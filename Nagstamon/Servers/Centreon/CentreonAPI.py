@@ -734,8 +734,13 @@ class CentreonServer(GenericServer):
             result = self.FetchURL(self.urls_centreon['resources'] + '?' + urllib.parse.urlencode(cgi_data),
                                    giveback="raw")
 
-           # If we got an 403 or 401, the token expired and must be renewed
-            if result.status_code == 403 or result.status_code == 401:
+           # If we got an 403 or 401 (and 500 for version 21.), the token expired and must be renewed
+            if self.centreon_version_major == 21:
+                ressources_response_list = [401, 403, 500]
+            else:
+                ressources_response_list = [401, 403]
+
+            if result.status_code in ressources_response_list:
                 self.token = self.get_token().result
                 if conf.debug_mode == True:
                     self.Debug(server='[' + self.get_name() + ']', debug='Check-session, session renewed')
