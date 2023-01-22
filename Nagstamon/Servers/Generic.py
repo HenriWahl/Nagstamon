@@ -26,6 +26,7 @@ import socket
 import sys
 import traceback
 import urllib.parse
+from urllib.request import getproxies
 
 from bs4 import BeautifulSoup
 import requests
@@ -332,9 +333,13 @@ class GenericServer(object):
         # check if proxies have to be used
         if self.use_proxy is True:
             if self.use_proxy_from_os is True:
-                # if .trust_enf is true the system environment will be evaluated
-                requester.trust_env = True
-                requester.proxies = dict()
+                # get proxies from system directly instead of via trust_env
+                requester.proxies = getproxies()
+                # check for missing '/' to make proxies work
+                for scheme, proxy_url in requester.proxies.items():
+                    if not proxy_url.endswith('/'):
+                        requester.proxies[scheme] = proxy_url + '/'
+                pass
             else:
                 # check if username and password are given and provide credentials if needed
                 if self.proxy_username == self.proxy_password == '':
@@ -354,8 +359,6 @@ class GenericServer(object):
                     # fill session.proxies for both protocols
                     requester.proxies = {'http': proxy_url, 'https': proxy_url}
         else:
-            # disable evaluation of environment variables
-            requester.trust_env = False
             requester.proxies = None
 
     def reset_HTTP(self):
