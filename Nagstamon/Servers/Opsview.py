@@ -202,9 +202,7 @@ class OpsviewServer(GenericServer):
         """
 	        Get status from Opsview Server
         """
-        if self.hashtag_filter == '':
-            keywords = ''
-        else:
+        if self.hashtag_filter != '':
             self.Debug(server=self.get_name(), debug="Raw hashtag filter string: " + self.hashtag_filter)
 
             trimmed_hashtags = re.sub(r'[#|\s]', '', self.hashtag_filter).split(",")
@@ -213,6 +211,8 @@ class OpsviewServer(GenericServer):
 
             keywords = "&keyword=" + "&keyword=".join(list_of_non_empty_hashtags)
             self.Debug(server=self.get_name(), debug="Keyword string" + pprint.pformat(keywords))
+        else:
+            keywords = ''
         # following XXXX to get ALL services in ALL states except OK
         # because we filter them out later
         # the REST API gets all host and service info in one call
