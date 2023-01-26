@@ -618,6 +618,19 @@
         </property>
        </widget>
       </item>
+      <item row="10" column="1">
+       <widget class="QLabel" name="label_hashtag_filter">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Hashtag filter:</string>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="1" colspan="3">
        <widget class="QCheckBox" name="input_checkbox_ignore_cert">
         <property name="text">
@@ -630,6 +643,13 @@
       </item>
       <item row="10" column="2" colspan="2">
        <widget class="QLineEdit" name="input_lineedit_host_filter">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="2" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_hashtag_filter">
         <property name="text">
          <string/>
         </property>

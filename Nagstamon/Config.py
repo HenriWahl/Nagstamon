@@ -941,6 +941,9 @@ class Server(object):
         self.host_filter = 'state !=0'
         self.service_filter = 'state !=0 or host.state != 0'
 
+        # Opsview hashtag filter
+        self.hashtag_filter = ''
+
         # Sensu/Uchiwa/??? Datacenter/Site config
         self.monitor_site = 'Site 1'
 
