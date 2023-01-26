@@ -205,7 +205,7 @@ class OpsviewServer(GenericServer):
         if self.hashtag_filter != '':
             self.Debug(server=self.get_name(), debug="Raw hashtag filter string: " + self.hashtag_filter)
 
-            trimmed_hashtags = re.sub(r'[#|\s]', '', self.hashtag_filter).split(",")
+            trimmed_hashtags = re.sub(r'[#\s]', '', self.hashtag_filter).split(",")
             list_of_non_empty_hashtags = [i for i in trimmed_hashtags if i]
             self.Debug(server=self.get_name(), debug="List of trimmed hashtags" + pprint.pformat(list_of_non_empty_hashtags))
 
