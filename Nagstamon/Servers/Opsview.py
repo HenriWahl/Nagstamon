@@ -273,6 +273,24 @@ class OpsviewServer(GenericServer):
         #dummy return in case all is OK
         return Result()
 
+    def open_monitor(self, host, service=''):
+        '''
+            open monitor from tablewidget context menu
+        '''
+        base_url = self.monitor_url + '/monitoring/#!?'
+        host_url = base_url + urllib.parse.urlencode({'autoSelectHost': host})
+        service_url = base_url + urllib.parse.urlencode({'autoSelectHost': host,
+                                                         'autoSelectService': service},
+                                                        quote_via=urllib.parse.quote)
+        if service == '':
+        if conf.debug_mode:
+            self.Debug(server=self.get_name(), host=host, service=service,
+                       debug='Open host monitor web page ' + host_url)
+            webbrowser_open(host_url)
+        else:
+            self.Debug(server=self.get_name(), host=host, service=service,
+                       debug='Open service monitor web page ' + service_url)
+            webbrowser_open(service_url)
 
     def open_monitor_webpage(self, host, service):
         webbrowser_open('%s/monitoring/#!?autoSelectHost=%s' % (self.monitor_url, host))
