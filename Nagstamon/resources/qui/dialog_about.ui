@@ -75,7 +75,7 @@
        <item>
         <widget class="QLabel" name="label_copyright">
          <property name="text">
-          <string>©2008-2022 Henri Wahl et al.</string>
+          <string>©2008-2023 Henri Wahl et al.</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>

@@ -1,5 +1,5 @@
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2022 Henri Wahl <henri@nagstamon.de> et al.
+# Copyright (C) 2008-2023 Henri Wahl <henri@nagstamon.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

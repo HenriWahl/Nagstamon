@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2022 Henri Wahl <henri@nagstamon.de> et al.
+# Copyright (C) 2008-2023 Henri Wahl <henri@nagstamon.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -121,9 +121,9 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '3.11-20230122'
+    VERSION = '3.11-20230126'
     WEBSITE = 'https://nagstamon.de'
-    COPYRIGHT = '©2008-2022 Henri Wahl et al.'
+    COPYRIGHT = '©2008-2023 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
     # dict of servers to offer for downloads if an update is available
     DOWNLOAD_SERVERS = {'nagstamon.de': 'https://github.com/HenriWahl/Nagstamon/releases'}
