@@ -299,9 +299,9 @@ class OpsviewServer(GenericServer):
                                                          'autoSelectService': service},
                                                         quote_via=urllib.parse.quote)
         if service == '':
-        if conf.debug_mode:
-            self.Debug(server=self.get_name(), host=host, service=service,
-                       debug='Open host monitor web page ' + host_url)
+            if conf.debug_mode:
+                self.Debug(server=self.get_name(), host=host, service=service,
+                           debug='Open host monitor web page ' + host_url)
             webbrowser_open(host_url)
         else:
             self.Debug(server=self.get_name(), host=host, service=service,
