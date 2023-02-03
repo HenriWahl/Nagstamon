@@ -631,6 +631,13 @@
         </property>
        </widget>
       </item>
+      <item row="11" column="1" colspan="3">
+       <widget class="QCheckBox" name="input_checkbox_can_change_only">
+        <property name="text">
+         <string>Only show services that the user can change or set downtimes on</string>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="1" colspan="3">
        <widget class="QCheckBox" name="input_checkbox_ignore_cert">
         <property name="text">

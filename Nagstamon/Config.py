@@ -941,8 +941,16 @@ class Server(object):
         self.host_filter = 'state !=0'
         self.service_filter = 'state !=0 or host.state != 0'
 
-        # Opsview hashtag filter
+        # For more information about he Opsview options below, see this link:
+        # https://knowledge.opsview.com/reference/api-status-filtering-service-objects
+
+        # The Opsview hashtag filter will filter out any services NOT having the
+        # listed hashtags (previously known as keywords).
         self.hashtag_filter = ''
+        # The Opsview can_change_only option allows a user to show only
+        # services for which the user has permissions to make changes OR set
+        # downtimes.
+        self.can_change_only = False
 
         # Sensu/Uchiwa/??? Datacenter/Site config
         self.monitor_site = 'Site 1'

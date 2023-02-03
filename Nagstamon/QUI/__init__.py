@@ -5698,6 +5698,7 @@ class Dialog_Server(Dialog):
             self.window.label_host_filter: ['op5Monitor'],
             self.window.input_lineedit_hashtag_filter: ['Opsview'],
             self.window.label_hashtag_filter: ['Opsview'],
+            self.window.input_checkbox_can_change_only: ['Opsview'],
             self.window.label_monitor_site: ['Sensu'],
             self.window.input_lineedit_monitor_site: ['Sensu'],
             self.window.label_map_to_hostname: ['Prometheus', 'Alertmanager'],
