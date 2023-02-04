@@ -202,25 +202,42 @@ class OpsviewServer(GenericServer):
         """
 	        Get status from Opsview Server
         """
+        if self.can_change_only:
+            if conf.debug_mode:
+                self.Debug(server=self.get_name(),
+                           debug="Showing only objects that the user can change or put in downtime")
+
+            can_change = '&can_change=true'
+        else:
+            can_change = ''
+
         if self.hashtag_filter != '':
-            self.Debug(server=self.get_name(), debug="Raw hashtag filter string: " + self.hashtag_filter)
+            if conf.debug_mode:
+                self.Debug(server=self.get_name(),
+                           debug="Raw hashtag filter string: " +
+                           self.hashtag_filter)
 
             trimmed_hashtags = re.sub(r'[#\s]', '', self.hashtag_filter).split(",")
             list_of_non_empty_hashtags = [i for i in trimmed_hashtags if i]
-            self.Debug(server=self.get_name(), debug="List of trimmed hashtags" + pprint.pformat(list_of_non_empty_hashtags))
+
+            if conf.debug_mode:
+                self.Debug(server=self.get_name(),
+                           debug="List of trimmed hashtags" +
+                           pprint.pformat(list_of_non_empty_hashtags))
 
             keywords = "&keyword=" + "&keyword=".join(list_of_non_empty_hashtags)
-            self.Debug(server=self.get_name(), debug="Keyword string" + pprint.pformat(keywords))
+
+            if conf.debug_mode:
+                self.Debug(server=self.get_name(),
+                           debug="Keyword string" + pprint.pformat(keywords))
         else:
             keywords = ''
+
         # following XXXX to get ALL services in ALL states except OK
         # because we filter them out later
         # the REST API gets all host and service info in one call
         try:
-            if keywords == '':
-                result = self.FetchURL(self.monitor_url + "/rest/status/service?state=1&state=2&state=3", giveback="raw")
-            else:
-                result = self.FetchURL(self.monitor_url + "/rest/status/service?state=1&state=2&state=3" + keywords, giveback="raw")
+            result = self.FetchURL(self.monitor_url + "/rest/status/service?state=1&state=2&state=3" + can_change + keywords, giveback="raw")
 
             data, error, status_code = json.loads(result.result), result.error, result.status_code
 
@@ -308,7 +325,5 @@ class OpsviewServer(GenericServer):
                        debug='Open service monitor web page ' + service_url)
             webbrowser_open(service_url)
 
-    def open_monitor_webpage(self, host, service):
-        webbrowser_open('%s/monitoring/#!?autoSelectHost=%s' % (self.monitor_url, host))
-
-
+    def open_monitor_webpage(self):
+        webbrowser_open('%s/monitoring/' % (self.monitor_url))

@@ -199,8 +199,9 @@ def create_server(server=None):
     new_server.host_filter = server.host_filter
     new_server.service_filter = server.service_filter
 
-    # Opsview hashtag filters
+    # Opsview hashtag filter and can_change_only option
     new_server.hashtag_filter = server.hashtag_filter
+    new_server.can_change_only = server.can_change_only
 
     # Zabbix
     new_server.use_description_name_service = server.use_description_name_service

@@ -249,6 +249,9 @@ class GenericServer(object):
         # Opsview hashtag filter
         self.hashtag_filter = ''
 
+        # Opsview can_change_only option
+        self.can_change_only = False
+
         # Sensu/Uchiwa/??? Datacenter/Site config
         self.monitor_site = 'Site 1'
 
