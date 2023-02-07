@@ -29,7 +29,11 @@ socket.setdefaulttimeout(30)
 
 try:
     if __name__ == '__main__':
-        from Nagstamon.Config import conf
+        from Nagstamon.Config import (conf,
+                                      OS,
+                                      OS_WINDOWS)
+        if OS == OS_WINDOWS:
+            import pip_system_certs.wrapt_requests
 
         from Nagstamon.Helpers import lock_config_folder
 

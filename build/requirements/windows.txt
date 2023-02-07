@@ -3,6 +3,7 @@ beautifulsoup4
 icinga2api
 keyring
 lxml
+pip-system-certs
 psutil
 pyinstaller
 pypiwin32
