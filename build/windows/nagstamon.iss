@@ -1,7 +1,7 @@
 [Setup]
 AppName=Nagstamon
-AppVerName=Nagstamon {#version}
-AppVersion={#version}
+AppVerName=Nagstamon {#version_is}
+AppVersion={#version_is}
 AppPublisher=Henri Wahl
 DefaultDirName={commonpf}\Nagstamon
 DefaultGroupName=Nagstamon
