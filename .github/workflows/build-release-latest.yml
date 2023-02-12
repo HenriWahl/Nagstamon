@@ -263,14 +263,13 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  repo-rpm:
+  repo-rpm-fedora:
     runs-on: ubuntu-latest
     # if not all are ready there might be trouble when downloading artifacts
     # maybe faster now with build containers
     needs: [fedora-34, fedora-35, fedora-36, fedora-37, rhel-9]
-    strategy:
-      matrix:
-        os_family: [fedora, rhel]
+    env:
+      FAMILY: fedora
     steps:
       # get binaries created by other jobs
       - uses: actions/download-artifact@v3
@@ -280,15 +279,42 @@ jobs:
       - run: chmod -R go-rwx ~/.ssh
       # get and prepare nagstamon-jekyll
       - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
-      - run: rm -rf ${{ env.repo_dir }}/${{ matrix.os_family }}/latest
-      - run: mkdir -p ${{ env.repo_dir }}/${{ matrix.os_family }}/latest
+      - run: rm -rf ${{ env.repo_dir }}/${{ FAMILY }}/latest
+      - run: mkdir -p ${{ env.repo_dir }}/${{ FAMILY }}/latest
       # copy *.rpm files into nagstamon-jekyll
-      - run: cp -r artifact/*.${{ matrix.os_family }}*.rpm ${{ env.repo_dir }}/${{ matrix.os_family }}/latest
+      - run: cp -r artifact/*.${{ FAMILY }}*.rpm ${{ env.repo_dir }}/${{ FAMILY }}/latest
+      # create rpm repo via Fedora container
+      - run: docker run --rm -v $PWD/${{ env.repo_dir }}/${{ FAMILY }}/latest:/repo fedora /bin/sh -c "dnf -y install createrepo_c && createrepo /repo"
+      # commit and push new binaries to nagstamon-repo
+      - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
+      - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ FAMILY }}" && git push
+
+  repo-rpm-rhel:
+    runs-on: ubuntu-latest
+    # if not all are ready there might be trouble when downloading artifacts
+    # maybe faster now with build containers
+    needs: [fedora-34, fedora-35, fedora-36, fedora-37, rhel-9, repo-rpm-fedora]
+    env:
+      FAMILY: rhel
+    steps:
+      # get binaries created by other jobs
+      - uses: actions/download-artifact@v3
+      # organize SSH deploy key for nagstamon-repo
+      - run: mkdir ~/.ssh
+      - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
+      - run: chmod -R go-rwx ~/.ssh
+      # get and prepare nagstamon-jekyll
+      - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
+      - run: rm -rf ${{ env.repo_dir }}/${{ FAMILY }}/latest
+      - run: mkdir -p ${{ env.repo_dir }}/${{ FAMILY }}/latest
+      # copy *.rpm files into nagstamon-jekyll
+      - run: cp -r artifact/*.${{ FAMILY }}*.rpm ${{ env.repo_dir }}/${{ FAMILY }}/latest
       # create rpm repo via Fedora container
       - run: docker run --rm -v $PWD/${{ env.repo_dir }}/${{ matrix.os_family }}/latest:/repo fedora /bin/sh -c "dnf -y install createrepo_c && createrepo /repo"
       # commit and push new binaries to nagstamon-repo
       - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
-      - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ matrix.os_family }}" && git push
+      - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ FAMILY }}" && git push
+
 
   github-release:
     runs-on: ubuntu-latest
