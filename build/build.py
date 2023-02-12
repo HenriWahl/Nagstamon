@@ -27,11 +27,9 @@ import subprocess
 import zipfile
 import glob
 
-from Nagstamon.Helpers import get_distro
-
 CURRENT_DIR = os.getcwd()
 NAGSTAMON_DIR = os.path.normpath('{0}{1}..{1}'.format(CURRENT_DIR, os.sep))
-sys.path.append(NAGSTAMON_DIR)
+sys.path.insert(1, NAGSTAMON_DIR)
 
 SCRIPTS_DIR = '{0}{1}scripts-{2}.{3}'.format(CURRENT_DIR, os.sep, sys.version_info.major, sys.version_info.minor)
 
@@ -88,7 +86,8 @@ def winmain():
     # old-school formatstrings needed for old Debian build base distro jessie and its old python
     ISCC = r'{0}{1}Inno Setup 6{1}iscc.exe'.format(os.environ['PROGRAMFILES{0}'.format(ARCH_OPTS[ARCH][2])], os.sep)
     DIR_BUILD_EXE = '{0}{1}dist{1}Nagstamon'.format(CURRENT_DIR, os.sep, ARCH_OPTS[ARCH][0], PYTHON_VERSION)
-    DIR_BUILD_NAGSTAMON = '{0}{1}dist{1}Nagstamon-{2}-win{3}{4}'.format(CURRENT_DIR, os.sep, VERSION, ARCH, FILENAME_SUFFIX)
+    DIR_BUILD_NAGSTAMON = '{0}{1}dist{1}Nagstamon-{2}-win{3}{4}'.format(CURRENT_DIR, os.sep, VERSION, ARCH,
+                                                                        FILENAME_SUFFIX)
     FILE_ZIP = '{0}.zip'.format(DIR_BUILD_NAGSTAMON)
 
     # clean older binaries
@@ -226,9 +225,11 @@ def rpmmain():
 
     current_dir = Path(CURRENT_DIR)
     for file in current_dir.iterdir():
-        if VERSION.replace('-', '.') in file.name:
-            file.rename(file.name.replace('src.rpm', f'{DIST_NAME}{DIST_VERSION}.src.rpm'))
-            file.rename(file.name.replace('noarch.rpm', f'{DIST_NAME}{DIST_VERSION}.noarch.rpm'))
+        if VERSION.replace('-', '.') in file.name and ('noarch' in file.name or 'src' in file.name):
+            for file_type in ['noarch', 'src']:
+                if file_type in file.name:
+                    file.replace(file.parent / Path(file.name.replace(f'{file_type}.rpm',
+                                                                      f'{DIST_NAME}{DIST_VERSION}.{file_type}.rpm')))
 
 
 DISTS = {
