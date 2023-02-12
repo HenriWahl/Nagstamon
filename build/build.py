@@ -27,6 +27,7 @@ import subprocess
 import zipfile
 import glob
 
+from Nagstamon.Helpers import get_distro
 
 CURRENT_DIR = os.getcwd()
 NAGSTAMON_DIR = os.path.normpath('{0}{1}..{1}'.format(CURRENT_DIR, os.sep))
@@ -44,6 +45,8 @@ ARCH_OPTS = {'32': ('win32', 'win32', '', 'x86'),
              '64': ('win-amd64', 'amd64', '(X86)', 'x64')}
 PYTHON_VERSION = '{0}.{1}'.format(sys.version_info[0],
                                   sys.version_info[1])
+
+DIST_NAME, DIST_VERSION, DIST_ID = get_distro()
 
 # depending on debug build or not a console window will be shown or not
 if len(sys.argv) > 1 and sys.argv[1] == 'debug':
@@ -220,6 +223,12 @@ def rpmmain():
 
     # run setup.py for rpm creation
     subprocess.call(['python3', 'setup.py', 'bdist_rpm'], shell=False)
+
+    current_dir = Path(CURRENT_DIR)
+    for file in current_dir.iterdir():
+        if VERSION.replace('-', '.') in file.name:
+            file.rename(file.name.replace('src.rpm', f'{DIST_NAME}{DIST_VERSION}.src.rpm'))
+            file.rename(file.name.replace('noarch.rpm', f'{DIST_NAME}{DIST_VERSION}.noarch.rpm'))
 
 
 DISTS = {
