@@ -200,11 +200,17 @@ class ZabbixAPI(object):
         else:
             raise ZabbixAPIException("No authentication information available.")
 
+        # check version to use the correct keyword for username which changed since 6.4
+        if self.api_version() < '6.4':
+            username_keyword = 'user'
+        else:
+            username_keyword = 'username'
+
         # don't print the raw password.
         hashed_pw_string = "sha256(" + hashlib.sha256(l_password.encode('utf-8')).hexdigest() + ")"
         self.debug(logging.DEBUG, "Trying to login with %s:%s" %
                 (repr(l_user), repr(hashed_pw_string)))
-        obj = self.json_obj('user.login', {'user': l_user, 'password': l_password}, auth=False)
+        obj = self.json_obj('user.login', {username_keyword: l_user, 'password': l_password}, auth=False)
         result = self.do_request(obj)
         self.auth = result['result']
 
@@ -296,7 +302,8 @@ class ZabbixAPI(object):
         return False
 
     def api_version(self, **options):
-        self.__checkauth__()
+        # kicked out check auth to be able to check vesion before being logged in to use the correct username keyword
+        #self.__checkauth__()
         obj = self.do_request(self.json_obj('apiinfo.version', options, auth=False))
         return obj['result']
 
