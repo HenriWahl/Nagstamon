@@ -4536,6 +4536,11 @@ class Dialog(QObject):
         # try to get and keep focus
         self.window.setWindowModality(Qt.WindowModality.ApplicationModal)
 
+        # in case dock icon is configured invisible in macOS it has to be shown while dialog is shown
+        # to be able to get keyboard focus
+        if OS == OS_MACOS and conf.hide_macos_dock_icon:
+            hide_macos_dock_icon(False)
+
     def initialize(self):
         """
             dummy initialize method
@@ -4546,12 +4551,6 @@ class Dialog(QObject):
         """
             simple how method, to be enriched
         """
-
-        # in case dock icon is configured invisible in macOS it has to be shown while dialog is shown
-        # to be able to get keyboard focus
-        if OS == OS_MACOS and conf.hide_macos_dock_icon:
-            hide_macos_dock_icon(False)
-
         # tell the world that dialog pops up
         self.show_dialog.emit()
 
@@ -6792,10 +6791,6 @@ class Dialog_About(Dialog):
         self.window.tabs.setCurrentIndex(0)
 
     def show(self):
-        # in case dock icon is configured invisible in macOS it has to be shown while dialog is shown
-        # to be able to get keyboard focus
-        if OS == OS_MACOS and conf.hide_macos_dock_icon:
-            hide_macos_dock_icon(False)
         self.window.exec()
         # hide macOS dock icon again if it is configured to be hidden
         # was only necessary to show up to let dialog get keyboard focus
