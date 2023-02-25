@@ -3870,7 +3870,7 @@ class TreeView(QTreeView):
     @Slot()
     def action_clipboard_action_all(self):
         """
-
+            copy all information to clipboard
         """
 
         list_host = []
@@ -3896,7 +3896,7 @@ class TreeView(QTreeView):
             item = self.server.hosts[host]
             text += 'Host: {0}\n'.format(host)
             # if it is a service switch to service object
-            if service != '':
+            if service != '' and item.services.get(service):
                 item = item.services[service]
                 text += 'Service: {0}\n'.format(service)
             # the other properties belong to both hosts and services
