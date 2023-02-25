@@ -4562,7 +4562,7 @@ class Dialog(QObject):
         # in case dock icon is configured invisible in macOS it has to be shown while dialog is shown
         # to be able to get keyboard focus
         if OS == OS_MACOS and conf.hide_macos_dock_icon:
-            hide_macos_dock_icon(False)
+            hide_macos_dock_icon(True)
 
     def toggle_visibility(self, checkbox, widgets=[]):
         """
