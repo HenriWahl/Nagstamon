@@ -6792,7 +6792,15 @@ class Dialog_About(Dialog):
         self.window.tabs.setCurrentIndex(0)
 
     def show(self):
+        # in case dock icon is configured invisible in macOS it has to be shown while dialog is shown
+        # to be able to get keyboard focus
+        if OS == OS_MACOS and conf.hide_macos_dock_icon:
+            hide_macos_dock_icon(False)
         self.window.exec()
+        # hide macOS dock icon again if it is configured to be hidden
+        # was only necessary to show up to let dialog get keyboard focus
+        if OS == OS_MACOS and conf.hide_macos_dock_icon:
+            hide_macos_dock_icon(True)
 
 
 class CheckVersion(QObject):
