@@ -4546,6 +4546,12 @@ class Dialog(QObject):
         """
             simple how method, to be enriched
         """
+
+        # in case dock icon is configured invisible in macOS it has to be shown while dialog is shown
+        # to be able to get keyboard focus
+        if OS == OS_MACOS and conf.hide_macos_dock_icon:
+            hide_macos_dock_icon(False)
+
         # tell the world that dialog pops up
         self.show_dialog.emit()
 
@@ -4612,16 +4618,26 @@ class Dialog(QObject):
 
     @Slot()
     def ok(self):
-        # dummy OK treatment
-        pass
+        """
+            as default closes dialog - might be refined, for example by settings dialog
+        """
+        # hide macOS dock icon again if it is configured to be hidden
+        # was only necessary to show up to let dialog get keyboard focus
+        if OS == OS_MACOS and conf.hide_macos_dock_icon:
+            hide_macos_dock_icon(True)
+        self.window.close()
 
     @Slot()
     def cancel(self):
         """
             as default closes dialog - might be refined, for example by settings dialog
         """
+        # hide macOS dock icon again if it is configured to be hidden
+        # was only necessary to show up to let dialog get keyboard focus
+        if OS == OS_MACOS and conf.hide_macos_dock_icon:
+            hide_macos_dock_icon(True)
         self.window.close()
-
+    
 
 class Dialog_Settings(Dialog):
     """
@@ -5138,12 +5154,16 @@ class Dialog_Settings(Dialog):
         # see if there are any servers created and enabled
         check_servers()
 
+        # call close and macOS dock icon treatment from ancestor
+        super().ok()
+
     @Slot()
     def cancel(self):
         """
             check if there are any usable servers configured
         """
-        self.window.close()
+        # call close and macOS dock icon treatment from ancestor
+        super().ok()
         check_servers()
 
     @Slot()
@@ -6020,8 +6040,6 @@ class Dialog_Server(Dialog):
             # tell main window about changes (Zabbix, Opsview for example)
             self.edited.emit()
 
-            self.window.close()
-
             # delete old server .conf file to reflect name changes
             # new one will be written soon
             if self.previous_server_conf is not None:
@@ -6029,6 +6047,9 @@ class Dialog_Server(Dialog):
 
             # store server settings
             conf.SaveMultipleConfig('servers', 'server')
+
+        # call close and macOS dock icon treatment from ancestor
+        super().ok()
 
     @Slot()
     def choose_custom_cert_ca_file(self):
@@ -6241,6 +6262,9 @@ class Dialog_Action(Dialog):
             # store server settings
             conf.SaveMultipleConfig('actions', 'action')
 
+        # call close and macOS dock icon treatment from ancestor
+        super().ok()
+
 
 class Dialog_Acknowledge(Dialog):
     """
@@ -6372,7 +6396,8 @@ class Dialog_Acknowledge(Dialog):
                                    'acknowledge_all_services': acknowledge_all_services,
                                    'all_services': all_services,
                                    'expire_time': expire_datetime})
-
+        # call close and macOS dock icon treatment from ancestor
+        super().ok()
 
 class Dialog_Downtime(Dialog):
     """
@@ -6461,9 +6486,10 @@ class Dialog_Downtime(Dialog):
                                 'end_time': self.window.input_lineedit_end_time.text(),
                                 'hours': int(self.window.input_spinbox_duration_hours.value()),
                                 'minutes': int(self.window.input_spinbox_duration_minutes.value())})
+        # call close and macOS dock icon treatment from ancestor
+        super().ok()
 
-    Slot(str, str)
-
+    @Slot(str, str)
     def set_start_end(self, start, end):
         """
             put values sent by worker into start and end fields
@@ -6471,8 +6497,7 @@ class Dialog_Downtime(Dialog):
         self.window.input_lineedit_start_time.setText(start)
         self.window.input_lineedit_end_time.setText(end)
 
-    Slot()
-
+    @Slot()
     def set_type_fixed(self):
         """
             enable/disable appropriate widgets if type is "Fixed"
@@ -6483,8 +6508,7 @@ class Dialog_Downtime(Dialog):
         self.window.input_spinbox_duration_hours.hide()
         self.window.input_spinbox_duration_minutes.hide()
 
-    Slot()
-
+    @Slot()
     def set_type_flexible(self):
         """
             enable/disable appropriate widgets if type is "Flexible"
@@ -6571,6 +6595,8 @@ class Dialog_Submit(Dialog):
                           'comment': self.window.input_lineedit_comment.text(),
                           'check_output': self.window.input_lineedit_check_output.text(),
                           'performance_data': self.window.input_lineedit_performance_data.text()})
+        # call close and macOS dock icon treatment from ancestor
+        super().ok()
 
 
 class Dialog_Authentication(Dialog):
@@ -6663,6 +6689,9 @@ class Dialog_Authentication(Dialog):
 
         # update server_vbox label
         self.update.emit(self.server.name)
+
+        # call close and macOS dock icon treatment from ancestor
+        super().ok()
 
     @Slot()
     def toggle_autologin(self):
@@ -7132,15 +7161,6 @@ if not OS in OS_NON_LINUX:
 # and non-existence of macOS-systray-context-menu
 elif conf.icon_in_systray:
     systrayicon.set_menu(menu)
-
-# set flag to be LSUIElement like in file info.properties
-if OS == OS_MACOS:
-    if conf.hide_macos_dock_icon:
-        lsuielement = '1'
-    else:
-        lsuielement = '0'
-    macos_info_dictionary = NSBundle.mainBundle().infoDictionary()
-    macos_info_dictionary['LSUIElement'] = lsuielement
 
 # versatile mediaplayer
 mediaplayer = MediaPlayer(statuswindow, RESOURCE_FILES)
