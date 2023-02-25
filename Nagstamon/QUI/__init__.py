@@ -6402,7 +6402,7 @@ class Dialog_Acknowledge(Dialog):
                                    'all_services': all_services,
                                    'expire_time': expire_datetime})
         # call close and macOS dock icon treatment from ancestor
-        super().ok()
+        #super().ok()
 
 class Dialog_Downtime(Dialog):
     """
