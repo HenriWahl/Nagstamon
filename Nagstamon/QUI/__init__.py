@@ -4557,12 +4557,7 @@ class Dialog(QObject):
 
         # reset window if only needs smaller screen estate
         self.window.adjustSize()
-        self.window.exec()
-
-        # in case dock icon is configured invisible in macOS it has to be shown while dialog is shown
-        # to be able to get keyboard focus
-        if OS == OS_MACOS and conf.hide_macos_dock_icon:
-            hide_macos_dock_icon(True)
+        self.window.show()
 
     def toggle_visibility(self, checkbox, widgets=[]):
         """
@@ -5169,7 +5164,7 @@ class Dialog_Settings(Dialog):
             check if there are any usable servers configured
         """
         # call close and macOS dock icon treatment from ancestor
-        super().ok()
+        super().cancel()
         check_servers()
 
     @Slot()
@@ -6055,7 +6050,7 @@ class Dialog_Server(Dialog):
             conf.SaveMultipleConfig('servers', 'server')
 
         # call close and macOS dock icon treatment from ancestor
-        #super().ok()
+        super().ok()
 
     @Slot()
     def choose_custom_cert_ca_file(self):
@@ -6269,7 +6264,7 @@ class Dialog_Action(Dialog):
             conf.SaveMultipleConfig('actions', 'action')
 
         # call close and macOS dock icon treatment from ancestor
-        #super().ok()
+        super().ok()
 
 
 class Dialog_Acknowledge(Dialog):
@@ -6403,7 +6398,7 @@ class Dialog_Acknowledge(Dialog):
                                    'all_services': all_services,
                                    'expire_time': expire_datetime})
         # call close and macOS dock icon treatment from ancestor
-        #super().ok()
+        super().ok()
 
 class Dialog_Downtime(Dialog):
     """
@@ -6493,7 +6488,7 @@ class Dialog_Downtime(Dialog):
                                 'hours': int(self.window.input_spinbox_duration_hours.value()),
                                 'minutes': int(self.window.input_spinbox_duration_minutes.value())})
         # call close and macOS dock icon treatment from ancestor
-        #super().ok()
+        super().ok()
 
     @Slot(str, str)
     def set_start_end(self, start, end):
@@ -6602,7 +6597,7 @@ class Dialog_Submit(Dialog):
                           'check_output': self.window.input_lineedit_check_output.text(),
                           'performance_data': self.window.input_lineedit_performance_data.text()})
         # call close and macOS dock icon treatment from ancestor
-        #super().ok()
+        super().ok()
 
 
 class Dialog_Authentication(Dialog):
@@ -6697,7 +6692,7 @@ class Dialog_Authentication(Dialog):
         self.update.emit(self.server.name)
 
         # call close and macOS dock icon treatment from ancestor
-        #super().ok()
+        super().ok()
 
     @Slot()
     def toggle_autologin(self):
@@ -6797,12 +6792,12 @@ class Dialog_About(Dialog):
 
         self.window.tabs.setCurrentIndex(0)
 
-    # def show(self):
-    #     self.window.exec()
-    #     # hide macOS dock icon again if it is configured to be hidden
-    #     # was only necessary to show up to let dialog get keyboard focus
-    #     if OS == OS_MACOS and conf.hide_macos_dock_icon:
-    #         hide_macos_dock_icon(True)
+    def show(self):
+        self.window.exec()
+        # hide macOS dock icon again if it is configured to be hidden
+        # was only necessary to show up to let dialog get keyboard focus
+        if OS == OS_MACOS and conf.hide_macos_dock_icon:
+            hide_macos_dock_icon(True)
 
 
 class CheckVersion(QObject):
