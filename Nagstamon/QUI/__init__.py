@@ -4436,27 +4436,33 @@ class Dialogs(object):
     """
         class for accessing all dialogs
     """
+    windows = list()
 
     def __init__(self):
         # settings main dialog
         self.settings = Dialog_Settings('settings_main')
         self.settings.initialize()
+        self.windows.append(self.settings.window)
 
         # server settings dialog
         self.server = Dialog_Server('settings_server')
         self.server.initialize()
+        self.windows.append(self.server.window)
 
         # action settings dialog
         self.action = Dialog_Action('settings_action')
         self.action.initialize()
+        self.windows.append(self.action.window)
 
         # acknowledge dialog for miserable item context menu
         self.acknowledge = Dialog_Acknowledge('dialog_acknowledge')
         self.acknowledge.initialize()
+        self.windows.append(self.acknowledge.window)
 
         # downtime dialog for miserable item context menu
         self.downtime = Dialog_Downtime('dialog_downtime')
         self.downtime.initialize()
+        self.windows.append(self.downtime.window)
 
         # open defaults settings on button click
         self.downtime.window.button_change_defaults_downtime.clicked.connect(self.settings.show_defaults)
@@ -4467,20 +4473,25 @@ class Dialogs(object):
         # downtime dialog for miserable item context menu
         self.submit = Dialog_Submit('dialog_submit')
         self.submit.initialize()
+        self.windows.append(self.submit.window)
 
         # authentication dialog for username/password
         self.authentication = Dialog_Authentication('dialog_authentication')
         self.authentication.initialize()
+        self.windows.append(self.authentication.window)
 
         # dialog for asking about disabled or not configured servers
         self.server_missing = Dialog_Server_missing('dialog_server_missing')
         self.server_missing.initialize()
+        self.windows.append(self.server_missing.window)
+
         # open server creation dialog
         self.server_missing.window.button_create_server.clicked.connect(self.settings.show_new_server)
         self.server_missing.window.button_enable_server.clicked.connect(self.settings.show)
 
         # about dialog
         self.about = Dialog_About('dialog_about')
+        self.windows.append(self.about.window)
 
         # file chooser Dialog
         self.file_chooser = QFileDialog()
@@ -4489,6 +4500,12 @@ class Dialogs(object):
         self.server.edited.connect(self.settings.toggle_zabbix_widgets)
         self.server.edited.connect(self.settings.toggle_op5monitor_widgets)
         self.server.edited.connect(self.settings.toggle_expire_time_widgets)
+
+    def get_shown_dialogs(self):
+        print(self.windows)
+        for x in self.windows:
+            print(x)
+        print([x for x in self.windows if x.isVisible()])
 
 
 class Dialog(QObject):
@@ -4546,6 +4563,8 @@ class Dialog(QObject):
         """
             simple how method, to be enriched
         """
+
+        dialogs.get_shown_dialogs()
 
         # in case dock icon is configured invisible in macOS it has to be shown while dialog is shown
         # to be able to get keyboard focus
@@ -5884,6 +5903,8 @@ class Dialog_Server(Dialog):
             # important final size adjustment
             self.window.adjustSize()
 
+            dialogs.get_shown_dialogs()
+
             # self.window.show()
             self.window.exec()
 
@@ -5918,7 +5939,7 @@ class Dialog_Server(Dialog):
         self.previous_server_conf = deepcopy(self.server_conf)
         # set window title
         self.window.setWindowTitle('Edit %s' % (self.server_conf.name))
-        # set self.shot_optios to give value to decorator
+        # set self.show_options to give value to decorator
         self.show_options = show_options
 
     @dialog_decoration
