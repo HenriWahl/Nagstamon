@@ -4663,6 +4663,8 @@ class Dialog(QObject):
             # if no window is shown already show dock icon
             if not len(dialogs.get_shown_dialogs()):
                 hide_macos_dock_icon(False)
+        else:
+            print('show')
 
     def hide_macos_dock_icon_if_necessary(self):
         """
@@ -4673,7 +4675,8 @@ class Dialog(QObject):
             # if no window is shown anymore hide dock icon
             if not len(dialogs.get_shown_dialogs()):
                 hide_macos_dock_icon(True)
-
+        else:
+            print('hide')
 
 class Dialog_Settings(Dialog):
     """
@@ -6201,7 +6204,14 @@ class Dialog_Action(Dialog):
             # important final size adjustment
             self.window.adjustSize()
 
+            # if running on macOS with disabled dock icon the dock icon might have to be made visible
+            # to make Nagstamon accept keyboard input
+            self.show_macos_dock_icon_if_necessary()
+
             self.window.exec()
+
+            # en reverse the dock icon might be hidden again after a potential keyboard input
+            self.hide_macos_dock_icon_if_necessary()
 
         # give back decorated function
         return (decoration_function)
@@ -6774,8 +6784,10 @@ class Dialog_Server_missing(Dialog):
         # hide dialog when server is to be created or enabled
         self.window.button_create_server.clicked.connect(self.window.hide)
         self.window.button_enable_server.clicked.connect(self.window.hide)
+        self.window.button_ignore.clicked.connect(self.ok)
         # simply hide window if ignore button chosen
         self.window.button_ignore.clicked.connect(self.window.hide)
+        self.window.button_ignore.clicked.connect(self.cancel)
         # byebye if exit button was pressed
         self.window.button_exit.clicked.connect(self.window.hide)
         self.window.button_exit.clicked.connect(exit)
