@@ -4502,6 +4502,9 @@ class Dialogs(object):
         self.server.edited.connect(self.settings.toggle_expire_time_widgets)
 
     def get_shown_dialogs(self):
+        """
+            get list of currently show dialog windows - needed for macOS hide dock icon stuff
+        """
         return [x for x in self.windows if x.isVisible()]
 
 
@@ -4560,7 +4563,8 @@ class Dialog(QObject):
         """
             simple how method, to be enriched
         """
-
+        # if running on macOS with disabled dock icon the dock icon might have to be made visible
+        # to make Nagstamon accept keyboard input
         self.show_macos_dock_icon_if_necessary()
 
         # in case dock icon is configured invisible in macOS it has to be shown while dialog is shown
@@ -4638,8 +4642,8 @@ class Dialog(QObject):
             as default closes dialog - might be refined, for example by settings dialog
         """
         self.window.close()
+        # en reverse the dock icon might be hidden again after a potential keyboard input
         self.hide_macos_dock_icon_if_necessary()
-
 
     @Slot()
     def cancel(self):
@@ -4647,6 +4651,7 @@ class Dialog(QObject):
             as default closes dialog - might be refined, for example by settings dialog
         """
         self.window.close()
+        # en reverse the dock icon might be hidden again after a potential keyboard input
         self.hide_macos_dock_icon_if_necessary()
 
     def show_macos_dock_icon_if_necessary(self):
@@ -4654,9 +4659,9 @@ class Dialog(QObject):
             show macOS dock icon again if it is configured to be hidden
             was only necessary to show up to let dialog get keyboard focus
         """
-        if not len(dialogs.get_shown_dialogs()):
-            print('show')
-            if OS == OS_MACOS:
+        if OS == OS_MACOS and conf.hide_macos_dock_icon:
+            # if no window is shown already show dock icon
+            if not len(dialogs.get_shown_dialogs()):
                 hide_macos_dock_icon(False)
 
     def hide_macos_dock_icon_if_necessary(self):
@@ -4664,9 +4669,9 @@ class Dialog(QObject):
             hide macOS dock icon again if it is configured to be hidden
             was only necessary to show up to let dialog get keyboard focus
         """
-        if not len(dialogs.get_shown_dialogs()):
-            print('hide')
-            if OS == OS_MACOS:
+        if OS == OS_MACOS and conf.hide_macos_dock_icon:
+            # if no window is shown anymore hide dock icon
+            if not len(dialogs.get_shown_dialogs()):
                 hide_macos_dock_icon(True)
 
 
@@ -5915,10 +5920,13 @@ class Dialog_Server(Dialog):
             # important final size adjustment
             self.window.adjustSize()
 
+            # if running on macOS with disabled dock icon the dock icon might have to be made visible
+            # to make Nagstamon accept keyboard input
             self.show_macos_dock_icon_if_necessary()
 
             self.window.exec()
 
+            # en reverse the dock icon might be hidden again after a potential keyboard input
             self.hide_macos_dock_icon_if_necessary()
 
         # give back decorated function
@@ -6824,9 +6832,6 @@ class Dialog_About(Dialog):
         self.window.textedit_credits.setReadOnly(True)
 
         self.window.tabs.setCurrentIndex(0)
-
-    #def show(self):
-    #    self.window.exec()
 
 
 class CheckVersion(QObject):
