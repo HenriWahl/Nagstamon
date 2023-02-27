@@ -6703,7 +6703,14 @@ class Dialog_Authentication(Dialog):
         if not statuswindow is None:
             statuswindow.hide_window()
         self.window.adjustSize()
+        
+        # the dock icon might be needed to be shown for a potential keyboard input
+        self.show_macos_dock_icon_if_necessary()
+        
         self.window.exec()
+        
+        # en reverse the dock icon might be hidden again after a potential keyboard input
+        self.hide_macos_dock_icon_if_necessary()
 
     def ok(self):
         """
