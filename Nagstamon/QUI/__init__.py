@@ -402,8 +402,12 @@ class SystemTrayIcon(QSystemTrayIcon):
             # when green icon is displayed and no popwin is about to pop up...
             if get_worst_status() == 'UP':
                 # ...nothing to do except on macOS where menu should be shown
-                if OS == OS_MACOS and not self.error_shown:
-                    self.menu.show_at_cursor()
+                if OS == OS_MACOS:
+                    # in case there is some error show popwin rather than context menu
+                    if not self.error_shown:
+                        self.menu.show_at_cursor()
+                    else:
+                        self.show_popwin.emit()
             else:
                 # show status window if there is something to tell
                 if statuswindow.is_shown:
