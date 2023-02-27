@@ -4502,10 +4502,7 @@ class Dialogs(object):
         self.server.edited.connect(self.settings.toggle_expire_time_widgets)
 
     def get_shown_dialogs(self):
-        print(self.windows)
-        for x in self.windows:
-            print(x)
-        print([x for x in self.windows if x.isVisible()])
+        return [x for x in self.windows if x.isVisible()]
 
 
 class Dialog(QObject):
@@ -4564,7 +4561,7 @@ class Dialog(QObject):
             simple how method, to be enriched
         """
 
-        dialogs.get_shown_dialogs()
+        self.show_macos_dock_icon_if_necessary()
 
         # in case dock icon is configured invisible in macOS it has to be shown while dialog is shown
         # to be able to get keyboard focus
@@ -4640,23 +4637,36 @@ class Dialog(QObject):
         """
             as default closes dialog - might be refined, for example by settings dialog
         """
-        # hide macOS dock icon again if it is configured to be hidden
-        # was only necessary to show up to let dialog get keyboard focus
-        if OS == OS_MACOS and conf.hide_macos_dock_icon:
-            hide_macos_dock_icon(True)
-        self.window.close()
+        self.hide_macos_dock_icon_if_necessary()
+
 
     @Slot()
     def cancel(self):
         """
             as default closes dialog - might be refined, for example by settings dialog
         """
-        # hide macOS dock icon again if it is configured to be hidden
-        # was only necessary to show up to let dialog get keyboard focus
-        if OS == OS_MACOS and conf.hide_macos_dock_icon:
-            hide_macos_dock_icon(True)
-        self.window.close()
-    
+        self.hide_macos_dock_icon_if_necessary()
+
+    def show_macos_dock_icon_if_necessary(self):
+        """
+            show macOS dock icon again if it is configured to be hidden
+            was only necessary to show up to let dialog get keyboard focus
+        """
+        if not len(dialogs.get_shown_dialogs()):
+            print('show')
+            if OS == OS_MACOS:
+                hide_macos_dock_icon(False)
+
+    def hide_macos_dock_icon_if_necessary(self):
+        """
+            hide macOS dock icon again if it is configured to be hidden
+            was only necessary to show up to let dialog get keyboard focus
+        """
+        if not len(dialogs.get_shown_dialogs()):
+            print('hide')
+            if OS == OS_MACOS:
+                hide_macos_dock_icon(True)
+
 
 class Dialog_Settings(Dialog):
     """
@@ -5903,7 +5913,7 @@ class Dialog_Server(Dialog):
             # important final size adjustment
             self.window.adjustSize()
 
-            dialogs.get_shown_dialogs()
+            self.show_macos_dock_icon_if_necessary()
 
             # self.window.show()
             self.window.exec()
@@ -6180,7 +6190,6 @@ class Dialog_Action(Dialog):
             # important final size adjustment
             self.window.adjustSize()
 
-            # self.window.show()
             self.window.exec()
 
         # give back decorated function
@@ -6813,12 +6822,8 @@ class Dialog_About(Dialog):
 
         self.window.tabs.setCurrentIndex(0)
 
-    def show(self):
-        self.window.exec()
-        # hide macOS dock icon again if it is configured to be hidden
-        # was only necessary to show up to let dialog get keyboard focus
-        if OS == OS_MACOS and conf.hide_macos_dock_icon:
-            hide_macos_dock_icon(True)
+    #def show(self):
+    #    self.window.exec()
 
 
 class CheckVersion(QObject):
