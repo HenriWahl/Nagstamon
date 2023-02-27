@@ -4637,6 +4637,7 @@ class Dialog(QObject):
         """
             as default closes dialog - might be refined, for example by settings dialog
         """
+        self.window.close()
         self.hide_macos_dock_icon_if_necessary()
 
 
@@ -4645,6 +4646,7 @@ class Dialog(QObject):
         """
             as default closes dialog - might be refined, for example by settings dialog
         """
+        self.window.close()
         self.hide_macos_dock_icon_if_necessary()
 
     def show_macos_dock_icon_if_necessary(self):
@@ -5917,6 +5919,8 @@ class Dialog_Server(Dialog):
 
             # self.window.show()
             self.window.exec()
+
+            self.hide_macos_dock_icon_if_necessary()
 
         # give back decorated function
         return (decoration_function)
