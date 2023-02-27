@@ -4667,8 +4667,6 @@ class Dialog(QObject):
             # if no window is shown already show dock icon
             if not len(dialogs.get_shown_dialogs()):
                 hide_macos_dock_icon(False)
-        else:
-            print('show')
 
     def hide_macos_dock_icon_if_necessary(self):
         """
@@ -4679,8 +4677,7 @@ class Dialog(QObject):
             # if no window is shown anymore hide dock icon
             if not len(dialogs.get_shown_dialogs()):
                 hide_macos_dock_icon(True)
-        else:
-            print('hide')
+
 
 class Dialog_Settings(Dialog):
     """
