@@ -5917,7 +5917,6 @@ class Dialog_Server(Dialog):
 
             self.show_macos_dock_icon_if_necessary()
 
-            # self.window.show()
             self.window.exec()
 
             self.hide_macos_dock_icon_if_necessary()
