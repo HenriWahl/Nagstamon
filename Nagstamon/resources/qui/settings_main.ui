@@ -766,7 +766,7 @@
           <item row="14" column="0">
            <widget class="QCheckBox" name="input_checkbox_hide_macos_dock_icon">
             <property name="text">
-             <string>Hide macOS Dock icon - needs restart</string>
+             <string>Hide macOS Dock icon</string>
             </property>
            </widget>
           </item>
