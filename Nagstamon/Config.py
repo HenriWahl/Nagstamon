@@ -121,7 +121,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '3.11-20230227'
+    VERSION = '3.11-20230308'
     WEBSITE = 'https://nagstamon.de'
     COPYRIGHT = '©2008-2023 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'

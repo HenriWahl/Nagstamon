@@ -4663,7 +4663,9 @@ class Dialog(QObject):
             show macOS dock icon again if it is configured to be hidden
             was only necessary to show up to let dialog get keyboard focus
         """
-        if OS == OS_MACOS and conf.hide_macos_dock_icon:
+        if OS == OS_MACOS and \
+                conf.icon_in_systray and \
+                conf.hide_macos_dock_icon:
             # if no window is shown already show dock icon
             if not len(dialogs.get_shown_dialogs()):
                 hide_macos_dock_icon(False)
@@ -4673,7 +4675,9 @@ class Dialog(QObject):
             hide macOS dock icon again if it is configured to be hidden
             was only necessary to show up to let dialog get keyboard focus
         """
-        if OS == OS_MACOS and conf.hide_macos_dock_icon:
+        if OS == OS_MACOS and \
+                conf.icon_in_systray and \
+                conf.hide_macos_dock_icon:
             # if no window is shown anymore hide dock icon
             if not len(dialogs.get_shown_dialogs()):
                 hide_macos_dock_icon(True)
