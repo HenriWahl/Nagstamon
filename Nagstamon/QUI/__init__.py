@@ -4664,7 +4664,7 @@ class Dialog(QObject):
             was only necessary to show up to let dialog get keyboard focus
         """
         if OS == OS_MACOS and \
-                conf.icon_in_systray and \
+                (conf.icon_in_systray or conf.statusbar_floating) and \
                 conf.hide_macos_dock_icon:
             # if no window is shown already show dock icon
             if not len(dialogs.get_shown_dialogs()):
@@ -4676,7 +4676,7 @@ class Dialog(QObject):
             was only necessary to show up to let dialog get keyboard focus
         """
         if OS == OS_MACOS and \
-                conf.icon_in_systray and \
+                (conf.icon_in_systray or conf.statusbar_floating) and \
                 conf.hide_macos_dock_icon:
             # if no window is shown anymore hide dock icon
             if not len(dialogs.get_shown_dialogs()):
