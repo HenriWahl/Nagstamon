@@ -1206,9 +1206,11 @@ class StatusWindow(QWidget):
         self.servers_scrollarea.hide()
 
         if conf.statusbar_floating:
-            # no need for icon in dock if floating - apply first to avoid window in background
+            # show icon in dock if window is set
             if OS == OS_MACOS:
-                hide_macos_dock_icon(conf.hide_macos_dock_icon)
+                # in floating mode always show dock icon - right now I am not able to
+                # get the icon hidden
+                hide_macos_dock_icon(False)
 
             # no need for systray
             systrayicon.hide()
@@ -4573,7 +4575,9 @@ class Dialog(QObject):
 
         # in case dock icon is configured invisible in macOS it has to be shown while dialog is shown
         # to be able to get keyboard focus
-        if OS == OS_MACOS and conf.hide_macos_dock_icon:
+        if OS == OS_MACOS and \
+                conf.icon_in_systray and \
+                conf.hide_macos_dock_icon:
             hide_macos_dock_icon(False)
 
         # tell the world that dialog pops up
@@ -4664,7 +4668,7 @@ class Dialog(QObject):
             was only necessary to show up to let dialog get keyboard focus
         """
         if OS == OS_MACOS and \
-                (conf.icon_in_systray or conf.statusbar_floating) and \
+                conf.icon_in_systray and \
                 conf.hide_macos_dock_icon:
             # if no window is shown already show dock icon
             if not len(dialogs.get_shown_dialogs()):
@@ -4676,7 +4680,7 @@ class Dialog(QObject):
             was only necessary to show up to let dialog get keyboard focus
         """
         if OS == OS_MACOS and \
-                (conf.icon_in_systray or conf.statusbar_floating) and \
+                conf.icon_in_systray and \
                 conf.hide_macos_dock_icon:
             # if no window is shown anymore hide dock icon
             if not len(dialogs.get_shown_dialogs()):
@@ -4786,8 +4790,7 @@ class Dialog_Settings(Dialog):
         if OS == OS_MACOS:
             # offer option to hide icon in dock on macOS
             self.TOGGLE_DEPS.update({
-                self.window.input_radiobutton_icon_in_systray: [self.window.input_checkbox_hide_macos_dock_icon],
-                self.window.input_radiobutton_statusbar_floating: [self.window.input_checkbox_hide_macos_dock_icon]})
+                self.window.input_radiobutton_icon_in_systray: [self.window.input_checkbox_hide_macos_dock_icon]})
 
         # show option to enable position fix only on Unices
         if not OS in OS_NON_LINUX:
