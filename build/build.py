@@ -21,6 +21,7 @@
 from pathlib import Path
 import platform
 import os, os.path
+from os import environ
 import sys
 import shutil
 import subprocess
@@ -60,11 +61,22 @@ else:
     # also no need for filename suffix
     FILENAME_SUFFIX = ''
 
+SIGNING = False
+if 'WIN_SIGNING_CERT_BASE64' in environ \
+    and 'WIN_SIGNING_PASSWORD' in environ:
+    SIGNING = True
+
 
 def winmain():
     """
         execute steps necessary for compilation of Windows binaries and setup.exe
     """
+
+
+    if SIGNING:
+        subprocess.call(['powershell', './windows/code_signing.ps1', 'build/Nagstamon/Nagstamon.exe'])
+        sys.exit(0)
+
     # InnoSetup does not like VersionInfoVersion with letters, only 0.0.0.0 schemed numbers
     if 'alpha' in VERSION.lower() or 'beta' in VERSION.lower() or 'rc' in VERSION.lower() or '-' in VERSION.lower():
         VERSION_IS = VERSION.replace('alpha', '').replace('beta', '').replace('rc', '').replace('-', '.').replace('..',
