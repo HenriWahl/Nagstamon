@@ -61,6 +61,8 @@ else:
     # also no need for filename suffix
     FILENAME_SUFFIX = ''
 
+# when run by GitHub Actions with PFX and password as environment variables
+# signing will be done
 SIGNING = False
 if 'WIN_SIGNING_CERT_BASE64' in environ \
     and 'WIN_SIGNING_PASSWORD' in environ:
@@ -71,11 +73,6 @@ def winmain():
     """
         execute steps necessary for compilation of Windows binaries and setup.exe
     """
-
-
-    if SIGNING:
-        subprocess.call(['powershell', './windows/code_signing.ps1', 'build/Nagstamon/Nagstamon.exe'])
-        sys.exit(0)
 
     # InnoSetup does not like VersionInfoVersion with letters, only 0.0.0.0 schemed numbers
     if 'alpha' in VERSION.lower() or 'beta' in VERSION.lower() or 'rc' in VERSION.lower() or '-' in VERSION.lower():
@@ -122,6 +119,10 @@ def winmain():
                      '..\\nagstamon.py'],
                     shell=True)
 
+    if SIGNING:
+        # environment variables will be used by powershell script for signing
+        subprocess.call(['powershell', './windows/code_signing.ps1', 'build/Nagstamon/Nagstamon.exe'])
+
     # rename output
     os.rename(DIR_BUILD_EXE, DIR_BUILD_NAGSTAMON)
 
@@ -157,6 +158,9 @@ def winmain():
                          r'/O{0}{1}dist'.format(CURRENT_DIR, os.sep),
                          r'{0}{1}windows{1}nagstamon.iss'.format(CURRENT_DIR, os.sep)], shell=True)
 
+    if SIGNING:
+        # environment variables will be used by powershell script for signing
+        subprocess.call(['powershell', '../windows/code_signing.ps1', '*.exe'])
 
 def macmain():
     """

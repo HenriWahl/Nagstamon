@@ -208,6 +208,8 @@ jobs:
       - run: cd ${{ github.workspace }}/build; python build.py
         env:
           PYTHONPATH: ${{ github.workspace }}
+          WIN_SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
+          WIN_SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
       - uses: actions/upload-artifact@v3
         with:
           path: |
@@ -232,6 +234,8 @@ jobs:
       - run: cd ${{ github.workspace }}/build; python build.py
         env:
           PYTHONPATH: ${{ github.workspace }}
+          WIN_SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
+          WIN_SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
       - uses: actions/upload-artifact@v3
         with:
           path: |
@@ -256,6 +260,8 @@ jobs:
       - run: cd ${{ github.workspace }}/build; python build.py debug
         env:
           PYTHONPATH: ${{ github.workspace }}
+          WIN_SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
+          WIN_SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
       - uses: actions/upload-artifact@v3
         with:
           path: |
