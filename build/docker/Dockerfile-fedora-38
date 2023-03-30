@@ -1,4 +1,4 @@
-FROM fedora:34
+FROM fedora:38
 LABEL maintainer=henri@nagstamon.de
 
 RUN dnf -y install desktop-file-utils \
@@ -11,17 +11,14 @@ RUN dnf -y install desktop-file-utils \
                    python3-keyring \
                    python3-lxml \
                    python3-psutil \
-                   python3-qt5 \
-                   python3-qt5-devel \
+                   python3-pyqt6 \
+                   python3-pyqt6-devel \
                    python3-requests \
                    python3-requests-kerberos \
                    python3-SecretStorage \
-                   qt5-qtsvg \
-                   qt5-qtmultimedia \
+                   qt6-qtsvg \
+                   qt6-qtmultimedia \
                    rpm-build
 
-# ugly workaround for legacy Qt5 on Fedora < 36
 CMD cd /nagstamon/build && \
-    sed -i s/pyqt6/pyqt5/g redhat/nagstamon.spec && \
-    sed -i s/qt6/qt5/g redhat/nagstamon.spec && \
     /usr/bin/python3 build.py
