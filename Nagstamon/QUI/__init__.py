@@ -4586,6 +4586,8 @@ class Dialog(QObject):
         # reset window if only needs smaller screen estate
         self.window.adjustSize()
         self.window.show()
+        # make sure dialog window will be the topmost
+        self.window.raise_()
 
     def toggle_visibility(self, checkbox, widgets=[]):
         """
