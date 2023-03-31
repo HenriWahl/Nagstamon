@@ -97,7 +97,6 @@ if OS not in OS_NON_LINUX:
 # make icon status in macOS dock accessible via NSApp, used by set_macos_dock_icon_visible()
 if OS == OS_MACOS:
     from AppKit import (NSApp,
-                        NSBundle,
                         NSApplicationPresentationDefault,
                         NSApplicationPresentationHideDock)
 
@@ -4588,6 +4587,11 @@ class Dialog(QObject):
         self.window.show()
         # make sure dialog window will be the topmost
         self.window.raise_()
+        # hidden dock icon on macOS needs extra activation
+        if OS == OS_MACOS and \
+                conf.icon_in_systray and \
+                conf.hide_macos_dock_icon:
+            NSApp.activateIgnoringOtherApps_(True)
 
     def toggle_visibility(self, checkbox, widgets=[]):
         """
