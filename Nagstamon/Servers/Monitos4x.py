@@ -164,8 +164,6 @@ class Monitos4xServer(GenericServer):
 
         # hosts
         try:
-            form_data = dict()
-
             page = 1
 
             # loop trough all api pages
@@ -300,8 +298,6 @@ class Monitos4xServer(GenericServer):
 
         # services
         try:
-            form_data = dict()
-
             page = 1
 
             # loop trough all api pages
@@ -442,19 +438,17 @@ class Monitos4xServer(GenericServer):
             :param host: String - Host name
             :param service: String - Service name
         """
-        form_data = dict()
-
-        type = 'host'
+        type_ = 'host'
         if service == '':
             uuid = self.hosts[host].uuid
         else:
-            type = 'serviceinstance'
+            type_ = 'serviceinstance'
             uuid = self.hosts[host].services[service].uuid
 
         if self.use_autologin is True:
-            self.session.post('{0}/api/{1}/{2}/reschedule?authtoken={3}'.format(self.monitor_url, type ,uuid, self.autologin_key))
+            self.session.post('{0}/api/{1}/{2}/reschedule?authtoken={3}'.format(self.monitor_url, type_, uuid, self.autologin_key))
         else:
-            self.session.post('{0}/api/{1}/{2}/reschedule'.format(self.monitor_url, type ,uuid))
+            self.session.post('{0}/api/{1}/{2}/reschedule'.format(self.monitor_url, type_, uuid))
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None):
         """
@@ -469,9 +463,7 @@ class Monitos4xServer(GenericServer):
             :param persistent: Bool - Persistent comment
             :param all_services: Optional[Array] - List of all services (filled only if 'Acknowledge all services on host' is set)
         """
-        form_data = dict()
-
-        type = 'host'
+        type_ = 'host'
 
         if all_services:  # Host & all Services
             uuid = self.hosts[host].uuid
@@ -485,15 +477,15 @@ class Monitos4xServer(GenericServer):
                  'sticky': int(sticky), 'includeServices': 0})
         else:  # Service
             uuid = self.hosts[host].services[service].uuid
-            type = 'serviceinstance'
+            type_ = 'serviceinstance'
             form_data = json.dumps(
                 {'comment': comment, 'notify': int(notify),
                  'persistent': int(persistent), 'sticky': int(sticky)})
 
         if self.use_autologin is True:
-            self.session.post('{0}/api/{1}/{2}/acknowledge?authtoken={3}'.format(self.monitor_url, type ,uuid, self.autologin_key), data=form_data)
+            self.session.post('{0}/api/{1}/{2}/acknowledge?authtoken={3}'.format(self.monitor_url, type_ ,uuid, self.autologin_key), data=form_data)
         else:
-            self.session.post('{0}/api/{1}/{2}/acknowledge'.format(self.monitor_url, type ,uuid), data=form_data)
+            self.session.post('{0}/api/{1}/{2}/acknowledge'.format(self.monitor_url, type_,uuid), data=form_data)
 
     def _set_submit_check_result(self, host, service, state, comment, check_output, performance_data):
         """
@@ -508,9 +500,7 @@ class Monitos4xServer(GenericServer):
         """
         state = state.upper()
 
-        form_data = dict()
-
-        type = 'host'
+        type_ = 'host'
 
         if service == '':  # Host
             uuid = self.hosts[host].uuid
@@ -534,7 +524,7 @@ class Monitos4xServer(GenericServer):
                 log.info('Setting UNREACHABLE to CRITICAL')
                 state = 'CRITICAL'
 
-            type = 'serviceinstance'
+            type_ = 'serviceinstance'
             uuid = self.hosts[host].services[service].uuid
 
             state_number = self.STATES_MAPPING_REV['services'][state]
@@ -547,9 +537,9 @@ class Monitos4xServer(GenericServer):
                     {'exit_status': state_number, 'plugin_output': check_output, 'performance_data': performance_data})
 
         if self.use_autologin is True:
-            self.session.post('{0}/api/{1}/{2}/checkresult?authtoken={3}'.format(self.monitor_url, type ,uuid, self.autologin_key), data=form_data)
+            self.session.post('{0}/api/{1}/{2}/checkresult?authtoken={3}'.format(self.monitor_url, type_ ,uuid, self.autologin_key), data=form_data)
         else:
-            self.session.post('{0}/api/{1}/{2}/checkresult'.format(self.monitor_url, type ,uuid), data=form_data)
+            self.session.post('{0}/api/{1}/{2}/checkresult'.format(self.monitor_url, type_ ,uuid), data=form_data)
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
         """
@@ -565,13 +555,11 @@ class Monitos4xServer(GenericServer):
             :param hours: Integer - Flexible Downtime
             :param minutes: Integer - Flexible Downtime
         """
-        form_data = dict()
-
         if service == '':
-            type = 'sv_host'
+            type_ = 'sv_host'
             uuid = self.hosts[host].uuid
         else:
-            type = 'sv_service_status'
+            type_ = 'sv_service_status'
             uuid = self.hosts[host].services[service].uuid
 
         # Format start_time and end_time from user-friendly format to timestamp
@@ -589,13 +577,13 @@ class Monitos4xServer(GenericServer):
             form_data = json.dumps({'start': start_time, 'end': end_time, 'comment': comment,
                                     'is_recurring': 'FALSE', 'includeServices': 'TRUE',
                                     'includeChildren': 'FALSE', 'schedule_now': 'FALSE',
-                                    'id': uuid, 'type': type})
+                                    'id': uuid, 'type': type_})
 
         else:
             form_data = json.dumps({'start': start_time, 'end': end_time, 'comment': comment,
                                     'is_recurring': 'FALSE', 'includeServices': 'TRUE',
                                     'includeChildren': 'FALSE', 'schedule_now': 'FALSE',
-                                    'id': uuid, 'duration': duration, 'type': type})
+                                    'id': uuid, 'duration': duration, 'type': type_})
 
         if self.use_autologin is True:
             self.session.post('{0}/api/downtime?authtoken={1}'.format(self.monitor_url, self.autologin_key), data=form_data)
