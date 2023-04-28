@@ -1,3 +1,21 @@
+nagstamon (3.11.20230428) unstable; urgency=low
+  * New upstream
+    - added option to hide dock icon on macOS when using systray
+    - added fallback GSSAPI usage when no Kerberos is available
+    - added usage of local certificate store on Windows
+    - added codesigning for Windows builds
+    - added support for RHEL9
+    - added Windows debugging version
+    - fixed Wayland support without using EWMH
+    - fixes for Icinga
+    - fixes for Zabbix
+    - fixes for Centreon
+    - fixes for Opsview
+    - fixes for Monitos
+    - improved build pipeline on GitHub Actions
+
+ -- Henri Wahl <henri@nagstamon.de> Fri, Apr 28 2023 08:00:00 +0100
+
 nagstamon (3.10.1) stable; urgency=low
   * New upstream
     - fixes Centreon flapping bug

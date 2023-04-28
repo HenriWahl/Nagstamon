@@ -6837,17 +6837,18 @@ class Dialog_About(Dialog):
     def __init__(self, dialog):
         Dialog.__init__(self, dialog)
         # first add the logo on top - no idea how to achive in Qt Designer
-        logo = QSvgWidget('{0}{1}nagstamon.svg'.format(RESOURCES, os.sep))
+        logo = QSvgWidget(f'{RESOURCES}{os.sep}nagstamon.svg')
         logo.setFixedSize(100, 100)
         self.window.vbox_about.insertWidget(1, logo, 0, Qt.AlignmentFlag.AlignHCenter)
         # update version information
-        self.window.label_nagstamon.setText('<h1>{0} {1}</h1>'.format(AppInfo.NAME, AppInfo.VERSION))
+        self.window.label_nagstamon.setText(f'<h1>{AppInfo.NAME} {AppInfo.VERSION}</h1>')
         self.window.label_nagstamon_long.setText('<h2>Nagios¹ status monitor for your desktop</2>')
         self.window.label_copyright.setText(AppInfo.COPYRIGHT)
-        self.window.label_website.setText('<a href={0}>{0}</a>'.format(AppInfo.WEBSITE))
+        self.window.label_website.setText(f'<a href={AppInfo.WEBSITE}>{AppInfo.WEBSITE}</a>')
         self.window.label_website.setOpenExternalLinks(True)
         self.window.label_versions.setText(f'Python: {platform.python_version()}, Qt: {QT_VERSION_STR}')
-        self.window.label_footnote.setText('<small>¹ plus Checkmk, Op5, Icinga, Centreon and more</small>')
+        self.window.label_contribution.setText(f'<a href={AppInfo.WEBSITE}/contribution>Contribution</a> | <a href=https://paypal.me/nagstamon>Donation</a>')
+        self.window.label_footnote.setText('<small>¹ meanwhile way more...</small>')
 
         # fill in license information
         license_file = open('{0}{1}LICENSE'.format(RESOURCES, os.sep))
@@ -6857,7 +6858,7 @@ class Dialog_About(Dialog):
         self.window.textedit_license.setReadOnly(True)
 
         # fill in credits information
-        credits_file = open('{0}{1}CREDITS'.format(RESOURCES, os.sep), encoding='utf-8')
+        credits_file = open(f'{RESOURCES}{os.sep}CREDITS', encoding='utf-8')
         credits = credits_file.read()
         credits_file.close()
         self.window.textedit_credits.setText(credits)
