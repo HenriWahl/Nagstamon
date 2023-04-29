@@ -236,14 +236,14 @@ class CentreonServer(GenericServer):
         '''
         try:
             # Aulogin with key, BROWSER_URLS needs the key
-            if self.use_autologin == True:
+            if self.use_autologin:
                 auth = '&autologin=1&useralias=' + self.username + '&token=' + self.autologin_key
                 self.BROWSER_URLS= { 'monitor': self.BROWSER_URLS['monitor'] + auth,\
                                     'hosts': self.BROWSER_URLS['hosts'] + auth,\
                                     'services': self.BROWSER_URLS['services'] + auth,\
                                     'history': self.BROWSER_URLS['history'] + auth}
                 raw = self.FetchURL(self.monitor_cgi_url + '/index.php?p=101&autologin=1&useralias=' + self.username + '&token=' + self.autologin_key, giveback='raw')
-                if conf.debug_mode == True:
+                if conf.debug_mode:
                     self.Debug(server=self.get_name(), debug='Autologin : ' + self.username + ' : ' + self.autologin_key)
                 # Gathering of the token who will be used to interact with Centreon (start with 2.66)
                 if  self.centreon_version >= 2.66 and self.centreon_version < 19.04:
@@ -269,11 +269,11 @@ class CentreonServer(GenericServer):
                     else:
                         login_data = {"useralias" : self.username, "password" : self.password, "submit" : "Login"}
                         raw = self.FetchURL(self.monitor_cgi_url + "/index.php",cgi_data=login_data, giveback="raw")
-                if conf.debug_mode == True:
+                if conf.debug_mode:
                     self.Debug(server=self.get_name(), debug='Password login : ' + self.username + ' : ' + self.password)
 
             sid = self.session.cookies.get('PHPSESSID', '')
-            if conf.debug_mode == True:
+            if conf.debug_mode:
                 self.Debug(server=self.get_name(), debug='SID : ' + sid)
                 if  self.centreon_version >= 2.66 and self.centreon_version < 19.04:
                     self.Debug(server=self.get_name(), debug='Centreon Token : ' + self.centreon_token)
@@ -364,12 +364,12 @@ class CentreonServer(GenericServer):
             ip = str(xmlobj.l.a.text)
             # when connection by DNS is not configured do it by IP
             try:
-                if conf.connect_by_dns == True:
+                if conf.connect_by_dns:
                    # try to get DNS name for ip (reverse DNS), if not available use ip
                     try:
                         address = socket.gethostbyaddr(ip)[0]
                     except:
-                        if conf.debug_mode == True:
+                        if conf.debug_mode:
                             self.Debug(server=self.get_name(), debug='Unable to do a reverse DNS lookup on IP: ' + ip)
                         address = ip
                 else:
@@ -385,7 +385,7 @@ class CentreonServer(GenericServer):
         del xmlobj
 
         # print IP in debug mode
-        if conf.debug_mode == True:
+        if conf.debug_mode:
             self.Debug(server=self.get_name(), debug='IP of %s:' % (host) + ' ' + address)
 
         # give back host or ip
@@ -408,23 +408,23 @@ class CentreonServer(GenericServer):
             if error == '':
                 if re.search('var _addrXML.*xml\/ndo\/host', raw):
                   self.XML_PATH = 'xml/ndo'
-                  if conf.debug_mode == True:
+                  if conf.debug_mode:
                       self.Debug(server=self.get_name(), debug='Detected broker : NDO')
                 elif re.search('var _addrXML.*xml\/broker\/host', raw):
                     self.XML_PATH = 'xml/broker'
-                    if conf.debug_mode == True:
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(), debug='Detected broker : C. Broker')
                 else:
-                    if conf.debug_mode == True:
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(), debug='Could not detect the broker for Centeron 2.[3-6]. Using Centreon Broker')
                     self.XML_PATH = 'xml/broker'
                 del raw
             else:
-                if conf.debug_mode == True:
+                if conf.debug_mode:
                     self.Debug(server=self.get_name(), debug='Unable to fetch the main page to detect the broker : ' + error)
             del result, error
         else:
-            if conf.debug_mode == True:
+            if conf.debug_mode:
                 self.Debug(server=self.get_name(), debug='Only Centreon Broker is supported in Centeon >= 2.7 -> XML_PATH='+ self.XML_PATH)
 
 
@@ -488,7 +488,7 @@ class CentreonServer(GenericServer):
         # 18.10 and beyond
         elif self.centreon_version >= 18.10:
             self.urls_centreon = urls_centreon_18_10
-        if conf.debug_mode == True:
+        if conf.debug_mode:
             self.Debug(server=self.get_name(), debug='URLs defined for Centreon %s' % (self.centreon_version))
 
 
@@ -510,7 +510,7 @@ class CentreonServer(GenericServer):
             host_id = raw.partition("var host_id = '")[2].partition("'")[0]
             del raw
         else:
-            if conf.debug_mode == True:
+            if conf.debug_mode:
                 self.Debug(server=self.get_name(), debug='Host ID could not be retrieved.')
 
         # some cleanup
@@ -519,7 +519,7 @@ class CentreonServer(GenericServer):
         # only if host_id is an usable integer return it
         try:
             if int(host_id):
-                if conf.debug_mode == True:
+                if conf.debug_mode:
                     self.Debug(server=self.get_name(), host=host, debug='Host ID is ' + host_id)
                 return host_id
             else:
@@ -545,10 +545,10 @@ class CentreonServer(GenericServer):
             host_id = raw.partition("var host_id = '")[2].partition("'")[0]
             svc_id = raw.partition("var svc_id = '")[2].partition("'")[0]
             del raw
-            if conf.debug_mode == True:
+            if conf.debug_mode:
                 self.Debug(server=self.get_name(), host=host, service=service, debug='- Get host/svc ID : ' + host_id + '/' + svc_id)
         else:
-            if conf.debug_mode == True:
+            if conf.debug_mode:
                 self.Debug(server=self.get_name(), host=host, service=service, debug='- IDs could not be retrieved.')
 
         # some cleanup
@@ -557,7 +557,7 @@ class CentreonServer(GenericServer):
         # only if host_id is an usable integer return it
         try:
             if int(host_id) and int(svc_id):
-                if conf.debug_mode == True:
+                if conf.debug_mode:
                     self.Debug(server=self.get_name(), host=host, service=service, debug='- Host & Service ID are valid (int)')
                 return host_id,svc_id
             else:
@@ -604,19 +604,19 @@ class CentreonServer(GenericServer):
             errors_occured = self.check_for_error(xmlobj, error, status_code)
 
             # if there are errors return them
-            if errors_occured != False:
+            if errors_occured:
                 return(errors_occured)
 
             # Check if the result is not empty
             if len(xmlobj) == 0:
-                if conf.debug_mode == True:
+                if conf.debug_mode:
                     self.Debug(server=self.get_name(), debug='Empty host XML result')
                 return Result(result=None, error="Empty host XML result")
 
             # in case there are no children session ID is expired
             if xmlobj.text.lower() == 'bad session id':
                 del xmlobj
-                if conf.debug_mode == True:
+                if conf.debug_mode:
                     self.Debug(server=self.get_name(), debug='Bad session ID, retrieving new one...')
 
                 # try again...
@@ -625,12 +625,12 @@ class CentreonServer(GenericServer):
                 xmlobj, error, status_code = result.result, result.error, result.status_code
                 errors_occured = self.check_for_error(xmlobj, error, status_code)
                 # if there are errors return them
-                if errors_occured != False:
+                if errors_occured:
                     return(errors_occured)
 
                 # a second time a bad session id should raise an error
                 if xmlobj.text.lower() == 'bad session id':
-                    if conf.debug_mode == True:
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(), debug='Even after renewing session ID, unable to get the XML')
                     return Result(result='ERROR',
                                   error='Bad session ID',
@@ -690,19 +690,19 @@ class CentreonServer(GenericServer):
             # check if any error occured
             errors_occured = self.check_for_error(xmlobj, error, status_code)
             # if there are errors return them
-            if errors_occured != False:
+            if errors_occured:
                 return(errors_occured)
 
             # Check if the result is not empty
             if len(xmlobj) == 0:
-                if conf.debug_mode == True:
+                if conf.debug_mode:
                     self.Debug(server=self.get_name(), debug='Empty service XML result')
                 return Result(result=None, error="Empty service XML result")
 
             # in case there are no children session id is invalid
             if xmlobj.text.lower() == 'bad session id':
                 # debug
-                if conf.debug_mode == True:
+                if conf.debug_mode:
                     self.Debug(server=self.get_name(), debug='Bad session ID, retrieving new one...')
                 # try again...
                 self.SID = self._get_sid().result
@@ -710,7 +710,7 @@ class CentreonServer(GenericServer):
                 xmlobj, error, status_code = result.result, result.error, result.status_code
                 errors_occured = self.check_for_error(xmlobj, error, status_code)
                 # if there are errors return them
-                if errors_occured != False:
+                if errors_occured:
                     return(errors_occured)
 
                 # a second time a bad session id should raise an error
@@ -735,12 +735,12 @@ class CentreonServer(GenericServer):
                 errors_occured = self.check_for_error(xmlobj_meta, error_meta, status_code_meta)
 
                 # if there are errors return them
-                if errors_occured != False:
+                if errors_occured:
                     return(errors_occured)
 
                 # a second time a bad session id should raise an error
                 if xmlobj_meta.text.lower() == 'bad session id':
-                    if conf.debug_mode == True:
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(), debug='Even after renewing session ID, unable to get the XML')
 
                     return Result(result='ERROR',
@@ -801,7 +801,7 @@ class CentreonServer(GenericServer):
                             self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type =\
                             self.HARD_SOFT[self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type]
 
-                        if conf.debug_mode == True:
+                        if conf.debug_mode:
                             self.Debug(server=self.get_name(), debug='Parsing service XML (Host/Service/Status_type) ' + self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].host + '/' + self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].name + '/' + self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].status_type)
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].last_check = str(l.lc.text)
                         self.new_hosts[str(l.hn.text)].services[str(l.sd.text)].duration = str(l.d.text)
@@ -931,7 +931,7 @@ class CentreonServer(GenericServer):
         # decision about host or service - they have different URLs
             #  Meta
             if host == '_Module_Meta':
-                if conf.debug_mode == True:
+                if conf.debug_mode:
                     self.Debug(server=self.get_name(), debug='Recheck on a Meta service, more work to be done')
                 m =  re.search(r'^.+ \((?P<rsd>.+)\)$', service)
                 if m:
@@ -1078,7 +1078,7 @@ class CentreonServer(GenericServer):
 
 
     def _check_session(self):
-        if conf.debug_mode == True:
+        if conf.debug_mode:
             self.Debug(server=self.get_name(), debug='Checking session status')
         if 'url_centreon' not in self.__dict__:
             self.init_config()
@@ -1088,23 +1088,23 @@ class CentreonServer(GenericServer):
                     result = self.FetchURL(self.urls_centreon['keepAlive'], giveback='raw')
                     self.raw, self.error, self.status_code = result.result, result.error, result.status_code
                     # Return 200 & null a session is open
-                    if conf.debug_mode == True:
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(), debug='Session status : ' + self.raw + ', http code : ' + str(self.status_code))
                     # 401 if no valid session is present
                     if self.status_code == 401:
                         self.SID = self._get_sid().result
-                        if conf.debug_mode == True:
+                        if conf.debug_mode:
                             self.Debug(server=self.get_name(), debug='Session renewed')
 
                 else:
                     result = self.FetchURL(self.urls_centreon['autologoutXMLresponse'], giveback='xml')
                     xmlobj, error, status_code = result.result, result.error, result.status_code
                     self.session_state = xmlobj.find("state").text.lower()
-                    if conf.debug_mode == True:
+                    if conf.debug_mode:
                         self.Debug(server=self.get_name(), debug='Session status : ' + self.session_state)
                     if self.session_state == "nok":
                         self.SID = self._get_sid().result
-                        if conf.debug_mode == True:
+                        if conf.debug_mode:
                             self.Debug(server=self.get_name(), debug='Session renewed')
             except:
                 import traceback

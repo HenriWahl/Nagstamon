@@ -52,7 +52,7 @@ class ZabbixLightApi():
             "id": self.zbx_req_id
         }
 
-        if no_auth == False:
+        if not no_auth:
             zabbix_rpc_obj["auth"] = self.zbx_auth
 
         self.zbx_req_id += 1

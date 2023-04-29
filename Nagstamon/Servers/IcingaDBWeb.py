@@ -191,7 +191,7 @@ class IcingaDBWebServer(GenericServer):
                     h = dict(host.items())
 
                     # host
-                    if self.use_display_name_host == False:
+                    if not self.use_display_name_host:
                         # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might
                         # better be name instead of display_name
                         host_name = h['name']
@@ -272,7 +272,7 @@ class IcingaDBWebServer(GenericServer):
                     # make dict of tuples for better reading
                     s = dict(service.items())
 
-                    if self.use_display_name_host == False:
+                    if not self.use_display_name_host:
                         # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might
                         # better be name instead of display_name
                         host_name = s['host']['name']

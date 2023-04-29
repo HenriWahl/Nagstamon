@@ -167,7 +167,7 @@ class CentreonServer(GenericServer):
             # ID of the user is needed by some requests
             user_id = data["contact"]["id"]
 
-            if conf.debug_mode == True:
+            if conf.debug_mode:
                 self.Debug(server='[' + self.get_name() + ']',
                            debug='API login : ' + self.username + ' / ' + self.password + ' > Token : ' + token + ' > User ID : ' + str(
                                user_id))
@@ -200,7 +200,7 @@ class CentreonServer(GenericServer):
 
             fqdn = str(data["result"][0]["fqdn"])
 
-            if conf.debug_mode == True:
+            if conf.debug_mode:
                 self.Debug(server='[' + self.get_name() + ']',
                            debug='Get Host FQDN or address : ' + host + " / " + fqdn)
 
@@ -235,7 +235,7 @@ class CentreonServer(GenericServer):
 
                 host_id = data["result"][0]["id"]
 
-                if conf.debug_mode == True:
+                if conf.debug_mode:
                     self.Debug(server='[' + self.get_name() + ']', debug='Get Host ID : ' + host + " / " + str(host_id))
                 return host_id
 
@@ -273,7 +273,7 @@ class CentreonServer(GenericServer):
                     host_id = data["result"][0]["parent"]["id"]
                 service_id = data["result"][0]["id"]
 
-                if conf.debug_mode == True:
+                if conf.debug_mode:
                     self.Debug(server='[' + self.get_name() + ']',
                                debug='Get Host / Service ID : ' + str(host_id) + " / " + str(service_id))
                 return host_id, service_id
@@ -719,11 +719,11 @@ class CentreonServer(GenericServer):
             return Result(result=result, error=error)
 
     def check_session(self):
-        if conf.debug_mode == True:
+        if conf.debug_mode:
             self.Debug(server='[' + self.get_name() + ']', debug='Checking session status')
 
         try:
-            if conf.debug_mode == True:
+            if conf.debug_mode:
                 self.Debug(server='[' + self.get_name() + ']',
                            debug='Check-session, the token expire if not been used for more than one hour. Current Token = ' + str(
                                self.token))
@@ -742,7 +742,7 @@ class CentreonServer(GenericServer):
 
             if result.status_code in ressources_response_list:
                 self.token = self.get_token().result
-                if conf.debug_mode == True:
+                if conf.debug_mode:
                     self.Debug(server='[' + self.get_name() + ']', debug='Check-session, session renewed')
                 result = self.FetchURL(self.urls_centreon['resources'] + '?' + urllib.parse.urlencode(cgi_data),
                                        giveback="raw")
