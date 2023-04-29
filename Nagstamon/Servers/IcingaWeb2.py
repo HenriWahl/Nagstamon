@@ -189,7 +189,7 @@ class IcingaWeb2Server(GenericServer):
                     h = dict(host.items())
 
                     # host
-                    if self.use_display_name_host == False:
+                    if not self.use_display_name_host:
                         # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might
                         # better be host_name instead of host_display_name
                         # legacy Icinga adjustments
@@ -269,7 +269,7 @@ class IcingaWeb2Server(GenericServer):
                     # make dict of tuples for better reading
                     s = dict(service.items())
 
-                    if self.use_display_name_host == False:
+                    if not self.use_display_name_host:
                         # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might
                         # better be host_name instead of host_display_name
                         # legacy Icinga adjustments

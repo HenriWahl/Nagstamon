@@ -123,13 +123,13 @@ class IcingaServer(GenericServer):
                         # hosts (up or down or unreachable)
                         self.cgiurl_hosts = {'hard': self.monitor_cgi_url + '/status.cgi?style=hostdetail&hoststatustypes=12&hostprops=262144', \
                                              'soft': self.monitor_cgi_url + '/status.cgi?style=hostdetail&hoststatustypes=12&hostprops=524288'}
-                    if self.json == True:
+                    if self.json:
                         for status_type in 'hard', 'soft':
                            self.cgiurl_services[status_type] += '&jsonoutput'
                            self.cgiurl_hosts[status_type] += '&jsonoutput'
 
                 # get status depending on JSONablility
-                if self.json == True:
+                if self.json:
                     return(self._get_status_JSON())
                 else:
                     return(self._get_status_HTML())
@@ -167,7 +167,7 @@ class IcingaServer(GenericServer):
                 # check if any error occured
                 errors_occured = self.check_for_error(jsonraw, error, status_code)
                 # if there are errors return them
-                if errors_occured != False:
+                if errors_occured:
                     return(errors_occured)    
                 
                 jsondict = json.loads(jsonraw)
@@ -178,7 +178,7 @@ class IcingaServer(GenericServer):
                     h = dict(host.items())
 
                     # host
-                    if self.use_display_name_host == False:
+                    if not self.use_display_name_host:
                         # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might
                         # better be host_name instead of host_display_name
                         # legacy Icinga adjustments
@@ -231,7 +231,7 @@ class IcingaServer(GenericServer):
                 # check if any error occured
                 errors_occured = self.check_for_error(jsonraw, error, status_code)
                 # if there are errors return them
-                if errors_occured != False:
+                if errors_occured:
                     return(errors_occured)    
 
                 jsondict = json.loads(jsonraw)
@@ -241,7 +241,7 @@ class IcingaServer(GenericServer):
                     # make dict of tuples for better reading
                     s = dict(service.items())
 
-                    if self.use_display_name_host == False:
+                    if not self.use_display_name_host:
                         # according to http://sourceforge.net/p/nagstamon/bugs/83/ it might
                         # better be host_name instead of host_display_name
                         # legacy Icinga adjustments
@@ -266,7 +266,7 @@ class IcingaServer(GenericServer):
                         elif 'host' in s:
                             self.new_hosts[host_name].real_name = s['host']
 
-                    if self.use_display_name_host == False:
+                    if not self.use_display_name_host:
                         # legacy Icinga adjustments
                         if 'service_description' in s: service_name = s['service_description']
                         elif 'description' in s: service_name = s['description']
@@ -339,7 +339,7 @@ class IcingaServer(GenericServer):
                 # check if any error occured
                 errors_occured = self.check_for_error(htobj, error, status_code)
                 # if there are errors return them
-                if errors_occured != False:
+                if errors_occured:
                     return(errors_occured)    
 
                 # put a copy of a part of htobj into table to be able to delete htobj
@@ -468,7 +468,7 @@ class IcingaServer(GenericServer):
                 # check if any error occured
                 errors_occured = self.check_for_error(htobj, error, status_code)
                 # if there are errors return them
-                if errors_occured != False:
+                if errors_occured:
                     return(errors_occured)    
                 
                 table = htobj('table', {'class': 'status'})[0]
@@ -670,11 +670,11 @@ class IcingaServer(GenericServer):
         cgi_data['com_author'] = author
         cgi_data['com_data'] = comment
         cgi_data['btnSubmit'] = 'Commit'
-        if notify == True:
+        if notify:
             cgi_data['send_notification'] = '1'
-        if persistent == True:
+        if persistent:
             cgi_data['persistent'] = 'on'
-        if sticky == True:
+        if sticky:
             cgi_data['sticky_ack'] = '1'
 
         self.FetchURL(url, giveback='raw', cgi_data=cgi_data)

@@ -301,7 +301,7 @@ class MultisiteServer(GenericServer):
             return Result(result=result, error=error)
 
         # Add filters to the url which should only be applied to the service request
-        if conf.filter_services_on_unreachable_hosts == True:
+        if conf.filter_services_on_unreachable_hosts:
             # thanks to https://github.com/HenriWahl/Nagstamon/issues/510
             url_params += '&hst0=On&hst1=On'
 
@@ -407,7 +407,7 @@ class MultisiteServer(GenericServer):
         else:
             url = self.urls['human_service'] + urllib.parse.urlencode({'x': 'site='+self.hosts[host].site+'&host='+host+'&service='+service}).replace('x=', '%26')
 
-        if conf.debug_mode == True:
+        if conf.debug_mode:
             self.Debug(server=self.get_name(), host=host, service=service, debug='Open host/service monitor web page ' + url)
         webbrowser_open(url)
 
@@ -428,10 +428,10 @@ class MultisiteServer(GenericServer):
             if host in self.hosts:
                 ip = self.hosts[host].address
 
-            if conf.debug_mode == True:
+            if conf.debug_mode:
                 self.Debug(server=self.get_name(), host=host, debug ='IP of %s:' % (host) + ' ' + ip)
 
-            if conf.connect_by_dns == True:
+            if conf.connect_by_dns:
                 try:
                     address = socket.gethostbyaddr(ip)[0]
                 except:
@@ -469,7 +469,7 @@ class MultisiteServer(GenericServer):
         transid = self._get_transid(host, service)
         url = url.replace('?_transid=-1&', '?_transid=%s&' % (transid))
 
-        if conf.debug_mode == True:
+        if conf.debug_mode:
             self.Debug(server=self.get_name(), host=host, debug ='Submitting action: ' + url + '&' + urllib.parse.urlencode(params))
 
         # apply action
@@ -552,7 +552,7 @@ class MultisiteServer(GenericServer):
         params['_resched_checks'] = 'Reschedule active checks'
         url = self.urls['api_svcprob_act']
 
-        if conf.debug_mode == True:
+        if conf.debug_mode:
             self.Debug(server=self.get_name(), debug ='Rechecking all action: ' + url + '&' + urllib.parse.urlencode(params))
 
         result = self.FetchURL(url + '&' + urllib.parse.urlencode(params), giveback = 'raw')

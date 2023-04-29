@@ -117,7 +117,7 @@ class ThrukServer(GenericServer):
 
         if self.use_autologin is True:
             req = self.session.post(self.monitor_cgi_url + '/user.cgi?', data={}, headers={'X-Thruk-Auth-Key':self.autologin_key.strip()})
-            if conf.debug_mode == True:
+            if conf.debug_mode:
                 self.Debug(server=self.get_name(), debug='Auto Login status: ' + req.url + ' http code : ' + str(req.status_code))
             if req.status_code != 200:
                 self.refresh_authentication = True
@@ -129,7 +129,7 @@ class ThrukServer(GenericServer):
                             data={'login': self.get_username(),
                                     'password': self.get_password(),
                                     'submit': 'Login'})
-            if conf.debug_mode == True:
+            if conf.debug_mode:
                 self.Debug(server=self.get_name(), debug='Login status: ' + req.url + ' http code : ' + str(req.status_code))
             if req.status_code != 200:
                 self.refresh_authentication = True
@@ -279,7 +279,7 @@ class ThrukServer(GenericServer):
             # check if any error occured
             errors_occured = self.check_for_error(jsonraw, error, status_code)
             # if there are errors return them
-            if errors_occured != False:
+            if errors_occured:
                 return(errors_occured)
 
             # in case basic auth did not work try form login cookie based login
@@ -327,7 +327,7 @@ class ThrukServer(GenericServer):
             # check if any error occured
             errors_occured = self.check_for_error(jsonraw, error, status_code)
             # if there are errors return them
-            if errors_occured != False:
+            if errors_occured:
                 return(errors_occured)
 
             # in case basic auth did not work try form login cookie based login
@@ -347,7 +347,7 @@ class ThrukServer(GenericServer):
                         self.new_hosts[s["host_name"]].server = self.name
                         self.new_hosts[s["host_name"]].status = "UP"
 
-                    if self.use_display_name_service == True:
+                    if self.use_display_name_service:
                         entry = s["display_name"]
                     else:
                         entry = s["description"]

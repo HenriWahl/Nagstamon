@@ -185,7 +185,7 @@ class ZabbixServer(GenericServer):
                 # https://github.com/HenriWahl/Nagstamon/issues/826 Zabbix 5.0 may have an empty list for
                 # the 'lastEvent' key if the trigger has no associated events
                 for service in services:
-                    if service['lastEvent'] == []:
+                    if not service['lastEvent']:
                         service['lastEvent'] = {
                             'eventid': -1,
                             'acknowledged': '0',

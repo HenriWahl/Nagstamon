@@ -244,8 +244,8 @@ class OpsviewServer(GenericServer):
             # check if any error occured
             errors_occured = self.check_for_error(data, error, status_code)
             # if there are errors return them
-            if errors_occured != False:
-                return(errors_occured)    
+            if errors_occured:
+                return errors_occured
                 
             if conf.debug_mode:
                 self.Debug(server=self.get_name(), debug="Fetched JSON: " + pprint.pformat(data))
