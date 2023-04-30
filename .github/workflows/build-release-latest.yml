@@ -294,12 +294,12 @@ jobs:
       # create deb repo via Debian build container
       - run: |
           /usr/bin/docker run --rm \
-          -v ${{ github.workspace }}:/nagstamon \
+          -v ${{ github.workspace }}:/workspace \
           -v $PWD/${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}:/repo ${{ env.cr_image }}-${{ env.family }} \
-          /bin/sh -c "cd /nagstamon && \
+          /bin/sh -c "cd /workspace && \
                       gpg --import signing_key.asc && \
+                      cp -r artifact/*.deb nagstamon-jekyll/docs/repo/{{ env.family }}/{{ env.release }} && \
                       cd nagstamon-jekyll/docs/repo/{{ env.family }}/{{ env.release }}
-                      cp -r artifact/*.deb . && \
                       dpkg-scanpackages . > Packages && \
                       gzip -k -f Packages && \
                       apt-ftparchive release . > Release && \
