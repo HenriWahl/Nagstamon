@@ -289,13 +289,13 @@ jobs:
       - run: chmod -R go-rwx ~/.ssh
       # get and prepare nagstamon-jekyll
       - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
-      - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.dist }}/{{ env.release }}
-      - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.dist }}/{{ env.release }}
+      - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.dist }}/${{ env.release }}
+      - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.dist }}/${{ env.release }}
       # create deb repo via Debian build container
       - run: |
           /usr/bin/docker run --rm \
           -v ${{ github.workspace }}:/nagstamon \
-          -v $PWD/${{ env.repo_dir }}/${{ env.family }}/{{ env.release }}:/repo ${{ env.cr_image }}-${{ env.family }} \
+          -v $PWD/${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}:/repo ${{ env.cr_image }}-${{ env.family }} \
           /bin/sh -c "cd /nagstamon && \
                       gpg --import signing_key.asc && \
                       cd nagstamon-jekyll/docs/repo/{{ env.family }}/{{ env.release }}
