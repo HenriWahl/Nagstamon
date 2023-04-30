@@ -269,6 +269,41 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
+# borrowed from dhcpy6d for testing
+  repo-debian:
+    runs-on: ubuntu-latest
+    needs: [debian]
+    env:
+      family: debian
+      release: latest
+    steps:
+      - uses: actions/checkout@v2
+      # get binaries created by other jobs
+      - uses: actions/download-artifact@v2
+
+      # make entrypoints executable
+      - run: chmod +x build/entrypoint-*.sh
+      # get secret signing key
+      - run: echo "${{ secrets.PACKAGE_SIGNING_KEY }}" >  signing_key.asc
+      # organize SSH deploy key for nagstamon-jekyll repo
+      - run: mkdir ~/.ssh
+      - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
+      - run: chmod -R go-rwx ~/.ssh
+      # get and prepare nagstamon-jekyll
+      - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
+      - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.dist }}/{{ env.release }}
+      - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.dist }}/{{ env.release }}
+      # execute container with matching entrypoint
+      - run: |
+          /usr/bin/docker run --volume ${{ github.workspace }}:/dhcpy6d \
+                              --volume ${{ github.workspace }}/build/entrypoint-${{ github.job }}.sh:/entrypoint.sh \
+                              --entrypoint /entrypoint.sh \
+                              --env RELEASE=${{ env.release }} \
+                              ${{ github.job }}
+      # commit and push new binaries to dhcpyd-jekyll
+      - run: git config --global user.email "repo@dnagstamon.de" && git config --global user.name "Nagstamon Repository"
+      - run: cd ${{ env.repo_dir }} && git add . && git commit -am "new ${{ env.release }} repo ${{ env.family }}" && git push
+
   repo-rpm-fedora:
     runs-on: ubuntu-latest
     # if not all are ready there might be trouble when downloading artifacts
