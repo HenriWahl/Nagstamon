@@ -298,8 +298,8 @@ jobs:
           -v $PWD/${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}:/repo ${{ env.cr_image }}-${{ env.family }} \
           /bin/sh -c "cd /workspace && \
                       gpg --import signing_key.asc && \
-                      cp -r artifact/*.deb nagstamon-jekyll/docs/repo/{{ env.family }}/{{ env.release }} && \
-                      cd nagstamon-jekyll/docs/repo/{{ env.family }}/{{ env.release }}
+                      cp -r artifact/*.deb nagstamon-jekyll/docs/repo/${{ env.family }}/${{ env.release }} && \
+                      cd nagstamon-jekyll/docs/repo/${{ env.family }}/${{ env.release }}
                       dpkg-scanpackages . > Packages && \
                       gzip -k -f Packages && \
                       apt-ftparchive release . > Release && \
