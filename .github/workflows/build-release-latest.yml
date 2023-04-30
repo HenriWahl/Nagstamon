@@ -281,9 +281,6 @@ jobs:
       - uses: actions/checkout@v2
       # get binaries created by other jobs
       - uses: actions/download-artifact@v2
-
-      # make entrypoints executable
-      - run: chmod +x build/entrypoint-*.sh
       # get secret signing key
       - run: echo "${{ secrets.PACKAGE_SIGNING_KEY }}" >  signing_key.asc
       # organize SSH deploy key for nagstamon-jekyll repo
