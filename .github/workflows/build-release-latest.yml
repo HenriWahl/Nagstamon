@@ -269,10 +269,10 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-# borrowed from dhcpy6d for testing
+# borrowed from dhcpy6d
   repo-debian:
     runs-on: ubuntu-latest
-    needs: [debian]
+    needs: [fedora-35, fedora-36, fedora-37, fedora-38, rhel-9, debian]
     env:
       family: debian
       release: latest
