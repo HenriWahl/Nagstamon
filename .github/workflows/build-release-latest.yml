@@ -8,7 +8,7 @@ on:
       - '!*.*.*'
 
 env:
-  python_win_version: 3.10.8
+  python_win_version: 3.11.3
   repo_dir: nagstamon-jekyll/docs/repo
   cr_image: ghcr.io/henriwahl/build-nagstamon
 
