@@ -172,7 +172,7 @@ jobs:
           if-no-files-found: error
 
   macos:
-    runs-on: macos-12
+    runs-on: macos-11
     needs: test
     steps:
       - uses: actions/checkout@v3
