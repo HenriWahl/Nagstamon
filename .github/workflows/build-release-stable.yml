@@ -324,7 +324,7 @@ jobs:
       - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
       - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/??
       # copy *.rpm files into nagstamon-jekyll
-      - run: for noarch_rpm in artifact/*.noarch.rpm; do version=$(echo $noarch_rpm | python3 -c "file=input(); print(file.split('fedora')[1].split('-')[0])"); mkdir -p mkdir -p ${{ env.repo_dir }}/fedora/$version; cp -r artifact/*.fedora$version-*.rpm ${{ env.repo_dir }}/fedora/$version; docker run --rm -v $PWD/${{ env.repo_dir }}/fedora/$version:/repo fedora /bin/sh -c "dnf -y install createrepo_c && createrepo /repo"; done
+      - run: for noarch_rpm in artifact/*.noarch.rpm; do version=$(echo ${noarch_rpm} | python3 -c "file=input(); print(file.split('fedora')[1].split('-')[0])"); mkdir -p mkdir -p ${{ env.repo_dir }}/fedora/${version}; cp -r artifact/*.fedora${version}-*.rpm ${{ env.repo_dir }}/fedora/${version}; docker run --rm -v $PWD/${{ env.repo_dir }}/fedora/${version}:/repo fedora /bin/sh -c "dnf -y install createrepo_c && createrepo /repo"; done
       # create rpm repo via Fedora container
       - run: docker run --rm -v $PWD/${{ env.repo_dir }}/${{ env.family }}/latest:/repo fedora /bin/sh -c "dnf -y install createrepo_c && createrepo /repo"
       # commit and push new binaries to nagstamon-repo
