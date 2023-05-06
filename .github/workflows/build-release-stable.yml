@@ -329,7 +329,7 @@ jobs:
       - run: docker run --rm -v $PWD/${{ env.repo_dir }}/${{ env.family }}/latest:/repo fedora /bin/sh -c "dnf -y install createrepo_c && createrepo /repo"
       # commit and push new binaries to nagstamon-repo
       - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
-      - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ env.family }}" && git push
+    #  - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ env.family }}" && git push
 
   repo-rpm-rhel:
     runs-on: ubuntu-latest
@@ -356,19 +356,19 @@ jobs:
       - run: docker run --rm -v $PWD/${{ env.repo_dir }}/${{ env.family }}/${{ env.version }}:/repo fedora /bin/sh -c "dnf -y install createrepo_c && createrepo /repo"
       # commit and push new binaries to nagstamon-repo
       - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
-      - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ env.family }}" && git push
+    #  - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ env.family }}" && git push
 
-  github-release:
-    runs-on: ubuntu-latest
-    needs: [repo-rpm-rhel]
-    steps:
-      - uses: actions/download-artifact@v3
-      - run: cd artifact && md5sum *agstamon* > md5sums.txt
-      - run: cd artifact && sha256sum *agstamon* > sha256sums.txt
-      - uses: marvinpinto/action-automatic-releases@latest
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          prerelease: false
-          draft: true
-          files: |
-            artifact/*
+#  github-release:
+#    runs-on: ubuntu-latest
+#    needs: [repo-rpm-rhel]
+#    steps:
+#      - uses: actions/download-artifact@v3
+#      - run: cd artifact && md5sum *agstamon* > md5sums.txt
+#      - run: cd artifact && sha256sum *agstamon* > sha256sums.txt
+#      - uses: marvinpinto/action-automatic-releases@latest
+#        with:
+#          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+#          prerelease: false
+#          draft: true
+#          files: |
+#            artifact/*
