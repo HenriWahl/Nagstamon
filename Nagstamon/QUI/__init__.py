@@ -6848,7 +6848,7 @@ class Dialog_About(Dialog):
         self.window.label_website.setOpenExternalLinks(True)
         self.window.label_versions.setText(f'Python: {platform.python_version()}, Qt: {QT_VERSION_STR}')
         self.window.label_contribution.setText(f'<a href={AppInfo.WEBSITE}/contribution>Contribution</a> | <a href=https://paypal.me/nagstamon>Donation</a>')
-        self.window.label_footnote.setText('<small>¹ meanwhile way more...</small>')
+        self.window.label_footnote.setText('<small>¹ meanwhile many more monitors...</small>')
 
         # fill in license information
         license_file = open('{0}{1}LICENSE'.format(RESOURCES, os.sep))
