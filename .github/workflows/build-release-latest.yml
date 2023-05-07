@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.9]
+        python-version: [3.7, 3.9, 3.11]
 
     steps:
     - uses: actions/checkout@v3
@@ -309,7 +309,7 @@ jobs:
                       gpg --output key.gpg --armor --export"
       # commit and push new binaries to nagstamon-jekyll
       - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
-      #- run: cd ${{ env.repo_dir }} && git add . && git commit -am "new ${{ env.release }} repo ${{ env.family }}" && git push
+      - run: cd ${{ env.repo_dir }} && git add . && git commit -am "new ${{ env.release }} repo ${{ env.family }}" && git push
 
   repo-rpm-fedora:
     runs-on: ubuntu-latest
@@ -341,7 +341,7 @@ jobs:
             ls -laR ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}
       # commit and push new binaries to nagstamon-repo
       - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
-    #  - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ env.family }}" && git push
+      - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ env.family }}" && git push
 
   repo-rpm-rhel:
     runs-on: ubuntu-latest
@@ -373,7 +373,7 @@ jobs:
             ls -laR ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}
       # commit and push new binaries to nagstamon-repo
       - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
-    #  - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ env.family }}" && git push
+      - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ env.family }}" && git push
 
 #  github-release:
 #    runs-on: ubuntu-latest
