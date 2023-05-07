@@ -168,8 +168,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
-      #- run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
-      - run: /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
+      - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
       - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
       # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
       - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}
@@ -367,8 +366,7 @@ jobs:
       - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.version }}
       # copy *.rpm files into nagstamon-jekyll
       - run: cp -r artifact/*.${{ env.family }}*.rpm ${{ env.repo_dir }}/${{ env.family }}/${{ env.version }}
-      # create rpm repo via Fedora container
-      - run: docker run --rm -v $PWD/${{ env.repo_dir }}/${{ env.family }}/${{ env.version }}:/repo fedora /bin/sh -c "dnf -y install createrepo_c && createrepo /repo"
+      # copy *.rpm files into nagstamon-jekyll and create repodata
       - run: |
           for noarch_rpm in artifact/*${{ env.family }}*.noarch.rpm; \
             do \
