@@ -318,6 +318,7 @@ jobs:
     needs: [repo-debian]
     env:
       family: fedora
+      cr_image_latest: 38
     steps:
       # get binaries created by other jobs
       - uses: actions/download-artifact@v3
@@ -335,7 +336,7 @@ jobs:
             mkdir -p mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${version} && \
             cp -r artifact/*.${{ env.family }}* ${{ env.repo_dir }}/${{ env.family }}/${version} && \
             docker run --rm -v ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}:/repo \
-              ${{ env.cr_image }}-${{ env.family }}-${version}:${{ env.cr_image_version }} \
+              ${{ env.cr_image }}-${{ env.family }}-${{ env.cr_image_latest }}:${{ env.cr_image_version }} \
               /bin/bash -c "createrepo --verbose --workers 1 /repo" && \
             ls -laR ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}
       # commit and push new binaries to nagstamon-repo
@@ -349,6 +350,7 @@ jobs:
     needs: [repo-rpm-fedora]
     env:
       family: rhel
+      cr_image_latest: 9
     steps:
       # get binaries created by other jobs
       - uses: actions/download-artifact@v3
@@ -366,7 +368,7 @@ jobs:
             mkdir -p mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${version} && \
             cp -r artifact/*.${{ env.family }}* ${{ env.repo_dir }}/${{ env.family }}/${version} && \
             docker run --rm -v ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}:/repo \
-              ${{ env.cr_image }}-${{ env.family }}-${version}:${{ env.cr_image_version }} \
+              ${{ env.cr_image }}-${{ env.family }}-${{ env.cr_image_latest }}:${{ env.cr_image_version }} \
               /bin/bash -c "createrepo --verbose --workers 1 /repo" && \
             ls -laR ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}
       # commit and push new binaries to nagstamon-repo
