@@ -334,7 +334,7 @@ jobs:
       - run: |
             version=${{ env.release }} && \
             mkdir -p mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${version} && \
-            cp -r artifact/*.${{ env.family }}${version}* ${{ env.repo_dir }}/${{ env.family }}/${version} && \
+            cp -r artifact/*.${{ env.family }}* ${{ env.repo_dir }}/${{ env.family }}/${version} && \
             docker run --rm -v ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}:/repo \
               ${{ env.cr_image }}-${{ env.family }}-${version}:${{ env.cr_image_version }} \
               /bin/bash -c "createrepo --verbose --workers 1 /repo" && \
