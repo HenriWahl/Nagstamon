@@ -296,7 +296,8 @@ jobs:
       - run: |
           /usr/bin/docker run --rm \
           -v ${{ github.workspace }}:/workspace \
-          -v $PWD/${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}:/repo ${{ env.cr_image }}-${{ env.family }}:${{ env.cr_image_version }} \
+          -v $PWD/${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}:/repo \
+          ${{ env.cr_image }}-${{ env.family }}:${{ env.cr_image_version }} \
           /bin/sh -c "cd /workspace && \
                       gpg --import signing_key.asc && \
                       cp -r artifact/*.deb nagstamon-jekyll/docs/repo/${{ env.family }}/${{ env.release }} && \
@@ -375,17 +376,17 @@ jobs:
       - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
       - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ env.family }}" && git push
 
-#  github-release:
-#    runs-on: ubuntu-latest
-#    needs: [repo-rpm-rhel]
-#    steps:
-#      - uses: actions/download-artifact@v3
-#      - run: cd artifact && md5sum *agstamon* > md5sums.txt
-#      - run: cd artifact && sha256sum *agstamon* > sha256sums.txt
-#      - uses: marvinpinto/action-automatic-releases@latest
-#        with:
-#          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-#          automatic_release_tag: "latest"
-#          prerelease: true
-#          files: |
-#            artifact/*
+  github-release:
+    runs-on: ubuntu-latest
+    needs: [repo-rpm-rhel]
+    steps:
+      - uses: actions/download-artifact@v3
+      - run: cd artifact && md5sum *agstamon* > md5sums.txt
+      - run: cd artifact && sha256sum *agstamon* > sha256sums.txt
+      - uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          files: |
+            artifact/*
