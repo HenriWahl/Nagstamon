@@ -11,7 +11,9 @@ env:
   python_win_version: 3.11.3
   repo_dir: nagstamon-jekyll/docs/repo
   cr_image: ghcr.io/henriwahl/build-nagstamon
+  # CR image version will be increased if further updates are necessary
   cr_image_version: 1
+  # release type this file is used for
   release: latest
 
 jobs:
@@ -271,7 +273,7 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-# borrowed from dhcpy6d
+  # borrowed from dhcpy6d
   repo-debian:
     runs-on: ubuntu-latest
     # try to avoid race condition and start uploading only after the last install package has been build
@@ -383,7 +385,7 @@ jobs:
       - uses: actions/download-artifact@v3
       - run: cd artifact && md5sum *agstamon* > md5sums.txt
       - run: cd artifact && sha256sum *agstamon* > sha256sums.txt
-      - uses: marvinpinto/action-automatic-releases@latest
+      - uses: dciborow/action-github-releases@latest
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "latest"
