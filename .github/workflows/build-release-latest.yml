@@ -11,7 +11,7 @@ env:
   python_win_version: 3.11.3
   repo_dir: nagstamon-jekyll/docs/repo
   cr_image: ghcr.io/henriwahl/build-nagstamon
-  # CR image version will be increased if further updates are necessary
+  # to be increased if new updates of build images are necessary
   cr_image_version: 1
   # release type this file is used for
   release: latest
@@ -273,7 +273,7 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  # borrowed from dhcpy6d
+# borrowed from dhcpy6d
   repo-debian:
     runs-on: ubuntu-latest
     # try to avoid race condition and start uploading only after the last install package has been build
@@ -321,6 +321,7 @@ jobs:
     needs: [repo-debian]
     env:
       family: fedora
+      # which image to use for packaging
       cr_image_latest: 38
     steps:
       # get binaries created by other jobs
@@ -353,6 +354,7 @@ jobs:
     needs: [repo-rpm-fedora]
     env:
       family: rhel
+      # which image to use for packaging
       cr_image_latest: 9
     steps:
       # get binaries created by other jobs

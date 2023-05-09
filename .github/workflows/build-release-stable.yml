@@ -1,17 +1,13 @@
 name: build-release-stable
 on:
   push:
-    #tags: 'v*'
-    tags-ignore: 'v*'
-    branches:
-      - '**'
-      - '!master'
-      - '!*.*.*'
+    tags: 'v*'
 
 env:
   python_win_version: 3.11.3
   repo_dir: nagstamon-jekyll/docs/repo
   cr_image: ghcr.io/henriwahl/build-nagstamon
+  # to be increased if new updates of build images are necessary
   cr_image_version: 1
   release: stable
 
@@ -20,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.9]
+        python-version: [3.7, 3.9, 3.11]
 
     steps:
     - uses: actions/checkout@v3
@@ -171,7 +167,7 @@ jobs:
       - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
       - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
       # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
-      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}
+      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
       - uses: actions/upload-artifact@v3
         with:
           path: build/*.rpm
@@ -297,7 +293,8 @@ jobs:
       - run: |
           /usr/bin/docker run --rm \
           -v ${{ github.workspace }}:/workspace \
-          -v $PWD/${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}:/repo ${{ env.cr_image }}-${{ env.family }}:${{ env.cr_image_version }} \
+          -v $PWD/${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}:/repo \
+          ${{ env.cr_image }}-${{ env.family }}:${{ env.cr_image_version }} \
           /bin/sh -c "cd /workspace && \
                       gpg --import signing_key.asc && \
                       cp -r artifact/*.deb nagstamon-jekyll/docs/repo/${{ env.family }}/${{ env.release }} && \
@@ -310,7 +307,7 @@ jobs:
                       gpg --output key.gpg --armor --export"
       # commit and push new binaries to nagstamon-jekyll
       - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
-      #- run: cd ${{ env.repo_dir }} && git add . && git commit -am "new ${{ env.release }} repo ${{ env.family }}" && git push
+      - run: cd ${{ env.repo_dir }} && git add . && git commit -am "new ${{ env.release }} repo ${{ env.family }}" && git push
 
   repo-rpm-fedora:
     runs-on: ubuntu-latest
@@ -343,7 +340,7 @@ jobs:
             done
 #       commit and push new binaries to nagstamon-repo
       - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
-    #  - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ env.family }}" && git push
+      - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ env.family }}" && git push
 
   repo-rpm-rhel:
     runs-on: ubuntu-latest
@@ -352,6 +349,7 @@ jobs:
     needs: [repo-rpm-fedora]
     env:
       family: rhel
+      # currently just one version available
       version: 9
     steps:
       # get binaries created by other jobs
@@ -380,19 +378,19 @@ jobs:
             done
       # commit and push new binaries to nagstamon-repo
       - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
-      #- run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ env.family }}" && git push
+      - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ env.family }}" && git push
 
-#  github-release:
-#    runs-on: ubuntu-latest
-#    needs: [repo-rpm-rhel]
-#    steps:
-#      - uses: actions/download-artifact@v3
-#      - run: cd artifact && md5sum *agstamon* > md5sums.txt
-#      - run: cd artifact && sha256sum *agstamon* > sha256sums.txt
-#      - uses: marvinpinto/action-automatic-releases@latest
-#        with:
-#          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-#          prerelease: false
-#          draft: true
-#          files: |
-#            artifact/*
+  github-release:
+    runs-on: ubuntu-latest
+    needs: [repo-rpm-rhel]
+    steps:
+      - uses: actions/download-artifact@v3
+      - run: cd artifact && md5sum *agstamon* > md5sums.txt
+      - run: cd artifact && sha256sum *agstamon* > sha256sums.txt
+      - uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: false
+          draft: true
+          files: |
+            artifact/*
