@@ -1,8 +1,3 @@
-nagstamon (3.13-20230506) unstable; urgency=low
-  * New upstream
-
- -- Henri Wahl <henri@nagstamon.de> Sat, May 06 2023 08:00:00 +0200
-
 nagstamon (3.12.0) stable; urgency=low
   * New upstream
     - added option to hide dock icon on macOS when using systray
@@ -19,7 +14,7 @@ nagstamon (3.12.0) stable; urgency=low
     - fixes for Monitos
     - improved build pipeline on GitHub Actions
 
- -- Henri Wahl <henri@nagstamon.de> Sat, May 06 2023 08:00:00 +0200
+ -- Henri Wahl <henri@nagstamon.de> Tue, May 09 2023 08:00:00 +0200
 
 nagstamon (3.10.1) stable; urgency=low
   * New upstream
