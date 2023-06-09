@@ -7,8 +7,7 @@ pip-system-certs
 psutil
 pyinstaller
 pypiwin32
-pyqt6==6.4.2
-pyqt6-qt6==6.4.2
+pyqt6==6.5.1
 pysocks
 python-dateutil
 requests
