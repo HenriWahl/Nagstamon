@@ -60,13 +60,13 @@ class IcingaDBWebServer(GenericServer):
     """
     TYPE = 'IcingaDBWeb'
     MENU_ACTIONS = ['Monitor', 'Recheck', 'Acknowledge', 'Submit check result', 'Downtime']
-    STATES_MAPPING = {'hosts' : {0 : 'UP', 1 : 'DOWN', 2 : 'UNREACHABLE'}, \
+    STATES_MAPPING = {'hosts' : {0 : 'UP', 1 : 'DOWN', 2 : 'UNREACHABLE'},
                      'services' : {0 : 'OK', 1 : 'WARNING', 2 : 'CRITICAL', 3 : 'UNKNOWN'}}
-    STATES_MAPPING_REV = {'hosts' : { 'UP': 0, 'DOWN': 1, 'UNREACHABLE': 2}, \
+    STATES_MAPPING_REV = {'hosts' : { 'UP': 0, 'DOWN': 1, 'UNREACHABLE': 2},
                      'services' : {'OK': 0, 'WARNING': 1, 'CRITICAL': 2, 'UNKNOWN': 3}}
-    BROWSER_URLS = { 'monitor': '$MONITOR-CGI$/dashboard', \
-                    'hosts': '$MONITOR-CGI$/icingadb/hosts', \
-                    'services': '$MONITOR-CGI$/icingadb/services', \
+    BROWSER_URLS = { 'monitor': '$MONITOR-CGI$/dashboard',
+                    'hosts': '$MONITOR-CGI$/icingadb/hosts',
+                    'services': '$MONITOR-CGI$/icingadb/services',
                     'history': '$MONITOR-CGI$/icingadb/history'}
 
 
@@ -120,7 +120,7 @@ class IcingaDBWebServer(GenericServer):
             Get status from Icinga Server - only JSON
         """
         # define CGI URLs for hosts and services
-        if self.cgiurl_hosts == self.cgiurl_services == self.cgiurl_monitoring_health == None:
+        if self.cgiurl_hosts is None and self.cgiurl_services is None and self.cgiurl_monitoring_health is None:
             # services (unknown, warning or critical?)
             self.cgiurl_services = {'hard': self.monitor_cgi_url + '/icingadb/services?service.state.is_problem=y&service.state.in_downtime=n&service.state.state_type=hard&columns=service.state.last_update,service.state.is_reachable&format=json', \
                                     'soft': self.monitor_cgi_url + '/icingadb/services?service.state.is_problem=y&service.state.in_downtime=n&service.state.state_type=soft&columns=service.state.last_update,service.state.is_reachable&format=json'}
