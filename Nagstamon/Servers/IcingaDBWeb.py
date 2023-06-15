@@ -159,13 +159,10 @@ class IcingaDBWebServer(GenericServer):
                                               copy.deepcopy(result.error),\
                                               result.status_code
 
-                if error != '' or status_code >= 400:
-                    return Result(result=jsonraw,
-                                  error=error,
-                                  status_code=status_code)
-
                 # check if any error occured
-                self.check_for_error(jsonraw, error, status_code)
+                potential_error = self.check_for_error(jsonraw, error, status_code)
+                if potential_error:
+                    return potential_error
 
                 # Check if the backend is running
                 # If it isn't running the last values stored in the database are returned/shown

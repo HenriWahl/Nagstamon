@@ -26,6 +26,7 @@ import socket
 import sys
 import traceback
 import urllib.parse
+from typing import Optional
 from urllib.request import getproxies
 
 from bs4 import BeautifulSoup
@@ -1687,16 +1688,17 @@ class GenericServer(object):
         """
         return(len(list((e for e in self.events_history if self.events_history[e] is True))))
 
-    def check_for_error(self, result, error, status_code):
+    @staticmethod
+    def check_for_error(result, error, status_code) -> Optional[Result]:
         """
             check if any error occured - if so, return error
         """
         if error != '' or status_code > 400:
-            return(Result(result=copy.deepcopy(result),
+            return Result(result=copy.deepcopy(result),
                           error=copy.deepcopy(error),
-                          status_code=copy.deepcopy(status_code)))
+                          status_code=copy.deepcopy(status_code))
         else:
-            return(False)
+            return None
 
     def get_worst_status_current(self):
         """
