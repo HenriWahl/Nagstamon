@@ -5790,7 +5790,11 @@ class Dialog_Server(Dialog):
             self.window.label_map_to_warning: ['Alertmanager'],
             self.window.input_lineedit_map_to_warning: ['Alertmanager'],
             self.window.label_map_to_critical: ['Alertmanager'],
-            self.window.input_lineedit_map_to_critical: ['Alertmanager']
+            self.window.input_lineedit_map_to_critical: ['Alertmanager'],
+            self.window.input_lineedit_notification_filter: ['IcingaDBWebNotifications'],
+            self.window.label_notification_filter: ['IcingaDBWebNotifications'],
+            self.window.input_lineedit_notification_lookback: ['IcingaDBWebNotifications'],
+            self.window.label_notification_lookback: ['IcingaDBWebNotifications'],
         }
 
         # to be used when selecting authentication method Kerberos

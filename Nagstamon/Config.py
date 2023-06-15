@@ -969,6 +969,10 @@ class Server(object):
         self.map_to_unknown = 'unknown'
         self.map_to_ok = 'ok'
 
+        # IcingaDBWebNotificationsServer
+        self.notification_filter = "user.name=*"
+        self.notification_lookback = "30 minutes"
+
 class Action(object):
     """
     class for custom actions, which whill be thrown into one config dictionary like the servers

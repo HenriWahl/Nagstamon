@@ -38,6 +38,7 @@ from Nagstamon.Servers.Centreon import CentreonServer
 from Nagstamon.Servers.Icinga import IcingaServer
 from Nagstamon.Servers.IcingaWeb2 import IcingaWeb2Server
 from Nagstamon.Servers.IcingaDBWeb import IcingaDBWebServer
+from Nagstamon.Servers.IcingaDBWebNotifications import IcingaDBWebNotificationsServer
 from Nagstamon.Servers.Multisite import MultisiteServer
 from Nagstamon.Servers.op5Monitor import Op5MonitorServer
 from Nagstamon.Servers.Opsview import OpsviewServer
@@ -190,6 +191,10 @@ def create_server(server=None):
     # IcingaWeb2
     new_server.no_cookie_auth = server.no_cookie_auth
 
+    # IcingaDBWebNotifications
+    new_server.notification_filter = server.notification_filter
+    new_server.notification_lookback = server.notification_lookback
+
     # Checkmk Multisite
     new_server.force_authuser = server.force_authuser
     new_server.checkmk_view_hosts = server.checkmk_view_hosts
@@ -237,6 +242,7 @@ servers_list = [AlertmanagerServer,
                 CentreonServer,
                 IcingaServer,
                 IcingaDBWebServer,
+                IcingaDBWebNotificationsServer,
                 IcingaWeb2Server,
                 LivestatusServer,
                 Monitos3Server,

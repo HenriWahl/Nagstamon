@@ -258,6 +258,10 @@ class GenericServer(object):
         # Zabbix
         self.use_description_name_service = None
 
+        # IcingaDBWebNotifications
+        self.notification_filter = None
+        self.notification_lookback = None
+
     def init_config(self):
         '''
             set URLs for CGI - they are static and there is no need to set them with every cycle
