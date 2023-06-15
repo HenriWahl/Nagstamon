@@ -442,15 +442,21 @@ class IcingaDBWebServer(GenericServer):
         #if not info_dict['expire_time']:
         #    info_dict['expire_time'] = None
 
-        self._set_acknowledge(info_dict['host'],
-                              info_dict['service'],
-                              info_dict['author'],
-                              info_dict['comment'],
-                              info_dict['sticky'],
-                              info_dict['notify'],
-                              info_dict['persistent'],
-                              all_services,
-                              info_dict['expire_time'])
+        try:
+            self._set_acknowledge(info_dict['host'],
+                                  info_dict['service'],
+                                  info_dict['author'],
+                                  info_dict['comment'],
+                                  info_dict['sticky'],
+                                  info_dict['notify'],
+                                  info_dict['persistent'],
+                                  all_services,
+                                  info_dict['expire_time'])
+        except:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+            result, error = self.Error(sys.exc_info())
+            return Result(result=result, error=error)
 
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None, expire_time=None):
