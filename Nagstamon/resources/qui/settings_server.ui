@@ -443,6 +443,20 @@
         </property>
        </widget>
       </item>
+      <item row="11" column="2" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_notification_filter">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="12" column="2" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_notification_lookback">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
       <item row="6" column="1">
        <widget class="QLabel" name="label_timeout">
         <property name="text">
@@ -513,6 +527,32 @@
         </property>
         <property name="text">
          <string>Service filter:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="11" column="1">
+       <widget class="QLabel" name="label_notification_filter">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Notification filter:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="12" column="1">
+       <widget class="QLabel" name="label_notification_lookback">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Notification lookback horizon:</string>
         </property>
        </widget>
       </item>
