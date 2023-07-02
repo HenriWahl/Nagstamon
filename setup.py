@@ -45,6 +45,8 @@ if OS not in ['Windows', 'Darwin']:
     else:
         DIST, DIST_VERSION, DIST_NAME = platform.dist()
     NAME = NAME.lower()
+else:
+    DIST = ""
 #VERSION = AppInfo.VERSION.replace('-', '.') + '.' + DIST + DIST_VERSION
 VERSION = AppInfo.VERSION.replace('-', '.')
 NAGSTAMON_SCRIPT = 'nagstamon.py'
