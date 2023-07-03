@@ -94,8 +94,6 @@ class IcingaDBWebNotificationsServer(IcingaDBWebServer):
         notifications = json.loads(result.result)
 
         for notification in reversed(notifications):
-            if notification["type"] not in ("problem", "recovery"):
-                continue
             if notification["object_type"] == "host":
                 # host
                 if not self.use_display_name_host:
@@ -108,16 +106,25 @@ class IcingaDBWebNotificationsServer(IcingaDBWebServer):
                     host_name = notification['host']['display_name']
 
                 status_type = notification['host']["state_type"]
+
+                if status_type == 'hard':
+                    status_numeric = int(notification['host']['state']['hard_state'])
+                else:
+                    status_numeric = int(notification['host']['state']['soft_state'])
+
+                if status_numeric not in (1, 2):
+                    try:
+                        del self.new_hosts[host_name]
+                    except KeyError:
+                        pass
+                    continue
+
                 self.new_hosts[host_name] = GenericHost()
                 self.new_hosts[host_name].name = host_name
                 self.new_hosts[host_name].server = self.name
                 self.new_hosts[host_name].status_type = status_type
 
-                if status_type == 'hard':
-                    self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'][int(notification['host']['state']['hard_state'])]
-                else:
-                    self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'][int(notification['host']['state']['soft_state'])]
-
+                self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'][status_numeric]
                 self.new_hosts[host_name].last_check = datetime.datetime.fromtimestamp(int(float(notification['host']['state']['last_update'])))
                 self.new_hosts[host_name].attempt = "{}/{}".format(notification['host']['state']['check_attempt'],notification['host']['max_check_attempts'])
                 self.new_hosts[host_name].status_information = BeautifulSoup(notification['host']['state']['output'].replace('\n', ' ').strip(), 'html.parser').text
@@ -156,6 +163,23 @@ class IcingaDBWebNotificationsServer(IcingaDBWebServer):
                     # problems with that so here we go with extra display_name option
                     host_name = notification['host']['display_name']
 
+                status_type = notification['service']["state"]["state_type"]
+                service_name = notification['service']['display_name']
+
+                if status_type == 'hard':
+                    status_numeric = int(notification['service']['state']['hard_state'])
+                else:
+                    status_numeric = int(notification['service']['state']['soft_state'])
+
+                if status_numeric not in (1, 2, 3):
+                    try:
+                        del self.new_hosts[host_name].services[service_name]
+                        if not self.new_hosts[host_name].services:
+                            del self.new_hosts[host_name]
+                    except KeyError:
+                        pass
+                    continue
+
                 # host objects contain service objects
                 if not host_name in self.new_hosts:
                     self.new_hosts[host_name] = GenericHost()
@@ -165,20 +189,15 @@ class IcingaDBWebNotificationsServer(IcingaDBWebServer):
                     # acknowledge needs host_description and no display name
                     self.new_hosts[host_name].real_name = notification['host']['name']
 
-                service_name = notification['service']['display_name']
-
-                status_type = notification['service']["state"]["state_type"]
-
                 # if a service does not exist create its object
                 self.new_hosts[host_name].services[service_name] = GenericService()
                 self.new_hosts[host_name].services[service_name].host = host_name
                 self.new_hosts[host_name].services[service_name].name = service_name
                 self.new_hosts[host_name].services[service_name].server = self.name
                 self.new_hosts[host_name].services[service_name].status_type = status_type
-                if status_type == 'hard':
-                    self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][int(notification['service']['state']['hard_state'])]
-                else:
-                    self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][int(notification['service']['state']['soft_state'])]
+
+                self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][status_numeric]
+
                 self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(int(float(notification['service']['state']['last_update'])))
                 self.new_hosts[host_name].services[service_name].status_information = BeautifulSoup(notification['service']['state']['output'].replace('\n', ' ').strip(), 'html.parser').text
                 self.new_hosts[host_name].services[service_name].passiveonly = not int(notification['service'].get('active_checks_enabled') or '0')
