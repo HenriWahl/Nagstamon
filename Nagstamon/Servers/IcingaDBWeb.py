@@ -734,9 +734,14 @@ class IcingaDBWebServer(GenericServer):
 
 
     def open_monitor(self, host, service=''):
-        '''
-            open monitor from tablewidget context menu
-        '''
+        """Open monitor from tablewidget context menu."""
+        if host not in self.hosts:
+            print("Cannot find {}. Skipping!".format(host))
+            return
+        if service and service not in self.hosts[host].services:
+            print("Cannot find {}::{}. Skipping!".format(host, service))
+            return
+
         # only type is important so do not care of service '' in case of host monitor
         if service == '':
             url = '{0}/icingadb/hosts?host.state.is_problem=y&sort=host.state.severity#!{1}/icingadb/host?{2}'.format(self.monitor_url,
