@@ -3459,7 +3459,9 @@ class TreeView(QTreeView):
                     # take data from model data_array
                     miserable_host = self.model().data_array[lrow][0]
                     miserable_service = self.model().data_array[lrow][2]
-
+                    miserable_duration = self.model().data_array[lrow][6]
+                    miserable_attempt = self.model().data_array[lrow][7]
+                    miserable_status_information = self.model().data_array[lrow][8]
                     # check if clicked line is a service or host
                     # if it is check if the action is targeted on hosts or services
                     if miserable_service:
@@ -3478,25 +3480,25 @@ class TreeView(QTreeView):
                                     item_visible_temporary = True
                             # dito
                             if action.re_status_information_enabled is True:
-                                if is_found_by_re(miserable_service,
+                                if is_found_by_re(miserable_status_information,
                                                   action.re_status_information_pattern,
                                                   action.re_status_information_reverse):
                                     item_visible_temporary = True
                             # dito
                             if action.re_duration_enabled is True:
-                                if is_found_by_re(miserable_service,
+                                if is_found_by_re(miserable_duration,
                                                   action.re_duration_pattern,
                                                   action.re_duration_reverse):
                                     item_visible_temporary = True
 
                             # dito
                             if action.re_attempt_enabled is True:
-                                if is_found_by_re(miserable_service,
+                                if is_found_by_re(miserable_attempt,
                                                   action.re_attempt_pattern,
                                                   action.re_attempt_reverse):
                                     item_visible_temporary = True
 
-                            # dito
+                            # dito - how is this supposed to work?
                             if action.re_groups_enabled is True:
                                 if is_found_by_re(miserable_service,
                                                   action.re_groups_pattern,
