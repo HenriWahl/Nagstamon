@@ -5,6 +5,7 @@ lxml
 psutil
 pyinstaller
 pyobjc-framework-ApplicationServices
+# 6.5.1 leads to crash on macOS
 pyqt6==6.4.2
 pysocks
 python-dateutil
