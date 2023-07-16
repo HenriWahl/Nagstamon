@@ -161,9 +161,12 @@ class Icinga2APIServer(GenericServer):
                     new_service.attempt = "{}/{}".format(
                         int(service['attrs']['check_attempt']),
                         int(service['attrs']['max_check_attempts']))
+                if service['attrs']['last_check_result'] is None:
+                    new_service.status_information = 'UNKNOWN'
+                else:
+                    new_service.status_information = service['attrs']['last_check_result']['output']
                 new_service.last_check = arrow.get(service['attrs']['last_check']).humanize()
                 new_service.duration = arrow.get(service['attrs']['previous_state_change']).humanize()
-                new_service.status_information = service['attrs']['last_check_result']['output']
                 new_service.passiveonly = not(service['attrs']['enable_active_checks'])
                 new_service.notifications_disabled = not(service['attrs']['enable_notifications'])
                 new_service.flapping = service['attrs']['flapping']
