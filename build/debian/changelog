@@ -1,7 +1,7 @@
-nagstamon (3.13-20230707) unstable; urgency=low
+nagstamon (3.13-20230720) unstable; urgency=low
   * New upstream
 
- -- Henri Wahl <henri@nagstamon.de> Fri, July 07 2023 08:00:00 +0200
+ -- Henri Wahl <henri@nagstamon.de> Thu, July 20 2023 08:00:00 +0200
 
 nagstamon (3.12.0) stable; urgency=low
   * New upstream

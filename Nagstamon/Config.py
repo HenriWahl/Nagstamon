@@ -53,7 +53,8 @@ OS_NON_LINUX = (OS_MACOS, OS_WINDOWS)
 if 'WAYLAND_DISPLAY' in os.environ or\
     'XDG_SESSION_TYPE' in os.environ and os.environ['XDG_SESSION_TYPE'] == 'wayland':
     # dirty workaround to activate X11 support in Wayland environment - just a test
-    os.environ['QT_QPA_PLATFORM'] = 'xcb'
+    if not os.environ.get('QT_QPA_PLATFORM'):
+        os.environ['QT_QPA_PLATFORM'] = 'xcb'
     DESKTOP_WAYLAND = True
 else:
     DESKTOP_WAYLAND = False
@@ -123,7 +124,7 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '3.13-20230707'
+    VERSION = '3.13-20230720'
     WEBSITE = 'https://nagstamon.de'
     COPYRIGHT = '©2008-2023 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
