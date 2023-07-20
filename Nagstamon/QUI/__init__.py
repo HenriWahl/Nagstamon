@@ -4147,12 +4147,12 @@ class TreeView(QTreeView):
                                 if item.is_host():
                                     if hash in self.server.events_history and \
                                             self.server.events_history[hash] is True:
-                                        # second item in las data_array line is host flags
+                                        # second item in last data_array line is host flags
                                         self.data_array[-1][1] += 'N'
                                 else:
                                     if hash in self.server.events_history and \
                                             self.server.events_history[hash] is True:
-                                        # fourth item in las data_array line is service flags
+                                        # fourth item in last data_array line is service flags
                                         self.data_array[-1][3] += 'N'
                                 # add text color as QBrush from status
                                 self.data_array[-1].append(
