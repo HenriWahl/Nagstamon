@@ -79,15 +79,25 @@ class IcingaDBWebNotificationsServer(IcingaDBWebServer):
 
     def _update_new_host_content(self) -> Result:
         """Update self.new_host based on icinga notifications."""
-        notification_url =  "{}/icingadb/notifications?{}&history.event_time>{} ago&format=json".format(
+        notification_url = "{}/icingadb/notifications?{}&history.event_time>{} ago&format=json".format(
             self.monitor_cgi_url, self.notification_filter, self.notification_lookback)
-
+        health_url = '{}/health?format=json'.format(self.monitor_cgi_url)
         result = self.FetchURL(notification_url, giveback='raw')
 
-        # check if any error occured
+        # check if any error occurred
         potential_error = self.check_for_error(result.result, result.error, result.status_code)
         if potential_error:
             return potential_error
+
+        # HEALTH CHECK
+        health_result = self.FetchURL(health_url, giveback='raw')
+        if health_result.status_code == 200:
+            # we already got check results so icinga is unlikely down. do not break it without need.
+            monitoring_health_results = json.loads(health_result.result)
+            if monitoring_health_results["status"] != "success":
+                errors = [e["message"] for e in monitoring_health_results["data"] if e["state"] != 0]
+                return Result(result="UNKNOWN",
+                              error='Icinga2 not healthy: {}'.format("; ".join(errors)))
 
         self.new_hosts = {}
 
