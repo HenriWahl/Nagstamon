@@ -12,3 +12,4 @@ requests
 requests-kerberos
 requests-ecp
 setuptools
+requests_oauthlib

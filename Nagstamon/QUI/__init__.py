@@ -5815,6 +5815,11 @@ class Dialog_Server(Dialog):
             self.window.label_idp_ecp_endpoint,
             self.window.input_lineedit_idp_ecp_endpoint]
 
+        self.AUTHENTICATION_OAUTH2_WEBFLOW_WIDGETS = [
+            self.window.label_openid_configuration_endpoint,
+            self.window.input_lineedit_idp_ecp_endpoint
+        ]
+
         # fill default order fields combobox with monitor server types
         self.window.input_combobox_type.addItems(sorted(SERVER_TYPES.keys(), key=str.lower))
         # default to Nagios as it is the mostly used monitor server
@@ -5828,14 +5833,14 @@ class Dialog_Server(Dialog):
         self.window.button_choose_custom_cert_ca_file.clicked.connect(self.choose_custom_cert_ca_file)
 
         # fill authentication combobox
-        self.window.input_combobox_authentication.addItems(['Basic', 'Digest', 'Kerberos', 'Bearer'])
+        self.window.input_combobox_authentication.addItems(['Basic', 'Digest', 'Kerberos', 'Bearer', 'OAuth2 Web Flow'])
         if ECP_AVAILABLE is True:
             self.window.input_combobox_authentication.addItems(['ECP'])
 
         # detect change of server type which leads to certain options shown or hidden
         self.window.input_combobox_type.activated.connect(self.toggle_type)
 
-        # when authentication is changed to Kerberos then disable username/password as the are now useless
+        # when authentication is changed to Kerberos then disable username/password as they are now useless
         self.window.input_combobox_authentication.activated.connect(self.toggle_authentication)
 
         # reset Checkmk views
@@ -5874,15 +5879,29 @@ class Dialog_Server(Dialog):
             for widget in self.AUTHENTICATION_ECP_WIDGETS:
                 widget.hide()
 
+        if self.window.input_combobox_authentication.currentText() == 'OAuth2 Web Flow':
+            for widget in self.AUTHENTICATION_OAUTH2_WEBFLOW_WIDGETS:
+                widget.show()
+        else:
+            for widget in self.AUTHENTICATION_OAUTH2_WEBFLOW_WIDGETS:
+                widget.hide()
+
         # change credential input for bearer auth
         if self.window.input_combobox_authentication.currentText() == 'Bearer':
             for widget in self.AUTHENTICATION_BEARER_WIDGETS:
                 widget.hide()
-                self.window.label_password.setText('Token')
         else:
             for widget in self.AUTHENTICATION_BEARER_WIDGETS:
                 widget.show()
-                self.window.label_password.setText('Password')
+
+        if self.window.input_combobox_authentication.currentText() == 'Bearer':
+            self.window.label_password.setText('Token:')
+        elif self.window.input_combobox_authentication.currentText() == 'OAuth2 Web Flow':
+            self.window.label_username.setText('Client ID:')
+            self.window.label_password.setText('Client Secret:')
+        else:
+            self.window.label_username.setText('Username:')
+            self.window.label_password.setText('Password:')
 
         # after hiding authentication widgets dialog might shrink
         self.window.adjustSize()
