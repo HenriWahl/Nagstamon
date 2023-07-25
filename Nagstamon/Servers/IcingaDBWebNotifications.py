@@ -17,41 +17,16 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-# Initial implementation by Marcus Mönnig
-#
-# This Server class connects against IcingaWeb2. The monitor URL in the setup should be
-# something like http://icinga2/icingaweb2
-#
-# Status/TODOs:
-#
-# * The IcingaWeb2 API is not implemented yet, so currently this implementation uses
-#   two HTTP requests per action. The first fetches the HTML, then the form data is extracted and
-#   then a second HTTP POST request is made which actually executed the action.
-#   Once IcingaWeb2 has an API, it's probably the better choice.
-
-
-from Nagstamon.Servers.Generic import GenericServer
-import urllib.parse
+# Same as IcingaDBWeb but uses the notification endpoint to allow fine granular recipient management for alerts
 import sys
 import json
 import datetime
-import socket
 
 from bs4 import BeautifulSoup
 from Nagstamon.Objects import (GenericHost,
                                GenericService,
                                Result)
-from Nagstamon.Config import (conf,
-                              AppInfo)
-from Nagstamon.Helpers import webbrowser_open
-from Nagstamon.Servers.IcingaDBWeb import IcingaDBWebServer
-
-
-def strfdelta(tdelta, fmt):
-    d = {'days': tdelta.days}
-    d['hours'], rem = divmod(tdelta.seconds, 3600)
-    d['minutes'], d['seconds'] = divmod(rem, 60)
-    return fmt.format(**d)
+from Nagstamon.Servers.IcingaDBWeb import IcingaDBWebServer, strfdelta
 
 
 class IcingaDBWebNotificationsServer(IcingaDBWebServer):
