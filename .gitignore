@@ -17,3 +17,4 @@ __pycache__/
 /dist/
 /nagstamon.conf/
 /nagstamon.egg-info/
+/certifi/
