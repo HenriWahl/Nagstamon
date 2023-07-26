@@ -13,8 +13,7 @@ __pycache__/
 *.swp
 *.zip
 *~
-build/bdist*
-dist/
-nagstamon
-nagstamon.conf/
-nagstamon.egg-info/
+/build/bdist*
+/dist/
+/nagstamon.conf/
+/nagstamon.egg-info/
