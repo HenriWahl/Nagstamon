@@ -330,6 +330,7 @@ class GenericServer(object):
                 client_secret=self.password,
                 openid_config_url=self.idp_ecp_endpoint,
                 port=9000)
+            session.headers['X-OAuth2'] = "1"
 
         session.headers['User-Agent'] = self.USER_AGENT
 
