@@ -301,7 +301,13 @@ class GenericServer(object):
             self.session = None
             return False
         elif self.session is None:
-            self.session = self.create_session()
+            try:
+                self.session = self.create_session()
+            except Exception as e:
+                print("Error while creating session: {}".format(e))
+                self.refresh_authentication = True
+                self.session = None
+                return False
             return True
 
     def create_session(self):
