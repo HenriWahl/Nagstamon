@@ -112,7 +112,7 @@ class IcingaDBWebNotificationsServer(IcingaDBWebServer):
                 self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'][status_numeric]
                 self.new_hosts[host_name].last_check = datetime.datetime.fromtimestamp(int(float(notification['host']['state']['last_update'])))
                 self.new_hosts[host_name].attempt = "{}/{}".format(notification['host']['state']['check_attempt'],notification['host']['max_check_attempts'])
-                self.new_hosts[host_name].status_information = BeautifulSoup(notification['host']['state']['output'].replace('\n', ' ').strip(), 'html.parser').text
+                self.new_hosts[host_name].status_information = BeautifulSoup(notification['text'].replace('\n', ' ').strip(), 'html.parser').text
                 self.new_hosts[host_name].passiveonly = not int(notification['host'].get('active_checks_enabled') or '0')
                 self.new_hosts[host_name].notifications_disabled = not int(notification['host'].get('notifications_enabled') or '0')
                 self.new_hosts[host_name].flapping = bool(int(notification['host']['state']['is_flapping'] or 0))
@@ -184,7 +184,7 @@ class IcingaDBWebNotificationsServer(IcingaDBWebServer):
                 self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][status_numeric]
 
                 self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(int(float(notification['service']['state']['last_update'])))
-                self.new_hosts[host_name].services[service_name].status_information = BeautifulSoup(notification['service']['state']['output'].replace('\n', ' ').strip(), 'html.parser').text
+                self.new_hosts[host_name].services[service_name].status_information = BeautifulSoup(notification['text'].replace('\n', ' ').strip(), 'html.parser').text
                 self.new_hosts[host_name].services[service_name].passiveonly = not int(notification['service'].get('active_checks_enabled') or '0')
                 self.new_hosts[host_name].services[service_name].notifications_disabled = not int(notification['service'].get('notifications_enabled') or '0')
                 self.new_hosts[host_name].services[service_name].flapping = bool(int(notification['service']['state']['is_flapping'] or 0))
