@@ -122,8 +122,8 @@ class IcingaDBWebServer(GenericServer):
         # define CGI URLs for hosts and services
         if self.cgiurl_hosts is None and self.cgiurl_services is None and self.cgiurl_monitoring_health is None:
             # services (unknown, warning or critical?)
-            self.cgiurl_services = {'hard': self.monitor_cgi_url + '/icingadb/services?service.state.is_problem=y&service.state.in_downtime=n&service.state.state_type=hard&columns=service.state.last_update,service.state.is_reachable&format=json', \
-                                    'soft': self.monitor_cgi_url + '/icingadb/services?service.state.is_problem=y&service.state.in_downtime=n&service.state.state_type=soft&columns=service.state.last_update,service.state.is_reachable&format=json'}
+            self.cgiurl_services = {'hard': self.monitor_cgi_url + '/icingadb/services?service.state.is_problem=y&service.state.state_type=hard&columns=service.state.last_update,service.state.is_reachable&format=json', \
+                                    'soft': self.monitor_cgi_url + '/icingadb/services?service.state.is_problem=y&service.state.state_type=soft&columns=service.state.last_update,service.state.is_reachable&format=json'}
             # hosts (up or down or unreachable)
             self.cgiurl_hosts = {'hard': self.monitor_cgi_url + '/icingadb/hosts?host.state.is_problem=y&host.state.state_type=hard&columns=host.state.last_update&format=json', \
                                  'soft': self.monitor_cgi_url + '/icingadb/hosts?host.state.is_problem=y&host.state.state_type=soft&columns=host.state.last_update&format=json'}
