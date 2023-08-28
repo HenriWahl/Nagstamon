@@ -37,9 +37,9 @@ class AlertmanagerServer(GenericServer):
         'history':  '$MONITOR$/#/alerts'
     }
 
-    API_PATH_ALERTS = "/api/v2/alerts"
+    API_PATH_ALERTS = "/api/v2/alerts?inhibited=false"
     API_PATH_SILENCES = "/api/v2/silences"
-    API_FILTERS = '?filter='
+    API_FILTERS = '&filter='
 
     # vars specific to alertmanager class
     map_to_hostname = ''
