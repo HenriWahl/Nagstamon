@@ -559,10 +559,10 @@ class ZabbixServer(GenericServer):
         hostids = [self.hosts[hostname].hostid]
 
         date = datetime.datetime.strptime(start_time, "%Y-%m-%d %H:%M")
-        stime = time.mktime(date.timetuple())
+        stime = int(time.mktime(date.timetuple()))
 
         date = datetime.datetime.strptime(end_time, "%Y-%m-%d %H:%M")
-        etime = time.mktime(date.timetuple())
+        etime = int(time.mktime(date.timetuple()))
 
         if conf.debug_mode is True:
             self.Debug(server=self.get_name(),
