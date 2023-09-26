@@ -165,7 +165,7 @@ class GenericService(GenericObject):
         """
             return hash for event history tracking
         """
-        return " ".join((self.server, self.site, self.host, self.name, self.status, self.status_information))
+        return " ".join((self.server, self.site, self.host, self.name, self.status))
 
 
 class Result(object):
