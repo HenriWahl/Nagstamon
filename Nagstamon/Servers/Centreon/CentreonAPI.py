@@ -78,7 +78,7 @@ class CentreonServer(GenericServer):
 
         # check if any error occured
         errors_occured = self.check_for_error(data, error, status_code)
-        if errors_occured is not False:
+        if errors_occured is not None:
             return (errors_occured)
 
         self.centreon_version_major = int(data["web"]["major"])
@@ -95,8 +95,10 @@ class CentreonServer(GenericServer):
             # RestAPI version
             if self.centreon_version_major == 21:
                 self.restapi_version = "latest"
-            else:
+            elif self.centreon_version_major == 22:
                 self.restapi_version = "v22.04"
+            else:
+                self.restapi_version = "v23.04"
             if conf.debug_mode is True:
                 self.Debug(server='[' + self.get_name() + ']', debug='Centreon API version used : ' + self.restapi_version)
 
@@ -160,7 +162,7 @@ class CentreonServer(GenericServer):
 
             # check if any error occured
             errors_occured = self.check_for_error(data, error, status_code)
-            if errors_occured is not False:
+            if errors_occured is not None:
                 return (errors_occured)
 
             token = data["security"]["token"]
@@ -195,7 +197,7 @@ class CentreonServer(GenericServer):
 
             # check if any error occured
             errors_occured = self.check_for_error(data, error, status_code)
-            if errors_occured is not False:
+            if errors_occured is not None:
                 return (errors_occured)
 
             fqdn = str(data["result"][0]["fqdn"])
@@ -230,7 +232,7 @@ class CentreonServer(GenericServer):
 
                 # check if any error occured
                 errors_occured = self.check_for_error(data, error, status_code)
-                if errors_occured is not False:
+                if errors_occured is not None:
                     return (errors_occured)
 
                 host_id = data["result"][0]["id"]
@@ -264,7 +266,7 @@ class CentreonServer(GenericServer):
 
                 # check if any error occured
                 errors_occured = self.check_for_error(data, error, status_code)
-                if errors_occured is not False:
+                if errors_occured is not None:
                     return (errors_occured)
 
                 if host == "Meta_Services":
@@ -334,7 +336,7 @@ class CentreonServer(GenericServer):
 
             # check if any error occured
             errors_occured = self.check_for_error(data, error, status_code)
-            if errors_occured is not False:
+            if errors_occured is not None:
                 return (errors_occured)
 
             if data["meta"]["total"] == 0:
@@ -391,7 +393,7 @@ class CentreonServer(GenericServer):
 
             # check if any error occured
             errors_occured = self.check_for_error(data, error, status_code)
-            if errors_occured is not False:
+            if errors_occured is not None:
                 return (errors_occured)
 
             if data["meta"]["total"] == 0:
@@ -548,6 +550,15 @@ class CentreonServer(GenericServer):
             "resources": [
             ]
         }
+
+        # This new parameter was added in 23.04
+        if self.restapi_version == "v23.04":
+            property_to_add = {
+                "check": {
+                    "is_forced": True
+                }
+            }
+            rechecks.update(property_to_add)
 
         try:
             # Host
