@@ -8,7 +8,7 @@ on:
       - '!*.*.*'
 
 env:
-  python_win_version: 3.11.4
+  python_win_version: 3.11.6
   repo_dir: nagstamon-jekyll/docs/repo
   cr_image: ghcr.io/henriwahl/build-nagstamon
   # to be increased if new updates of build images are necessary
@@ -69,28 +69,6 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  fedora-35:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - uses: actions/checkout@v3
-      # docker login is needed for pushing the build image
-      - uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
-      - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
-      - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-      # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
-      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-      - uses: actions/upload-artifact@v3
-        with:
-          path: build/*.rpm
-          retention-days: 1
-          if-no-files-found: error
-
   fedora-36:
     runs-on: ubuntu-latest
     needs: test
@@ -136,6 +114,28 @@ jobs:
           if-no-files-found: error
 
   fedora-38:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v3
+      # docker login is needed for pushing the build image
+      - uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
+      - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
+      - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
+      # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
+      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
+      - uses: actions/upload-artifact@v3
+        with:
+          path: build/*.rpm
+          retention-days: 1
+          if-no-files-found: error
+
+  fedora-39:
     runs-on: ubuntu-latest
     needs: test
     steps:
@@ -277,7 +277,7 @@ jobs:
   repo-debian:
     runs-on: ubuntu-latest
     # try to avoid race condition and start uploading only after the last install package has been build
-    needs: [debian, fedora-35, fedora-36, fedora-37, fedora-38, rhel-9, macos, windows-32, windows-64, windows-64-debug]
+    needs: [debian, fedora-36, fedora-37, fedora-38, fedora-39, rhel-9, macos, windows-32, windows-64, windows-64-debug]
     env:
       family: debian
     steps:
