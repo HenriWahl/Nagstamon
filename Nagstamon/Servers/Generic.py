@@ -61,6 +61,8 @@ from Nagstamon.Config import (AppInfo,
                               OS_MACOS,
                               RESOURCES)
 
+# flag to keep track of Kerberos availability
+KERBEROS_AVAILABLE = False
 if OS == OS_MACOS:
     # requests_gssapi is newer but not available everywhere
     try:
@@ -68,16 +70,18 @@ if OS == OS_MACOS:
         import numbers
         import gssapi.raw.cython_converters
         from requests_gssapi import HTTPSPNEGOAuth as HTTPSKerberos
+        KERBEROS_AVAILABLE = True
     except ImportError:
-        from requests_kerberos import HTTPKerberosAuth as HTTPSKerberos
+        print('No Kerberos available')
 else:
     # requests_gssapi is newer but not available everywhere
     try:
         # requests_gssapi needs installation of KfW - Kerberos for Windows
         # requests_kerberoes doesn't
         from requests_kerberos import HTTPKerberosAuth as HTTPSKerberos
+        KERBEROS_AVAILABLE = True
     except ImportError:
-        from requests_gssapi import HTTPSPNEGOAuth as HTTPSKerberos
+        print('No Kerberos available')
 
 # disable annoying SubjectAltNameWarning warnings
 try:
@@ -319,7 +323,7 @@ class GenericServer(object):
             session.auth = requests.auth.HTTPDigestAuth(self.username, self.password)
         elif self.authentication == 'ecp' and ECP_AVAILABLE:
             session.auth = HTTPECPAuth(self.idp_ecp_endpoint, username=self.username, password=self.password)
-        elif self.authentication == 'kerberos':
+        elif self.authentication == 'kerberos' and KERBEROS_AVAILABLE:
             session.auth = HTTPSKerberos()
         elif self.authentication == 'bearer':
             session.auth = BearerAuth(self.password)

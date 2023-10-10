@@ -107,6 +107,28 @@ try:
 except ImportError:
     ECP_AVAILABLE = False
 
+# flag to keep track of Kerberos availability
+KERBEROS_AVAILABLE = False
+if OS == OS_MACOS:
+    # requests_gssapi is newer but not available everywhere
+    try:
+        # extra imports needed to get it compiled on macOS
+        import numbers
+        import gssapi.raw.cython_converters
+        from requests_gssapi import HTTPSPNEGOAuth as HTTPSKerberos
+        KERBEROS_AVAILABLE = True
+    except ImportError:
+        print('No Kerberos available')
+else:
+    # requests_gssapi is newer but not available everywhere
+    try:
+        # requests_gssapi needs installation of KfW - Kerberos for Windows
+        # requests_kerberoes doesn't
+        from requests_kerberos import HTTPKerberosAuth as HTTPSKerberos
+        KERBEROS_AVAILABLE = True
+    except ImportError:
+        print('No Kerberos available')
+
 # since Qt6 HighDPI-awareness is default behaviour
 if QT_VERSION_MAJOR < 6:
     # enable HighDPI-awareness to avoid https://github.com/HenriWahl/Nagstamon/issues/618
@@ -5828,9 +5850,11 @@ class Dialog_Server(Dialog):
         self.window.button_choose_custom_cert_ca_file.clicked.connect(self.choose_custom_cert_ca_file)
 
         # fill authentication combobox
-        self.window.input_combobox_authentication.addItems(['Basic', 'Digest', 'Kerberos', 'Bearer'])
+        self.window.input_combobox_authentication.addItems(['Basic', 'Digest', 'Bearer'])
         if ECP_AVAILABLE is True:
             self.window.input_combobox_authentication.addItems(['ECP'])
+        if KERBEROS_AVAILABLE is True:
+            self.window.input_combobox_authentication.addItems(['Kerberos'])
 
         # detect change of server type which leads to certain options shown or hidden
         self.window.input_combobox_type.activated.connect(self.toggle_type)
