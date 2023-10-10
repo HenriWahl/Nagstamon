@@ -5,7 +5,8 @@ keyring
 lxml
 pip-system-certs
 psutil
-pyinstaller
+# last stable of the 5 series
+pyinstaller==5.13.2
 pypiwin32
 pyqt6==6.5.2
 pyqt6-qt6==6.5.2
