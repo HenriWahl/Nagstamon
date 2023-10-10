@@ -114,8 +114,6 @@ def winmain():
                      '--icon=..\\Nagstamon\\resources\\nagstamon.ico',
                      '--name=Nagstamon',
                      '--hidden-import=PyQt6.uic.plugins',
-                     '--hidden-import=requests_kerberos',
-                     '--hidden-import=spnego',
                      '--hidden-import=win32timezone',
                      GUI_MODE,
                      '..\\nagstamon.py'],
