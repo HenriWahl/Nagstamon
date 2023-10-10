@@ -179,18 +179,21 @@ class MultisiteServer(GenericServer):
         #        return ''
 
         # looks like cookieauth
-        elif content.startswith('<'):
+        elif content.startswith('<') or\
+                '<!DOCTYPE html>' in content:
             self.CookieAuth = True
             # if first attempt login and then try to get data again
             if not self._is_auth_in_cookies():
                 self._get_cookie_login()
                 result = self.FetchURL(url, 'raw')
                 content, error = result.result, result.error
-                if content.startswith('<'):
+                if content.startswith('<') or\
+                '<!DOCTYPE html>' in content:
                     return ''
 
         # if finally still some <HTML> is sent this looks like a new login due to password change
-        if content.startswith('<'):
+        if content.startswith('<') or\
+                '<!DOCTYPE html>' in content:
             self.refresh_authentication = True
             return ''
 

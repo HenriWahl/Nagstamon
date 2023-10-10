@@ -7010,7 +7010,11 @@ class CheckVersion(QObject):
                                                giveback='raw',
                                                no_auth=True)
                     # stop searching the available download URLs
-                    if response.error == "" and not response.result.startswith('<'):
+                    if response.error == "" and \
+                            not response.result.startswith('<') and \
+                            not '\n' in response.result and \
+                            len(response.result) > 5 and \
+                            response.result[0].isdigit():
                         latest_version = response.result.strip()
                         break
                 # ignore TLS error in case it was caused by requesting latest version - not important for monitoring
