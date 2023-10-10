@@ -32,6 +32,8 @@ from urllib.request import getproxies
 from bs4 import BeautifulSoup
 import requests
 
+from Nagstamon.Servers.Oauth2WebFlow import get_oauth2_session
+
 # check ECP authentication support availability
 try:
     from requests_ecp import HTTPECPAuth
@@ -299,7 +301,12 @@ class GenericServer(object):
             self.session = None
             return False
         elif self.session is None:
-            self.session = self.create_session()
+            try:
+                self.session = self.create_session()
+            except Exception as e:
+                print("Error while creating session: {}".format(e))
+                self.session = None
+                return False
             return True
 
     def create_session(self):
@@ -309,7 +316,6 @@ class GenericServer(object):
         different between various server types
         """
         session = requests.Session()
-        session.headers['User-Agent'] = self.USER_AGENT
 
         # support for different authentication types
         if self.authentication == 'basic':
@@ -323,6 +329,15 @@ class GenericServer(object):
             session.auth = HTTPSKerberos()
         elif self.authentication == 'bearer':
             session.auth = BearerAuth(self.password)
+        elif self.authentication == 'oauth2 web flow':
+            session = get_oauth2_session(
+                client_id=self.username,
+                client_secret=self.password,
+                openid_config_url=self.idp_ecp_endpoint,
+                port=9000)
+            session.headers['X-OAuth2'] = "1"
+
+        session.headers['User-Agent'] = self.USER_AGENT
 
         # default to check TLS validity
         if self.ignore_cert:
@@ -1535,6 +1550,7 @@ class GenericServer(object):
                     del temporary_session
 
             except Exception:
+                self.reset_HTTP()   # reset session to refresh auth and cookies
                 if conf.debug_mode:
                     self.Error(sys.exc_info())
                 result, error = self.Error(sys.exc_info())

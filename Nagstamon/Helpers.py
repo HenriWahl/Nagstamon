@@ -429,15 +429,15 @@ def compare_status_information(item):
     return(item.lower())
 
 
-def webbrowser_open(url):
+def webbrowser_open(url, new=0):
     """
         decide if default or custom browser is used for various tasks
         used by almost all
     """
     if conf.use_default_browser:
-        webbrowser.open(url)
+        webbrowser.open(url, new=new)
     else:
-        webbrowser.get('{0} %s &'.format(conf.custom_browser)).open(url)
+        webbrowser.get('{0} %s &'.format(conf.custom_browser)).open(url, new=new)
 
 
 def get_distro():

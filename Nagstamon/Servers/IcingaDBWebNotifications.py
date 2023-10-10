@@ -17,41 +17,16 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-# Initial implementation by Marcus Mönnig
-#
-# This Server class connects against IcingaWeb2. The monitor URL in the setup should be
-# something like http://icinga2/icingaweb2
-#
-# Status/TODOs:
-#
-# * The IcingaWeb2 API is not implemented yet, so currently this implementation uses
-#   two HTTP requests per action. The first fetches the HTML, then the form data is extracted and
-#   then a second HTTP POST request is made which actually executed the action.
-#   Once IcingaWeb2 has an API, it's probably the better choice.
-
-
-from Nagstamon.Servers.Generic import GenericServer
-import urllib.parse
+# Same as IcingaDBWeb but uses the notification endpoint to allow fine granular recipient management for alerts
 import sys
 import json
 import datetime
-import socket
 
 from bs4 import BeautifulSoup
 from Nagstamon.Objects import (GenericHost,
                                GenericService,
                                Result)
-from Nagstamon.Config import (conf,
-                              AppInfo)
-from Nagstamon.Helpers import webbrowser_open
-from Nagstamon.Servers.IcingaDBWeb import IcingaDBWebServer
-
-
-def strfdelta(tdelta, fmt):
-    d = {'days': tdelta.days}
-    d['hours'], rem = divmod(tdelta.seconds, 3600)
-    d['minutes'], d['seconds'] = divmod(rem, 60)
-    return fmt.format(**d)
+from Nagstamon.Servers.IcingaDBWeb import IcingaDBWebServer, strfdelta
 
 
 class IcingaDBWebNotificationsServer(IcingaDBWebServer):
@@ -137,7 +112,7 @@ class IcingaDBWebNotificationsServer(IcingaDBWebServer):
                 self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'][status_numeric]
                 self.new_hosts[host_name].last_check = datetime.datetime.fromtimestamp(int(float(notification['host']['state']['last_update'])))
                 self.new_hosts[host_name].attempt = "{}/{}".format(notification['host']['state']['check_attempt'],notification['host']['max_check_attempts'])
-                self.new_hosts[host_name].status_information = BeautifulSoup(notification['host']['state']['output'].replace('\n', ' ').strip(), 'html.parser').text
+                self.new_hosts[host_name].status_information = BeautifulSoup(notification['text'].replace('\n', ' ').strip(), 'html.parser').text
                 self.new_hosts[host_name].passiveonly = not int(notification['host'].get('active_checks_enabled') or '0')
                 self.new_hosts[host_name].notifications_disabled = not int(notification['host'].get('notifications_enabled') or '0')
                 self.new_hosts[host_name].flapping = bool(int(notification['host']['state']['is_flapping'] or 0))
@@ -209,7 +184,7 @@ class IcingaDBWebNotificationsServer(IcingaDBWebServer):
                 self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][status_numeric]
 
                 self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(int(float(notification['service']['state']['last_update'])))
-                self.new_hosts[host_name].services[service_name].status_information = BeautifulSoup(notification['service']['state']['output'].replace('\n', ' ').strip(), 'html.parser').text
+                self.new_hosts[host_name].services[service_name].status_information = BeautifulSoup(notification['text'].replace('\n', ' ').strip(), 'html.parser').text
                 self.new_hosts[host_name].services[service_name].passiveonly = not int(notification['service'].get('active_checks_enabled') or '0')
                 self.new_hosts[host_name].services[service_name].notifications_disabled = not int(notification['service'].get('notifications_enabled') or '0')
                 self.new_hosts[host_name].services[service_name].flapping = bool(int(notification['service']['state']['is_flapping'] or 0))

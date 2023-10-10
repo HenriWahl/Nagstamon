@@ -16,3 +16,4 @@ requests-ecp
 requests-kerberos
 setuptools
 wheel
+requests_oauthlib
