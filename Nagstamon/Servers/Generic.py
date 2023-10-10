@@ -71,8 +71,8 @@ if OS == OS_MACOS:
         import gssapi.raw.cython_converters
         from requests_gssapi import HTTPSPNEGOAuth as HTTPSKerberos
         KERBEROS_AVAILABLE = True
-    except ImportError:
-        print('No Kerberos available')
+    except ImportError as error:
+        print(error)
 else:
     # requests_gssapi is newer but not available everywhere
     try:
@@ -80,8 +80,8 @@ else:
         # requests_kerberoes doesn't
         from requests_kerberos import HTTPKerberosAuth as HTTPSKerberos
         KERBEROS_AVAILABLE = True
-    except ImportError:
-        print('No Kerberos available')
+    except ImportError as error:
+        print(error)
 
 # disable annoying SubjectAltNameWarning warnings
 try:
