@@ -8,6 +8,7 @@ psutil
 # last stable of the 5 series
 pyinstaller==5.13.2
 pypiwin32
+# try latest Qt6
 pyqt6==6.5.3
 pyqt6-qt6==6.5.3
 pysocks
