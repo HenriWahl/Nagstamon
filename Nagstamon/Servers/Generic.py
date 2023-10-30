@@ -360,7 +360,7 @@ class GenericServer(object):
                 if self.proxy_username == self.proxy_password == '':
                     user_pass = ''
                 else:
-                    user_pass = '{0}:{1}@'.format(self.proxy_username, self.proxy_password)
+                    user_pass = '{0}:{1}'.format(self.proxy_username, self.proxy_password)
 
                 # split and analyze proxy URL
                 proxy_address_parts = self.proxy_address.split('//')
@@ -370,7 +370,7 @@ class GenericServer(object):
                 # use only valid schemes
                 if scheme.lower() in ('http:', 'https:', 'socks5:', 'socks5h:'):
                     # merge proxy URL
-                    proxy_url = '{0}//{1}{2}'.format(scheme, user_pass, host_port)
+                    proxy_url = f'{scheme}//{user_pass}@{host_port}/'
                     # fill session.proxies for both protocols
                     requester.proxies = {'http': proxy_url, 'https': proxy_url}
         else:
