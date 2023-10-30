@@ -244,7 +244,7 @@ class OpsviewServer(GenericServer):
             # check if any error occured
             errors_occured = self.check_for_error(data, error, status_code)
             # if there are errors return them
-            if errors_occured:
+            if errors_occured is not None:
                 return errors_occured
                 
             if conf.debug_mode:

@@ -604,7 +604,7 @@ class CentreonServer(GenericServer):
             errors_occured = self.check_for_error(xmlobj, error, status_code)
 
             # if there are errors return them
-            if errors_occured:
+            if errors_occured is not None:
                 return(errors_occured)
 
             # Check if the result is not empty
@@ -625,7 +625,7 @@ class CentreonServer(GenericServer):
                 xmlobj, error, status_code = result.result, result.error, result.status_code
                 errors_occured = self.check_for_error(xmlobj, error, status_code)
                 # if there are errors return them
-                if errors_occured:
+                if errors_occured is not None:
                     return(errors_occured)
 
                 # a second time a bad session id should raise an error
@@ -690,7 +690,7 @@ class CentreonServer(GenericServer):
             # check if any error occured
             errors_occured = self.check_for_error(xmlobj, error, status_code)
             # if there are errors return them
-            if errors_occured:
+            if errors_occured is not None:
                 return(errors_occured)
 
             # Check if the result is not empty
@@ -710,7 +710,7 @@ class CentreonServer(GenericServer):
                 xmlobj, error, status_code = result.result, result.error, result.status_code
                 errors_occured = self.check_for_error(xmlobj, error, status_code)
                 # if there are errors return them
-                if errors_occured:
+                if errors_occured is not None:
                     return(errors_occured)
 
                 # a second time a bad session id should raise an error
@@ -735,7 +735,7 @@ class CentreonServer(GenericServer):
                 errors_occured = self.check_for_error(xmlobj_meta, error_meta, status_code_meta)
 
                 # if there are errors return them
-                if errors_occured:
+                if errors_occured is not None:
                     return(errors_occured)
 
                 # a second time a bad session id should raise an error
