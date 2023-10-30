@@ -167,7 +167,7 @@ class IcingaServer(GenericServer):
                 # check if any error occured
                 errors_occured = self.check_for_error(jsonraw, error, status_code)
                 # if there are errors return them
-                if errors_occured:
+                if errors_occured is not None:
                     return(errors_occured)    
                 
                 jsondict = json.loads(jsonraw)
@@ -231,7 +231,7 @@ class IcingaServer(GenericServer):
                 # check if any error occured
                 errors_occured = self.check_for_error(jsonraw, error, status_code)
                 # if there are errors return them
-                if errors_occured:
+                if errors_occured is not None:
                     return(errors_occured)    
 
                 jsondict = json.loads(jsonraw)
@@ -339,7 +339,7 @@ class IcingaServer(GenericServer):
                 # check if any error occured
                 errors_occured = self.check_for_error(htobj, error, status_code)
                 # if there are errors return them
-                if errors_occured:
+                if errors_occured is not None:
                     return(errors_occured)    
 
                 # put a copy of a part of htobj into table to be able to delete htobj
@@ -468,7 +468,7 @@ class IcingaServer(GenericServer):
                 # check if any error occured
                 errors_occured = self.check_for_error(htobj, error, status_code)
                 # if there are errors return them
-                if errors_occured:
+                if errors_occured is not None:
                     return(errors_occured)    
                 
                 table = htobj('table', {'class': 'status'})[0]
