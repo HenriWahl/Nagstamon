@@ -300,7 +300,12 @@ class IcingaDBWebServer(GenericServer):
                             self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][int(s['state']['hard_state'])]
                         else:
                             self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][int(s['state']['soft_state'])]
-                        self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(int(float(s['state']['last_update'])))
+
+                        if s['state']['last_update'].isnumeric(): # new version of icingadb doesnt return unix timestamp
+                            self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(int(float(s['state']['last_update'])))
+                        else:
+                            self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromisoformat(s['state']['last_update'])
+
                         self.new_hosts[host_name].services[service_name].attempt = "{}/{}".format(s['state']['check_attempt'],s['max_check_attempts'])
                         self.new_hosts[host_name].services[service_name].status_information = BeautifulSoup(s['state']['output'].replace('\n', ' ').strip(), 'html.parser').text
                         self.new_hosts[host_name].services[service_name].passiveonly = not int(s.get('active_checks_enabled') or '0')
@@ -327,11 +332,17 @@ class IcingaDBWebServer(GenericServer):
                                 self.new_hosts[host_name].services[service_name].attempt = "HARD"
 
                         # extra duration needed for calculation
-                        if s['state']['last_state_change'] is not None and s['state']['last_state_change'] != 0:
-                            duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(float(s['state']['last_state_change'])))
-                            self.new_hosts[host_name].services[service_name].duration = strfdelta(duration, '{days}d {hours}h {minutes}m {seconds}s')
-                        else:
-                            self.new_hosts[host_name].services[service_name].duration = 'n/a'
+                        if s['state']['last_state_change'] is not None:
+                            if s['state']['last_update'].isnumeric(): # new version of icingadb doesnt return unix timestamp
+                                duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(float(s['state']['last_state_change'])))
+                            else:
+                                last_state_change = datetime.datetime.fromisoformat(s['state']['last_state_change'])
+                                duration = datetime.datetime.now().replace(tzinfo=last_state_change.tzinfo) - last_state_change
+                            
+                            if duration.total_seconds() > 0:
+                                self.new_hosts[host_name].services[service_name].duration = strfdelta(duration, '{days}d {hours}h {minutes}m {seconds}s')
+                            else:
+                                self.new_hosts[host_name].services[service_name].duration = 'n/a'
 
                     del s, host_name, service_name
         except:
