@@ -1706,7 +1706,7 @@ class GenericServer(object):
                           error=copy.deepcopy(error),
                           status_code=copy.deepcopy(status_code))
         else:
-            return False
+            return None
 
     def get_worst_status_current(self):
         """
