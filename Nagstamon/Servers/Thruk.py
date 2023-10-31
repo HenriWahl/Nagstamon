@@ -279,7 +279,7 @@ class ThrukServer(GenericServer):
             # check if any error occured
             errors_occured = self.check_for_error(jsonraw, error, status_code)
             # if there are errors return them
-            if errors_occured:
+            if errors_occured is not None:
                 return(errors_occured)
 
             # in case basic auth did not work try form login cookie based login
@@ -327,7 +327,7 @@ class ThrukServer(GenericServer):
             # check if any error occured
             errors_occured = self.check_for_error(jsonraw, error, status_code)
             # if there are errors return them
-            if errors_occured:
+            if errors_occured is not None:
                 return(errors_occured)
 
             # in case basic auth did not work try form login cookie based login

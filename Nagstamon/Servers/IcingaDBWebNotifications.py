@@ -86,7 +86,7 @@ class IcingaDBWebNotificationsServer(IcingaDBWebServer):
 
         # check if any error occurred
         potential_error = self.check_for_error(result.result, result.error, result.status_code)
-        if potential_error:
+        if potential_error is not None:
             return potential_error
 
         # HEALTH CHECK

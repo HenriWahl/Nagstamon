@@ -161,7 +161,7 @@ class IcingaDBWebServer(GenericServer):
 
                 # check if any error occured
                 potential_error = self.check_for_error(jsonraw, error, status_code)
-                if potential_error:
+                if potential_error is not None:
                     return potential_error
 
                 # Check if the backend is running

@@ -155,7 +155,7 @@ class PrometheusServer(GenericServer):
 
             # check if any error occured
             errors_occured = self.check_for_error(data, error, status_code)
-            if errors_occured is not False:
+            if errors_occured is not None:
                 return(errors_occured)
 
             if conf.debug_mode:

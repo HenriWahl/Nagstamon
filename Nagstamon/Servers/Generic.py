@@ -648,7 +648,7 @@ class GenericServer(object):
                 # check if any error occured
                 errors_occured = self.check_for_error(htobj, error, status_code)
                 # if there are errors return them
-                if errors_occured is not False:
+                if errors_occured is not None:
                     return(errors_occured)
 
                 # put a copy of a part of htobj into table to be able to delete htobj
@@ -773,7 +773,7 @@ class GenericServer(object):
                 # check if any error occured
                 errors_occured = self.check_for_error(htobj, error, status_code)
                 # if there are errors return them
-                if errors_occured is not False:
+                if errors_occured is not None:
                     return(errors_occured)
 
                 # too much copy.deepcopy()s here give recursion crashs
