@@ -124,8 +124,8 @@ class MultisiteServer(GenericServer):
                 # if no cookie yet login
                 self._get_cookie_login()
         elif self.CookieAuth and self.refresh_authentication:
-            if self.session is None:
-                self.session = self.create_session()
+            #if self.session is None:
+            self.session = self.create_session()
 
             # force re-auth
             self._get_cookie_login()
