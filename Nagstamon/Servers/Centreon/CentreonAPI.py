@@ -97,8 +97,10 @@ class CentreonServer(GenericServer):
                 self.restapi_version = "latest"
             elif self.centreon_version_major == 22:
                 self.restapi_version = "v22.04"
-            else:
+            elif self.centreon_version_major == 23 and self.centreon_version_minor == 4:
                 self.restapi_version = "v23.04"
+            else:
+                self.restapi_version = "v23.10"
             if conf.debug_mode is True:
                 self.Debug(server='[' + self.get_name() + ']', debug='Centreon API version used : ' + self.restapi_version)
 
@@ -347,7 +349,7 @@ class CentreonServer(GenericServer):
                     self.new_hosts[new_host] = GenericHost()
                     self.new_hosts[new_host].name = alerts["name"]
                     self.new_hosts[new_host].server = self.name
-                    # API inconsistency, even by fixing exact version number
+                    # API inconsistency, even by fixing exact version number, changed starting with 22.04
                     if self.centreon_version_major == 21 or (self.centreon_version_major == 22 and self.centreon_version_minor == 4):
                         self.new_hosts[new_host].criticality = alerts["severity_level"]
                     else:
@@ -358,13 +360,20 @@ class CentreonServer(GenericServer):
                     self.new_hosts[new_host].duration = alerts["duration"]
                     self.new_hosts[new_host].attempt = alerts["tries"]
                     self.new_hosts[new_host].status_information = alerts["information"]
-                    self.new_hosts[new_host].passiveonly = alerts["passive_checks"]
-                    self.new_hosts[new_host].notifications_disabled = not alerts["notification_enabled"]
+                    # Change starting with 23.10
+                    if (self.centreon_version_major >= 23 and self.centreon_version_minor >= 10) or self.centreon_version_major > 23:
+                        self.new_hosts[new_host].passiveonly = alerts["has_passive_checks_enabled"]
+                        self.new_hosts[new_host].notifications_disabled = not alerts["is_notification_enabled"]
+                        self.new_hosts[new_host].acknowledged = alerts["is_acknowledged"]
+                        self.new_hosts[new_host].scheduled_downtime = alerts["is_in_downtime"]
+                    else:
+                        self.new_hosts[new_host].passiveonly = alerts["passive_checks"]
+                        self.new_hosts[new_host].notifications_disabled  = not alerts["notification_enabled"]
+                        self.new_hosts[new_host].acknowledged = alerts["acknowledged"]
+                        self.new_hosts[new_host].scheduled_downtime = alerts["in_downtime"]
                     # avoid crash if flapping is not configured in Centreon
                     # according to https://github.com/HenriWahl/Nagstamon/issues/866#issuecomment-1302257034
                     self.new_hosts[new_host].flapping = alerts.get("flapping", False)
-                    self.new_hosts[new_host].acknowledged = alerts["acknowledged"]
-                    self.new_hosts[new_host].scheduled_downtime = alerts["in_downtime"]
                     if "(S)" in alerts["tries"]:
                         self.new_hosts[new_host].status_type = self.HARD_SOFT['(S)']
                     else:
@@ -425,18 +434,25 @@ class CentreonServer(GenericServer):
                     self.new_hosts[new_host].services[new_service].duration = alerts["duration"]
                     self.new_hosts[new_host].services[new_service].attempt = alerts["tries"]
                     self.new_hosts[new_host].services[new_service].status_information = alerts["information"]
-                    self.new_hosts[new_host].services[new_service].passiveonly = alerts["passive_checks"]
-                    self.new_hosts[new_host].services[new_service].notifications_disabled = not alerts["notification_enabled"]
+                    # Change starting with 23.10
+                    if (self.centreon_version_major >= 23 and self.centreon_version_minor >= 10) or self.centreon_version_major > 23:
+                        self.new_hosts[new_host].services[new_service].passiveonly = alerts["has_passive_checks_enabled"]
+                        self.new_hosts[new_host].services[new_service].notifications_disabled = not alerts["is_notification_enabled"]
+                        self.new_hosts[new_host].services[new_service].acknowledged = alerts["is_acknowledged"]
+                        self.new_hosts[new_host].services[new_service].scheduled_downtime = alerts["is_in_downtime"]
+                    else:
+                        self.new_hosts[new_host].services[new_service].passiveonly = alerts["passive_checks"]
+                        self.new_hosts[new_host].services[new_service].notifications_disabled = not alerts["notification_enabled"]
+                        self.new_hosts[new_host].services[new_service].acknowledged = alerts["acknowledged"]
+                        self.new_hosts[new_host].services[new_service].scheduled_downtime = alerts["in_downtime"]
                     # avoid crash if flapping is not configured in Centreon
                     # according to https://github.com/HenriWahl/Nagstamon/issues/866#issuecomment-1302257034
                     self.new_hosts[new_host].services[new_service].flapping = alerts.get("flapping", False)
-                    self.new_hosts[new_host].services[new_service].acknowledged = alerts["acknowledged"]
-                    self.new_hosts[new_host].services[new_service].scheduled_downtime = alerts["in_downtime"]
                     if "(S)" in alerts["tries"]:
                         self.new_hosts[new_host].services[new_service].status_type = self.HARD_SOFT['(S)']
                     else:
                         self.new_hosts[new_host].services[new_service].status_type = self.HARD_SOFT['(H)']
-                    # API inconsistency, even by fixing exact version number
+                    # API inconsistency, even by fixing exact version number, changed starting with 22.04
                     if self.centreon_version_major == 21 or (self.centreon_version_major == 22 and self.centreon_version_minor == 4):
                         self.new_hosts[new_host].services[new_service].criticality = alerts["severity_level"]
                     else:
@@ -552,7 +568,7 @@ class CentreonServer(GenericServer):
         }
 
         # This new parameter was added in 23.04
-        if self.restapi_version == "v23.04":
+        if self.centreon_version_major >= 23:
             property_to_add = {
                 "check": {
                     "is_forced": True
