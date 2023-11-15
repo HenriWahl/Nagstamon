@@ -969,6 +969,7 @@ class Server(object):
         self.alertmanager_filter = ''
         self.map_to_critical = 'critical,error'
         self.map_to_warning = 'warning,warn'
+        self.map_to_down = 'down'
         self.map_to_unknown = 'unknown'
         self.map_to_ok = 'ok'
 
