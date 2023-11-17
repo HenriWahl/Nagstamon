@@ -47,6 +47,7 @@ class AlertmanagerServer(GenericServer):
     map_to_status_information = ''
     map_to_critical = ''
     map_to_warning = ''
+    map_to_down = ''
     map_to_unknown = ''
     map_to_ok = ''
     name = ''
@@ -96,6 +97,8 @@ class AlertmanagerServer(GenericServer):
             return "CRITICAL"
         if the_severity in self.map_to_warning.split(','):
             return "WARNING"
+        if the_severity in self.map_to_down.split(','):
+            return "DOWN"
         if the_severity in self.map_to_ok.split(','):
             return "OK"
         return the_severity.upper()
@@ -183,6 +186,8 @@ class AlertmanagerServer(GenericServer):
                   self.map_to_critical)
         log.debug("severity config (map_to_warning): '%s'",
                   self.map_to_warning)
+        log.debug("severity config (map_to_down): '%s'",
+                  self.map_to_down)
         log.debug("severity config (map_to_ok): '%s'",
                   self.map_to_ok)
 
