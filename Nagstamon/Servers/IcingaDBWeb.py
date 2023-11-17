@@ -36,6 +36,7 @@ import sys
 import copy
 import json
 import datetime
+from datetime import timezone
 import socket
 
 from bs4 import BeautifulSoup
@@ -241,7 +242,7 @@ class IcingaDBWebServer(GenericServer):
                                 duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(float(h['state']['last_state_change'])))
                             else:
                                 last_state_change = datetime.datetime.fromisoformat(h['state']['last_state_change'])
-                                duration = datetime.datetime.now().replace(tzinfo=last_state_change.tzinfo) - last_state_change
+                                duration = datetime.datetime.now(timezone.utc).astimezone() - last_state_change
                             
                             if duration.total_seconds() > 0:
                                 self.new_hosts[host_name].duration = strfdelta(duration,'{days}d {hours}h {minutes}m {seconds}s')
@@ -348,7 +349,7 @@ class IcingaDBWebServer(GenericServer):
                                 duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(float(s['state']['last_state_change'])))
                             else:
                                 last_state_change = datetime.datetime.fromisoformat(s['state']['last_state_change'])
-                                duration = datetime.datetime.now().replace(tzinfo=last_state_change.tzinfo) - last_state_change
+                                duration = datetime.datetime.now(timezone.utc).astimezone() - last_state_change
                             
                             if duration.total_seconds() > 0:
                                 self.new_hosts[host_name].services[service_name].duration = strfdelta(duration, '{days}d {hours}h {minutes}m {seconds}s')
