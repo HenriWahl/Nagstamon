@@ -36,7 +36,6 @@ import sys
 import copy
 import json
 import datetime
-from datetime import timezone
 import socket
 
 from bs4 import BeautifulSoup
@@ -209,11 +208,11 @@ class IcingaDBWebServer(GenericServer):
                         else:
                             self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'][int(h['state']['soft_state'])]
 
-                        if h['state']['last_update'].replace(".", "").isnumeric(): # new version of icingadb doesnt return unix timestamp
+                        if h['state']['last_update'].isnumeric(): # new version of icingadb doesnt return unix timestamp
                             self.new_hosts[host_name].last_check = datetime.datetime.fromtimestamp(int(float(h['state']['last_update'])))
                         else:
                             self.new_hosts[host_name].last_check = datetime.datetime.fromisoformat(h['state']['last_update'])
-
+                        
                         self.new_hosts[host_name].attempt = "{}/{}".format(h['state']['check_attempt'],h['max_check_attempts'])
                         self.new_hosts[host_name].status_information = BeautifulSoup(h['state']['output'].replace('\n', ' ').strip(), 'html.parser').text
                         self.new_hosts[host_name].passiveonly = not int(h.get('active_checks_enabled') or '0')
@@ -238,12 +237,12 @@ class IcingaDBWebServer(GenericServer):
                         # extra duration needed for calculation
                         self.new_hosts[host_name].duration = 'n/a'
                         if h['state']['last_state_change'] is not None:
-                            if h['state']['last_state_change'].replace(".", "").isnumeric(): # new version of icingadb doesnt return unix timestamp
+                            if h['state']['last_state_change'].isnumeric(): # new version of icingadb doesnt return unix timestamp
                                 duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(float(h['state']['last_state_change'])))
                             else:
                                 last_state_change = datetime.datetime.fromisoformat(h['state']['last_state_change'])
-                                duration = datetime.datetime.now(timezone.utc).astimezone() - last_state_change
-
+                                duration = datetime.datetime.now().replace(tzinfo=last_state_change.tzinfo) - last_state_change
+                            
                             if duration.total_seconds() > 0:
                                 self.new_hosts[host_name].duration = strfdelta(duration,'{days}d {hours}h {minutes}m {seconds}s')
 
@@ -312,7 +311,7 @@ class IcingaDBWebServer(GenericServer):
                         else:
                             self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][int(s['state']['soft_state'])]
 
-                        if s['state']['last_update'].replace(".", "").isnumeric(): # new version of icingadb doesnt return unix timestamp
+                        if s['state']['last_update'].isnumeric(): # new version of icingadb doesnt return unix timestamp
                             self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(int(float(s['state']['last_update'])))
                         else:
                             self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromisoformat(s['state']['last_update'])
@@ -345,12 +344,12 @@ class IcingaDBWebServer(GenericServer):
                         # extra duration needed for calculation
                         self.new_hosts[host_name].services[service_name].duration = 'n/a'
                         if s['state']['last_state_change'] is not None:
-                            if s['state']['last_update'].replace(".", "").isnumeric(): # new version of icingadb doesnt return unix timestamp
+                            if s['state']['last_update'].isnumeric(): # new version of icingadb doesnt return unix timestamp
                                 duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(float(s['state']['last_state_change'])))
                             else:
                                 last_state_change = datetime.datetime.fromisoformat(s['state']['last_state_change'])
-                                duration = datetime.datetime.now(timezone.utc).astimezone() - last_state_change
-
+                                duration = datetime.datetime.now().replace(tzinfo=last_state_change.tzinfo) - last_state_change
+                            
                             if duration.total_seconds() > 0:
                                 self.new_hosts[host_name].services[service_name].duration = strfdelta(duration, '{days}d {hours}h {minutes}m {seconds}s')
 
