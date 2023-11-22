@@ -276,31 +276,27 @@ class AlertmanagerServer(GenericServer):
     def _set_downtime(self, host, service, author, comment, fixed, start_time,
                       end_time, hours, minutes):
 
+        alert = self.hosts[host].services[service]
+
         # Convert local dates to UTC
         start_time_dt = convert_timestring_to_utc(start_time)
         end_time_dt = convert_timestring_to_utc(end_time)
 
         # API Spec: https://github.com/prometheus/alertmanager/blob/master/api/v2/openapi.yaml
-        silence_data = {
-            "matchers": [
-                {
-                    "name": "instance",
-                    "value": host,
-                    "isRegex": False,
-                    "isEqual": False
-                },
-                {
-                    "name": "alertname",
-                    "value": service,
-                    "isRegex": False,
-                    "isEqual": False
-                }
-            ],
-            "startsAt": start_time_dt,
-            "endsAt": end_time_dt,
-            "createdBy": author,
-            "comment": comment
-        }
+        silence_data = {}
+        silence_data["matchers"] = []
+        for name, value in alert.labels.items():
+            silence_data["matchers"].append({
+                "name": name,
+                "value": value,
+                "isRegex": False,
+                "isEqual": True
+            })
+        silence_data["startsAt"] = start_time_dt
+        silence_data["endsAt"] = end_time_dt
+        silence_data["comment"] = comment or "Nagstamon downtime"
+        silence_data["createdBy"] = author or "Nagstamon"
+
 
         post = requests.post(self.monitor_url + self.API_PATH_SILENCES, json=silence_data)
 
