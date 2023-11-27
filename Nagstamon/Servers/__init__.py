@@ -220,7 +220,7 @@ def create_server(server=None):
     new_server.map_to_unknown = server.map_to_unknown
     new_server.map_to_warning = server.map_to_warning
     new_server.map_to_critical = server.map_to_critical
-
+    new_server.map_to_down = server.map_to_down
 
     # server's individual preparations for HTTP connections (for example cookie creation)
     # is done in GetStatus() method of monitor
