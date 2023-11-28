@@ -5934,6 +5934,7 @@ class Dialog_Server(Dialog):
 
             # run through all input widgets and and apply defaults from config
             for widget in self.window.__dict__:
+
                 if widget.startswith('input_'):
                     if widget.startswith('input_checkbox_'):
                         setting = widget.split('input_checkbox_')[1]

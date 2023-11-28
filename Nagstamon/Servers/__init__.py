@@ -225,6 +225,7 @@ def create_server(server=None):
     # Thruk
     new_server.disabled_backends = server.disabled_backends
 
+
     # server's individual preparations for HTTP connections (for example cookie creation)
     # is done in GetStatus() method of monitor
     if server.enabled is True:
