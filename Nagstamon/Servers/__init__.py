@@ -221,6 +221,9 @@ def create_server(server=None):
     new_server.map_to_warning = server.map_to_warning
     new_server.map_to_critical = server.map_to_critical
 
+    # Thruk
+    new_server.disabled_backends = server.disabled_backends
+
 
     # server's individual preparations for HTTP connections (for example cookie creation)
     # is done in GetStatus() method of monitor
