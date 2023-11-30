@@ -220,6 +220,7 @@ def create_server(server=None):
     new_server.map_to_unknown = server.map_to_unknown
     new_server.map_to_warning = server.map_to_warning
     new_server.map_to_critical = server.map_to_critical
+    new_server.map_to_down = server.map_to_down
 
     # Thruk
     new_server.disabled_backends = server.disabled_backends
