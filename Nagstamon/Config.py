@@ -977,6 +977,9 @@ class Server(object):
         self.notification_filter = "user.name=*"
         self.notification_lookback = "30 minutes"
 
+        # Thruk
+        self.disabled_backends = ""
+
 class Action(object):
     """
     class for custom actions, which whill be thrown into one config dictionary like the servers

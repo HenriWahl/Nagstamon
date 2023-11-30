@@ -5821,6 +5821,8 @@ class Dialog_Server(Dialog):
             self.window.label_notification_filter: ['IcingaDBWebNotifications'],
             self.window.input_lineedit_notification_lookback: ['IcingaDBWebNotifications'],
             self.window.label_notification_lookback: ['IcingaDBWebNotifications'],
+            self.window.label_disabled_backends: ['Thruk'],
+            self.window.input_lineedit_disabled_backends: ['Thruk'],
         }
 
         # to be used when selecting authentication method Kerberos

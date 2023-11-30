@@ -267,6 +267,9 @@ class GenericServer(object):
         self.notification_filter = None
         self.notification_lookback = None
 
+        # Thruk
+        self.disabled_backends = None
+
     def init_config(self):
         '''
             set URLs for CGI - they are static and there is no need to set them with every cycle
