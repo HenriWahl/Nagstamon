@@ -1,6 +1,8 @@
 FROM fedora:37
 LABEL maintainer=henri@nagstamon.de
 
+RUN dnf -y upgrade
+
 RUN dnf -y install createrepo_c \
                    desktop-file-utils \
                    git \

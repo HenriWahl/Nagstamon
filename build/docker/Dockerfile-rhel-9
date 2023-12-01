@@ -1,6 +1,8 @@
 FROM rockylinux:9
 LABEL maintainer=henri@nagstamon.de
 
+RUN dnf -y upgrade
+
 RUN dnf -y install 'dnf-command(config-manager)' \
                    epel-release && \
     crb enable && \
