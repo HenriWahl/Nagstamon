@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>639</width>
-    <height>1470</height>
+    <height>1527</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -41,10 +41,100 @@
    <property name="verticalSpacing">
     <number>2</number>
    </property>
-   <item row="26" column="0" colspan="3">
-    <widget class="QCheckBox" name="input_checkbox_show_options">
+   <item row="5" column="1" colspan="2">
+    <widget class="QLineEdit" name="input_lineedit_monitor_cgi_url">
      <property name="text">
-      <string>Show more options</string>
+      <string>https://monitor-server/monitor/cgi-bin</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="label_monitor_url">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Monitor URL:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="label_monitor_cgi_url">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Monitor CGI URL:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QComboBox" name="input_combobox_type"/>
+   </item>
+   <item row="9" column="1">
+    <widget class="QLineEdit" name="input_lineedit_password">
+     <property name="text">
+      <string>1234567890</string>
+     </property>
+     <property name="echoMode">
+      <enum>QLineEdit::Password</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="2">
+    <widget class="QCheckBox" name="input_checkbox_save_password">
+     <property name="text">
+      <string>Save password</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1" colspan="2">
+    <widget class="QLineEdit" name="input_lineedit_name">
+     <property name="text">
+      <string>Monitor server</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1" colspan="2">
+    <widget class="QLineEdit" name="input_lineedit_monitor_url">
+     <property name="inputMask">
+      <string/>
+     </property>
+     <property name="text">
+      <string>https://monitor-server</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="label_name">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>Monitor name:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="1">
+    <widget class="QLineEdit" name="input_lineedit_username">
+     <property name="text">
+      <string>username</string>
+     </property>
+    </widget>
+   </item>
+   <item row="17" column="0">
+    <widget class="QCheckBox" name="input_checkbox_use_proxy">
+     <property name="text">
+      <string>Use proxy</string>
      </property>
     </widget>
    </item>
@@ -61,15 +151,115 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="1" colspan="2">
-    <widget class="QLineEdit" name="input_lineedit_name">
+   <item row="0" column="0" colspan="3">
+    <widget class="QCheckBox" name="input_checkbox_enabled">
      <property name="text">
-      <string>Monitor server</string>
+      <string>Enabled</string>
      </property>
     </widget>
    </item>
-   <item row="7" column="0">
-    <widget class="QLabel" name="label_username">
+   <item row="18" column="0" colspan="3">
+    <widget class="QGroupBox" name="groupbox_proxy">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="title">
+      <string>Proxy:</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <property name="leftMargin">
+       <number>10</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>10</number>
+      </property>
+      <property name="bottomMargin">
+       <number>10</number>
+      </property>
+      <property name="spacing">
+       <number>5</number>
+      </property>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_proxy_password">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Proxy password:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_proxy_username">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Proxy username:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="input_lineedit_proxy_username">
+        <property name="text">
+         <string>proxyusername</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="input_lineedit_proxy_address">
+        <property name="text">
+         <string>http://proxy:port/</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_proxy_address">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Proxy address:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLineEdit" name="input_lineedit_proxy_password">
+        <property name="text">
+         <string>1234567890</string>
+        </property>
+        <property name="echoMode">
+         <enum>QLineEdit::Password</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0" colspan="2">
+       <widget class="QCheckBox" name="input_checkbox_use_proxy_from_os">
+        <property name="text">
+         <string>Use proxy from OS</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_server_type">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
        <horstretch>0</horstretch>
@@ -77,27 +267,7 @@
       </sizepolicy>
      </property>
      <property name="text">
-      <string>Username:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="7" column="1">
-    <widget class="QLineEdit" name="input_lineedit_username">
-     <property name="text">
-      <string>username</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="0">
-    <widget class="QLabel" name="label_monitor_cgi_url">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>Monitor CGI URL:</string>
+      <string>Monitor type:</string>
      </property>
     </widget>
    </item>
@@ -587,186 +757,6 @@
      </layout>
     </widget>
    </item>
-   <item row="17" column="0">
-    <widget class="QCheckBox" name="input_checkbox_use_proxy">
-     <property name="text">
-      <string>Use proxy</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="1" colspan="2">
-    <widget class="QLineEdit" name="input_lineedit_monitor_cgi_url">
-     <property name="text">
-      <string>https://monitor-server/monitor/cgi-bin</string>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="0">
-    <widget class="QLabel" name="label_monitor_url">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>Monitor URL:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="label_server_type">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>Monitor type:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="1">
-    <widget class="QComboBox" name="input_combobox_type"/>
-   </item>
-   <item row="0" column="0" colspan="3">
-    <widget class="QCheckBox" name="input_checkbox_enabled">
-     <property name="text">
-      <string>Enabled</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="0">
-    <widget class="QLabel" name="label_name">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>Monitor name:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="18" column="0" colspan="3">
-    <widget class="QGroupBox" name="groupbox_proxy">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="title">
-      <string>Proxy:</string>
-     </property>
-     <layout class="QGridLayout" name="gridLayout_2">
-      <property name="leftMargin">
-       <number>10</number>
-      </property>
-      <property name="topMargin">
-       <number>10</number>
-      </property>
-      <property name="rightMargin">
-       <number>10</number>
-      </property>
-      <property name="bottomMargin">
-       <number>10</number>
-      </property>
-      <property name="spacing">
-       <number>5</number>
-      </property>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_proxy_password">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Proxy password:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_proxy_username">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Proxy username:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLineEdit" name="input_lineedit_proxy_username">
-        <property name="text">
-         <string>proxyusername</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLineEdit" name="input_lineedit_proxy_address">
-        <property name="text">
-         <string>http://proxy:port/</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_proxy_address">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Proxy address:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QLineEdit" name="input_lineedit_proxy_password">
-        <property name="text">
-         <string>1234567890</string>
-        </property>
-        <property name="echoMode">
-         <enum>QLineEdit::Password</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0" colspan="2">
-       <widget class="QCheckBox" name="input_checkbox_use_proxy_from_os">
-        <property name="text">
-         <string>Use proxy from OS</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="9" column="1">
-    <widget class="QLineEdit" name="input_lineedit_password">
-     <property name="text">
-      <string>1234567890</string>
-     </property>
-     <property name="echoMode">
-      <enum>QLineEdit::Password</enum>
-     </property>
-    </widget>
-   </item>
-   <item row="9" column="2">
-    <widget class="QCheckBox" name="input_checkbox_save_password">
-     <property name="text">
-      <string>Save password</string>
-     </property>
-    </widget>
-   </item>
    <item row="28" column="2">
     <widget class="QDialogButtonBox" name="button_box">
      <property name="orientation">
@@ -777,13 +767,23 @@
      </property>
     </widget>
    </item>
-   <item row="4" column="1" colspan="2">
-    <widget class="QLineEdit" name="input_lineedit_monitor_url">
-     <property name="inputMask">
-      <string/>
+   <item row="7" column="0">
+    <widget class="QLabel" name="label_username">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
      <property name="text">
-      <string>https://monitor-server</string>
+      <string>Username:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="26" column="0" colspan="3">
+    <widget class="QCheckBox" name="input_checkbox_show_options">
+     <property name="text">
+      <string>Show more options</string>
      </property>
     </widget>
    </item>
