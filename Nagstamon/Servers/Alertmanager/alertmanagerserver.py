@@ -248,6 +248,12 @@ class AlertmanagerServer(GenericServer):
                     self.new_hosts[service.host].name = str(service.host)
                     self.new_hosts[service.host].server = self.name
                 self.new_hosts[service.host].services[service.name] = service
+                if service.name not in self.new_hosts[service.host].services:
+                    self.new_hosts[service.host].services[service.name] = service
+                else:
+                    # Compare the labels if they match do *not* create a new "instance" of alert
+                    if not service.labels == self.new_hosts[service.host].services[service.name].labels:
+                        self.new_hosts[service.host].services[service.name + service.fingerprint[0:4]] = service
 
         except Exception as the_exception:
             # set checking flag back to False
