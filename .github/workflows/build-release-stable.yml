@@ -8,7 +8,7 @@ env:
   repo_dir: nagstamon-jekyll/docs/repo
   cr_image: ghcr.io/henriwahl/build-nagstamon
   # to be increased if new updates of build images are necessary
-  cr_image_version: 1
+  cr_image_version: 3
   release: stable
 
 jobs:

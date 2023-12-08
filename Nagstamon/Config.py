@@ -68,6 +68,13 @@ if os.environ.get('CINNAMON_VERSION') or\
 else:
     DESKTOP_NEEDS_FIX = False
 
+# use QT platform plugins if not set otherwise on GNOME desktop
+# based on QGnomePlatform
+if not os.environ.get('QT_QPA_PLATFORMTHEME'):
+    if os.environ.get('XDG_SESSION_DESKTOP'):
+        if os.environ['XDG_SESSION_DESKTOP'].lower() == 'gnome':
+            os.environ['QT_QPA_PLATFORMTHEME'] = 'gnome'
+
 # queue.Queue() needs threading module which might be not such a good idea to be used
 # because QThread is already in use
 # maybe not the most logical place here to be defined but at least all
@@ -754,14 +761,14 @@ class Config(object):
         """
         if OS == OS_WINDOWS:
             defaultactions = {"RDP": Action(name="RDP", description="Connect via RDP.",
-                                            type="command", string="C:\windows\system32\mstsc.exe /v:$ADDRESS$"),
+                                            type="command", string="C:/windows/system32/mstsc.exe /v:$ADDRESS$"),
                               "VNC": Action(name="VNC", description="Connect via VNC.",
-                                            type="command", string="C:\Program Files\TightVNC\vncviewer.exe $ADDRESS$"),
+                                            type="command", string="C:/Program Files/TightVNC/vncviewer.exe $ADDRESS$"),
                               "Telnet": Action(name="Telnet", description="Connect via Telnet.",
-                                               type="command", string="C:\Windows\System32\Telnet.exe root@$ADDRESS$"),
+                                               type="command", string="C:/Windows/System32\telnet.exe root@$ADDRESS$"),
                               "SSH": Action(name="SSH", description="Connect via SSH.",
                                             type="command",
-                                            string="C:\Program Files\PuTTY\putty.exe -l root $ADDRESS$")}
+                                            string="C:/Program Files/PuTTY/putty.exe -l root $ADDRESS$")}
         elif OS == OS_MACOS:
             defaultactions = {"RDP": Action(name="RDP", description="Connect via RDP.",
                                             type="command", string="open rdp://$ADDRESS$"),
@@ -976,6 +983,9 @@ class Server(object):
         # IcingaDBWebNotificationsServer
         self.notification_filter = "user.name=*"
         self.notification_lookback = "30 minutes"
+
+        # Thruk
+        self.disabled_backends = ""
 
 class Action(object):
     """
