@@ -9,8 +9,8 @@ psutil
 pyinstaller==5.13.2
 pypiwin32
 # try newer version
-pyqt6==6.5.3
-pyqt6-qt6==6.5.3
+pyqt6==6.6.1
+pyqt6-qt6==6.6.1
 pysocks
 python-dateutil
 requests
