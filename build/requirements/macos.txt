@@ -7,8 +7,9 @@ psutil
 pyinstaller==5.13.2
 pyobjc-framework-ApplicationServices
 # 6.5.3 leads to crash on macOS
-pyqt6==6.6.1
-pyqt6-qt6==6.6.1
+# 6.6.1 leads to crash on macOS
+pyqt6==6.4.2
+pyqt6-qt6==6.4.2
 pysocks
 python-dateutil
 requests
