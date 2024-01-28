@@ -208,7 +208,7 @@ class IcingaDBWebServer(GenericServer):
                         else:
                             self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'][int(h['state']['soft_state'])]
 
-                        if h['state']['last_update'].isnumeric(): # new version of icingadb doesnt return unix timestamp
+                        if h['state']['last_update'].replace(".", "").isnumeric(): # new version of icingadb doesnt return unix timestamp
                             self.new_hosts[host_name].last_check = datetime.datetime.fromtimestamp(int(float(h['state']['last_update'])))
                         else:
                             self.new_hosts[host_name].last_check = datetime.datetime.fromisoformat(h['state']['last_update'])
@@ -237,7 +237,7 @@ class IcingaDBWebServer(GenericServer):
                         # extra duration needed for calculation
                         self.new_hosts[host_name].duration = 'n/a'
                         if h['state']['last_state_change'] is not None:
-                            if h['state']['last_state_change'].isnumeric(): # new version of icingadb doesnt return unix timestamp
+                            if h['state']['last_state_change'].replace(".", "").isnumeric(): # new version of icingadb doesnt return unix timestamp
                                 duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(float(h['state']['last_state_change'])))
                             else:
                                 last_state_change = datetime.datetime.fromisoformat(h['state']['last_state_change'])
@@ -311,7 +311,7 @@ class IcingaDBWebServer(GenericServer):
                         else:
                             self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][int(s['state']['soft_state'])]
 
-                        if s['state']['last_update'].isnumeric(): # new version of icingadb doesnt return unix timestamp
+                        if s['state']['last_update'].replace(".", "").isnumeric(): # new version of icingadb doesnt return unix timestamp
                             self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(int(float(s['state']['last_update'])))
                         else:
                             self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromisoformat(s['state']['last_update'])
@@ -344,7 +344,7 @@ class IcingaDBWebServer(GenericServer):
                         # extra duration needed for calculation
                         self.new_hosts[host_name].services[service_name].duration = 'n/a'
                         if s['state']['last_state_change'] is not None:
-                            if s['state']['last_update'].isnumeric(): # new version of icingadb doesnt return unix timestamp
+                            if s['state']['last_update'].replace(".", "").isnumeric(): # new version of icingadb doesnt return unix timestamp
                                 duration = datetime.datetime.now() - datetime.datetime.fromtimestamp(int(float(s['state']['last_state_change'])))
                             else:
                                 last_state_change = datetime.datetime.fromisoformat(s['state']['last_state_change'])
