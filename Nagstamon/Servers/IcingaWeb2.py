@@ -356,7 +356,9 @@ class IcingaWeb2Server(GenericServer):
         if service == '':
             url = self.monitor_cgi_url + '/monitoring/host/show?host=' + self.hosts[host].real_name
         else:
-            url = self.monitor_cgi_url + '/monitoring/service/show?host=' + self.hosts[host].real_name + '&service=' + self.hosts[host].services[service].real_name
+            url = self.monitor_cgi_url + \
+                  '/monitoring/service/show?host=' + self.hosts[host].real_name + \
+                  '&service=' + urllib.parse.quote(self.hosts[host].services[service].real_name)
         result = self.FetchURL(url, giveback='raw')
 
         if result.error != '':
@@ -367,20 +369,22 @@ class IcingaWeb2Server(GenericServer):
         pagesoup = BeautifulSoup(pageraw, 'html.parser')
 
         # Extract the relevant form element values
+        try:
+            formtag = pagesoup.find('form', {'name':'IcingaModuleMonitoringFormsCommandObjectCheckNowCommandForm'})
+            CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
+            formUID = formtag.findNext('input', {'name':'formUID'})['value']
+            btn_submit = formtag.findNext('button', {'name':'btn_submit'})['value']
 
-        formtag = pagesoup.find('form', {'name':'IcingaModuleMonitoringFormsCommandObjectCheckNowCommandForm'})
-        CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
-        formUID = formtag.findNext('input', {'name':'formUID'})['value']
-        btn_submit = formtag.findNext('button', {'name':'btn_submit'})['value']
-
-        # Pass these values to the same URL as cgi_data
-        cgi_data = {}
-        cgi_data['CSRFToken'] = CSRFToken
-        cgi_data['formUID'] = formUID
-        cgi_data['btn_submit'] = btn_submit
-        result = self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
-
-
+            # Pass these values to the same URL as cgi_data
+            cgi_data = {}
+            cgi_data['CSRFToken'] = CSRFToken
+            cgi_data['formUID'] = formUID
+            cgi_data['btn_submit'] = btn_submit
+            result = self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+        except AttributeError:
+            if conf.debug_mode:
+                self.Debug(server=self.get_name(), host=host, service=service,
+                           debug='No valid CSRFToken available')
     # Overwrite function from generic server to add expire_time value
     def set_acknowledge(self, info_dict):
         '''
