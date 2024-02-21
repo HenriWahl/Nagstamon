@@ -335,7 +335,6 @@ class IcingaWeb2Server(GenericServer):
 
                     del s, host_name, service_name
         except:
-
             import traceback
             traceback.print_exc(file=sys.stdout)
 
@@ -356,6 +355,7 @@ class IcingaWeb2Server(GenericServer):
         if service == '':
             url = self.monitor_cgi_url + '/monitoring/host/show?host=' + self.hosts[host].real_name
         else:
+            # to make the request working even with %-characters in service name it has to be quoted
             url = self.monitor_cgi_url + \
                   '/monitoring/service/show?host=' + self.hosts[host].real_name + \
                   '&service=' + urllib.parse.quote(self.hosts[host].services[service].real_name)
@@ -369,6 +369,7 @@ class IcingaWeb2Server(GenericServer):
         pagesoup = BeautifulSoup(pageraw, 'html.parser')
 
         # Extract the relevant form element values
+        # try-except needed in case the CSRFToken will not be found
         try:
             formtag = pagesoup.find('form', {'name':'IcingaModuleMonitoringFormsCommandObjectCheckNowCommandForm'})
             CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
@@ -380,11 +381,12 @@ class IcingaWeb2Server(GenericServer):
             cgi_data['CSRFToken'] = CSRFToken
             cgi_data['formUID'] = formUID
             cgi_data['btn_submit'] = btn_submit
-            result = self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+            self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
         except AttributeError:
             if conf.debug_mode:
                 self.Debug(server=self.get_name(), host=host, service=service,
                            debug='No valid CSRFToken available')
+
     # Overwrite function from generic server to add expire_time value
     def set_acknowledge(self, info_dict):
         '''
@@ -413,14 +415,13 @@ class IcingaWeb2Server(GenericServer):
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None, expire_time=None):
         # First retrieve the info page for this host/service
         if service == '':
-            # url = self.monitor_cgi_url + '/monitoring/host/acknowledge-problem?host=' + host
             url = '{0}/monitoring/host/acknowledge-problem?host={1}'.format(self.monitor_cgi_url,
                                                                             self.hosts[host].real_name)
         else:
-            # url = self.monitor_cgi_url + '/monitoring/service/acknowledge-problem?host=' + host + '&service=' + service
+            # to make the request working even with %-characters in service name it has to be quoted
             url = '{0}/monitoring/service/acknowledge-problem?host={1}&service={2}'.format(self.monitor_cgi_url,
                                                                                            self.hosts[host].real_name,
-                                                                                           self.hosts[host].services[service].real_name)
+                                                                                           urllib.parse.quote(self.hosts[host].services[service].real_name))
         result = self.FetchURL(url, giveback='raw')
 
         if result.error != '':
@@ -431,28 +432,34 @@ class IcingaWeb2Server(GenericServer):
         pagesoup = BeautifulSoup(pageraw, 'html.parser')
 
         # Extract the relevant form element values
-        formtag = pagesoup.find('form', {'name':'IcingaModuleMonitoringFormsCommandObjectAcknowledgeProblemCommandForm'})
+        # try-except needed in case the CSRFToken will not be found
+        try:
+            formtag = pagesoup.find('form', {'name':'IcingaModuleMonitoringFormsCommandObjectAcknowledgeProblemCommandForm'})
 
-        CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
-        formUID = formtag.findNext('input', {'name':'formUID'})['value']
-        btn_submit = formtag.findNext('input', {'name':'btn_submit'})['value']
+            CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
+            formUID = formtag.findNext('input', {'name':'formUID'})['value']
+            btn_submit = formtag.findNext('input', {'name':'btn_submit'})['value']
 
-        # Pass these values to the same URL as cgi_data
-        cgi_data = {}
-        cgi_data['CSRFToken'] = CSRFToken
-        cgi_data['formUID'] = formUID
-        cgi_data['btn_submit'] = btn_submit
-#
-        cgi_data['comment'] = comment
-        cgi_data['persistent'] = int(persistent)
-        cgi_data['sticky'] = int(sticky)
-        cgi_data['notify'] = int(notify)
-        cgi_data['comment'] = comment
-        if expire_time:
-            cgi_data['expire'] = 1
-            cgi_data['expire_time'] = expire_time
+            # Pass these values to the same URL as cgi_data
+            cgi_data = {}
+            cgi_data['CSRFToken'] = CSRFToken
+            cgi_data['formUID'] = formUID
+            cgi_data['btn_submit'] = btn_submit
+            cgi_data['comment'] = comment
+            cgi_data['persistent'] = int(persistent)
+            cgi_data['sticky'] = int(sticky)
+            cgi_data['notify'] = int(notify)
+            cgi_data['comment'] = comment
+            if expire_time:
+                cgi_data['expire'] = 1
+                cgi_data['expire_time'] = expire_time
 
-        self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+            self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+
+        except AttributeError:
+            if conf.debug_mode:
+                self.Debug(server=self.get_name(), host=host, service=service,
+                           debug='No valid CSRFToken available')
 
         if len(all_services) > 0:
             for s in all_services:
@@ -466,7 +473,10 @@ class IcingaWeb2Server(GenericServer):
             url = self.monitor_cgi_url + '/monitoring/host/process-check-result?host=' + self.hosts[host].real_name
             status = self.STATES_MAPPING_REV['hosts'][state.upper()]
         else:
-            url = self.monitor_cgi_url + '/monitoring/service/process-check-result?host=' + self.hosts[host].real_name + '&service=' + self.hosts[host].services[service].real_name
+            # to make the request working even with %-characters in service name it has to be quoted
+            url = self.monitor_cgi_url + \
+                  '/monitoring/service/process-check-result?host=' + self.hosts[host].real_name + \
+                  '&service=' + urllib.parse.quote(self.hosts[host].services[service].real_name)
             status = self.STATES_MAPPING_REV['services'][state.upper()]
 
         result = self.FetchURL(url, giveback='raw')
@@ -479,31 +489,38 @@ class IcingaWeb2Server(GenericServer):
         pagesoup = BeautifulSoup(pageraw, 'html.parser')
 
         # Extract the relevant form element values
+        # try-except needed in case the CSRFToken will not be found
+        try:
+            formtag = pagesoup.find('form', {'name':'IcingaModuleMonitoringFormsCommandObjectProcessCheckResultCommandForm'})
+            CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
+            formUID = formtag.findNext('input', {'name':'formUID'})['value']
+            btn_submit = formtag.findNext('input', {'name':'btn_submit'})['value']
 
-        formtag = pagesoup.find('form', {'name':'IcingaModuleMonitoringFormsCommandObjectProcessCheckResultCommandForm'})
-        CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
-        formUID = formtag.findNext('input', {'name':'formUID'})['value']
-        btn_submit = formtag.findNext('input', {'name':'btn_submit'})['value']
+            # Pass these values to the same URL as cgi_data
+            cgi_data = {}
+            cgi_data['CSRFToken'] = CSRFToken
+            cgi_data['formUID'] = formUID
+            cgi_data['btn_submit'] = btn_submit
 
-        # Pass these values to the same URL as cgi_data
-        cgi_data = {}
-        cgi_data['CSRFToken'] = CSRFToken
-        cgi_data['formUID'] = formUID
-        cgi_data['btn_submit'] = btn_submit
+            cgi_data['status'] = status
+            cgi_data['output'] = check_output
+            cgi_data['perfdata'] = performance_data
 
-        cgi_data['status'] = status
-        cgi_data['output'] = check_output
-        cgi_data['perfdata'] = performance_data
+            self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
 
-        self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
-
+        except AttributeError:
+            if conf.debug_mode:
+                self.Debug(server=self.get_name(), host=host, service=service,
+                           debug='No valid CSRFToken available')
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
         # First retrieve the info page for this host/service
         if service == '':
             url = self.monitor_cgi_url + '/monitoring/host/schedule-downtime?host=' + self.hosts[host].real_name
         else:
-            url = self.monitor_cgi_url + '/monitoring/service/schedule-downtime?host=' + self.hosts[host].real_name + '&service=' + self.hosts[host].services[service].real_name
+            url = self.monitor_cgi_url + \
+                  '/monitoring/service/schedule-downtime?host=' + self.hosts[host].real_name + \
+                  '&service=' + urllib.parse.quote(self.hosts[host].services[service].real_name)
 
         result = self.FetchURL(url, giveback='raw')
 
@@ -515,41 +532,47 @@ class IcingaWeb2Server(GenericServer):
         pagesoup = BeautifulSoup(pageraw, 'html.parser')
 
         # Extract the relevant form element values
-        if service == '':
-            formtag = pagesoup.find('form', {'name':'IcingaModuleMonitoringFormsCommandObjectScheduleHostDowntimeCommandForm'})
-        else:
-            formtag = pagesoup.find('form', {'name':'IcingaModuleMonitoringFormsCommandObjectScheduleServiceDowntimeCommandForm'})
+        # try-except needed in case the CSRFToken will not be found
+        try:
+            if service == '':
+                formtag = pagesoup.find('form', {'name':'IcingaModuleMonitoringFormsCommandObjectScheduleHostDowntimeCommandForm'})
+            else:
+                formtag = pagesoup.find('form', {'name':'IcingaModuleMonitoringFormsCommandObjectScheduleServiceDowntimeCommandForm'})
 
-        CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
-        formUID = formtag.findNext('input', {'name':'formUID'})['value']
-        btn_submit = formtag.findNext('input', {'name':'btn_submit'})['value']
+            CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
+            formUID = formtag.findNext('input', {'name':'formUID'})['value']
+            btn_submit = formtag.findNext('input', {'name':'btn_submit'})['value']
 
-        # Pass these values to the same URL as cgi_data
-        cgi_data = {}
-        cgi_data['CSRFToken'] = CSRFToken
-        cgi_data['formUID'] = formUID
-        cgi_data['btn_submit'] = btn_submit
-        cgi_data['comment'] = comment
-        if fixed:
-            cgi_data['type'] = 'fixed'
-        else:
-            cgi_data['type'] = 'flexible'
-            cgi_data['hours'] = hours
-            cgi_data['minutes'] = minutes
-        if start_time == '' or start_time == 'n/a':
-            start = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
-        else:
-            start = start_time
-        if end_time == '' or end_time == 'n/a':
-            end = (datetime.datetime.now() + datetime.timedelta(hours=hours, minutes=minutes)).strftime('%Y-%m-%dT%H:%M:%S')
-        else:
-            end = end_time
+            # Pass these values to the same URL as cgi_data
+            cgi_data = {}
+            cgi_data['CSRFToken'] = CSRFToken
+            cgi_data['formUID'] = formUID
+            cgi_data['btn_submit'] = btn_submit
+            cgi_data['comment'] = comment
+            if fixed:
+                cgi_data['type'] = 'fixed'
+            else:
+                cgi_data['type'] = 'flexible'
+                cgi_data['hours'] = hours
+                cgi_data['minutes'] = minutes
+            if start_time == '' or start_time == 'n/a':
+                start = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+            else:
+                start = start_time
+            if end_time == '' or end_time == 'n/a':
+                end = (datetime.datetime.now() + datetime.timedelta(hours=hours, minutes=minutes)).strftime('%Y-%m-%dT%H:%M:%S')
+            else:
+                end = end_time
 
-        cgi_data['start'] = start
-        cgi_data['end'] = end
+            cgi_data['start'] = start
+            cgi_data['end'] = end
 
-        self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+            self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
 
+        except AttributeError:
+            if conf.debug_mode:
+                self.Debug(server=self.get_name(), host=host, service=service,
+                           debug='No valid CSRFToken available')
 
     def get_start_end(self, host):
         '''
