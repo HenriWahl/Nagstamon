@@ -444,6 +444,9 @@ class Config(object):
         # time saving config
         try:
             for server in servers:
+                # server name needs to be a string at every cost
+                # see issue https://github.com/HenriWahl/Nagstamon/issues/1010
+                servers[server].name = str(servers[server].name)
                 # usernames for monitor server and proxy
                 servers[server].username = self.DeObfuscate(servers[server].username)
                 servers[server].proxy_username = self.DeObfuscate(servers[server].proxy_username)
