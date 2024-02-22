@@ -121,7 +121,8 @@ def winmain():
 
     if SIGNING:
         # environment variables will be used by powershell script for signing
-        subprocess.run(['C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe', './windows/code_signing.ps1', 'build/Nagstamon/Nagstamon.exe'])
+        #subprocess.run(['C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe', './windows/code_signing.ps1', 'build/Nagstamon/Nagstamon.exe'])
+        subprocess.run(['pwsh.exe', './windows/code_signing.ps1', 'build/Nagstamon/Nagstamon.exe'])
 
     # rename output
     os.rename(DIR_BUILD_EXE, DIR_BUILD_NAGSTAMON)
@@ -160,7 +161,8 @@ def winmain():
 
     if SIGNING:
         # environment variables will be used by powershell script for signing
-        subprocess.run(['C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe', '../windows/code_signing.ps1', '*.exe'])
+        #subprocess.run(['C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe', '../windows/code_signing.ps1', '*.exe'])
+        subprocess.run(['pwsh.exe', '../windows/code_signing.ps1', '*.exe'])
 
 def macmain():
     """
