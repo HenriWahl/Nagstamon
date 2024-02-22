@@ -169,7 +169,7 @@ jobs:
 
   windows-32:
     # better depend on stable build image
-    runs-on: windows-2019
+    runs-on: windows-2022
     needs: test
     steps:
       - uses: actions/checkout@v3
@@ -197,7 +197,7 @@ jobs:
 
   windows-64:
     # better depend on stable build image
-    runs-on: windows-2019
+    runs-on: windows-2022
     needs: test
     steps:
       - uses: actions/checkout@v3
@@ -223,7 +223,7 @@ jobs:
 
   windows-64-debug:
     # better depend on stable build image
-    runs-on: windows-2019
+    runs-on: windows-2022
     needs: test
     steps:
       - uses: actions/checkout@v3
@@ -295,7 +295,7 @@ jobs:
     env:
       family: fedora
       # which image to use for packaging
-      cr_image_latest: 38
+      cr_image_latest: 39
     steps:
       # get binaries created by other jobs
       - uses: actions/download-artifact@v3
