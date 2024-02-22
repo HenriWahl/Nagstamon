@@ -8,4 +8,5 @@ $cert_buffer = [System.Convert]::FromBase64String($env:WIN_SIGNING_CERT_BASE64)
 $cert = [System.Security.Cryptography.X509Certificates.X509Certificate2]::New($cert_buffer, $env:WIN_SIGNING_PASSWORD)
 
 # finally sign the given file
+Import-Module Microsoft.PowerShell.Security
 Set-AuthenticodeSignature -HashAlgorithm SHA256 -Certificate $cert -TimestampServer http://timestamp.sectigo.com -FilePath $file
