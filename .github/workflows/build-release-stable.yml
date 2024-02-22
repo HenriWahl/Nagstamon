@@ -295,7 +295,7 @@ jobs:
     env:
       family: fedora
       # which image to use for packaging
-      cr_image_latest: 39
+      cr_image_latest: 38
     steps:
       # get binaries created by other jobs
       - uses: actions/download-artifact@v3
