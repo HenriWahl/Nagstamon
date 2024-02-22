@@ -1,5 +1,15 @@
 nagstamon (3.13-20240221) unstable; urgency=low
   * New upstream
+    - improved Wayland support
+    - improved proxy support
+    - added Opsview hashtag filtering and can_change_only option
+    - fixes for Alertmanager
+    - fixes for Centreon
+    - fixes for Icinga
+    - fixes for Opsview
+    - fixes for Zabbix
+    - added support for registering version in Windows
+    - added support for using system certificates in Windows
 
  -- Henri Wahl <henri@nagstamon.de> Wed, Feb 21 2024 08:00:00 +0200
 
