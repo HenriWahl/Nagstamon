@@ -5,12 +5,11 @@ keyring
 lxml
 pip-system-certs
 psutil
-# last stable of the 5 series
-pyinstaller==5.13.2
+pyinstaller
 pypiwin32
 # try newer version
-pyqt6==6.6.1
-pyqt6-qt6==6.6.1
+pyqt6
+pyqt6-qt6
 pysocks
 python-dateutil
 requests
