@@ -158,7 +158,7 @@ jobs:
           if-no-files-found: error
 
   macos:
-    runs-on: macos-13
+    runs-on: macos-14
     needs: test
     steps:
       - uses: actions/checkout@v3
