@@ -5,9 +5,9 @@ keyring
 lxml
 pip-system-certs
 psutil
-pyinstaller
+# last stable of the 5 series
+pyinstaller==5.13.2
 pypiwin32
-# try newer version
 pyqt6
 pyqt6-qt6
 pysocks

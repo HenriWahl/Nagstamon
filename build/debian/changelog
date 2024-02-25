@@ -1,4 +1,4 @@
-nagstamon (3.13-20240221) unstable; urgency=low
+nagstamon (3.13-20240225) unstable; urgency=low
   * New upstream
     - improved Wayland support
     - improved proxy support
@@ -11,7 +11,7 @@ nagstamon (3.13-20240221) unstable; urgency=low
     - added support for registering version in Windows
     - added support for using system certificates in Windows
 
- -- Henri Wahl <henri@nagstamon.de> Wed, Feb 21 2024 08:00:00 +0200
+ -- Henri Wahl <henri@nagstamon.de> Sun, Feb 25 2024 08:00:00 +0200
 
 nagstamon (3.12.0) stable; urgency=low
   * New upstream
