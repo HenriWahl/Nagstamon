@@ -1,4 +1,4 @@
-nagstamon (3.13-20240225) unstable; urgency=low
+nagstamon (3.14.0) stable; urgency=low
   * New upstream
     - improved Wayland support
     - improved proxy support
