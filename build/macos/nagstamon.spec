@@ -34,7 +34,6 @@ exe = EXE(pyz,
           upx_exclude=[],
           runtime_tmpdir=None,
           console=False,
-          target_arch='universal2',
           codesign_identity=None,
           entitlements_file=None,
           icon='../../Nagstamon/resources/nagstamon.icns')
