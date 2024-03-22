@@ -19,6 +19,7 @@ RUN dnf -y install createrepo_c \
                    python3-requests \
                    python3-requests-kerberos \
                    python3-SecretStorage \
+                   python3-setuptools \
                    qt6-qtsvg \
                    qt6-qtmultimedia \
                    rpm-build
