@@ -98,7 +98,11 @@ class ZabbixLightApi():
 
     def login(self, username, password):
         self.logger.debug("Login in as " + username)
-        self.zbx_auth = self.do_request('user.login', {'user': username, 'password': password})
+        # see issue https://github.com/HenriWahl/Nagstamon/issues/1018
+        if self.api_version() < '6.4':
+            self.zbx_auth = self.do_request('user.login', {'user': username, 'password': password})
+        else:
+            self.zbx_auth = self.do_request('user.login', {'username': username, 'password': password})
 
 class ZabbixLightApiException(Exception):
     pass
