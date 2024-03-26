@@ -302,8 +302,7 @@ class ZabbixAPI(object):
         return False
 
     def api_version(self, **options):
-        # kicked out check auth to be able to check vesion before being logged in to use the correct username keyword
-        #self.__checkauth__()
+        # kicked out check auth to be able to check version before being logged in to use the correct username keyword
         obj = self.do_request(self.json_obj('apiinfo.version', options, auth=False))
         return obj['result']
 
