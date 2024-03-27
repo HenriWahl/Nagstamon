@@ -87,7 +87,7 @@ class ZabbixLightApi():
 
     def api_version(self, **options):
         obj = self.do_request('apiinfo.version', options, no_auth=True)
-        return obj['result']
+        return obj
 
     def logged_in(self):
         if self.zbx_auth is None:
