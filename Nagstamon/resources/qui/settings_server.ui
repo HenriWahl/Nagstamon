@@ -585,6 +585,63 @@
         </item>
        </layout>
       </item>
+      <item row="7" column="1" colspan="3">
+       <widget class="QCheckBox" name="input_checkbox_use_client_cert">
+        <property name="text">
+         <string>Use client side certificate</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="1">
+       <widget class="QLabel" name="label_client_cert_path">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Cert Path (PKCS12):</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="1">
+       <widget class="QLabel" name="label_client_cert_password">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Cert Password:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="2" colspan="2">
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QLineEdit" name="input_lineedit_client_cert_path"/>
+        </item>
+        <item>
+         <widget class="QPushButton" name="button_choose_client_cert_path">
+          <property name="text">
+           <string>Choose file...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="9" column="2">
+       <widget class="QLineEdit" name="input_lineedit_client_cert_password">
+        <property name="text">
+         <string>1234567890</string>
+        </property>
+        <property name="echoMode">
+         <enum>QLineEdit::Password</enum>
+        </property>
+       </widget>
+      </item>
       <item row="36" column="2" colspan="2">
        <widget class="QLineEdit" name="input_lineedit_disabled_backends">
         <property name="text">
@@ -810,6 +867,10 @@
   <tabstop>button_choose_custom_cert_ca_file</tabstop>
   <tabstop>input_combobox_authentication</tabstop>
   <tabstop>input_spinbox_timeout</tabstop>
+  <tabstop>input_checkbox_use_client_cert</tabstop>
+  <tabstop>input_lineedit_client_cert_path</tabstop>
+  <tabstop>button_choose_client_cert_path</tabstop>
+  <tabstop>input_lineedit_client_cert_password</tabstop>
   <tabstop>input_checkbox_use_autologin</tabstop>
   <tabstop>input_lineedit_monitor_site</tabstop>
   <tabstop>input_lineedit_autologin_key</tabstop>
