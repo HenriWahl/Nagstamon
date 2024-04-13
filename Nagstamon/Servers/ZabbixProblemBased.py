@@ -85,6 +85,10 @@ class ZabbixLightApi():
 
         return response_json['result']
 
+    def api_version(self, **options):
+        obj = self.do_request('apiinfo.version', options, no_auth=True)
+        return obj
+
     def logged_in(self):
         if self.zbx_auth is None:
             return False
@@ -98,7 +102,11 @@ class ZabbixLightApi():
 
     def login(self, username, password):
         self.logger.debug("Login in as " + username)
-        self.zbx_auth = self.do_request('user.login', {'user': username, 'password': password})
+        # see issue https://github.com/HenriWahl/Nagstamon/issues/1018
+        if self.api_version() < '6.4':
+            self.zbx_auth = self.do_request('user.login', {'user': username, 'password': password})
+        else:
+            self.zbx_auth = self.do_request('user.login', {'username': username, 'password': password})
 
 class ZabbixLightApiException(Exception):
     pass
