@@ -8,8 +8,22 @@
 	<project_license>GPL-2.0</project_license>
 	<name>Nagstamon</name>
 	<summary>The status monitor for the desktop</summary>
-    <releases>
+	<releases>
 		<release version="3.14.0" date="2024-02-24">
+			<description>
+				<ul>
+ 					<li>improved Wayland support</li>
+					<li>improved proxy support</li>
+					<li>added Opsview hashtag filtering and can_change_only option</li>
+					<li>fixes for Alertmanager</li>
+					<li>fixes for Centreon</li>
+					<li>fixes for Icinga</li>
+					<li>fixes for Opsview</li>
+					<li>fixes for Zabbix</li>
+					<li>added support for registering version in Windows</li>
+					<li>added support for using system certificates in Windows</li>
+				</ul>
+			</description>
 		</release>
 	</releases>
 	<description>
