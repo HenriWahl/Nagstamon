@@ -8,6 +8,10 @@
 	<project_license>GPL-2.0</project_license>
 	<name>Nagstamon</name>
 	<summary>The status monitor for the desktop</summary>
+<releases>
+		<release version="3.14.0" date="2024-02-24">
+		</release>
+	</releases>
 	<description>
 		<p>
 			Nagstamon is a status monitor for the desktop. It connects to multiple Nagios, Icinga, Opsview, Centreon,
