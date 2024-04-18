@@ -99,8 +99,12 @@ class CentreonServer(GenericServer):
                 self.restapi_version = "v22.04"
             elif self.centreon_version_major == 23 and self.centreon_version_minor == 4:
                 self.restapi_version = "v23.04"
-            else:
+            elif self.centreon_version_major == 23 and self.centreon_version_minor == 10:
                 self.restapi_version = "v23.10"
+            elif self.centreon_version_major == 24:
+                self.restapi_version = "v24.04"
+            else:
+                self.restapi_version = "v24.04"
             if conf.debug_mode is True:
                 self.Debug(server='[' + self.get_name() + ']', debug='Centreon API version used : ' + self.restapi_version)
 
@@ -486,14 +490,22 @@ class CentreonServer(GenericServer):
             # host
             if service == '':
                 host_id = self.get_host_and_service_id(host)
-
-                new_resource = {
-                    "type": "host",
-                    "id": host_id,
-                    "parent": {
-                        "id": None
+                if self.centreon_version_major >= 24:
+                    new_resource = {
+                        "type": "host",
+                        "id": host_id,
+                        "parent": {
+                            "id": host_id
+                        }
                     }
-                }
+                else:
+                    new_resource = {
+                        "type": "host",
+                        "id": host_id,
+                        "parent": {
+                            "id": None
+                        }
+                    }
 
                 acknowledgements["resources"].append(new_resource)
 
