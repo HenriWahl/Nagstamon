@@ -28,14 +28,14 @@ try:
     from PyQt6.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
 
     # get int-ed version parts
-    QT_VERSION_MAJOR, QT_VERSION_MINOR = [int(x) for x in QT_VERSION_STR.split('.')][0:2]
+    QT_VERSION_MAJOR, QT_VERSION_MINOR = [int(x) for x in QT_VERSION_STR.split('.')[0:2]]
     # for later decision which differences have to be considered
     QT_FLAVOR = 'PyQt6'
 except ImportError:
     try:
         from PyQt5.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
         # get int-ed version parts
-        QT_VERSION_MAJOR, QT_VERSION_MINOR = [int(x) for x in QT_VERSION_STR.split('.')][0:2]
+        QT_VERSION_MAJOR, QT_VERSION_MINOR = [int(x) for x in QT_VERSION_STR.split('.')[0:2]]
         # for later decision which differences have to be considered
         QT_FLAVOR = 'PyQt5'
     except ImportError:
