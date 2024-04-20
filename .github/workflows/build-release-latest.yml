@@ -63,7 +63,7 @@ jobs:
       - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
       # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
       - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon -e DEB_BUILD_OPTIONS=nocheck ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: build/*.deb
           retention-days: 1
@@ -85,7 +85,7 @@ jobs:
       - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
       # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
       - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: build/*.rpm
           retention-days: 1
@@ -107,7 +107,7 @@ jobs:
       - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
       # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
       - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: build/*.rpm
           retention-days: 1
@@ -129,7 +129,7 @@ jobs:
       - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
       # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
       - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: build/*.rpm
           retention-days: 1
@@ -151,7 +151,7 @@ jobs:
       - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
       # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
       - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: build/*.rpm
           retention-days: 1
@@ -173,7 +173,7 @@ jobs:
       - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
       # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
       - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: build/*.rpm
           retention-days: 1
@@ -195,7 +195,7 @@ jobs:
       - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
       # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
       - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: build/*.rpm
           retention-days: 1
@@ -210,7 +210,7 @@ jobs:
       - run: cd ${{ github.workspace }}/build; python3 build.py
         env:
           PYTHONPATH: ${{ github.workspace }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: build/*.dmg
           retention-days: 1
@@ -236,7 +236,7 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
           WIN_SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
           WIN_SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: |
             build/dist/*.zip
@@ -262,7 +262,7 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
           WIN_SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
           WIN_SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: |
             build/dist/*.zip
@@ -288,7 +288,7 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
           WIN_SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
           WIN_SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: |
             build/dist/*.zip
