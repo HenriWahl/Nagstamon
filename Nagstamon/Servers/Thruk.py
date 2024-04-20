@@ -201,6 +201,8 @@ class ThrukServer(GenericServer):
                 self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
 
     def _set_recheck(self, host, service):
+        self.session.headers.update({'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'})
+
         if service != '':
             if self.hosts[host].services[ service ].is_passive_only():
                 # Do not check passive only checks
