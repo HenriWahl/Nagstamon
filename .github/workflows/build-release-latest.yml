@@ -317,6 +317,8 @@ jobs:
       - uses: actions/checkout@v4
       # get binaries created by other jobs
       - uses: actions/download-artifact@v4
+        with:
+          name: ${{ github.job }}
       # get secret signing key
       - run: echo "${{ secrets.PACKAGE_SIGNING_KEY }}" >  signing_key.asc
       # organize SSH deploy key for nagstamon-jekyll repo
@@ -359,6 +361,8 @@ jobs:
     steps:
       # get binaries created by other jobs
       - uses: actions/download-artifact@v4
+        with:
+          name: ${{ github.job }}
       # organize SSH deploy key for nagstamon-repo
       - run: mkdir ~/.ssh
       - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
@@ -392,6 +396,8 @@ jobs:
     steps:
       # get binaries created by other jobs
       - uses: actions/download-artifact@v4
+        with:
+          name: ${{ github.job }}
       # organize SSH deploy key for nagstamon-repo
       - run: mkdir ~/.ssh
       - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
@@ -418,6 +424,8 @@ jobs:
     needs: [repo-rpm-rhel]
     steps:
       - uses: actions/download-artifact@v4
+        with:
+          name: ${{ github.job }}
       - run: cd artifact && md5sum *agstamon* > md5sums.txt
       - run: cd artifact && sha256sum *agstamon* > sha256sums.txt
       - uses: marvinpinto/action-automatic-releases@latest
