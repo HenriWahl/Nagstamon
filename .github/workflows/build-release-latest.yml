@@ -68,6 +68,7 @@ jobs:
           path: build/*.deb
           retention-days: 1
           if-no-files-found: error
+          name: ${{ github.job }}
 
   fedora-37:
     runs-on: ubuntu-latest
@@ -90,6 +91,7 @@ jobs:
           path: build/*.rpm
           retention-days: 1
           if-no-files-found: error
+          name: ${{ github.job }}
 
   fedora-38:
     runs-on: ubuntu-latest
@@ -112,6 +114,7 @@ jobs:
           path: build/*.rpm
           retention-days: 1
           if-no-files-found: error
+          name: ${{ github.job }}
 
   fedora-39:
     runs-on: ubuntu-latest
@@ -134,6 +137,7 @@ jobs:
           path: build/*.rpm
           retention-days: 1
           if-no-files-found: error
+          name: ${{ github.job }}
 
   fedora-40:
     runs-on: ubuntu-latest
@@ -156,6 +160,7 @@ jobs:
           path: build/*.rpm
           retention-days: 1
           if-no-files-found: error
+          name: ${{ github.job }}
 
   fedora-41:
     runs-on: ubuntu-latest
@@ -178,6 +183,7 @@ jobs:
           path: build/*.rpm
           retention-days: 1
           if-no-files-found: error
+          name: ${{ github.job }}
 
   rhel-9:
     runs-on: ubuntu-latest
@@ -200,6 +206,7 @@ jobs:
           path: build/*.rpm
           retention-days: 1
           if-no-files-found: error
+          name: ${{ github.job }}
 
   macos:
     runs-on: macos-12
@@ -215,6 +222,7 @@ jobs:
           path: build/*.dmg
           retention-days: 1
           if-no-files-found: error
+          name: ${{ github.job }}
 
   windows-32:
     # better depend on stable build image
@@ -243,6 +251,7 @@ jobs:
             build/dist/*.exe
           retention-days: 1
           if-no-files-found: error
+          name: ${{ github.job }}
 
   windows-64:
     # better depend on stable build image
@@ -269,6 +278,7 @@ jobs:
             build/dist/*.exe
           retention-days: 1
           if-no-files-found: error
+          name: ${{ github.job }}
 
   windows-64-debug:
     # better depend on stable build image
@@ -294,6 +304,7 @@ jobs:
             build/dist/*.zip
           retention-days: 1
           if-no-files-found: error
+          name: ${{ github.job }}
 
 # borrowed from dhcpy6d
   repo-debian:
