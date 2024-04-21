@@ -184,6 +184,8 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           pattern: 'debian*'
+          path: artifact
+          merge-multiple: true
       - run: pwd
       - run: find . -name '*.deb'
       # get secret signing key
