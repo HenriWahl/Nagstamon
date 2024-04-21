@@ -232,6 +232,8 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           pattern: 'fedora*'
+          path: artifact
+          merge-multiple: true
       # organize SSH deploy key for nagstamon-repo
       - run: mkdir ~/.ssh
       - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
@@ -267,6 +269,8 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: 'rhel*'
+          path: artifact
+          merge-multiple: true
       # organize SSH deploy key for nagstamon-repo
       - run: mkdir ~/.ssh
       - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
