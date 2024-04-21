@@ -17,39 +17,8 @@ env:
   release: latest
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [3.9, 3.11]
-
-    steps:
-    - uses: actions/checkout@v4
-    # somehow weird way to get the hash over the requirements to be aware if they changed
-    - id: requirements_hash
-      run: echo "HASH=$(md5sum build/requirements/linux.txt | cut -d\  -f1)" >> $GITHUB_OUTPUT
-      # docker login is needed for pushing the test image
-    - uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    # if image defined by hash over requirements is not pullable aka does not exist it will be created and pushed
-    - run: docker pull ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }} --build-arg VERSION=${{ matrix.python-version }} --build-arg REQUIREMENTS="$(cat build/requirements/linux.txt | base64 --wrap=0)" -f build/docker/Dockerfile-${{ github.job }} .
-    - run: docker push ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }}
-    # - name: Lint with flake8
-    #   run: |
-    #     # stop the build if there are Python syntax errors or undefined names
-    #     flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-    #     # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-    #     flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with unittest
-      # using the tests in precompiled image makes them way faster instead of creating the test environment every time from scratch
-      run: docker run --rm -v $PWD:/src --workdir /src ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }} python -m unittest tests/test_*.py
-
   debian:
     runs-on: ubuntu-latest
-    needs: test
     steps:
       - uses: actions/checkout@v4
       # docker login is needed for pushing the build image
@@ -72,7 +41,6 @@ jobs:
 
   fedora-37:
     runs-on: ubuntu-latest
-    needs: test
     steps:
       - uses: actions/checkout@v4
       # docker login is needed for pushing the build image
@@ -95,7 +63,6 @@ jobs:
 
   fedora-38:
     runs-on: ubuntu-latest
-    needs: test
     steps:
       - uses: actions/checkout@v4
       # docker login is needed for pushing the build image
@@ -118,7 +85,6 @@ jobs:
 
   fedora-39:
     runs-on: ubuntu-latest
-    needs: test
     steps:
       - uses: actions/checkout@v4
       # docker login is needed for pushing the build image
@@ -141,7 +107,6 @@ jobs:
 
   fedora-40:
     runs-on: ubuntu-latest
-    needs: test
     steps:
       - uses: actions/checkout@v4
       # docker login is needed for pushing the build image
@@ -164,7 +129,6 @@ jobs:
 
   fedora-41:
     runs-on: ubuntu-latest
-    needs: test
     steps:
       - uses: actions/checkout@v4
       # docker login is needed for pushing the build image
@@ -187,7 +151,6 @@ jobs:
 
   rhel-9:
     runs-on: ubuntu-latest
-    needs: test
     steps:
       - uses: actions/checkout@v4
       # docker login is needed for pushing the build image
@@ -208,109 +171,11 @@ jobs:
           if-no-files-found: error
           name: ${{ github.job }}
 
-  macos:
-    runs-on: macos-12
-    needs: test
-    steps:
-      - uses: actions/checkout@v4
-      - run: pip3 install --no-warn-script-location -r build/requirements/macos.txt
-      - run: cd ${{ github.workspace }}/build; python3 build.py
-        env:
-          PYTHONPATH: ${{ github.workspace }}
-      - uses: actions/upload-artifact@v4
-        with:
-          path: build/*.dmg
-          retention-days: 1
-          if-no-files-found: error
-          name: ${{ github.job }}
-
-  windows-32:
-    # better depend on stable build image
-    runs-on: windows-2022
-    needs: test
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.python_win_version }}
-          architecture: x86
-      #  no PyQt6 for win32 available on pypi.org
-      - run: ((Get-Content -path build/requirements/windows.txt -Raw) -replace 'pyqt6.*','pyqt5') | Set-Content -Path build/requirements/windows.txt
-      - run: python -m pip install --no-warn-script-location -r build/requirements/windows.txt
-      # pretty hacky but no other idea to avoid gssapi being installed which breaks requests-kerberos
-      - run: python -m pip uninstall -y gssapi requests-gssapi
-      - run: cd ${{ github.workspace }}/build; python build.py
-        env:
-          PYTHONPATH: ${{ github.workspace }}
-          WIN_SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
-          WIN_SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
-      - uses: actions/upload-artifact@v4
-        with:
-          path: |
-            build/dist/*.zip
-            build/dist/*.exe
-          retention-days: 1
-          if-no-files-found: error
-          name: ${{ github.job }}
-
-  windows-64:
-    # better depend on stable build image
-    runs-on: windows-2022
-    needs: test
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.python_win_version }}
-          architecture: x64
-      - run: python -m pip install --no-warn-script-location -r build/requirements/windows.txt
-      # pretty hacky but no other idea to avoid gssapi being installed which breaks requests-kerberos
-      - run: python -m pip uninstall -y gssapi requests-gssapi
-      - run: cd ${{ github.workspace }}/build; python build.py
-        env:
-          PYTHONPATH: ${{ github.workspace }}
-          WIN_SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
-          WIN_SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
-      - uses: actions/upload-artifact@v4
-        with:
-          path: |
-            build/dist/*.zip
-            build/dist/*.exe
-          retention-days: 1
-          if-no-files-found: error
-          name: ${{ github.job }}
-
-  windows-64-debug:
-    # better depend on stable build image
-    runs-on: windows-2022
-    needs: test
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.python_win_version }}
-          architecture: x64
-      - run: python -m pip install --no-warn-script-location -r build/requirements/windows.txt
-      # pretty hacky but no other idea to avoid gssapi being installed which breaks requests-kerberos
-      - run: python -m pip uninstall -y gssapi requests-gssapi
-      - run: cd ${{ github.workspace }}/build; python build.py debug
-        env:
-          PYTHONPATH: ${{ github.workspace }}
-          WIN_SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
-          WIN_SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
-      - uses: actions/upload-artifact@v4
-        with:
-          path: |
-            build/dist/*.zip
-          retention-days: 1
-          if-no-files-found: error
-          name: ${{ github.job }}
-
 # borrowed from dhcpy6d
   repo-debian:
     runs-on: ubuntu-latest
     # try to avoid race condition and start uploading only after the last install package has been build
-    needs: [debian, fedora-37, fedora-38, fedora-39, fedora-40, fedora-41, rhel-9, macos, windows-32, windows-64, windows-64-debug]
+    needs: [debian, fedora-37, fedora-38, fedora-39, fedora-40, fedora-41, rhel-9]
     env:
       family: debian
     steps:
@@ -321,6 +186,8 @@ jobs:
           pattern: 'debian*'
           path: artifact
           merge-multiple: true
+      - run: pwd
+      - run: find . -name '*.deb'
       # get secret signing key
       - run: echo "${{ secrets.PACKAGE_SIGNING_KEY }}" >  signing_key.asc
       # organize SSH deploy key for nagstamon-jekyll repo
@@ -424,22 +291,3 @@ jobs:
       # commit and push new binaries to nagstamon-repo
       - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
       - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ env.family }}" && git push
-
-  github-release:
-    runs-on: ubuntu-latest
-    needs: [repo-rpm-rhel]
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: '*'
-      - run: cd artifact && md5sum *agstamon* > md5sums.txt
-      - run: cd artifact && sha256sum *agstamon* > sha256sums.txt
-      - uses: marvinpinto/action-automatic-releases@latest
-      # the dciborow action is outdated as well :-(
-      #- uses: dciborow/action-github-releases@v1.0.1
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "latest"
-          prerelease: true
-          files: |
-            artifact/*
