@@ -268,7 +268,7 @@ jobs:
       # get binaries created by other jobs
       - uses: actions/download-artifact@v4
         with:
-          name: 'rhel*'
+          pattern: 'rhel*'
           path: artifact
           merge-multiple: true
       # organize SSH deploy key for nagstamon-repo
