@@ -19,7 +19,6 @@ env:
 jobs:
   debian:
     runs-on: ubuntu-latest
-    needs: test
     steps:
       - uses: actions/checkout@v4
       # docker login is needed for pushing the build image
