@@ -220,7 +220,7 @@ class IcingaDBWebServer(GenericServer):
                         self.new_hosts[host_name].notifications_disabled = not int(h.get('notifications_enabled') or '0')
                         self.new_hosts[host_name].flapping = bool(int(h['state']['is_flapping'] or 0))
                         #s['state']['is_acknowledged'] can be null, 0, 1, or 'sticky'
-                        self.new_hosts[host_name].acknowledged = bool(int(h['state']['is_acknowledged'].replace('sticky', '1') or 0))
+                        self.new_hosts[host_name].acknowledged = h['state']['is_acknowledged'] if isinstance(h['state']['is_acknowledged'], bool) else bool(int(h['state']['is_acknowledged'].replace('sticky', '1') or 0))
                         self.new_hosts[host_name].scheduled_downtime = bool(int(h['state']['in_downtime'] or 0))
 
                         # extra Icinga properties to solve https://github.com/HenriWahl/Nagstamon/issues/192
@@ -323,7 +323,7 @@ class IcingaDBWebServer(GenericServer):
                         self.new_hosts[host_name].services[service_name].notifications_disabled = not int(s.get('notifications_enabled') or '0')
                         self.new_hosts[host_name].services[service_name].flapping = bool(int(s['state']['is_flapping'] or 0))
                         #s['state']['is_acknowledged'] can be null, 0, 1, or 'sticky'
-                        self.new_hosts[host_name].services[service_name].acknowledged = bool(int(s['state']['is_acknowledged'].replace('sticky', '1') or 0))
+                        self.new_hosts[host_name].services[service_name].acknowledged = s['state']['is_acknowledged'] if isinstance(s['state']['is_acknowledged'], bool) else bool(int(s['state']['is_acknowledged'].replace('sticky', '1') or 0))
                         self.new_hosts[host_name].services[service_name].scheduled_downtime = bool(int(s['state']['in_downtime'] or 0))
                         self.new_hosts[host_name].services[service_name].unreachable = not bool(int(s['state']['is_reachable'] or 0))
 
