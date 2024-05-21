@@ -135,17 +135,6 @@ class ZabbixServer(GenericServer):
         services_in_maintenance = set()
 
         try:
-            api_version = int(''.join(self.zapi.api_version().split('.')[:-1])) # Make API Version smaller
-        except ZabbixAPIException:
-            # FIXME Is there a cleaner way to handle this? I just borrowed
-            # this code from 80 lines ahead. -- AGV
-            # set checking flag back to False
-            self.isChecking = False
-            result, error = self.Error(sys.exc_info())
-            print(sys.exc_info())
-            return Result(result=result, error=error)
-
-        try:
             now_ts = int(datetime.datetime.utcnow().timestamp())
             # only the maintenance object knows about services "in downtime"
             maintenances = self.zapi.maintenance.get({
