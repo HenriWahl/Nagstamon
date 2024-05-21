@@ -154,7 +154,6 @@ class ZabbixServer(GenericServer):
         try:
             try:
                 # Get a list of all issues (AKA tripped triggers)
-                # Zabbix 3+ returns array of objects
                 services = self.zapi.trigger.get({'only_true': True,
                                                   'skipDependent': True,
                                                   'monitored': True,
@@ -206,43 +205,24 @@ class ZabbixServer(GenericServer):
             # Create Hostids for shorten Query
             try:
                 hosts = []
-                if api_version >= 54:  # For Version 5.4 and higher
-                    # Some performance improvement for 5.4
-                    hostids = []
-                    # get just involved Hosts.
-                    for service in services:
-                        for host in service["hosts"]:
-                            hostids.append(host["hostid"])
+                hostids = []
+                # get just involved Hosts.
+                for service in services:
+                    for host in service["hosts"]:
+                        hostids.append(host["hostid"])
 
-                    try:
-                        hosts = self.zapi.host.get({"output": ["hostid", "host", "name", "status", "available",
-                                                               "maintenance_status", "maintenance_from"],
-                                                    "hostids": hostids,
-                                                    "selectInterfaces": ["ip"],
-                                                    "filter": {}
-                                                    })
-                    except (ZabbixError, ZabbixAPIException, APITimeout, Already_Exists):
-                        # set checking flag back to False
-                        self.isChecking = False
-                        result, error = self.Error(sys.exc_info())
-                        return Result(result=result, error=error)
-                else:
-                    try:
-                        # TODO: This Query can be removed when Zabbix Version 4 Support is dropped.
-                        hosts = self.zapi.host.get({"output": ["hostid", "host", "name", "status", "available",
-                                                               "error", "errors_from", # dropped in Version 5.4
-                                                               "snmp_available", "snmp_error", "snmp_errors_from", # dropped in Version 5.4
-                                                               "ipmi_available", "ipmi_error", "ipmi_errors_from", # dropped in Version 5.4
-                                                               "jmx_available", "jmx_error", "jmx_errors_from", # dropped in Version 5.4
-                                                               "maintenance_status", "maintenance_from"],
-                                                    "selectInterfaces": ["ip"],
-                                                    "filter": {}
-                                                    })
-                    except (ZabbixError, ZabbixAPIException, APITimeout, Already_Exists):
-                        # set checking flag back to False
-                        self.isChecking = False
-                        result, error = self.Error(sys.exc_info())
-                        return Result(result=result, error=error)
+                try:
+                    hosts = self.zapi.host.get({"output": ["hostid", "host", "name", "status", "available",
+                                                           "maintenance_status", "maintenance_from"],
+                                                "hostids": hostids,
+                                                "selectInterfaces": ["ip"],
+                                                "filter": {}
+                                                })
+                except (ZabbixError, ZabbixAPIException, APITimeout, Already_Exists):
+                    # set checking flag back to False
+                    self.isChecking = False
+                    result, error = self.Error(sys.exc_info())
+                    return Result(result=result, error=error)
                 # get All Hosts.
                 # 1. Store data in cache (to be used by events)
                 # 2. We store as faulty two kinds of hosts incidences:
