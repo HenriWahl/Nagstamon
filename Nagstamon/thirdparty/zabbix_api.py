@@ -179,10 +179,10 @@ class ZabbixAPI(object):
         obj = {'jsonrpc': '2.0',
                'method': method,
                'params': params,
-               'auth': self.auth,
+               'auth': self.auth,  # deprecated in 6.4
                'id': self.id
                }
-        if not auth:
+        if not auth or self.api_version > '6.4':
             del obj['auth']
 
         self.debug(logging.DEBUG, "json_obj: " + str(obj))
@@ -204,7 +204,7 @@ class ZabbixAPI(object):
             raise ZabbixAPIException("No authentication information available.")
 
         # check version to use the correct keyword for username which changed since 6.4
-        if self.api_version() < '6.4':
+        if self.api_version < '6.4':
             username_keyword = 'user'
         else:
             username_keyword = 'username'
@@ -233,6 +233,8 @@ class ZabbixAPI(object):
         headers = {'Content-Type': 'application/json-rpc',
                    'User-Agent': 'python/zabbix_api'}
 
+        if self.api_version > '6.4':
+            headers['Authorization'] = 'Bearer ' + self.auth
         if self.httpuser:
             self.debug(logging.INFO, "HTTP Auth enabled")
             auth = 'Basic ' + string.strip(base64.encodestring(self.httpuser + ':' + self.httppasswd))
