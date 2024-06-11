@@ -135,17 +135,6 @@ class ZabbixServer(GenericServer):
         services_in_maintenance = set()
 
         try:
-            api_version = int(''.join(self.zapi.api_version().split('.')[:-1])) # Make API Version smaller
-        except ZabbixAPIException:
-            # FIXME Is there a cleaner way to handle this? I just borrowed
-            # this code from 80 lines ahead. -- AGV
-            # set checking flag back to False
-            self.isChecking = False
-            result, error = self.Error(sys.exc_info())
-            print(sys.exc_info())
-            return Result(result=result, error=error)
-
-        try:
             now_ts = int(datetime.datetime.utcnow().timestamp())
             # only the maintenance object knows about services "in downtime"
             maintenances = self.zapi.maintenance.get({
@@ -165,7 +154,6 @@ class ZabbixServer(GenericServer):
         try:
             try:
                 # Get a list of all issues (AKA tripped triggers)
-                # Zabbix 3+ returns array of objects
                 services = self.zapi.trigger.get({'only_true': True,
                                                   'skipDependent': True,
                                                   'monitored': True,
@@ -217,7 +205,7 @@ class ZabbixServer(GenericServer):
             # Create Hostids for shorten Query
             try:
                 hosts = []
-                if api_version >= 54:  # For Version 5.4 and higher
+                if self.zapi.api_version > '5.4':  # For Version 5.4 and higher
                     # Some performance improvement for 5.4
                     hostids = []
                     # get just involved Hosts.

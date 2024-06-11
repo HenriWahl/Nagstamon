@@ -119,6 +119,7 @@ class ZabbixAPI(object):
     httppasswd = None
     timeout = 10
     validate_certs = None
+    api_version = '0.0'
     # sub-class instances.
     # Constructor Params:
     # server: Server to connect to
@@ -149,6 +150,8 @@ class ZabbixAPI(object):
         self.r_query = deque([], maxlen=r_query_len)
         self.validate_certs = validate_certs
         self.debug(logging.INFO, "url: " + self.url)
+        self.api_version = self.get_api_version()
+        self.debug(logging.INFO, "Zabbix API version: " + self.api_version)
 
     def _setuplogging(self):
         self.logger = logging.getLogger("zabbix_api.%s" % self.__class__.__name__)
@@ -176,10 +179,10 @@ class ZabbixAPI(object):
         obj = {'jsonrpc': '2.0',
                'method': method,
                'params': params,
-               'auth': self.auth,
+               'auth': self.auth,  # deprecated in 6.4
                'id': self.id
                }
-        if not auth:
+        if not auth or self.api_version > '6.4':
             del obj['auth']
 
         self.debug(logging.DEBUG, "json_obj: " + str(obj))
@@ -201,7 +204,7 @@ class ZabbixAPI(object):
             raise ZabbixAPIException("No authentication information available.")
 
         # check version to use the correct keyword for username which changed since 6.4
-        if self.api_version() < '6.4':
+        if self.api_version < '6.4':
             username_keyword = 'user'
         else:
             username_keyword = 'username'
@@ -230,6 +233,8 @@ class ZabbixAPI(object):
         headers = {'Content-Type': 'application/json-rpc',
                    'User-Agent': 'python/zabbix_api'}
 
+        if self.api_version > '6.4':
+            headers['Authorization'] = 'Bearer ' + self.auth
         if self.httpuser:
             self.debug(logging.INFO, "HTTP Auth enabled")
             auth = 'Basic ' + string.strip(base64.encodestring(self.httpuser + ':' + self.httppasswd))
@@ -301,7 +306,7 @@ class ZabbixAPI(object):
             return True
         return False
 
-    def api_version(self, **options):
+    def get_api_version(self, **options):
         # kicked out check auth to be able to check version before being logged in to use the correct username keyword
         obj = self.do_request(self.json_obj('apiinfo.version', options, auth=False))
         return obj['result']
