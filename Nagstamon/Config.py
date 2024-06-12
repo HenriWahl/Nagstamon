@@ -122,7 +122,9 @@ CONFIG_STRINGS = ['custom_browser',
                   'autologin_key',
                   'custom_cert_ca_file',
                   'idp_ecp_endpoint',
-                  'monitor_site'
+                  'monitor_site',
+                  'client_cert_path',
+                  'client_cert_password'
                   ]
 
 
@@ -475,6 +477,17 @@ class Config(object):
                         servers[server].proxy_password = proxy_password
                 elif servers[server].proxy_password != "":
                     servers[server].proxy_password = self.DeObfuscate(servers[server].proxy_password)
+                # client side cert password
+                if self.keyring_available and self.use_system_keyring:
+                    client_cert_password = keyring.get_password('Nagstamon', '@'.join(('client_cert',
+                                                                                 servers[server].client_cert_path))) or ""
+                    if client_cert_password == "":
+                        if servers[server].client_cert_password != "":
+                            servers[server].client_cert_password = self.DeObfuscate(servers[server].client_cert_password)
+                    else:
+                        servers[server].client_cert_password = client_cert_password
+                elif servers[server].client_cert_password != "":
+                    servers[server].client_cert_password = self.DeObfuscate(servers[server].client_cert_password)
 
                 # do only deobfuscating if any autologin_key is set - will be only Centreon/Thruk
                 if 'autologin_key' in servers[server].__dict__.keys():
@@ -619,7 +632,7 @@ class Config(object):
             for option in self.__dict__[settingsdir][s].__dict__:
                 # obfuscate certain entries in config file - special arrangement for servers
                 if settingsdir == 'servers':
-                    if option in ['username', 'password', 'proxy_username', 'proxy_password', 'autologin_key']:
+                    if option in ['username', 'password', 'proxy_username', 'proxy_password', 'autologin_key', 'client_cert_password']:
                         value = self.Obfuscate(self.__dict__[settingsdir][s].__dict__[option])
                         if option == 'password':
                             if self.__dict__[settingsdir][s].save_password is False:
@@ -650,6 +663,22 @@ class Config(object):
                                                                                     self.__dict__[settingsdir][
                                                                                         s].proxy_address)),
                                                              self.__dict__[settingsdir][s].proxy_password)
+                                    except Exception:
+                                        import traceback
+                                        traceback.print_exc(file=sys.stdout)
+                                        sys.exit(1)
+
+                                value = ''
+                        if option == 'client_cert_password':
+                            if self.keyring_available and self.use_system_keyring:
+                                if self.__dict__[settingsdir][s].client_cert_password != '':
+                                    # provoke crash if password saving does not work - this is the case
+                                    # on newer Ubuntu releases
+                                    try:
+                                        keyring.set_password('Nagstamon', '@'.join(('client_cert',
+                                                                                    self.__dict__[settingsdir][
+                                                                                        s].client_cert_path)),
+                                                             self.__dict__[settingsdir][s].client_cert_password)
                                     except Exception:
                                         import traceback
                                         traceback.print_exc(file=sys.stdout)
@@ -918,6 +947,9 @@ class Server(object):
         self.proxy_address = 'http://proxyserver:port/'
         self.proxy_username = 'proxyusername'
         self.proxy_password = 'proxypassword'
+        self.use_client_cert = False
+        self.client_cert_path = '~/nagstamon.pfx'
+        self.client_cert_password = 'clientcertpassword'
         # defaults to 'basic', other possible values are 'digest' and 'kerberos'
         self.authentication = 'basic'
         self.timeout = 10
