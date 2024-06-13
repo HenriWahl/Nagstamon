@@ -18,17 +18,18 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 import arrow
+import copy
+import json
 import logging
 import sys
-import urllib3
-from icinga2api.client import Client
+import dateutil.parser
+import urllib.parse
 
 from Nagstamon.Config import conf
 from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.Objects import (GenericHost, GenericService, Result)
 
-log = logging.getLogger('Icinga2API.py')
-urllib3.disable_warnings()
+log = logging.getLogger(__name__)
 
 
 class Icinga2APIServer(GenericServer):
@@ -41,10 +42,6 @@ class Icinga2APIServer(GenericServer):
     MENU_ACTIONS = []
     BROWSER_URLS = {}
 
-    # Helpers
-    iapi = None
-    SERVICE_SEVERITY_CODE_TEXT_MAP = dict()
-    HOST_SEVERITY_CODE_TEXT_MAP = dict()
 
     def __init__(self, **kwds):
         """
@@ -67,21 +64,6 @@ class Icinga2APIServer(GenericServer):
             1: 'DOWN',
             2: 'UNREACHABLE'
         }
-
-    def _ilogin(self):
-        """
-        Initialize HTTP connection to icinga api
-        """
-        try:
-            self.iapi = Client(url=self.url,
-                               username=self.username,
-                               password=self.password,
-                               )
-        except Exception as e:
-            log.exception(e)
-            result, error = self.Error(sys.exc_info())
-            return Result(result=result, error=error)
-
     def _insert_service_to_hosts(self, service: GenericService):
         """
         We want to create hosts for faulty services as GenericService requires
@@ -106,6 +88,7 @@ class Icinga2APIServer(GenericServer):
         try:
             # We ask icinga for hosts which are not doing well
             hosts = self._get_host_events()
+            assert isinstance(hosts, list), "Fail to list hosts"
             for host in hosts:
                 host_name = host['attrs']['name']
                 if host_name not in self.new_hosts:
@@ -131,6 +114,7 @@ class Icinga2APIServer(GenericServer):
                     self.new_hosts[host_name].notifications_disabled = not(host['attrs']['enable_notifications'])
                     self.new_hosts[host_name].flapping = host['attrs']['flapping']
                     self.new_hosts[host_name].acknowledged = host['attrs']['acknowledgement']
+                    self.new_hosts[host_name].scheduled_downtime = bool(host['attrs']['downtime_depth'])
                     self.new_hosts[host_name].status_type = {0: "soft", 1: "hard"}[host['attrs']['state_type']]
                 del host_name
             del hosts
@@ -171,6 +155,7 @@ class Icinga2APIServer(GenericServer):
                 new_service.notifications_disabled = not(service['attrs']['enable_notifications'])
                 new_service.flapping = service['attrs']['flapping']
                 new_service.acknowledged = service['attrs']['acknowledgement']
+                new_service.scheduled_downtime = bool(service['attrs']['downtime_depth'])
                 new_service.status_type = {0: "soft", 1: "hard"}[service['attrs']['state_type']]
                 self._insert_service_to_hosts(new_service)
             del services
@@ -185,25 +170,37 @@ class Icinga2APIServer(GenericServer):
         # dummy return in case all is OK
         return Result()
 
+    def _list_objects(self, object_type, filter):
+        """List objects"""
+        result = self.FetchURL(
+            f'{self.url}/objects/{object_type}?{urllib.parse.urlencode({"filter": filter})}',
+            giveback='raw'
+        )
+        # purify JSON result of unnecessary control sequence \n
+        jsonraw, error, status_code = copy.deepcopy(result.result.replace('\n', '')),\
+                                      copy.deepcopy(result.error),\
+                                      result.status_code
+
+        # check if any error occured
+        errors_occured = self.check_for_error(jsonraw, error, status_code)
+        # if there are errors return them
+        if errors_occured is not None:
+            return(errors_occured)
+
+        jsondict = json.loads(jsonraw)
+        return jsondict.get('results', [])
+
     def _get_service_events(self):
         """
         Suck faulty service events from API
         """
-        if self.iapi is None:
-            self._ilogin()
-        filters = 'service.state!=ServiceOK'
-        events = self.iapi.objects.list('Service', filters=filters)
-        return events
+        return self._list_objects('services', 'service.state!=ServiceOK')
 
     def _get_host_events(self):
         """
         Suck faulty hosts from API
         """
-        if self.iapi is None:
-            self._ilogin()
-        filters = 'host.state!=0'
-        events = self.iapi.objects.list('Host', filters=filters)
-        return events
+        return self._list_objects('hosts', 'host.state!=0')
 
     def _set_recheck(self, host, service):
         """
