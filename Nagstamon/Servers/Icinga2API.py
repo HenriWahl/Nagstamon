@@ -18,17 +18,19 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 import arrow
+import copy
+import datetime
+import json
 import logging
 import sys
-import urllib3
-from icinga2api.client import Client
+import dateutil.parser
+import urllib.parse
 
 from Nagstamon.Config import conf
 from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.Objects import (GenericHost, GenericService, Result)
 
-log = logging.getLogger('Icinga2API.py')
-urllib3.disable_warnings()
+log = logging.getLogger(__name__)
 
 
 class Icinga2APIServer(GenericServer):
@@ -38,13 +40,13 @@ class Icinga2APIServer(GenericServer):
     TYPE = 'Icinga2API'
 
     # ICINGA2API does not provide a web interface for humans
-    MENU_ACTIONS = []
+    MENU_ACTIONS = ['Recheck', 'Acknowledge', 'Submit check result', 'Downtime']
+    STATES_MAPPING = {'hosts' : {0 : 'UP', 1 : 'DOWN', 2 : 'UNREACHABLE'}, \
+                     'services' : {0 : 'OK', 1 : 'WARNING', 2 : 'CRITICAL', 3 : 'UNKNOWN'}}
+    STATES_MAPPING_REV = {'hosts' : { 'UP': 0, 'DOWN': 1, 'UNREACHABLE': 2}, \
+                         'services' : {'OK': 0, 'WARNING': 1, 'CRITICAL': 2, 'UNKNOWN': 3}}
     BROWSER_URLS = {}
 
-    # Helpers
-    iapi = None
-    SERVICE_SEVERITY_CODE_TEXT_MAP = dict()
-    HOST_SEVERITY_CODE_TEXT_MAP = dict()
 
     def __init__(self, **kwds):
         """
@@ -55,32 +57,6 @@ class Icinga2APIServer(GenericServer):
         self.url = conf.servers[self.get_name()].monitor_url
         self.username = conf.servers[self.get_name()].username
         self.password = conf.servers[self.get_name()].password
-
-        self.SERVICE_SEVERITY_CODE_TEXT_MAP = {
-            0: 'OK',
-            1: 'WARNING',
-            2: 'CRITICAL',
-            3: 'UNKNOWN'
-        }
-        self.HOST_SEVERITY_CODE_TEXT_MAP = {
-            0: 'UP',
-            1: 'DOWN',
-            2: 'UNREACHABLE'
-        }
-
-    def _ilogin(self):
-        """
-        Initialize HTTP connection to icinga api
-        """
-        try:
-            self.iapi = Client(url=self.url,
-                               username=self.username,
-                               password=self.password,
-                               )
-        except Exception as e:
-            log.exception(e)
-            result, error = self.Error(sys.exc_info())
-            return Result(result=result, error=error)
 
     def _insert_service_to_hosts(self, service: GenericService):
         """
@@ -106,6 +82,7 @@ class Icinga2APIServer(GenericServer):
         try:
             # We ask icinga for hosts which are not doing well
             hosts = self._get_host_events()
+            assert isinstance(hosts, list), "Fail to list hosts"
             for host in hosts:
                 host_name = host['attrs']['name']
                 if host_name not in self.new_hosts:
@@ -113,7 +90,7 @@ class Icinga2APIServer(GenericServer):
                     self.new_hosts[host_name].name = host_name
                     self.new_hosts[host_name].site = self.name
                     try:
-                        self.new_hosts[host_name].status = self.HOST_SEVERITY_CODE_TEXT_MAP.get(host['attrs']['state'])
+                        self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'].get(host['attrs']['state'])
                     except KeyError:
                         self.new_hosts[host_name].status = 'UNKNOWN'
                     if int(host['attrs']['state_type']) > 0:  # if state is not SOFT, icinga does not report attempts properly
@@ -131,6 +108,7 @@ class Icinga2APIServer(GenericServer):
                     self.new_hosts[host_name].notifications_disabled = not(host['attrs']['enable_notifications'])
                     self.new_hosts[host_name].flapping = host['attrs']['flapping']
                     self.new_hosts[host_name].acknowledged = host['attrs']['acknowledgement']
+                    self.new_hosts[host_name].scheduled_downtime = bool(host['attrs']['downtime_depth'])
                     self.new_hosts[host_name].status_type = {0: "soft", 1: "hard"}[host['attrs']['state_type']]
                 del host_name
             del hosts
@@ -150,7 +128,7 @@ class Icinga2APIServer(GenericServer):
                 new_service.host = service['attrs']['host_name']
                 new_service.name = service['attrs']['name']
                 try:
-                    new_service.status = self.SERVICE_SEVERITY_CODE_TEXT_MAP.get(service['attrs']['state'])
+                    new_service.status = self.STATES_MAPPING['services'].get(service['attrs']['state'])
                 except KeyError:
                     new_service.status = 'UNKNOWN'
                 if int(service['attrs']['state_type']) > 0:  # if state is not SOFT, icinga does not report attempts properly
@@ -171,6 +149,7 @@ class Icinga2APIServer(GenericServer):
                 new_service.notifications_disabled = not(service['attrs']['enable_notifications'])
                 new_service.flapping = service['attrs']['flapping']
                 new_service.acknowledged = service['attrs']['acknowledgement']
+                new_service.scheduled_downtime = bool(service['attrs']['downtime_depth'])
                 new_service.status_type = {0: "soft", 1: "hard"}[service['attrs']['state_type']]
                 self._insert_service_to_hosts(new_service)
             del services
@@ -185,52 +164,186 @@ class Icinga2APIServer(GenericServer):
         # dummy return in case all is OK
         return Result()
 
+    def _list_objects(self, object_type, filter):
+        """List objects"""
+        result = self.FetchURL(
+            f'{self.url}/objects/{object_type}?{urllib.parse.urlencode({"filter": filter})}',
+            giveback='raw'
+        )
+        # purify JSON result of unnecessary control sequence \n
+        jsonraw, error, status_code = copy.deepcopy(result.result.replace('\n', '')),\
+                                      copy.deepcopy(result.error),\
+                                      result.status_code
+
+        # check if any error occured
+        errors_occured = self.check_for_error(jsonraw, error, status_code)
+        # if there are errors return them
+        if errors_occured is not None:
+            return(errors_occured)
+
+        jsondict = json.loads(jsonraw)
+        return jsondict.get('results', [])
+
     def _get_service_events(self):
         """
         Suck faulty service events from API
         """
-        if self.iapi is None:
-            self._ilogin()
-        filters = 'service.state!=ServiceOK'
-        events = self.iapi.objects.list('Service', filters=filters)
-        return events
+        return self._list_objects('services', 'service.state!=ServiceOK')
 
     def _get_host_events(self):
         """
         Suck faulty hosts from API
         """
-        if self.iapi is None:
-            self._ilogin()
-        filters = 'host.state!=0'
-        events = self.iapi.objects.list('Host', filters=filters)
-        return events
+        return self._list_objects('hosts', 'host.state!=0')
+
+
+    def _trigger_action(self, action, **data):
+        """Trigger on action using Icinga2 API"""
+        action_data = {k: v for k, v in data.items() if v is not None}
+        self.Debug(server=self.get_name(), debug=f"Trigger action {action} with data={action_data}")
+        try:
+            response = self.session.post(
+                f'{self.url}/actions/{action}',
+                headers={'Accept': 'application/json'},
+                json=action_data,
+            )
+            self.Debug(
+                server=self.get_name(),
+                debug=f"API return on triggering action {action} (status={response.status_code}): "
+                f"{response.text}"
+            )
+            if 200 <= response.status_code <= 299:
+                return True
+            self.Error(f"Fail to trigger action {action}: {response.json().get('status', 'Unknown error')}")
+        except IOError as err:
+            log.exception("Fail to trigger action %s with data %s", action, data)
+            self.Error(f"Fail to trigger action {action}: {err}")
 
     def _set_recheck(self, host, service):
         """
         Please check again Icinga!
         """
-        pass
+        self._trigger_action(
+            "reschedule-check",
+            type="Service" if service else "Host",
+            filter=(
+                'host.name == host_name && service.name == service_name'
+                if service else 'host.name == host_name'
+            ),
+            filter_vars=(
+                {'host_name': host, 'service_name': service}
+                if service else {'host_name': host}
+            ),
+        )
+
+    # Overwrite function from generic server to add expire_time value
+    def set_acknowledge(self, info_dict):
+        '''
+            different monitors might have different implementations of _set_acknowledge
+        '''
+        if info_dict['acknowledge_all_services'] is True:
+            all_services = info_dict['all_services']
+        else:
+            all_services = []
+
+        # Make sure expire_time is set
+        #if not info_dict['expire_time']:
+        #    info_dict['expire_time'] = None
+
+        self._set_acknowledge(info_dict['host'],
+                              info_dict['service'],
+                              info_dict['author'],
+                              info_dict['comment'],
+                              info_dict['sticky'],
+                              info_dict['notify'],
+                              info_dict['persistent'],
+                              all_services,
+                              info_dict['expire_time'])
 
     def _set_acknowledge(self, host, service, author, comment, sticky,
-                         notify, persistent, all_services=None):
+                         notify, persistent, all_services=None, expire_time=None):
         '''
         Send acknowledge to monitor server
         '''
-        pass
+        self._trigger_action(
+            "acknowledge-problem",
+            type="Service" if service else "Host",
+            filter=(
+                'host.name == host_name && service.name == service_name'
+                if service else 'host.name == host_name'
+            ),
+            filter_vars=(
+                {'host_name': host, 'service_name': service}
+                if service else {'host_name': host}
+            ),
+            author=author,
+            comment=comment,
+            sticky=sticky,
+            notify=notify,
+            expiry=(
+                dateutil.parser.parse(expire_time).timestamp()
+                if expire_time else None
+            ),
+            persistent=persistent,
+        )
+
+        if len(all_services) > 0:
+            for s in all_services:
+                # cheap, recursive solution...
+                self._set_acknowledge(host, s, author, comment, sticky, notify, persistent, [], expire_time)
 
     def _set_submit_check_result(self, host, service, state, comment,
                                  check_output, performance_data):
         '''
         Submit check results
         '''
-        pass
+        self._trigger_action(
+            "process-check-result",
+            type="Service" if service else "Host",
+            filter=(
+                'host.name == host_name && service.name == service_name'
+                if service else 'host.name == host_name'
+            ),
+            filter_vars=(
+                {'host_name': host, 'service_name': service}
+                if service else {'host_name': host}
+            ),
+            exit_status=self.STATES_MAPPING_REV['services' if service else 'hosts'][state.upper()],
+            plugin_output=check_output,
+            performance_data=performance_data,
+        )
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time,
                       end_time, hours, minutes):
         """
         Submit downtime
         """
-        pass
-
-
-0
+        self._trigger_action(
+            "schedule-downtime",
+            type="Service" if service else "Host",
+            filter=(
+                'host.name == host_name && service.name == service_name'
+                if service else 'host.name == host_name'
+            ),
+            filter_vars=(
+                {'host_name': host, 'service_name': service}
+                if service else {'host_name': host}
+            ),
+            author=author,
+            comment=comment,
+            start_time=(
+                datetime.datetime.now().timestamp()
+                if start_time == '' or start_time == 'n/a'
+                else dateutil.parser.parse(start_time).timestamp()
+            ),
+            end_time=(
+                (datetime.datetime.now() + datetime.timedelta(hours=hours, minutes=minutes)).timestamp()
+                if end_time == '' or end_time == 'n/a'
+                else dateutil.parser.parse(end_time).timestamp()
+            ),
+            fixed=fixed,
+            duration=(
+                (hours * 3600 + minutes * 60)
+                if not fixed else None
+            ),
+        )

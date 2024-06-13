@@ -3354,7 +3354,7 @@ class TreeView(QTreeView):
         height = 0
 
         mddl = self.model()
-        
+
         rwcnt = mddl.rowCount(self)
 
         # only count if there is anything to display - there is no use of the headers only
@@ -5718,7 +5718,7 @@ class Dialog_Settings(Dialog):
         use_expire_time = False
         for server in servers.values():
             if server.enabled:
-                if server.type in ['IcingaWeb2', 'Alertmanager']:
+                if server.type in ['IcingaWeb2', 'Icinga2API', 'Alertmanager']:
                     use_expire_time = True
                     break
         if use_expire_time:
@@ -6393,8 +6393,8 @@ class Dialog_Acknowledge(Dialog):
                                           x.TYPE not in PROMETHEUS_OR_ALERTMANAGER]
 
         self.VOLATILE_WIDGETS = {
-            self.window.input_checkbox_use_expire_time: ['IcingaWeb2'],
-            self.window.input_datetime_expire_time: ['IcingaWeb2', 'Alertmanager'],
+            self.window.input_checkbox_use_expire_time: ['IcingaWeb2', 'Icinga2API'],
+            self.window.input_datetime_expire_time: ['IcingaWeb2', 'Icinga2API', 'Alertmanager'],
             self.window.input_checkbox_sticky_acknowledgement: NOT_PROMETHEUS_OR_ALERTMANAGER,
             self.window.input_checkbox_send_notification: NOT_PROMETHEUS_OR_ALERTMANAGER,
             self.window.input_checkbox_persistent_comment: NOT_PROMETHEUS_OR_ALERTMANAGER,
@@ -6752,12 +6752,12 @@ class Dialog_Authentication(Dialog):
         if not statuswindow is None:
             statuswindow.hide_window()
         self.window.adjustSize()
-        
+
         # the dock icon might be needed to be shown for a potential keyboard input
         self.show_macos_dock_icon_if_necessary()
-        
+
         self.window.exec()
-        
+
         # en reverse the dock icon might be hidden again after a potential keyboard input
         self.hide_macos_dock_icon_if_necessary()
 

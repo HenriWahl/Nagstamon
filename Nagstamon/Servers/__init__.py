@@ -25,13 +25,6 @@ import urllib.parse
 
 from collections import OrderedDict
 
-# we need this for uncommon modules
-try:
-    import icinga2api
-    icinga2api_is_available = True
-except:
-    icinga2api_is_available = False
-
 # load all existing server types
 from Nagstamon.Servers.Nagios import NagiosServer
 from Nagstamon.Servers.Centreon import CentreonServer
@@ -39,6 +32,7 @@ from Nagstamon.Servers.Icinga import IcingaServer
 from Nagstamon.Servers.IcingaWeb2 import IcingaWeb2Server
 from Nagstamon.Servers.IcingaDBWeb import IcingaDBWebServer
 from Nagstamon.Servers.IcingaDBWebNotifications import IcingaDBWebNotificationsServer
+from Nagstamon.Servers.Icinga2API import Icinga2APIServer
 from Nagstamon.Servers.Multisite import MultisiteServer
 from Nagstamon.Servers.op5Monitor import Op5MonitorServer
 from Nagstamon.Servers.Opsview import OpsviewServer
@@ -59,9 +53,6 @@ from Nagstamon.Config import conf
 
 from Nagstamon.Helpers import STATES
 
-# conditional load if module is available
-if icinga2api_is_available is True:
-    from Nagstamon.Servers.Icinga2API import Icinga2APIServer
 
 # dictionary for servers
 servers = OrderedDict()
@@ -247,6 +238,7 @@ servers_list = [AlertmanagerServer,
                 IcingaDBWebServer,
                 IcingaDBWebNotificationsServer,
                 IcingaWeb2Server,
+                Icinga2APIServer,
                 LivestatusServer,
                 Monitos3Server,
                 Monitos4xServer,
@@ -262,9 +254,6 @@ servers_list = [AlertmanagerServer,
                 ZabbixProblemBasedServer,
                 ZabbixServer,
                 ZenossServer]
-# we use these servers conditionally if modules are available only
-if icinga2api_is_available is True:
-    servers_list.append(Icinga2APIServer)
 
 for server in servers_list:
     register_server(server)
