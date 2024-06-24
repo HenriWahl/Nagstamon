@@ -120,6 +120,12 @@ class MultisiteServer(GenericServer):
                 'PEND':    'PENDING',
             }
 
+        # Function overrides for Checkmk 2.3+
+        version = self._omd_get_version()
+        if version >= [2, 3]:
+            self._set_downtime = self._omd_set_downtime
+            self._set_recheck = self._omd_set_recheck
+
         if self.CookieAuth and not self.refresh_authentication:
             # get cookie to access Checkmk web interface
             if 'cookies' in dir(self.session):
