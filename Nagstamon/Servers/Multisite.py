@@ -25,6 +25,8 @@ import urllib.request, urllib.parse, urllib.error
 import time
 import copy
 import html
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from Nagstamon.Objects import (GenericHost,
                                GenericService,
@@ -527,6 +529,47 @@ class MultisiteServer(GenericServer):
                            debug='Invalid start/end date/time given')
 
 
+    def _omd_set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
+        """
+           _set_downtime function for Checkmk version 2.3+
+        """
+        try:
+            # Headers required for Checkmk API
+            headers = {
+                "Authorization": f"Bearer {self.username} {self.password}",
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            }
+
+            # Only timezone aware dates are allowed
+            iso_start_time =  datetime.strptime(start_time, "%Y-%m-%d %H:%M").replace(tzinfo=ZoneInfo('localtime')).isoformat()
+            iso_end_time =  datetime.strptime(end_time, "%Y-%m-%d %H:%M").replace(tzinfo=ZoneInfo('localtime')).isoformat()
+            # Set parameters for host downtimes
+            url = self.urls["omd_host_downtime"]
+            params = {
+                "start_time": iso_start_time,
+                "end_time": iso_end_time,
+                "comment": author == self.username and comment or "%s: %s" % (author, comment),
+                "downtime_type": "host",
+                "host_name": host,
+            }
+
+            # Downtime type is "flexible" if "duration" is set
+            if fixed == 0:
+                params["duration"] = hours * 60 + minutes
+            # Parameter overrides for service downtimes
+            if service:
+                url = self.urls["omd_svc_downtime"]
+                params["downtime_type"] = "service"
+                params["service_descriptions"] = [service]
+
+            self.session.post(url, headers=headers, json=params)
+        except:
+            if conf.debug_mode:
+                self.Debug(server=self.get_name(), host=host,
+                           debug='Invalid start/end date/time given')
+
+
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None):
         p = {
             '_acknowledge':    'Acknowledge',
@@ -549,6 +592,21 @@ class MultisiteServer(GenericServer):
             '_resched_pread':  '0'
         }
         self._action(self.hosts[host].site, host, service, p)
+
+
+    def _omd_set_recheck(self, host, service):
+        """
+           _set_recheck function for Checkmk version 2.3+
+        """
+        csrf_token = self._get_csrf_token(host, service)
+        data = {
+            "site": self.hosts[host].site,
+            "host": host,
+            "service": service,
+            "wait_svc": service,
+            "csrf_token": csrf_token,
+        }
+        self.FetchURL(self.urls["recheck"], cgi_data=data)
 
 
     def recheck_all(self):
