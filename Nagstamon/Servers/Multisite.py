@@ -571,3 +571,14 @@ class MultisiteServer(GenericServer):
         transid = self.FetchURL(self.urls['transid'].replace('$HOST$', host).replace('$SERVICE$', service.replace(' ', '+')),
                                 'obj').result.find(attrs={'name' : '_transid'})['value']
         return transid
+
+
+    def _get_csrf_token(self, host, service):
+        """
+           get csrf token for the session
+        """
+        # since Checkmk 2.0 it seems to be a problem if service is empty so fill it with a definitively existing one
+        if not service:
+            service = "PING"
+        csrf_token = self.FetchURL(self.urls["transid"].replace("$HOST$", host).replace("$SERVICE$", service.replace(" ", "+")), "obj").result.find(attrs={"name": "csrf_token"})["value"]
+        return csrf_token
