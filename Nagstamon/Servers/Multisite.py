@@ -103,6 +103,7 @@ class MultisiteServer(GenericServer):
               'api_svcprob_act': self.monitor_url + '/view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&view_name=svcproblems&filled_in=actions&lang=',
               'human_events':    self.monitor_url + '/index.py?%s' %
                                                    urllib.parse.urlencode({'start_url': 'view.py?view_name=events'}),
+              'omd_version':         self.monitor_url + '/api/1.0/version',
               'transid':         self.monitor_url + '/view.py?actions=yes&filled_in=actions&host=$HOST$&service=$SERVICE$&view_name=service'
             }
 
@@ -582,3 +583,15 @@ class MultisiteServer(GenericServer):
             service = "PING"
         csrf_token = self.FetchURL(self.urls["transid"].replace("$HOST$", host).replace("$SERVICE$", service.replace(" ", "+")), "obj").result.find(attrs={"name": "csrf_token"})["value"]
         return csrf_token
+
+
+    def _omd_get_version(self):
+        """
+           get version of OMD Checkmk as [major_version, minor_version]
+        """
+        try:
+            version = [int(v) for v in self.session.get(self.urls["omd_version"]).json()["versions"]["checkmk"].split(".")[:2]]
+        # If /version api is not supported, return the lowest non-negative pair
+        except:
+            version = [0, 0]
+        return version
