@@ -25,6 +25,8 @@ import urllib.request, urllib.parse, urllib.error
 import time
 import copy
 import html
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from Nagstamon.Objects import (GenericHost,
                                GenericService,
@@ -103,6 +105,8 @@ class MultisiteServer(GenericServer):
               'api_svcprob_act': self.monitor_url + '/view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&view_name=svcproblems&filled_in=actions&lang=',
               'human_events':    self.monitor_url + '/index.py?%s' %
                                                    urllib.parse.urlencode({'start_url': 'view.py?view_name=events'}),
+              'omd_host_downtime': self.monitor_url + '/api/1.0/domain-types/downtime/collections/host',
+              'omd_svc_downtime': self.monitor_url + '/api/1.0/domain-types/downtime/collections/service',
               'recheck':         self.monitor_url + '/ajax_reschedule.py?_ajaxid=0',
               'omd_version':         self.monitor_url + '/api/1.0/version',
               'transid':         self.monitor_url + '/view.py?actions=yes&filled_in=actions&host=$HOST$&service=$SERVICE$&view_name=service'
@@ -519,6 +523,47 @@ class MultisiteServer(GenericServer):
             if service:
                 params['_do_confirm_service_downtime'] = 'Schedule+downtime+for+1+service'
             self._action(self.hosts[host].site, host, service, params)
+        except:
+            if conf.debug_mode:
+                self.Debug(server=self.get_name(), host=host,
+                           debug='Invalid start/end date/time given')
+
+
+    def _omd_set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
+        """
+           _set_downtime function for Checkmk version 2.3+
+        """
+        try:
+            # Headers required for Checkmk API
+            headers = {
+                "Authorization": f"Bearer {self.username} {self.password}",
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            }
+
+            # Only timezone aware dates are allowed
+            iso_start_time =  datetime.strptime(start_time, "%Y-%m-%d %H:%M").replace(tzinfo=ZoneInfo('localtime')).isoformat()
+            iso_end_time =  datetime.strptime(end_time, "%Y-%m-%d %H:%M").replace(tzinfo=ZoneInfo('localtime')).isoformat()
+            # Set parameters for host downtimes
+            url = self.urls["omd_host_downtime"]
+            params = {
+                "start_time": iso_start_time,
+                "end_time": iso_end_time,
+                "comment": author == self.username and comment or "%s: %s" % (author, comment),
+                "downtime_type": "host",
+                "host_name": host,
+            }
+
+            # Downtime type is "flexible" if "duration" is set
+            if fixed == 0:
+                params["duration"] = hours * 60 + minutes
+            # Parameter overrides for service downtimes
+            if service:
+                url = self.urls["omd_svc_downtime"]
+                params["downtime_type"] = "service"
+                params["service_descriptions"] = [service]
+
+            self.session.post(url, headers=headers, json=params)
         except:
             if conf.debug_mode:
                 self.Debug(server=self.get_name(), host=host,
