@@ -103,6 +103,7 @@ class MultisiteServer(GenericServer):
               'api_svcprob_act': self.monitor_url + '/view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&view_name=svcproblems&filled_in=actions&lang=',
               'human_events':    self.monitor_url + '/index.py?%s' %
                                                    urllib.parse.urlencode({'start_url': 'view.py?view_name=events'}),
+              'recheck':         self.monitor_url + '/ajax_reschedule.py?_ajaxid=0',
               'omd_version':         self.monitor_url + '/api/1.0/version',
               'transid':         self.monitor_url + '/view.py?actions=yes&filled_in=actions&host=$HOST$&service=$SERVICE$&view_name=service'
             }
@@ -546,6 +547,21 @@ class MultisiteServer(GenericServer):
             '_resched_pread':  '0'
         }
         self._action(self.hosts[host].site, host, service, p)
+
+
+    def _omd_set_recheck(self, host, service):
+        """
+           _set_recheck function for Checkmk version 2.3+
+        """
+        csrf_token = self._get_csrf_token(host, service)
+        data = {
+            "site": self.hosts[host].site,
+            "host": host,
+            "service": service,
+            "wait_svc": service,
+            "csrf_token": csrf_token,
+        }
+        self.FetchURL(self.urls["recheck"], cgi_data=data)
 
 
     def recheck_all(self):
