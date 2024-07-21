@@ -363,7 +363,7 @@ class MultisiteServer(GenericServer):
                     self.new_hosts[n['host']].services[new_service].address = n['address']
                     self.new_hosts[n['host']].services[new_service].command = n['command']
 
-                    # transistion to Checkmk 1.1.10p2
+                    # transition to Checkmk 1.1.10p2
                     if 'svc_in_downtime' in service:
                         if service['svc_in_downtime'] == 'yes':
                             self.new_hosts[n['host']].services[new_service].scheduled_downtime = True
@@ -376,6 +376,9 @@ class MultisiteServer(GenericServer):
                     if 'svc_notifications_enabled' in service:
                         if service['svc_notifications_enabled'] == 'no':
                             self.new_hosts[n['host']].services[new_service].notifications_disabled = True
+                    if 'host_in_downtime' in service:
+                        if service['host_in_downtime'] == 'yes':
+                            self.new_hosts[n['host']].scheduled_downtime = True
 
                     # hard/soft state for later filter evaluation
                     real_attempt, max_attempt = self.new_hosts[n['host']].services[new_service].attempt.split('/')
