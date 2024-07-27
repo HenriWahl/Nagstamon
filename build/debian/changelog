@@ -1,7 +1,7 @@
-nagstamon (3.15-20240506) unstable; urgency=low
+nagstamon (3.15-20240727) unstable; urgency=low
   * New upstream
 
- -- Henri Wahl <henri@nagstamon.de> Fri, May 05 2024 08:00:00 +0200
+ -- Henri Wahl <henri@nagstamon.de> Sat, Jul 27 2024 08:00:00 +0200
 
 nagstamon (3.14.0) stable; urgency=low
   * New upstream
