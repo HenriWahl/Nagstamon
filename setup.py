@@ -93,6 +93,7 @@ if OS not in ['Windows', 'Darwin']:
     if DIST.lower() == 'fedora' and int(DIST_VERSION) < 36 or \
        DIST.lower() == 'rhel' and int(DIST_VERSION) <= 9:
         bdist_rpm_options = dict(requires='python3 '
+                                          'python3-arrow '
                                           'python3-beautifulsoup4 '
                                           'python3-cryptography '
                                           'python3-dateutil '
@@ -109,6 +110,7 @@ if OS not in ['Windows', 'Darwin']:
                                  dist_dir='./build')
     else:
         bdist_rpm_options = dict(requires='python3 '
+                                          'python3-arrow '
                                           'python3-beautifulsoup4 '
                                           'python3-cryptography '
                                           'python3-dateutil '
