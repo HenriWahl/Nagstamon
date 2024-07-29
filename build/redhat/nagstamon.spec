@@ -16,6 +16,7 @@ BuildRequires: python3-devel
 BuildRequires: python3-pyqt6-devel
 BuildRequires: desktop-file-utils
 Requires:      python3
+Requires:      python3-arrow
 Requires:      python3-beautifulsoup4
 Requires:      python3-cryptography
 Requires:      python3-dateutil
