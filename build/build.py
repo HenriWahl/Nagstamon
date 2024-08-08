@@ -90,8 +90,6 @@ def winmain():
     else:
         VERSION_IS = VERSION
 
-    print('VERSION_IS:', VERSION_IS)
-
     # old-school formatstrings needed for old Debian build base distro jessie and its old python
     ISCC = r'{0}{1}Inno Setup 6{1}iscc.exe'.format(os.environ['PROGRAMFILES{0}'.format(ARCH_OPTS[ARCH][2])], os.sep)
     DIR_BUILD_EXE = '{0}{1}dist{1}Nagstamon'.format(CURRENT_DIR, os.sep, ARCH_OPTS[ARCH][0], PYTHON_VERSION)
@@ -118,6 +116,8 @@ def winmain():
                      GUI_MODE,
                      '..\\nagstamon.py'],
                     shell=True)
+
+    print(subprocess)
 
     if SIGNING:
         # environment variables will be used by powershell script for signing
