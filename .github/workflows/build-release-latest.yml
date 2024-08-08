@@ -266,7 +266,7 @@ jobs:
       - run: python -m pip install --no-warn-script-location -r build/requirements/windows.txt
       # pretty hacky but no other idea to avoid gssapi being installed which breaks requests-kerberos
       - run: python -m pip uninstall -y gssapi requests-gssapi
-      - run: dir -a D:/a/Nagstamon/Nagstamon/build/dist
+      - run: dir -r D:/a/Nagstamon/Nagstamon/build/dist
       - run: cd ${{ github.workspace }}/build; python build.py
         env:
           PYTHONPATH: ${{ github.workspace }}
