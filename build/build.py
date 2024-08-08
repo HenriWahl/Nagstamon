@@ -145,6 +145,9 @@ def winmain():
                 zip_archive.write('{0}{1}{2}'.format(root, os.sep, file))
 
     if not DEBUG:
+        # for some reason out of nowhere the old path SetupIconFile={#resources}\nagstamon.ico
+        # does not work anymore, so the icon gets copied into the path referenced to
+        # as SourceDir in the ISS file
         shutil.copyfile(f'{NAGSTAMON_DIR}{os.sep}Nagstamon{os.sep}resources{os.sep}nagstamon.ico',
                         f'{DIR_BUILD_NAGSTAMON}{os.sep}nagstamon.ico')
 
@@ -155,7 +158,6 @@ def winmain():
                          r'/Dversion={0}'.format(VERSION),
                          r'/Darch={0}'.format(ARCH),
                          r'/Darchs_allowed={0}'.format(ARCH_OPTS[ARCH][3]),
-                         r'/Dresources={0}{1}resources'.format(DIR_BUILD_NAGSTAMON, os.sep),
                          r'/O{0}{1}dist'.format(CURRENT_DIR, os.sep),
                          r'{0}{1}windows{1}nagstamon.iss'.format(CURRENT_DIR, os.sep)],
                          shell=True)
