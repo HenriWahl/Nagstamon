@@ -32,11 +32,6 @@ CURRENT_DIR = os.getcwd()
 NAGSTAMON_DIR = os.path.normpath('{0}{1}..{1}'.format(CURRENT_DIR, os.sep))
 sys.path.insert(1, NAGSTAMON_DIR)
 
-print(CURRENT_DIR)
-print(NAGSTAMON_DIR)
-
-sys.exit(0)
-
 SCRIPTS_DIR = '{0}{1}scripts-{2}.{3}'.format(CURRENT_DIR, os.sep, sys.version_info.major, sys.version_info.minor)
 
 # has to be imported here after NAGSTAMON_DIR was wadded to sys.path
