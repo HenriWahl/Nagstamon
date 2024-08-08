@@ -117,8 +117,6 @@ def winmain():
                      '..\\nagstamon.py'],
                     shell=True)
 
-    print(subprocess)
-
     if SIGNING:
         # environment variables will be used by powershell script for signing
         subprocess.run(['pwsh.exe', './windows/code_signing.ps1', 'build/Nagstamon/Nagstamon.exe'])
@@ -152,7 +150,7 @@ def winmain():
         print(r'/Dresources={0}{1}resources'.format(DIR_BUILD_NAGSTAMON, os.sep))
 
         # execute InnoSetup with many variables set by ISCC.EXE outside .iss file
-        subprocess.call([ISCC,
+        result = subprocess.call([ISCC,
                          r'/Dsource={0}'.format(DIR_BUILD_NAGSTAMON),
                          r'/Dversion_is={0}'.format(VERSION_IS),
                          r'/Dversion={0}'.format(VERSION),
@@ -161,6 +159,9 @@ def winmain():
                          r'/Dresources={0}{1}resources'.format(DIR_BUILD_NAGSTAMON, os.sep),
                          r'/O{0}{1}dist'.format(CURRENT_DIR, os.sep),
                          r'{0}{1}windows{1}nagstamon.iss'.format(CURRENT_DIR, os.sep)], shell=True)
+
+
+        print(result)
 
     if SIGNING:
         # environment variables will be used by powershell script for signing
