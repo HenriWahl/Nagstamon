@@ -158,10 +158,12 @@ def winmain():
                          r'/Darchs_allowed={0}'.format(ARCH_OPTS[ARCH][3]),
                          r'/Dresources={0}{1}resources'.format(DIR_BUILD_NAGSTAMON, os.sep),
                          r'/O{0}{1}dist'.format(CURRENT_DIR, os.sep),
-                         r'{0}{1}windows{1}nagstamon.iss'.format(CURRENT_DIR, os.sep)], shell=True)
+                         r'{0}{1}windows{1}nagstamon.iss'.format(CURRENT_DIR, os.sep)],
+                         shell=True)
 
 
-        print(result)
+        if result > 0:
+            sys.exit(result)
 
     if SIGNING:
         # environment variables will be used by powershell script for signing
