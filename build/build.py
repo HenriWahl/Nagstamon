@@ -146,7 +146,7 @@ def winmain():
 
     if not DEBUG:
         shutil.copyfile(f'{NAGSTAMON_DIR}{os.sep}Nagstamon{os.sep}resources{os.sep}nagstamon.ico',
-                        f'{CURRENT_DIR}{os.sep}windows{os.sep}nagstamon.ico')
+                        f'{CURRENT_DIR}{os.sep}nagstamon.ico')
         # execute InnoSetup with many variables set by ISCC.EXE outside .iss file
         result = subprocess.call([ISCC,
                          r'/Dsource={0}'.format(DIR_BUILD_NAGSTAMON),
