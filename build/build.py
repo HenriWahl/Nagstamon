@@ -161,7 +161,6 @@ def winmain():
                          r'{0}{1}windows{1}nagstamon.iss'.format(CURRENT_DIR, os.sep)],
                          shell=True)
 
-
         if result > 0:
             sys.exit(result)
 
