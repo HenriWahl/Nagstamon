@@ -147,6 +147,10 @@ def winmain():
                 zip_archive.write('{0}{1}{2}'.format(root, os.sep, file))
 
     if not DEBUG:
+
+        # try to debug https://github.com/HenriWahl/Nagstamon/actions/runs/10300735350/job/28510780209#step:7:219
+        print(r'/Dresources={0}{1}resources'.format(DIR_BUILD_NAGSTAMON, os.sep))
+
         # execute InnoSetup with many variables set by ISCC.EXE outside .iss file
         subprocess.call([ISCC,
                          r'/Dsource={0}'.format(DIR_BUILD_NAGSTAMON),
