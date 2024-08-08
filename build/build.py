@@ -145,6 +145,9 @@ def winmain():
                 zip_archive.write('{0}{1}{2}'.format(root, os.sep, file))
 
     if not DEBUG:
+        shutil.copyfile(f'{NAGSTAMON_DIR}{os.sep}Nagstamon{os.sep}resources{os.sep}nagstamon.ico',
+                        f'{DIR_BUILD_NAGSTAMON}{os.sep}nagstamon.ico')
+
         # execute InnoSetup with many variables set by ISCC.EXE outside .iss file
         result = subprocess.call([ISCC,
                          r'/Dsource={0}'.format(DIR_BUILD_NAGSTAMON),
