@@ -203,7 +203,7 @@ def macmain():
                           f'-format UDZO -imagekey zlib-level=9 -o "Nagstamon {VERSION} {ARCH_MACOS_NAMES[ARCH_MACOS]}.dmg"'], shell=True)
 
     # Delete uncompressed DMG file as it is no longer needed
-    os.unlink('Nagstamon {0} uncompressed.dmg'.format(VERSION))
+    os.unlink(f'Nagstamon {VERSION} uncompressed.dmg')
 
 
 def debmain():
