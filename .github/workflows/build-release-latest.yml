@@ -208,11 +208,29 @@ jobs:
           if-no-files-found: error
           name: ${{ github.job }}
 
-  macos:
+  macos-intel:
     runs-on: macos-12
     needs: test
     steps:
       - uses: actions/checkout@v4
+      - run: python -c "import platform; print(platform.processor())"
+      - run: pip3 install --no-warn-script-location -r build/requirements/macos.txt
+      - run: cd ${{ github.workspace }}/build; python3 build.py
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+      - uses: actions/upload-artifact@v4
+        with:
+          path: build/*.dmg
+          retention-days: 1
+          if-no-files-found: error
+          name: ${{ github.job }}
+
+  macos-arm:
+    runs-on: macos-14
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -c "import platform; print(platform.processor())"
       - run: pip3 install --no-warn-script-location -r build/requirements/macos.txt
       - run: cd ${{ github.workspace }}/build; python3 build.py
         env:
@@ -310,7 +328,7 @@ jobs:
   repo-debian:
     runs-on: ubuntu-latest
     # try to avoid race condition and start uploading only after the last install package has been build
-    needs: [debian, fedora-37, fedora-38, fedora-39, fedora-40, fedora-41, rhel-9, macos, windows-32, windows-64, windows-64-debug]
+    needs: [debian, fedora-37, fedora-38, fedora-39, fedora-40, fedora-41, rhel-9, macos-intel, macos-arm, windows-32, windows-64, windows-64-debug]
     env:
       family: debian
     steps:

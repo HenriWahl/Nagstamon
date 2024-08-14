@@ -47,6 +47,8 @@ PYTHON_VERSION = '{0}.{1}'.format(sys.version_info[0],
 
 DIST_NAME, DIST_VERSION, DIST_ID = get_distro()
 
+#MACOS_PROCESSOR = platform.processor()
+
 # depending on debug build or not a console window will be shown or not
 if len(sys.argv) > 1 and sys.argv[1] == 'debug':
     DEBUG = True
