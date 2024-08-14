@@ -39,9 +39,11 @@ from Nagstamon.Config import AppInfo
 from Nagstamon.Helpers import get_distro
 
 VERSION = AppInfo.VERSION
+
 ARCH_WINDOWS = platform.architecture()[0][0:2]
 ARCH_WINDOWS_OPTS = {'32': ('win32', 'win32', '', 'x86'),
              '64': ('win-amd64', 'amd64', '(X86)', 'x64')}
+
 ARCH_MACOS = platform.machine()
 ARCH_MACOS_NAMES = {'x86_64': 'Intel',
                     'arm64': 'ARM'}
