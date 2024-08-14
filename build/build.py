@@ -43,10 +43,8 @@ ARCH_WINDOWS = platform.architecture()[0][0:2]
 ARCH_WINDOWS_OPTS = {'32': ('win32', 'win32', '', 'x86'),
              '64': ('win-amd64', 'amd64', '(X86)', 'x64')}
 ARCH_MACOS = platform.machine()
-ARCH_MACOS_NAMES = {'i386': 'Intel',
-                    'x86_64': 'Intel',
-                    'arm': 'Apple_Silicon',
-                    'arm64': 'Apple_Silicon'}
+ARCH_MACOS_NAMES = {'x86_64': 'Intel',
+                    'arm64': 'ARM'}
 
 PYTHON_VERSION = '{0}.{1}'.format(sys.version_info[0],
                                   sys.version_info[1])
