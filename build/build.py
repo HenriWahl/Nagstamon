@@ -194,9 +194,9 @@ def macmain():
         os.unlink(dmg_file)
 
     # create DMG
-    subprocess.call(['hdiutil create -srcfolder "Nagstamon {0} Staging DMG" '
-                     '-volname "Nagstamon {0}" -fs HFS+ -format UDRW -size 100M '
-                     '"Nagstamon {0} uncompressed.dmg"'.format(VERSION)], shell=True)
+    subprocess.call([f'hdiutil create -srcfolder "Nagstamon {VERSION} Staging DMG" '
+                          f'-volname "Nagstamon {VERSION}" -fs HFS+ -format UDRW -size 100M '
+                          f'"Nagstamon {VERSION} uncompressed.dmg"'], shell=True)
 
     # Compress DMG
     subprocess.call([f'hdiutil convert "Nagstamon {VERSION} uncompressed".dmg '
