@@ -39,15 +39,17 @@ from Nagstamon.Config import AppInfo
 from Nagstamon.Helpers import get_distro
 
 VERSION = AppInfo.VERSION
-ARCH = platform.architecture()[0][0:2]
-ARCH_OPTS = {'32': ('win32', 'win32', '', 'x86'),
+ARCH_WINDOWS = platform.architecture()[0][0:2]
+ARCH_WINDOWS_OPTS = {'32': ('win32', 'win32', '', 'x86'),
              '64': ('win-amd64', 'amd64', '(X86)', 'x64')}
+ARCH_MACOS = platform.processor()
+ARCH_MACOS_NAMES = {'i386': 'Intel', 'arm': 'Apple_Silicon'}
+
 PYTHON_VERSION = '{0}.{1}'.format(sys.version_info[0],
                                   sys.version_info[1])
 
 DIST_NAME, DIST_VERSION, DIST_ID = get_distro()
 
-#MACOS_PROCESSOR = platform.processor()
 
 # depending on debug build or not a console window will be shown or not
 if len(sys.argv) > 1 and sys.argv[1] == 'debug':
@@ -93,9 +95,9 @@ def winmain():
         VERSION_IS = VERSION
 
     # old-school formatstrings needed for old Debian build base distro jessie and its old python
-    ISCC = r'{0}{1}Inno Setup 6{1}iscc.exe'.format(os.environ['PROGRAMFILES{0}'.format(ARCH_OPTS[ARCH][2])], os.sep)
-    DIR_BUILD_EXE = '{0}{1}dist{1}Nagstamon'.format(CURRENT_DIR, os.sep, ARCH_OPTS[ARCH][0], PYTHON_VERSION)
-    DIR_BUILD_NAGSTAMON = '{0}{1}dist{1}Nagstamon-{2}-win{3}{4}'.format(CURRENT_DIR, os.sep, VERSION, ARCH,
+    ISCC = r'{0}{1}Inno Setup 6{1}iscc.exe'.format(os.environ['PROGRAMFILES{0}'.format(ARCH_WINDOWS_OPTS[ARCH_WINDOWS][2])], os.sep)
+    DIR_BUILD_EXE = '{0}{1}dist{1}Nagstamon'.format(CURRENT_DIR, os.sep, ARCH_WINDOWS_OPTS[ARCH_WINDOWS][0], PYTHON_VERSION)
+    DIR_BUILD_NAGSTAMON = '{0}{1}dist{1}Nagstamon-{2}-win{3}{4}'.format(CURRENT_DIR, os.sep, VERSION, ARCH_WINDOWS,
                                                                         FILENAME_SUFFIX)
     FILE_ZIP = '{0}.zip'.format(DIR_BUILD_NAGSTAMON)
 
@@ -158,8 +160,8 @@ def winmain():
                          r'/Dsource={0}'.format(DIR_BUILD_NAGSTAMON),
                          r'/Dversion_is={0}'.format(VERSION_IS),
                          r'/Dversion={0}'.format(VERSION),
-                         r'/Darch={0}'.format(ARCH),
-                         r'/Darchs_allowed={0}'.format(ARCH_OPTS[ARCH][3]),
+                         r'/Darch={0}'.format(ARCH_WINDOWS),
+                         r'/Darchs_allowed={0}'.format(ARCH_WINDOWS_OPTS[ARCH_WINDOWS][3]),
                          r'/O{0}{1}dist'.format(CURRENT_DIR, os.sep),
                          r'{0}{1}windows{1}nagstamon.iss'.format(CURRENT_DIR, os.sep)],
                          shell=True)
@@ -197,7 +199,7 @@ def macmain():
 
     # Compress DMG
     subprocess.call(['hdiutil convert "Nagstamon {0} uncompressed".dmg '
-                     '-format UDZO -imagekey zlib-level=9 -o "Nagstamon {0}.dmg"'.format(VERSION)], shell=True)
+                     f'-format UDZO -imagekey zlib-level=9 -o "Nagstamon {VERSION} {ARCH_MACOS_NAMES[ARCH_MACOS]}.dmg"'], shell=True)
 
     # Delete uncompressed DMG file as it is no longer needed
     os.unlink('Nagstamon {0} uncompressed.dmg'.format(VERSION))

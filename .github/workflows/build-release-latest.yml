@@ -213,7 +213,6 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v4
-      - run: python -c "import platform; print(platform.processor())"
       - run: pip3 install --no-warn-script-location -r build/requirements/macos.txt
       - run: cd ${{ github.workspace }}/build; python3 build.py
         env:
@@ -230,8 +229,7 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v4
-      - run: python -c "import platform; print(platform.processor())"
-      - run: pip3 install --no-warn-script-location -r build/requirements/macos.txt
+      - run: pip3 install --no-warn-script-location --break-system-packages -r build/requirements/macos.txt
       - run: cd ${{ github.workspace }}/build; python3 build.py
         env:
           PYTHONPATH: ${{ github.workspace }}
