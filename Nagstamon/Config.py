@@ -1062,10 +1062,16 @@ try:
     executable_dir = os.path.join(os.sep.join(sys.executable.split(os.sep)[:-1]))
     if os.path.exists(os.path.normcase(os.sep.join((executable_dir, "resources")))):
         RESOURCES = os.path.normcase(os.sep.join((executable_dir, "resources")))
+
+        print('resources 1: ' + RESOURCES)
+
     else:
         import pkg_resources
 
         RESOURCES = pkg_resources.resource_filename("Nagstamon", "resources")
+
+        print('resources 2: ' + RESOURCES)
+
 
 except Exception as err:
     # get resources directory from current directory - only if not being set before by pkg_resources
@@ -1096,6 +1102,10 @@ except Exception as err:
     for path in paths_to_check:
         if os.path.exists(path):
             RESOURCES = path
+            print('resources 3: ' + RESOURCES, paths_to_check)
+
             break
     else:
         RESOURCES = str(Path(__file__).parent.absolute().joinpath('resources'))
+
+        print('resources 4: ' + RESOURCES)
