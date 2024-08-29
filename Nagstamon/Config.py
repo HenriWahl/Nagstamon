@@ -1062,16 +1062,10 @@ try:
     executable_dir = os.path.join(os.sep.join(sys.executable.split(os.sep)[:-1]))
     if os.path.exists(os.path.normcase(os.sep.join((executable_dir, "resources")))):
         RESOURCES = os.path.normcase(os.sep.join((executable_dir, "resources")))
-
-        print('resources 1: ' + RESOURCES)
-
     else:
         import pkg_resources
 
         RESOURCES = pkg_resources.resource_filename("Nagstamon", "resources")
-
-        print('resources 2: ' + RESOURCES)
-
 
 except Exception as err:
     # get resources directory from current directory - only if not being set before by pkg_resources
@@ -1082,7 +1076,6 @@ except Exception as err:
         # if resources dir is not available in CWD, try the
         # libs dir (site-packages) for the current Python
         from distutils.sysconfig import get_python_lib
-
         paths_to_check.append(os.path.normcase(os.path.join(get_python_lib(), "Nagstamon", "resources")))
     except Exception:
         pass
@@ -1090,7 +1083,6 @@ except Exception as err:
     # if we're still out of luck, maybe this was a user scheme install
     try:
         import site
-
         site.getusersitepackages()  # make sure USER_SITE is set
         paths_to_check.append(os.path.normcase(os.path.join(site.USER_SITE, "Nagstamon", "resources")))
     except Exception:
@@ -1103,12 +1095,9 @@ except Exception as err:
         if os.path.exists(path):
             RESOURCES = path
             print('resources 3: ' + RESOURCES, paths_to_check)
-
             break
     else:
         RESOURCES = str(Path(__file__).parent.absolute().joinpath('resources'))
-
-        print('resources 4: ' + RESOURCES)
 
 # try to fix missing resources path for Windows
 if OS == OS_WINDOWS:
