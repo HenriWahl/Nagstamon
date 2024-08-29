@@ -1111,6 +1111,6 @@ except Exception as err:
         print('resources 4: ' + RESOURCES)
 
 # try to fix missing resources path for Windows
-if OS == 'Windows':
+if OS == OS_WINDOWS:
     if r'\_internal\Nagstamon\resources' in RESOURCES:
         RESOURCES = RESOURCES.replace(r'\_internal\Nagstamon\resources', r'\_internal\resources')
