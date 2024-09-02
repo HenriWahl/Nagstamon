@@ -226,7 +226,7 @@ def create_server(server=None):
 
     # debug
     if conf.debug_mode is True:
-        new_server.Debug(server=server.name, debug="Created server.")
+        new_server.debug(server=server.name, debug="Created server.")
 
     return new_server
 

@@ -128,9 +128,9 @@ class Monitos4xServer(GenericServer):
                 form_inputs['_password'] = self.password
 
                 # call login page to get temporary cookie
-                self.FetchURL('{0}/security/login'.format(self.monitor_url))
+                self.fetch_url('{0}/security/login'.format(self.monitor_url))
                 # submit login form to retrieve authentication cookie
-                self.FetchURL(
+                self.fetch_url(
                     '{0}/security/login_check'.format(self.monitor_url),
                     cgi_data=form_inputs,
                     multipart=True
@@ -170,7 +170,7 @@ class Monitos4xServer(GenericServer):
             while True:
                 cgiurl_hosts_page = self.cgiurl_hosts + '&page=' + str(page)
 
-                result = self.FetchURL(
+                result = self.fetch_url(
                     cgiurl_hosts_page, giveback='raw', cgi_data=None)
 
                 # authentication errors get a status code 200 too
@@ -178,7 +178,7 @@ class Monitos4xServer(GenericServer):
                         result.result.startswith('<'):
                     # in case of auth error reset HTTP session and try again
                     self.reset_HTTP()
-                    result = self.FetchURL(
+                    result = self.fetch_url(
                         cgiurl_hosts_page, giveback='raw', cgi_data=None)
 
                     if result.status_code < 400 and \
@@ -218,7 +218,7 @@ class Monitos4xServer(GenericServer):
                     host_name = h['name']
 
                     if conf.debug_mode:
-                        self.Debug(server=self.get_name(), debug=time.strftime('%a %H:%M:%S') + ' host_name is: ' + host_name)
+                        self.debug(server=self.get_name(), debug=time.strftime('%a %H:%M:%S') + ' host_name is: ' + host_name)
 
                     # If a host does not exist, create its object
                     if host_name not in self.new_hosts:
@@ -278,7 +278,7 @@ class Monitos4xServer(GenericServer):
 
                         # extra duration needed for calculation
                         if h['status']['lastStateChange'] is None:
-                            self.Debug(server=self.get_name(), debug=time.strftime('%a %H:%M:%S') + 'Host has wrong lastStateChange - host_name is: ' + host_name)
+                            self.debug(server=self.get_name(), debug=time.strftime('%a %H:%M:%S') + 'Host has wrong lastStateChange - host_name is: ' + host_name)
                         else:
                             duration = datetime.datetime.now(
                             ) - datetime.datetime.fromtimestamp(int(h['status']['lastStateChange']))
@@ -293,7 +293,7 @@ class Monitos4xServer(GenericServer):
 
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         # services
@@ -304,8 +304,8 @@ class Monitos4xServer(GenericServer):
             while True:
                 cgiurl_services_page = self.cgiurl_services + '&page=' + str(page)
 
-                result = self.FetchURL(cgiurl_services_page,
-                                       giveback='raw', cgi_data=None)
+                result = self.fetch_url(cgiurl_services_page,
+                                        giveback='raw', cgi_data=None)
 
                 # purify JSON result
                 jsonraw = copy.deepcopy(result.result.replace('\n', ''))
@@ -338,7 +338,7 @@ class Monitos4xServer(GenericServer):
                     service_name = s['configuration']['serviceDescription']
 
                     if conf.debug_mode:
-                        self.Debug(server=self.get_name(), debug=time.strftime('%a %H:%M:%S') + ' host_name is: ' + host_name + ' service_name is: ' + service_name)
+                        self.debug(server=self.get_name(), debug=time.strftime('%a %H:%M:%S') + ' host_name is: ' + host_name + ' service_name is: ' + service_name)
 
                     # If host not in problem list, create it
                     if host_name not in self.new_hosts:
@@ -407,7 +407,7 @@ class Monitos4xServer(GenericServer):
 
                         # extra duration needed for calculation
                         if s['status']['lastStateChange'] is None:
-                            self.Debug(server=self.get_name(), debug=time.strftime('%a %H:%M:%S')
+                            self.debug(server=self.get_name(), debug=time.strftime('%a %H:%M:%S')
                                                                      + 'Service has wrong lastStateChange - host_name is ' + host_name + ' service_name is: ' + service_name)
                         else:
                             duration = datetime.datetime.now(
@@ -423,7 +423,7 @@ class Monitos4xServer(GenericServer):
 
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         del jsonraw, error, hosts

@@ -97,7 +97,7 @@ class SensuServer(GenericServer):
                 verify=verify
             )
         except SensuAPIException:
-                self.Error(sys.exc_info())
+                self.error(sys.exc_info())
 
     def _insert_service_to_hosts(self, service: GenericService):
         service_host = service.get_host_name()
@@ -151,7 +151,7 @@ class SensuServer(GenericServer):
                 self._insert_service_to_hosts(new_service)
         except:
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             print(traceback.format_exc())
             return Result(result=result, error=error)
 
@@ -213,12 +213,12 @@ class SensuServer(GenericServer):
     def set_recheck(self, info_dict):
         if info_dict['service'] == 'keepalive':
             if conf.debug_mode:
-                self.Debug(server=self.name, debug='Keepalive results must come from the client running on host {0}, unable to recheck'.format(info_dict['host']))
+                self.debug(server=self.name, debug='Keepalive results must come from the client running on host {0}, unable to recheck'.format(info_dict['host']))
         else:
             standalone = self.sensu_api.get_event(info_dict['host'], info_dict['service'])['check']['standalone']
             if standalone:
                 if conf.debug_mode:
-                    self.Debug(server=self.name, debug='Service {0} on host {1} is a standalone service, will not recheck'.format(info_dict['service'], info_dict['host']))
+                    self.debug(server=self.name, debug='Service {0} on host {1} is a standalone service, will not recheck'.format(info_dict['service'], info_dict['host']))
             else:
                 self.sensu_api.post_check_request(
                     info_dict['service'],

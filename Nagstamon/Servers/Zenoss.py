@@ -69,7 +69,7 @@ class ZenossServer(GenericServer):
         try:
             self.zapi = ZenossAPI(Server=self.server)
         except Exception:
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
     
     def _get_status(self):
@@ -139,7 +139,7 @@ class ZenossServer(GenericServer):
                 
         except:
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             print(traceback.format_exc())
             return Result(result=result, error=error)
 
