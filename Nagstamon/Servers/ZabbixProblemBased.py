@@ -162,7 +162,11 @@ class ZabbixProblemBasedServer(GenericServer):
 
             #Get all current problems (trigger based), no need to check acknowledged problems if they are filtered out (load reduce)
             if conf.filter_acknowledged_hosts_services:
-                problems = self.zlapi.do_request("problem.get", {'recent': False, 'acknowledged': False})
+                # old versions doesnt support suppressed problems
+                if parse_version(self.zbx_version) < parse_version("6.2.0"):
+                    problems = self.zlapi.do_request("problem.get", {'recent': False, 'acknowledged': False})
+                else:
+                    problems = self.zlapi.do_request("problem.get", {'recent': False, 'acknowledged': False, 'suppressed': False})
             else:
                 problems = self.zlapi.do_request("problem.get", {'recent': False})
 
