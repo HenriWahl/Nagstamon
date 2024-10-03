@@ -160,8 +160,8 @@ class Config(object):
             supposed to be sensible defaults
         """
         self.headless = False
-        self.headless_addr = '127.0.0.1'
-        self.headless_port = 19000
+        self.headless_addr = '0.0.0.0'
+        self.headless_port = 80
         self.headless_basicauth_user = ''
         self.headless_basicauth_password = ''
 

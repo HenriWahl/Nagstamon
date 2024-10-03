@@ -32,5 +32,7 @@ WORKDIR /opt/app
 COPY . /opt/app/
 COPY --from=build /venv /venv
 
+EXPOSE 80
+
 ENTRYPOINT [ "/venv/bin/python", "nagstamon.py" ]
 
