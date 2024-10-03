@@ -20,6 +20,7 @@
 
 import sys
 import socket
+import os
 
 # fix/patch for https://bugs.launchpad.net/ubuntu/+source/nagstamon/+bug/732544
 socket.setdefaulttimeout(30)
@@ -41,7 +42,8 @@ try:
             print('An instance is already running this config ({})'.format(conf.configdir))
             sys.exit(1)
 
-        if conf.headless is True:
+        headless = os.getenv("NAGSTAMON_HEADLESS", 'False').lower() in ('true', '1', 't')
+        if headless:
             from Nagstamon.headless import (APP)
         else:
             # get GUI

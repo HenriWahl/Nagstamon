@@ -159,12 +159,6 @@ class Config(object):
             read config file and set the appropriate attributes
             supposed to be sensible defaults
         """
-        self.headless = False
-        self.headless_addr = '0.0.0.0'
-        self.headless_port = 80
-        self.headless_basicauth_user = ''
-        self.headless_basicauth_password = ''
-
         # move from minute interval to seconds
         self.update_interval_seconds = 60
         self.short_display = False
