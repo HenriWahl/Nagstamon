@@ -41,26 +41,29 @@ try:
             print('An instance is already running this config ({})'.format(conf.configdir))
             sys.exit(1)
 
-        # get GUI
-        from Nagstamon.QUI import (APP,
-                                   statuswindow,
-                                   check_version,
-                                   check_servers,
-                                   QT_FLAVOR,
-                                   QT_VERSION_STR)
+        if conf.headless is True:
+            from Nagstamon.headless import (APP)
+        else:
+            # get GUI
+            from Nagstamon.QUI import (APP,
+                                       statuswindow,
+                                       check_version,
+                                       check_servers,
+                                       QT_FLAVOR,
+                                       QT_VERSION_STR)
 
-        # ask for help if no servers are configured
-        check_servers()
+            # ask for help if no servers are configured
+            check_servers()
 
-        # show and resize status window
-        statuswindow.show()
-        if not conf.fullscreen:
-            statuswindow.adjustSize()
+            # show and resize status window
+            statuswindow.show()
+            if not conf.fullscreen:
+                statuswindow.adjustSize()
 
-        if conf.check_for_new_version is True:
-            check_version.check(start_mode=True, parent=statuswindow)
+            if conf.check_for_new_version is True:
+                check_version.check(start_mode=True, parent=statuswindow)
 
-        sys.exit(APP.exec())
+            sys.exit(APP.exec())
 
 except Exception as err:
     import traceback
