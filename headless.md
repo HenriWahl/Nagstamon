@@ -22,8 +22,16 @@ Using the datasource plugin [yesoreyeram-infinity-datasource](https://grafana.co
  * Health check URL: http(s)://<NAGSTAMON_HEADLESS_ADDRESS>[:<NAGSTAMON_HEADLESS_PORT>]/hosts
 
 #### Grafana Dashboard
+Sample dashboard:
+![Dashboard](grafana-dashboard.png "Grafana Dashboard")
 
+The dashboard can be imported from this json (datasource needs to be configured manually): [Dashboard json](grafana-dashboard.json)
 
+## Build container
+If you want to build the container yourself it can be built like this:
+```
+docker buildx build -t friesoft/nagstamon-headless:0.0.1 .
+```
 
 ## Docker Standalone with same Nagstamon config directory from Windows install
 ```
