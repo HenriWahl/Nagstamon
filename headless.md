@@ -2,8 +2,12 @@
 Nagstamon headless mode can be used to query all data fetched by Nagstamon from all enabled servers allowing a unified view of all alerts from all configured servers (just like Nagstamon does on desktop).
 The data retrieved from the REST api can then be used for example in Grafana to visualize all open alerts.
 
+## Server passwords
+Using Nagstamon in headless mode in containers where no keyring is available the option "Use system keyring" must be disabled for saving the server passwords to the server config files.
+Make sure the `password` key is not empty in your servers config.
+
 ### Grafana example
-Using the datasource plugin [yesoreyeram-infinity-datasource|https://grafana.com/docs/plugins/yesoreyeram-infinity-datasource/latest/] you can visualize all data from the datasource.
+Using the datasource plugin [yesoreyeram-infinity-datasource](https://grafana.com/docs/plugins/yesoreyeram-infinity-datasource/latest/) you can visualize all data from the datasource.
 
 #### Datasource configuration
 * Authentication
