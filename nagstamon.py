@@ -35,17 +35,17 @@ try:
         if OS == OS_WINDOWS:
             import pip_system_certs.wrapt_requests
 
-        from Nagstamon.Helpers import lock_config_folder
-
-        # Acquire the lock
-        if not lock_config_folder(conf.configdir):
-            print('An instance is already running this config ({})'.format(conf.configdir))
-            sys.exit(1)
-
         headless = os.getenv("NAGSTAMON_HEADLESS", 'False').lower() in ('true', '1', 't')
         if headless:
             from Nagstamon.headless import (APP)
         else:
+            from Nagstamon.Helpers import lock_config_folder
+
+            # Acquire the lock
+            if not lock_config_folder(conf.configdir):
+                print('An instance is already running this config ({})'.format(conf.configdir))
+                sys.exit(1)
+
             # get GUI
             from Nagstamon.QUI import (APP,
                                        statuswindow,
