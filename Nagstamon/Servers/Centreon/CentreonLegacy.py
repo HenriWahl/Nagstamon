@@ -91,7 +91,7 @@ class CentreonServer(GenericServer):
             result_versioncheck = self.fetch_url(self.monitor_cgi_url + '/index.php', giveback='raw')
             raw_versioncheck, error_versioncheck = result_versioncheck.result, result_versioncheck.error
             if error_versioncheck == '':
-                if re.search('2\.2\.[0-9]', raw_versioncheck):
+                if re.search(r'2\.2\.[0-9]', raw_versioncheck):
                     self.centreon_version = 2.2
                     if conf.debug_mode is True:
                         self.debug(server=self.get_name(), debug='Centreon version detected : 2.2')
@@ -100,7 +100,7 @@ class CentreonServer(GenericServer):
                                         'hosts': '$MONITOR$/main.php?p=20103&o=hpb',
                                         'services': '$MONITOR$/main.php?p=20202&o=svcpb',
                                         'history': '$MONITOR$/main.php?p=203'}
-                elif re.search('2\.[3-6]\.[0-5]', raw_versioncheck):
+                elif re.search(r'2\.[3-6]\.[0-5]', raw_versioncheck):
                     self.centreon_version = 2.3456
                     if conf.debug_mode is True:
                         self.debug(server=self.get_name(), debug='Centreon version detected : 2.3 <=> 2.6.5')
@@ -109,7 +109,7 @@ class CentreonServer(GenericServer):
                                         'hosts': '$MONITOR$/main.php?p=20103&o=hpb',
                                         'services': '$MONITOR$/main.php?p=20202&o=svcpb',
                                         'history': '$MONITOR$/main.php?p=203'}
-                elif re.search('2\.6\.[6-9]', raw_versioncheck):
+                elif re.search(r'2\.6\.[6-9]', raw_versioncheck):
                     self.centreon_version = 2.66
                     if conf.debug_mode is True:
                         self.debug(server=self.get_name(), debug='Centreon version detected : 2.6.6')
@@ -118,7 +118,7 @@ class CentreonServer(GenericServer):
                                         'hosts': '$MONITOR$/main.php?p=20103&o=hpb',
                                         'services': '$MONITOR$/main.php?p=20202&o=svcpb',
                                         'history': '$MONITOR$/main.php?p=203'}
-                elif re.search('2\.7\.[0-9]', raw_versioncheck):
+                elif re.search(r'2\.7\.[0-9]', raw_versioncheck):
                     # Centreon 2.7 only support C. Broker
                     self.centreon_version = 2.7
                     if conf.debug_mode is True:
@@ -128,7 +128,7 @@ class CentreonServer(GenericServer):
                                         'hosts': '$MONITOR$/main.php?p=20202&o=hpb',
                                         'services': '$MONITOR$/main.php?p=20201&o=svcpb',
                                         'history': '$MONITOR$/main.php?p=203'}
-                elif re.search('2\.8\.[0-9]', raw_versioncheck):
+                elif re.search(r'2\.8\.[0-9]', raw_versioncheck):
                     # Centreon 2.8 only support C. Broker
                     self.centreon_version = 2.8
                     if conf.debug_mode is True:
@@ -138,7 +138,7 @@ class CentreonServer(GenericServer):
                                         'hosts': '$MONITOR$/main.php?p=20202',
                                         'services': '$MONITOR$/main.php?p=20201',
                                         'history': '$MONITOR$/main.php?p=203'}
-                elif re.search('18\.10\.[0-9]', raw_versioncheck):
+                elif re.search(r'18\.10\.[0-9]', raw_versioncheck):
                     self.centreon_version = 18.10
                     if conf.debug_mode is True:
                         self.debug(server=self.get_name(), debug='Centreon version detected : 18.10')
@@ -147,7 +147,7 @@ class CentreonServer(GenericServer):
                                         'hosts': '$MONITOR$/main.php?p=20202',
                                         'services': '$MONITOR$/main.php?p=20201',
                                         'history': '$MONITOR$/main.php?p=203'}
-                elif re.search('19\.(04|10)\.[0-9]', raw_versioncheck) or re.search('20\.(04|10)\.[0-9]', raw_versioncheck):
+                elif re.search(r'19\.(04|10)\.[0-9]', raw_versioncheck) or re.search(r'20\.(04|10)\.[0-9]', raw_versioncheck):
                     self.centreon_version = 19.04
                     if conf.debug_mode is True:
                         self.debug(server=self.get_name(), debug='Centreon version detected : 19.04 <=> 20.10')
@@ -406,11 +406,11 @@ class CentreonServer(GenericServer):
             result = self.fetch_url(self.monitor_cgi_url + '/main.php', cgi_data=cgi_data, giveback='raw')
             raw, error = result.result, result.error
             if error == '':
-                if re.search('var _addrXML.*xml\/ndo\/host', raw):
+                if re.search(r'var _addrXML.*xml\/ndo\/host', raw):
                   self.XML_PATH = 'xml/ndo'
                   if conf.debug_mode:
                       self.debug(server=self.get_name(), debug='Detected broker : NDO')
-                elif re.search('var _addrXML.*xml\/broker\/host', raw):
+                elif re.search(r'var _addrXML.*xml\/broker\/host', raw):
                     self.XML_PATH = 'xml/broker'
                     if conf.debug_mode:
                         self.debug(server=self.get_name(), debug='Detected broker : C. Broker')
