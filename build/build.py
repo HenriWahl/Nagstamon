@@ -173,8 +173,6 @@ def winmain():
             sys.exit(result)
 
     if SIGNING:
-        subprocess.run(['pwsh.exe', '../windows/code_signing.ps1', '*.zip'])
-        subprocess.run(['ls'])
         # environment variables will be used by powershell script for signing
         subprocess.run(['pwsh.exe', '../windows/code_signing.ps1', '*.exe'])
 
