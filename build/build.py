@@ -126,6 +126,7 @@ def winmain():
 
     if SIGNING:
         # environment variables will be used by powershell script for signing
+        subprocess.run(['pwsh.exe', 'ls', 'build/Nagstamon'])
         subprocess.run(['pwsh.exe', './windows/code_signing.ps1', 'build/Nagstamon/*.exe'])
 
     # rename output
