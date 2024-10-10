@@ -150,6 +150,7 @@ def winmain():
         for root, dirs, files in os.walk(os.path.basename(DIR_BUILD_NAGSTAMON)):
             for file in files:
                 zip_archive.write('{0}{1}{2}'.format(root, os.sep, file))
+        zip_archive.close()
 
     if not DEBUG:
         # for some reason out of nowhere the old path SetupIconFile={#resources}\nagstamon.ico
