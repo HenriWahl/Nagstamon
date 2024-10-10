@@ -1,6 +1,9 @@
 FROM fedora:42
 LABEL maintainer=henri@nagstamon.de
 
+# avoid Cisco OpenH264 plugin causing upgrade failure
+RUN dnf config-manager setopt fedora-cisco-openh264.enabled=false
+
 RUN dnf -y upgrade
 
 RUN dnf -y install createrepo_c \
