@@ -61,7 +61,7 @@ class IcingaServer(GenericServer):
         """
             Try to get Icinga version for different URLs and JSON capabilities
         """
-        result = self.FetchURL('%s/tac.cgi?jsonoutput' % (self.monitor_cgi_url), giveback='raw')
+        result = self.fetch_url('%s/tac.cgi?jsonoutput' % (self.monitor_cgi_url), giveback='raw')
         if result.error != '':
             return result
         else:
@@ -140,7 +140,7 @@ class IcingaServer(GenericServer):
         except:
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         # dummy return in case all is OK
@@ -158,7 +158,7 @@ class IcingaServer(GenericServer):
         # now using JSON output from Icinga
         try:
             for status_type in 'hard', 'soft':
-                result = self.FetchURL(self.cgiurl_hosts[status_type], giveback='raw')
+                result = self.fetch_url(self.cgiurl_hosts[status_type], giveback='raw')
                 # purify JSON result of unnecessary control sequence \n
                 jsonraw, error, status_code = copy.deepcopy(result.result.replace('\n', '')),\
                                               copy.deepcopy(result.error),\
@@ -216,13 +216,13 @@ class IcingaServer(GenericServer):
         except:
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         # services
         try:
             for status_type in 'hard', 'soft':
-                result = self.FetchURL(self.cgiurl_services[status_type], giveback='raw')
+                result = self.fetch_url(self.cgiurl_services[status_type], giveback='raw')
                 # purify JSON result of unnecessary control sequence \n
                 jsonraw, error, status_code = copy.deepcopy(result.result.replace('\n', '')),\
                                               copy.deepcopy(result.error),\
@@ -303,7 +303,7 @@ class IcingaServer(GenericServer):
         except:
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         # some cleanup
@@ -331,7 +331,7 @@ class IcingaServer(GenericServer):
         # hosts must be analyzed separately
         try:
             for status_type in 'hard', 'soft':
-                result = self.FetchURL(self.cgiurl_hosts[status_type])
+                result = self.fetch_url(self.cgiurl_hosts[status_type])
                 htobj, error, status_code = result.result,\
                                             result.error,\
                                             result.status_code
@@ -445,7 +445,7 @@ class IcingaServer(GenericServer):
                             # some cleanup
                             del tds, n
                     except:
-                        self.Error(sys.exc_info())
+                        self.error(sys.exc_info())
 
                 # do some cleanup
                 htobj.decompose()
@@ -454,13 +454,13 @@ class IcingaServer(GenericServer):
         except:
                 # set checking flag back to False
                 self.isChecking = False
-                result, error = self.Error(sys.exc_info())
+                result, error = self.error(sys.exc_info())
                 return Result(result=result, error=error)
 
         # services
         try:
             for status_type in 'hard', 'soft':
-                result = self.FetchURL(self.cgiurl_services[status_type])
+                result = self.fetch_url(self.cgiurl_services[status_type])
                 htobj, error, status_code = result.result,\
                                             result.error,\
                                             result.status_code
@@ -582,7 +582,7 @@ class IcingaServer(GenericServer):
                             # some cleanup
                             del tds, n
                     except:
-                        self.Error(sys.exc_info())
+                        self.error(sys.exc_info())
 
                 # do some cleanup
                 htobj.decompose()
@@ -591,7 +591,7 @@ class IcingaServer(GenericServer):
         except:
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
             # some cleanup
@@ -611,7 +611,7 @@ class IcingaServer(GenericServer):
                 # Do not check passive only checks
                 return
         # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
-        result = self.FetchURL(self.monitor_cgi_url + '/cmd.cgi?' + urllib.parse.urlencode({'cmd_typ':'96', 'host':host}))
+        result = self.fetch_url(self.monitor_cgi_url + '/cmd.cgi?' + urllib.parse.urlencode({'cmd_typ': '96', 'host':host}))
         self.start_time = dict(result.result.find(attrs={'name':'start_time'}).attrs)['value']
 
         # decision about host or service - they have different URLs
@@ -631,7 +631,7 @@ class IcingaServer(GenericServer):
                                      ('com_data', 'Recheck by %s' % self.username), \
                                      ('btnSubmit', 'Commit')])
         # execute POST request
-        self.FetchURL(self.monitor_cgi_url + '/cmd.cgi', giveback='raw', cgi_data=cgi_data)
+        self.fetch_url(self.monitor_cgi_url + '/cmd.cgi', giveback='raw', cgi_data=cgi_data)
 
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None):
@@ -677,13 +677,13 @@ class IcingaServer(GenericServer):
         if sticky:
             cgi_data['sticky_ack'] = '1'
 
-        self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+        self.fetch_url(url, giveback='raw', cgi_data=cgi_data)
 
         # acknowledge all services on a host
         if all_services:
             for s in all_services:
                 cgi_data['cmd_typ'] = '34'
                 cgi_data['service'] = s
-                self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+                self.fetch_url(url, giveback='raw', cgi_data=cgi_data)
 
 

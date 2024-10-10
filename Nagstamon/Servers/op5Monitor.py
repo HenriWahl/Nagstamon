@@ -143,7 +143,7 @@ class Op5MonitorServer(GenericServer):
             api_default_host_query+='&format=json'
 
             api_default_host_query = api_default_host_query.replace(" ", "%20")
-            result = self.FetchURL(self.monitor_url + self.api_count + api_default_host_query, giveback="raw")
+            result = self.fetch_url(self.monitor_url + self.api_count + api_default_host_query, giveback="raw")
             data, error, status_code = json.loads(result.result),\
                                        result.error,\
                                        result.status_code
@@ -161,7 +161,7 @@ class Op5MonitorServer(GenericServer):
                 api_default_host_query+='&format=json'
 
                 api_default_host_query = api_default_host_query.replace(" ", "%20")
-                result = self.FetchURL(self.monitor_url + self.api_query + api_default_host_query + '&limit=' + str(count), giveback="raw")
+                result = self.fetch_url(self.monitor_url + self.api_query + api_default_host_query + '&limit=' + str(count), giveback="raw")
                 data = json.loads(result.result)
                 n = dict()
                 for api in data:
@@ -204,7 +204,7 @@ class Op5MonitorServer(GenericServer):
             api_default_svc_query+='&format=json'
 
             api_default_svc_query = api_default_svc_query.replace(" ", "%20")
-            result = self.FetchURL(self.monitor_url + self.api_count + api_default_svc_query, giveback="raw")
+            result = self.fetch_url(self.monitor_url + self.api_count + api_default_svc_query, giveback="raw")
             data, error, status_code = json.loads(result.result),\
                                        result.error,\
                                        result.status_code
@@ -222,7 +222,7 @@ class Op5MonitorServer(GenericServer):
                 api_default_svc_query+='&format=json'
 
                 api_default_svc_query = api_default_svc_query.replace(" ", "%20")
-                result = self.FetchURL(self.monitor_url + self.api_query + api_default_svc_query + '&limit=' + str(count), giveback="raw")
+                result = self.fetch_url(self.monitor_url + self.api_query + api_default_svc_query + '&limit=' + str(count), giveback="raw")
                 data = json.loads(result.result)
                 for api in data:
                     n = dict()
@@ -280,7 +280,7 @@ class Op5MonitorServer(GenericServer):
             # store status_code for returning result to tell GUI to reauthenticate
             status_code = result.status_code
 
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error, status_code=status_code)
 
         return Result()
@@ -300,7 +300,7 @@ class Op5MonitorServer(GenericServer):
 
     def send_command(self, command, params=False):
         url = self.monitor_url + self.api_cmd + '/' + command
-        self.FetchURL(url, cgi_data=params, giveback='raw')
+        self.fetch_url(url, cgi_data=params, giveback='raw')
 
 
     def _set_recheck(self, host, service):

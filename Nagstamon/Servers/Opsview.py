@@ -75,7 +75,7 @@ class OpsviewServer(GenericServer):
         if len(self.session.cookies) == 0:
 
             if conf.debug_mode:
-                self.Debug(server=self.get_name(), debug="Fetching Login token")
+                self.debug(server=self.get_name(), debug="Fetching Login token")
 
             logindata = json.dumps({'username': self.get_username(),
                                    'password': self.get_password()})
@@ -84,17 +84,17 @@ class OpsviewServer(GenericServer):
             # get cookie from login page via url retrieving as with other urls
             try:
                 # login and get cookie
-                resp = literal_eval(self.FetchURL(self.monitor_url + "/rest/login",
-                                    giveback='raw',
-                                    cgi_data=logindata).result)
+                resp = literal_eval(self.fetch_url(self.monitor_url + "/rest/login",
+                                                   giveback='raw',
+                                                   cgi_data=logindata).result)
 
                 if conf.debug_mode:
-                    self.Debug(server=self.get_name(), debug="Login Token: " + resp.get('token') )
+                    self.debug(server=self.get_name(), debug="Login Token: " + resp.get('token'))
 
                 self.session.headers.update({'X-Opsview-Username': self.get_username(),
                                              'X-Opsview-Token':resp.get('token')})
             except:
-                self.Error(sys.exc_info())
+                self.error(sys.exc_info())
 
 
     def init_config(self):
@@ -132,8 +132,8 @@ class OpsviewServer(GenericServer):
 
         cgi_data = urllib.parse.urlencode(data)
 
-        self.Debug(server=self.get_name(), debug="Downtime url: " + url)
-        self.FetchURL(url + cgi_data, giveback="raw", cgi_data=({ }))
+        self.debug(server=self.get_name(), debug="Downtime url: " + url)
+        self.fetch_url(url + cgi_data, giveback="raw", cgi_data=({ }))
 
 
     def _set_submit_check_result(self, host, service, state, comment, check_output, performance_data):
@@ -155,8 +155,8 @@ class OpsviewServer(GenericServer):
 
         cgi_data = urllib.parse.urlencode(data)
 
-        self.Debug(server=self.get_name(), debug="Submit result url: " + url)
-        self.FetchURL(url + cgi_data, giveback="raw", cgi_data=({ }))
+        self.debug(server=self.get_name(), debug="Submit result url: " + url)
+        self.fetch_url(url + cgi_data, giveback="raw", cgi_data=({ }))
 
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None):
@@ -176,8 +176,8 @@ class OpsviewServer(GenericServer):
 
         cgi_data = urllib.parse.urlencode(data)
 
-        self.Debug(server=self.get_name(), debug="ACK url: " + url)
-        self.FetchURL(url + cgi_data, giveback="raw", cgi_data=({ }))
+        self.debug(server=self.get_name(), debug="ACK url: " + url)
+        self.fetch_url(url + cgi_data, giveback="raw", cgi_data=({ }))
 
 
     def _set_recheck(self, host, service):
@@ -194,8 +194,8 @@ class OpsviewServer(GenericServer):
 
         cgi_data = urllib.parse.urlencode(data)
 
-        self.Debug(server=self.get_name(), debug="Recheck url: " + url)
-        self.FetchURL(url + cgi_data, giveback="raw", cgi_data=({ }))
+        self.debug(server=self.get_name(), debug="Recheck url: " + url)
+        self.fetch_url(url + cgi_data, giveback="raw", cgi_data=({ }))
 
 
     def _get_status(self):
@@ -204,7 +204,7 @@ class OpsviewServer(GenericServer):
         """
         if self.can_change_only:
             if conf.debug_mode:
-                self.Debug(server=self.get_name(),
+                self.debug(server=self.get_name(),
                            debug="Showing only objects that the user can change or put in downtime")
 
             can_change = '&can_change=true'
@@ -213,7 +213,7 @@ class OpsviewServer(GenericServer):
 
         if self.hashtag_filter != '':
             if conf.debug_mode:
-                self.Debug(server=self.get_name(),
+                self.debug(server=self.get_name(),
                            debug="Raw hashtag filter string: " +
                            self.hashtag_filter)
 
@@ -221,14 +221,14 @@ class OpsviewServer(GenericServer):
             list_of_non_empty_hashtags = [i for i in trimmed_hashtags if i]
 
             if conf.debug_mode:
-                self.Debug(server=self.get_name(),
+                self.debug(server=self.get_name(),
                            debug="List of trimmed hashtags" +
                            pprint.pformat(list_of_non_empty_hashtags))
 
             keywords = "&keyword=" + "&keyword=".join(list_of_non_empty_hashtags)
 
             if conf.debug_mode:
-                self.Debug(server=self.get_name(),
+                self.debug(server=self.get_name(),
                            debug="Keyword string" + pprint.pformat(keywords))
         else:
             keywords = ''
@@ -237,7 +237,7 @@ class OpsviewServer(GenericServer):
         # because we filter them out later
         # the REST API gets all host and service info in one call
         try:
-            result = self.FetchURL(self.monitor_url + "/rest/status/service?state=1&state=2&state=3" + can_change + keywords, giveback="raw")
+            result = self.fetch_url(self.monitor_url + "/rest/status/service?state=1&state=2&state=3" + can_change + keywords, giveback="raw")
 
             data, error, status_code = json.loads(result.result), result.error, result.status_code
 
@@ -248,7 +248,7 @@ class OpsviewServer(GenericServer):
                 return errors_occured
                 
             if conf.debug_mode:
-                self.Debug(server=self.get_name(), debug="Fetched JSON: " + pprint.pformat(data))
+                self.debug(server=self.get_name(), debug="Fetched JSON: " + pprint.pformat(data))
 
             for host in data["list"]:
                 self.new_hosts[host["name"]] = GenericHost()
@@ -300,7 +300,7 @@ class OpsviewServer(GenericServer):
         except:
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         #dummy return in case all is OK
@@ -317,11 +317,11 @@ class OpsviewServer(GenericServer):
                                                         quote_via=urllib.parse.quote)
         if service == '':
             if conf.debug_mode:
-                self.Debug(server=self.get_name(), host=host, service=service,
+                self.debug(server=self.get_name(), host=host, service=service,
                            debug='Open host monitor web page ' + host_url)
             webbrowser_open(host_url)
         else:
-            self.Debug(server=self.get_name(), host=host, service=service,
+            self.debug(server=self.get_name(), host=host, service=service,
                        debug='Open service monitor web page ' + service_url)
             webbrowser_open(service_url)
 

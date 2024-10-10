@@ -92,7 +92,7 @@ class ZabbixServer(GenericServer):
             if not self.zapi.logged_in():
                 self.zapi.login(self.username, self.password)
         except ZabbixAPIException:
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
     def getLastApp(self, this_item):
@@ -188,7 +188,7 @@ class ZabbixServer(GenericServer):
                 # this code from 80 lines ahead. -- AGV
                 # set checking flag back to False
                 self.isChecking = False
-                result, error = self.Error(sys.exc_info())
+                result, error = self.error(sys.exc_info())
                 print(sys.exc_info())
                 return Result(result=result, error=error)
 
@@ -223,7 +223,7 @@ class ZabbixServer(GenericServer):
                     except (ZabbixError, ZabbixAPIException, APITimeout, Already_Exists):
                         # set checking flag back to False
                         self.isChecking = False
-                        result, error = self.Error(sys.exc_info())
+                        result, error = self.error(sys.exc_info())
                         return Result(result=result, error=error)
                 else:
                     try:
@@ -240,7 +240,7 @@ class ZabbixServer(GenericServer):
                     except (ZabbixError, ZabbixAPIException, APITimeout, Already_Exists):
                         # set checking flag back to False
                         self.isChecking = False
-                        result, error = self.Error(sys.exc_info())
+                        result, error = self.error(sys.exc_info())
                         return Result(result=result, error=error)
                 # get All Hosts.
                 # 1. Store data in cache (to be used by events)
@@ -339,7 +339,7 @@ class ZabbixServer(GenericServer):
 
             except ZabbixError:
                 self.isChecking = False
-                result, error = self.Error(sys.exc_info())
+                result, error = self.error(sys.exc_info())
                 return Result(result=result, error=error)
             ###
             for service in services:
@@ -348,9 +348,6 @@ class ZabbixServer(GenericServer):
                 #        so I left it
                 # print(service)
                 status = self.statemap.get(service['lastEvent']['severity'], service['lastEvent']['severity'])
-                # self.Debug(server=self.get_name(), debug="SERVICE (" + service['application'] + ") STATUS: **" +
-                # status + "** PRIORITY: #" + service['priority']) self.Debug(server=self.get_name(),
-                # debug="-----======== SERVICE " + str(service))
                 if not status == 'OK':
                     # if not service['description'].endswith('...'):
                     #     state = service['description']
@@ -413,7 +410,7 @@ class ZabbixServer(GenericServer):
                         print("================================")
                         print("Host " + key + "Not found in host cache")
                         if conf.debug_mode is True:
-                            self.Debug(server=self.get_name(), debug="Host not found [" + key + "]")
+                            self.debug(server=self.get_name(), debug="Host not found [" + key + "]")
 
                     # if a service does not exist create its object
                     new_service = n["triggerid"]
@@ -440,13 +437,13 @@ class ZabbixServer(GenericServer):
                         self.new_hosts[key].services[new_service].eventid = n["eventid"]
                         self.new_hosts[key].services[new_service].allow_manual_close = n["allow_manual_close"]
                         if conf.debug_mode is True:
-                            self.Debug(server=self.get_name(),
+                            self.debug(server=self.get_name(),
                                        debug="Adding new service[" + new_service + "] **" + n['service'] + "**")
 
         except (ZabbixError, ZabbixAPIException):
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             print(sys.exc_info())
             return Result(result=result, error=error)
 
@@ -456,7 +453,7 @@ class ZabbixServer(GenericServer):
         webbrowser_open(url)
 
         if conf.debug_mode is True:
-            self.Debug(server=self.get_name(), debug="Open web page " + url)
+            self.debug(server=self.get_name(), debug="Open web page " + url)
 
     def open_services(self):
         self._open_browser(self.urls['human_services'])
@@ -476,7 +473,7 @@ class ZabbixServer(GenericServer):
                 {'x': 'site=' + self.hosts[host].site + '&host=' + host + '&service=' + service}).replace('x=', '%26')
 
         if conf.debug_mode is True:
-            self.Debug(server=self.get_name(), host=host, service=service,
+            self.debug(server=self.get_name(), host=host, service=service,
                        debug="Open host/service monitor web page " + url)
         webbrowser_open(url)
 
@@ -486,7 +483,7 @@ class ZabbixServer(GenericServer):
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None):
         if conf.debug_mode is True:
-            self.Debug(server=self.get_name(),
+            self.debug(server=self.get_name(),
                        debug="Set Acknowledge Host: " + host + " Service: " + service + " Sticky: " + str(
                            sticky) + " persistent:" + str(persistent) + " All services: " + str(all_services))
         self._login()
@@ -522,7 +519,7 @@ class ZabbixServer(GenericServer):
             if comment:
                 actions |= 4
             if conf.debug_mode:
-                self.Debug(server=self.get_name(),
+                self.debug(server=self.get_name(),
                            debug="Events to acknowledge: " + str(eventids) + " Close: " + str(actions))
             # If some events are not closable, we need to make 2 requests, 1 for the closable and one for the not closable
             if sticky and unclosable_events:
@@ -553,7 +550,7 @@ class ZabbixServer(GenericServer):
         etime = int(time.mktime(date.timetuple()))
 
         if conf.debug_mode is True:
-            self.Debug(server=self.get_name(),
+            self.debug(server=self.get_name(),
                        debug="Downtime for " + hostname + "[" + str(hostids) + "] stime:" + str(
                            stime) + " etime:" + str(etime))
         # print("Downtime for " + hostname + "[" + str(hostids) + "] stime:" + str(stime) + " etime:" + str(etime))
@@ -569,12 +566,12 @@ class ZabbixServer(GenericServer):
         try:
             self.zapi.maintenance.create(body)
         except Already_Exists:
-            self.Debug(server=self.get_name(), debug=f"Maintanence with name {body['name']} already exists")
+            self.debug(server=self.get_name(), debug=f"Maintanence with name {body['name']} already exists")
 
     def get_start_end(self, host):
         return time.strftime("%Y-%m-%d %H:%M"), time.strftime("%Y-%m-%d %H:%M", time.localtime(time.time() + 7200))
 
-    def GetHost(self, host):
+    def get_host(self, host):
         """
             find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
             have their ip saved in Nagios
@@ -591,7 +588,7 @@ class ZabbixServer(GenericServer):
             if host in self.hosts:
                 ip = self.hosts[host].address
             if conf.debug_mode is True:
-                self.Debug(server=self.get_name(), host=host, debug="IP of %s:" % host + " " + ip)
+                self.debug(server=self.get_name(), host=host, debug="IP of %s:" % host + " " + ip)
 
             if conf.connect_by_dns is True:
                 try:
@@ -601,7 +598,7 @@ class ZabbixServer(GenericServer):
             else:
                 address = ip
         except ZabbixError:
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         return Result(result=address)

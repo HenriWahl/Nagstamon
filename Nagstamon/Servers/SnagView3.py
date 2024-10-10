@@ -127,9 +127,9 @@ class SnagViewServer(GenericServer):
             form_inputs['_password'] = self.password
 
             # call login page to get temporary cookie
-            self.FetchURL('{0}/security/login'.format(self.monitor_url))
+            self.fetch_url('{0}/security/login'.format(self.monitor_url))
             # submit login form to retrieve authentication cookie
-            self.FetchURL(
+            self.fetch_url(
                 '{0}/security/login_check'.format(self.monitor_url),
                 cgi_data=form_inputs,
                 multipart=True
@@ -162,7 +162,7 @@ class SnagViewServer(GenericServer):
             # Get all hosts
             form_data['limit_length'] = 99999
 
-            result = self.FetchURL(
+            result = self.fetch_url(
                 self.cgiurl_hosts, giveback='raw', cgi_data=form_data)
 
             # authentication errors get a status code 200 too
@@ -170,7 +170,7 @@ class SnagViewServer(GenericServer):
                     result.result.startswith('<'):
                 # in case of auth error reset HTTP session and try again
                 self.reset_HTTP()
-                result = self.FetchURL(
+                result = self.fetch_url(
                     self.cgiurl_hosts, giveback='raw', cgi_data=form_data)
 
                 if result.status_code < 400 and \
@@ -243,7 +243,7 @@ class SnagViewServer(GenericServer):
 
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         # services
@@ -258,8 +258,8 @@ class SnagViewServer(GenericServer):
             # Get all services
             form_data['limit_length'] = 99999
 
-            result = self.FetchURL(self.cgiurl_services,
-                                   giveback='raw', cgi_data=form_data)
+            result = self.fetch_url(self.cgiurl_services,
+                                    giveback='raw', cgi_data=form_data)
 
             # purify JSON result
             jsonraw = copy.deepcopy(result.result.replace('\n', ''))
@@ -337,7 +337,7 @@ class SnagViewServer(GenericServer):
 
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         del jsonraw, error, hosts

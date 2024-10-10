@@ -147,8 +147,8 @@ class PrometheusServer(GenericServer):
         """
         # get all alerts from the API server
         try:
-            result = self.FetchURL(self.monitor_url + self.API_PATH_ALERTS,
-                                   giveback="raw")
+            result = self.fetch_url(self.monitor_url + self.API_PATH_ALERTS,
+                                    giveback="raw")
             data = json.loads(result.result)
             error = result.error
             status_code = result.status_code
@@ -159,12 +159,12 @@ class PrometheusServer(GenericServer):
                 return(errors_occured)
 
             if conf.debug_mode:
-                self.Debug(server=self.get_name(),
+                self.debug(server=self.get_name(),
                            debug="Fetched JSON: " + pprint.pformat(data))
 
             for alert in data["data"]["alerts"]:
                 if conf.debug_mode:
-                    self.Debug(
+                    self.debug(
                         server=self.get_name(),
                         debug="Processing Alert: " + pprint.pformat(alert)
                     )
@@ -214,7 +214,7 @@ class PrometheusServer(GenericServer):
         except:
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         # dummy return in case all is OK

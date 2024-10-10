@@ -262,7 +262,7 @@ class ZabbixProblemBasedServer(GenericServer):
         except ZabbixLightApiException:
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         return Result()

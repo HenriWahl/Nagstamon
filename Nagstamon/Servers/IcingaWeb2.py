@@ -99,7 +99,7 @@ class IcingaWeb2Server(GenericServer):
         if not self.no_cookie_auth:
             if 'cookies' not in dir(self.session) or len(self.session.cookies) == 0:
                 # get login page, thus automatically a cookie
-                login = self.FetchURL('{0}/authentication/login'.format(self.monitor_url))
+                login = self.fetch_url('{0}/authentication/login'.format(self.monitor_url))
                 if login.error == '' and login.status_code == 200:
                     form = login.result.find('form')
                     form_inputs = {}
@@ -112,7 +112,7 @@ class IcingaWeb2Server(GenericServer):
                     form_inputs['password'] = self.password
     
                     # fire up login button with all needed data
-                    self.FetchURL('{0}/authentication/login'.format(self.monitor_url), cgi_data=form_inputs)
+                    self.fetch_url('{0}/authentication/login'.format(self.monitor_url), cgi_data=form_inputs)
 
 
     def _get_status(self):
@@ -138,14 +138,14 @@ class IcingaWeb2Server(GenericServer):
         try:
             for status_type in 'hard', 'soft':   
                 # first attempt
-                result = self.FetchURL(self.cgiurl_hosts[status_type], giveback='raw')            
+                result = self.fetch_url(self.cgiurl_hosts[status_type], giveback='raw')
                 # authentication errors get a status code 200 too back because its
                 # HTML works fine :-(
                 if result.status_code < 400 and\
                    result.result.startswith('<'):
                     # in case of auth error reset HTTP session and try again
                     self.reset_HTTP()
-                    result = self.FetchURL(self.cgiurl_hosts[status_type], giveback='raw') 
+                    result = self.fetch_url(self.cgiurl_hosts[status_type], giveback='raw')
                     # if it does not work again tell GUI there is a problem
                     if result.status_code < 400 and\
                        result.result.startswith('<'):
@@ -172,7 +172,7 @@ class IcingaWeb2Server(GenericServer):
                 # Unfortunately we need to make a extra request for this and only, if monitoring health is possible
                 if self.cgiurl_monitoring_health:
                     try:
-                        result = self.FetchURL(self.cgiurl_monitoring_health, giveback='raw')
+                        result = self.fetch_url(self.cgiurl_monitoring_health, giveback='raw')
                         monitoring_health = json.loads(result.result)[0]
                         if (monitoring_health['is_currently_running'] == '0'):
                             return Result(result=monitoring_health,
@@ -243,13 +243,13 @@ class IcingaWeb2Server(GenericServer):
 
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         # services
         try:
             for status_type in 'hard', 'soft':
-                result = self.FetchURL(self.cgiurl_services[status_type], giveback='raw')
+                result = self.fetch_url(self.cgiurl_services[status_type], giveback='raw')
                 # purify JSON result of unnecessary control sequence \n
                 jsonraw, error, status_code = copy.deepcopy(result.result.replace('\n', '')),\
                                               copy.deepcopy(result.error),\
@@ -340,7 +340,7 @@ class IcingaWeb2Server(GenericServer):
 
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         # some cleanup
@@ -359,7 +359,7 @@ class IcingaWeb2Server(GenericServer):
             url = self.monitor_cgi_url + \
                   '/monitoring/service/show?host=' + self.hosts[host].real_name + \
                   '&service=' + urllib.parse.quote(self.hosts[host].services[service].real_name)
-        result = self.FetchURL(url, giveback='raw')
+        result = self.fetch_url(url, giveback='raw')
 
         if result.error != '':
             return result
@@ -381,10 +381,10 @@ class IcingaWeb2Server(GenericServer):
             cgi_data['CSRFToken'] = CSRFToken
             cgi_data['formUID'] = formUID
             cgi_data['btn_submit'] = btn_submit
-            self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+            self.fetch_url(url, giveback='raw', cgi_data=cgi_data)
         except AttributeError:
             if conf.debug_mode:
-                self.Debug(server=self.get_name(), host=host, service=service,
+                self.debug(server=self.get_name(), host=host, service=service,
                            debug='No valid CSRFToken available')
 
     # Overwrite function from generic server to add expire_time value
@@ -422,7 +422,7 @@ class IcingaWeb2Server(GenericServer):
             url = '{0}/monitoring/service/acknowledge-problem?host={1}&service={2}'.format(self.monitor_cgi_url,
                                                                                            self.hosts[host].real_name,
                                                                                            urllib.parse.quote(self.hosts[host].services[service].real_name))
-        result = self.FetchURL(url, giveback='raw')
+        result = self.fetch_url(url, giveback='raw')
 
         if result.error != '':
             return result
@@ -454,11 +454,11 @@ class IcingaWeb2Server(GenericServer):
                 cgi_data['expire'] = 1
                 cgi_data['expire_time'] = expire_time
 
-            self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+            self.fetch_url(url, giveback='raw', cgi_data=cgi_data)
 
         except AttributeError:
             if conf.debug_mode:
-                self.Debug(server=self.get_name(), host=host, service=service,
+                self.debug(server=self.get_name(), host=host, service=service,
                            debug='No valid CSRFToken available')
 
         if len(all_services) > 0:
@@ -479,7 +479,7 @@ class IcingaWeb2Server(GenericServer):
                   '&service=' + urllib.parse.quote(self.hosts[host].services[service].real_name)
             status = self.STATES_MAPPING_REV['services'][state.upper()]
 
-        result = self.FetchURL(url, giveback='raw')
+        result = self.fetch_url(url, giveback='raw')
 
         if result.error != '':
             return result
@@ -506,11 +506,11 @@ class IcingaWeb2Server(GenericServer):
             cgi_data['output'] = check_output
             cgi_data['perfdata'] = performance_data
 
-            self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+            self.fetch_url(url, giveback='raw', cgi_data=cgi_data)
 
         except AttributeError:
             if conf.debug_mode:
-                self.Debug(server=self.get_name(), host=host, service=service,
+                self.debug(server=self.get_name(), host=host, service=service,
                            debug='No valid CSRFToken available')
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
@@ -522,7 +522,7 @@ class IcingaWeb2Server(GenericServer):
                   '/monitoring/service/schedule-downtime?host=' + self.hosts[host].real_name + \
                   '&service=' + urllib.parse.quote(self.hosts[host].services[service].real_name)
 
-        result = self.FetchURL(url, giveback='raw')
+        result = self.fetch_url(url, giveback='raw')
 
         if result.error != '':
             return result
@@ -567,11 +567,11 @@ class IcingaWeb2Server(GenericServer):
             cgi_data['start'] = start
             cgi_data['end'] = end
 
-            self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+            self.fetch_url(url, giveback='raw', cgi_data=cgi_data)
 
         except AttributeError:
             if conf.debug_mode:
-                self.Debug(server=self.get_name(), host=host, service=service,
+                self.debug(server=self.get_name(), host=host, service=service,
                            debug='No valid CSRFToken available')
 
     def get_start_end(self, host):
@@ -580,13 +580,13 @@ class IcingaWeb2Server(GenericServer):
             directly from web interface
         '''
         try:
-            downtime = self.FetchURL(self.monitor_cgi_url + '/monitoring/host/schedule-downtime?host=' + self.hosts[host].real_name)
+            downtime = self.fetch_url(self.monitor_cgi_url + '/monitoring/host/schedule-downtime?host=' + self.hosts[host].real_name)
             start = downtime.result.find('input', {'name': 'start'})['value']
             end = downtime.result.find('input', {'name': 'end'})['value']
             # give values back as tuple
             return start, end
         except:
-            self.Error(sys.exc_info())
+            self.error(sys.exc_info())
             return 'n/a', 'n/a'
 
 
@@ -607,11 +607,11 @@ class IcingaWeb2Server(GenericServer):
                                                                                                                                         {'host': self.hosts[host].real_name,
                                                                                                                                          'service': self.hosts[host].services[service].real_name}).replace('+', ' '))
         if conf.debug_mode:
-            self.Debug(server=self.get_name(), host=host, service=service,
+            self.debug(server=self.get_name(), host=host, service=service,
                        debug='Open host/service monitor web page {0}'.format(url))
         webbrowser_open(url)
 
-    def GetHost(self, host):
+    def get_host(self, host):
         '''
             find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
             have their ip saved in Icinga
@@ -632,7 +632,7 @@ class IcingaWeb2Server(GenericServer):
         cgiurl_host = self.monitor_cgi_url + '/monitoring/list/hosts?host={0}&addColumns=host_address&format=json'.format(host)
 
         # get host info
-        hostobj = self.FetchURL(cgiurl_host, giveback='raw')
+        hostobj = self.fetch_url(cgiurl_host, giveback='raw')
         jsonhost = hostobj.result
 
         try:
@@ -642,7 +642,7 @@ class IcingaWeb2Server(GenericServer):
 
             # print IP in debug mode
             if conf.debug_mode is True:
-                self.Debug(server=self.get_name(), host=host, debug='IP of %s:' % (host) + ' ' + ip)
+                self.debug(server=self.get_name(), host=host, debug='IP of %s:' % (host) + ' ' + ip)
 
             # when connection by DNS is not configured do it by IP
             if conf.connect_by_dns is True:
@@ -654,7 +654,7 @@ class IcingaWeb2Server(GenericServer):
             else:
                 address = ip
         except Exception:
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         # do some cleanup
