@@ -87,7 +87,7 @@ class Monitos3Server(GenericServer):
         log.info(self.monitor_url)
         # we abuse the monitor_url for the connection information
         self.address = ('localhost', 6558)
-        m = re.match('.*?://([^:/]+?)(?::(\d+))?(?:/|$)', self.monitor_url)
+        m = re.match(r'.*?://([^:/]+?)(?::(\d+))?(?:/|$)', self.monitor_url)
         if m:
             host, port = m.groups()
             if not port:

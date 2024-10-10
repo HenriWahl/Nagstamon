@@ -293,9 +293,9 @@ class ZabbixAPI(object):
         self.id += 1
 
         if 'error' in jobj:  # some exception
-            msg = "Error %s: %s, %s while sending %s" % (jobj['error']['code'],
+            msg = 'Error %s: %s, %s while sending %s' % (jobj['error']['code'],
                     jobj['error']['message'], jobj['error']['data'], str(json_obj))
-            if re.search(".*already\sexists.*", jobj["error"]["data"], re.I):  # already exists
+            if re.search(r'.*already\sexists.*', jobj['error']['data'], re.I):  # already exists
                 raise Already_Exists(msg, jobj['error']['code'])
             else:
                 raise ZabbixAPIException(msg, jobj['error']['code'])
