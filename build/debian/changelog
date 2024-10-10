@@ -1,4 +1,4 @@
-nagstamon (3.15-20241010) unstable; urgency=low
+nagstamon (3.16.0) unstable; urgency=low
   * New upstream
     - Apple Silicon native support
     - fixes for Centreon
