@@ -42,7 +42,7 @@ VERSION = AppInfo.VERSION
 
 ARCH_WINDOWS = platform.architecture()[0][0:2]
 ARCH_WINDOWS_OPTS = {'32': ('win32', 'win32', '', 'x86'),
-             '64': ('win-amd64', 'amd64', '(X86)', 'x64')}
+                     '64': ('win-amd64', 'amd64', '(X86)', 'x64compatible')}
 
 ARCH_MACOS = platform.machine()
 ARCH_MACOS_NAMES = {'x86_64': 'Intel',
@@ -126,7 +126,7 @@ def winmain():
 
     if SIGNING:
         # environment variables will be used by powershell script for signing
-        subprocess.run(['pwsh.exe', './windows/code_signing.ps1', 'build/Nagstamon/Nagstamon.exe'])
+        subprocess.run(['pwsh.exe', './windows/code_signing.ps1', 'build/Nagstamon/*.exe'])
 
     # rename output
     os.rename(DIR_BUILD_EXE, DIR_BUILD_NAGSTAMON)
