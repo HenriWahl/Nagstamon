@@ -9,19 +9,17 @@
 	<name>Nagstamon</name>
 	<summary>The status monitor for the desktop</summary>
 	<releases>
-		<release version="3.14.0" date="2024-02-24">
+		<release version="3.16.0" date="2024-10-10">
 			<description>
 				<ul>
- 					<li>improved Wayland support</li>
-					<li>improved proxy support</li>
-					<li>added Opsview hashtag filtering and can_change_only option</li>
-					<li>fixes for Alertmanager</li>
+					<li>Apple Silicon native support</li>
 					<li>fixes for Centreon</li>
-					<li>fixes for Icinga</li>
-					<li>fixes for Opsview</li>
+					<li>fixes for Checkmk</li>
+					<li>fixes for Icinga2</li>
+					<li>fixes for IcingaDBWeb</li>
 					<li>fixes for Zabbix</li>
-					<li>added support for registering version in Windows</li>
-					<li>added support for using system certificates in Windows</li>
+					<li>fixes for pyinstaller</li>
+					<li>updated Qt6</li>
 				</ul>
 			</description>
 		</release>
