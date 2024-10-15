@@ -5772,7 +5772,12 @@ class Dialog_Server(Dialog):
             self.window.input_checkbox_show_options: [self.window.groupbox_options],
             self.window.input_checkbox_custom_cert_use: [self.window.label_custom_ca_file,
                                                          self.window.input_lineedit_custom_cert_ca_file,
-                                                         self.window.button_choose_custom_cert_ca_file]}
+                                                         self.window.button_choose_custom_cert_ca_file],
+            self.window.input_checkbox_use_client_cert: [self.window.label_client_cert_path,
+                                                         self.window.input_lineedit_client_cert_path,
+                                                         self.window.button_choose_client_cert_path,
+                                                         self.window.label_client_cert_password,
+                                                         self.window.input_lineedit_client_cert_password]}
 
         self.TOGGLE_DEPS_INVERTED = [self.window.input_checkbox_use_proxy_from_os]
 
@@ -5850,8 +5855,12 @@ class Dialog_Server(Dialog):
         self.window.button_choose_custom_cert_ca_file.setText('')
         self.window.button_choose_custom_cert_ca_file.setIcon(
             self.window.button_choose_custom_cert_ca_file.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
+        self.window.button_choose_client_cert_path.setText('')
+        self.window.button_choose_client_cert_path.setIcon(
+            self.window.button_choose_custom_cert_ca_file.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
         # connect choose custom cert CA file button with file dialog
         self.window.button_choose_custom_cert_ca_file.clicked.connect(self.choose_custom_cert_ca_file)
+        self.window.button_choose_client_cert_path.clicked.connect(self.choose_client_cert_path)
 
         # fill authentication combobox
         self.window.input_combobox_authentication.addItems(['Basic', 'Digest', 'Bearer'])
@@ -6159,6 +6168,20 @@ class Dialog_Server(Dialog):
         # only take filename if QFileDialog gave something useful back
         if file != '':
             self.window.input_lineedit_custom_cert_ca_file.setText(file)
+    
+    @Slot()
+    def choose_client_cert_path(self):
+        """
+            show dialog for selection of client certificate
+        """
+        filter = 'PFX files (*.pfx);;p12 files (*.p12);;All Files (*)'
+        file = dialogs.file_chooser.getOpenFileName(self.window,
+                                                    directory=os.path.expanduser('~'),
+                                                    filter=filter)[0]
+
+        # only take filename if QFileDialog gave something useful back
+        if file != '':
+            self.window.input_lineedit_client_cert_path.setText(file)
 
     @Slot()
     def checkmk_view_hosts_reset(self):
