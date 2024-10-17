@@ -2937,6 +2937,8 @@ class ServerVBox(QVBoxLayout):
         # start ignoring TLS trouble when button clicked
         self.button_fix_tls_error.clicked.connect(self.fix_tls_error)
 
+        print('highlight color', self.table.palette().highlight().color().setRgb(0,0,0,255))
+
         self.addWidget(self.table, 1)
 
         # as default do not show anything
@@ -3237,7 +3239,10 @@ class TreeView(QTreeView):
                               QTreeView::item:hover {margin: 0px;
                                                      color: white;
                                                      background-color: dimgrey;}
-                           ''')
+                              QTreeView::item:selected {margin: 0px;
+                                                        color: white;
+                                                        background-color: blue;}
+                            ''')
 
         # set application font
         self.set_font()
@@ -3323,6 +3328,8 @@ class TreeView(QTreeView):
 
         ## display mode - all or only header to display error
         #self.is_shown = False
+
+
 
     @Slot()
     def set_font(self):
