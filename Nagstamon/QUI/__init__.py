@@ -141,6 +141,10 @@ if QT_VERSION_MAJOR < 6:
 # global application instance
 APP = QApplication(sys.argv)
 
+# as long as Windows 11 + Qt6 looks that ugly it's better to choose another app style
+if OS_WINDOWS and platform.release() >= '11':
+    APP.setStyle('fusion')
+
 # fixed shortened and lowered color names for cells, also used by statusbar label snippets
 COLORS = OrderedDict([('DOWN', 'color_down_'),
                       ('UNREACHABLE', 'color_unreachable_'),
@@ -2936,8 +2940,6 @@ class ServerVBox(QVBoxLayout):
 
         # start ignoring TLS trouble when button clicked
         self.button_fix_tls_error.clicked.connect(self.fix_tls_error)
-
-        print('highlight color', self.table.palette().highlight().color().setRgb(0,0,0,255))
 
         self.addWidget(self.table, 1)
 
