@@ -112,8 +112,11 @@ def winmain():
             except:
                 os.remove(file)
 
-    # now with pyinstaller - dev version is able to run with Python 3.6
-    subprocess.call(['{0}\\Scripts\\pyinstaller'.format(sys.base_prefix),
+    # pyinstaller seems also to be installed not in \Scripts folder - if so, try without path
+    pyinstaller_path = f'{sys.base_prefix}\\Scripts\\pyinstaller'
+    if not Path(pyinstaller_path).exists():
+        pyinstaller_path = 'pyinstaller'
+    subprocess.call([pyinstaller_path,
                      '--noconfirm',
                      '--add-data=..\\Nagstamon/resources;resources',
                      '--icon=..\\Nagstamon\\resources\\nagstamon.ico',
