@@ -3241,7 +3241,7 @@ class TreeView(QTreeView):
                                                      background-color: dimgrey;}
                               QTreeView::item:selected {margin: 0px;
                                                         color: white;
-                                                        background-color: blue;}
+                                                        background-color: dimgrey;}
                             ''')
 
         # set application font
