@@ -3932,11 +3932,20 @@ class TreeView(QTreeView):
             # item to access all properties of host/service object
             # defaults to host
             item = self.server.hosts[host]
-            text += 'Host: {0}\n'.format(host)
+            text += f'Host: {host}\n'
             # if it is a service switch to service object
-            if service != '' and item.services.get(service):
-                item = item.services[service]
-                text += 'Service: {0}\n'.format(service)
+            if service != '':
+                if item.services.get(service):
+                    item = item.services[service]
+                    text += f'Service: {service}\n'
+                # finally solve https://github.com/HenriWahl/Nagstamon/issues/1024
+                elif self.server.TYPE == 'Zabbix':
+                    for service_item in item.services.values():
+                        if service_item.name == service:
+                            item = service_item
+                            text += f'Service: {service}\n'
+                            break
+
             # the other properties belong to both hosts and services
             text += 'Status: {0}\n'.format(item.status)
             text += 'Last check: {0}\n'.format(item.last_check)
