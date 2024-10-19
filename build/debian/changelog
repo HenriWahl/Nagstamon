@@ -1,9 +1,11 @@
-nagstamon (3.17-20241018) unstable; urgency=low
+nagstamon (3.16.1) stable; urgency=low
   * New upstream
+    - fix ridiculous Windows 11 appearance
+    - fix Zabbix all information copy action
 
- -- Henri Wahl <henri@nagstamon.de> Fri, Oct 18 2024 08:00:00 +0200
+ -- Henri Wahl <henri@nagstamon.de> Sun, Oct 20 2024 08:00:00 +0200
 
-nagstamon (3.16.0) unstable; urgency=low
+nagstamon (3.16.0) stable; urgency=low
   * New upstream
     - Apple Silicon native support
     - fixes for Centreon

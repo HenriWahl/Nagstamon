@@ -9,17 +9,11 @@
 	<name>Nagstamon</name>
 	<summary>The status monitor for the desktop</summary>
 	<releases>
-		<release version="3.16.0" date="2024-10-10">
+		<release version="3.16.1" date="2024-10-20">
 			<description>
 				<ul>
-					<li>Apple Silicon native support</li>
-					<li>fixes for Centreon</li>
-					<li>fixes for Checkmk</li>
-					<li>fixes for Icinga2</li>
-					<li>fixes for IcingaDBWeb</li>
-					<li>fixes for Zabbix</li>
-					<li>fixes for pyinstaller</li>
-					<li>updated Qt6</li>
+					<li>fix ridiculous Windows 11 appearance</li>
+					<li>fix Zabbix all information copy action</li>
 				</ul>
 			</description>
 		</release>
