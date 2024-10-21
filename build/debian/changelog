@@ -1,4 +1,4 @@
-nagstamon (3.17-20241021) unstable; urgency=low
+nagstamon (3.16.2) stable; urgency=low
   * New upstream
     - fix sound problem
 
