@@ -6,8 +6,9 @@ pip-system-certs
 psutil
 pyinstaller
 pypiwin32
-pyqt6
-pyqt6-qt6
+# since 6.6.0 no sound is available!?!
+pyqt6==6.5.3
+pyqt6-qt6==6.5.3
 pysocks
 python-dateutil
 requests
