@@ -20,6 +20,7 @@
 
 import sys
 import socket
+import os
 
 # fix/patch for https://bugs.launchpad.net/ubuntu/+source/nagstamon/+bug/732544
 socket.setdefaulttimeout(30)
@@ -34,33 +35,37 @@ try:
         if OS == OS_WINDOWS:
             import pip_system_certs.wrapt_requests
 
-        from Nagstamon.Helpers import lock_config_folder
+        headless = os.getenv("NAGSTAMON_HEADLESS", 'False').lower() in ('true', '1', 't')
+        if headless:
+            from Nagstamon.headless import (APP)
+        else:
+            from Nagstamon.Helpers import lock_config_folder
 
-        # Acquire the lock
-        if not lock_config_folder(conf.configdir):
-            print('An instance is already running this config ({})'.format(conf.configdir))
-            sys.exit(1)
+            # Acquire the lock
+            if not lock_config_folder(conf.configdir):
+                print('An instance is already running this config ({})'.format(conf.configdir))
+                sys.exit(1)
 
-        # get GUI
-        from Nagstamon.QUI import (APP,
-                                   statuswindow,
-                                   check_version,
-                                   check_servers,
-                                   QT_FLAVOR,
-                                   QT_VERSION_STR)
+            # get GUI
+            from Nagstamon.QUI import (APP,
+                                       statuswindow,
+                                       check_version,
+                                       check_servers,
+                                       QT_FLAVOR,
+                                       QT_VERSION_STR)
 
-        # ask for help if no servers are configured
-        check_servers()
+            # ask for help if no servers are configured
+            check_servers()
 
-        # show and resize status window
-        statuswindow.show()
-        if not conf.fullscreen:
-            statuswindow.adjustSize()
+            # show and resize status window
+            statuswindow.show()
+            if not conf.fullscreen:
+                statuswindow.adjustSize()
 
-        if conf.check_for_new_version is True:
-            check_version.check(start_mode=True, parent=statuswindow)
+            if conf.check_for_new_version is True:
+                check_version.check(start_mode=True, parent=statuswindow)
 
-        sys.exit(APP.exec())
+            sys.exit(APP.exec())
 
 except Exception as err:
     import traceback
