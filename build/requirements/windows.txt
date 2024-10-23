@@ -6,7 +6,7 @@ pip-system-certs
 psutil
 pyinstaller
 pypiwin32
-# since 6.6.0 no sound is available!?!
+# 6.7.3 has no sound
 pyqt6==6.6.1
 pyqt6-qt6==6.6.1
 pysocks
