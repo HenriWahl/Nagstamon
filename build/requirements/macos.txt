@@ -5,9 +5,9 @@ lxml
 psutil
 pyinstaller
 pyobjc-framework-ApplicationServices
-# since 6.6.0 no sound is available!?!
-pyqt6==6.5.3
-pyqt6-qt6==6.5.3
+# 6.7.3 has no sound
+pyqt6==6.6.1
+pyqt6-qt6==6.6.1
 pysocks
 python-dateutil
 requests
