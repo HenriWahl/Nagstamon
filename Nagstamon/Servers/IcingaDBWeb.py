@@ -736,18 +736,26 @@ class IcingaDBWebServer(GenericServer):
             print("Cannot find {}::{}. Skipping!".format(host, service))
             return
 
-        # only type is important so do not care of service '' in case of host monitor
+        # Generate the base path for the URL
+        base_path = urllib.parse.urlparse(self.monitor_url).path
+
+        # Handle URL for host monitoring
         if service == '':
-            url = '{0}/icingadb/hosts?host.state.is_problem=y&sort=host.state.severity#!{1}/icingadb/host?{2}'.format(self.monitor_url,
-                                                                                                                     (urllib.parse.urlparse(self.monitor_url).path),
-                                                                                                                     urllib.parse.urlencode(
-                                                                                                                        {'name': self.hosts[host].real_name}).replace('+', ' '))
+            url = '{0}/icingadb/hosts?host.state.is_problem=y&sort=host.state.severity#!{1}/icingadb/host?{2}'.format(
+                self.monitor_url,
+                base_path,
+                urllib.parse.urlencode({'name': self.hosts[host].real_name}, quote_via=quote)
+            )
         else:
-            url = '{0}/icingadb/services?service.state.is_problem=y&sort=service.state.severity%20desc#!{1}/icingadb/service?{2}'.format(self.monitor_url,
-                                                                                                                                   (urllib.parse.urlparse(self.monitor_url).path),
-                                                                                                                                    urllib.parse.urlencode(
-                                                                                                                                        {'name': self.hosts[host].services[service].real_name,
-                                                                                                                                         'host.name': self.hosts[host].real_name}).replace('+', ' '))
+            # Handle URL for service monitoring
+            url = '{0}/icingadb/services?service.state.is_problem=y&sort=service.state.severity%20desc#!{1}/icingadb/service?{2}'.format(
+                self.monitor_url,
+                base_path,
+                urllib.parse.urlencode({
+                    'name': self.hosts[host].services[service].real_name,
+                    'host.name': self.hosts[host].real_name
+                }, quote_via=urllib.parse.quote)
+            )
         if conf.debug_mode:
             self.debug(server=self.get_name(), host=host, service=service,
                        debug='[Open monitor] Open host/service monitor web page {0}'.format(url))
