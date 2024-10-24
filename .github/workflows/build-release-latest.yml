@@ -398,6 +398,7 @@ jobs:
       - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
       - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
       # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
+      # only needed for fedora
       - run: docker pull ${{ env.cr_image }}-${{ env.family }}-${{ env.cr_image_latest }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ env.family }}-${{ env.cr_image_latest }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
       - run: docker push ${{ env.cr_image }}-${{ env.family }}-${{ env.cr_image_latest }}:${{ env.cr_image_version }}
       # copy *.rpm files into nagstamon-jekyll and create repodata
