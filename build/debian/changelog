@@ -1,4 +1,4 @@
-nagstamon (3.17-20241023) unstable; urgency=low
+nagstamon (3.16.2) unstable; urgency=low
   * New upstream
     - fix sound problem
     - fix IncingaDBWeb
