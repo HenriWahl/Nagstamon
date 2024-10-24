@@ -142,8 +142,9 @@ if QT_VERSION_MAJOR < 6:
 APP = QApplication(sys.argv)
 
 # as long as Windows 11 + Qt6 looks that ugly it's better to choose another app style
-if OS == OS_WINDOWS and platform.release() >= '11':
-    APP.setStyle('fusion')
+# might be mitigated with Qt 6.5.3, so commented out now
+#if OS == OS_WINDOWS and platform.release() >= '11':
+#    APP.setStyle('fusion')
 
 # fixed shortened and lowered color names for cells, also used by statusbar label snippets
 COLORS = OrderedDict([('DOWN', 'color_down_'),
