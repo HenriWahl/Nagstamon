@@ -337,6 +337,12 @@ jobs:
           pattern: 'debian*'
           path: artifact
           merge-multiple: true
+      # docker login is needed for pushing the build image
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       # get secret signing key
       - run: echo "${{ secrets.PACKAGE_SIGNING_KEY }}" >  signing_key.asc
       # organize SSH deploy key for nagstamon-jekyll repo
@@ -386,6 +392,12 @@ jobs:
           pattern: 'fedora*'
           path: artifact
           merge-multiple: true
+      # docker login is needed for pushing the build image
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       # organize SSH deploy key for nagstamon-repo
       - run: mkdir ~/.ssh
       - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
