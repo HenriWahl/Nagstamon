@@ -375,7 +375,7 @@ jobs:
     env:
       family: fedora
       # which image to use for packaging
-      cr_image_latest: 39
+      cr_image_latest: 40
     steps:
       # get binaries created by other jobs
       - uses: actions/download-artifact@v4
@@ -383,6 +383,12 @@ jobs:
           pattern: 'fedora*'
           path: artifact
           merge-multiple: true
+      # docker login is needed for pushing the build image
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       # organize SSH deploy key for nagstamon-repo
       - run: mkdir ~/.ssh
       - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
@@ -391,6 +397,10 @@ jobs:
       - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
       - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
       - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
+      # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
+      # only needed for fedora
+      - run: docker pull ${{ env.cr_image }}-${{ env.family }}-${{ env.cr_image_latest }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ env.family }}-${{ env.cr_image_latest }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
+      - run: docker push ${{ env.cr_image }}-${{ env.family }}-${{ env.cr_image_latest }}:${{ env.cr_image_version }}
       # copy *.rpm files into nagstamon-jekyll and create repodata
       - run: |
             version=${{ env.release }} && \
