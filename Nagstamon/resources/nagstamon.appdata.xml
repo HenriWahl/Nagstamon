@@ -9,11 +9,11 @@
 	<name>Nagstamon</name>
 	<summary>The status monitor for the desktop</summary>
 	<releases>
-		<release version="3.16.1" date="2024-10-20">
+		<release version="3.16.2" date="2024-10-25">
 			<description>
 				<ul>
-					<li>fix ridiculous Windows 11 appearance</li>
-					<li>fix Zabbix all information copy action</li>
+					<li>fix sound problem</li>
+					<li>fix IncingaDBWeb</li>
 				</ul>
 			</description>
 		</release>
