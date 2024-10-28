@@ -744,7 +744,7 @@ class IcingaDBWebServer(GenericServer):
             url = '{0}/icingadb/hosts?host.state.is_problem=y&sort=host.state.severity#!{1}/icingadb/host?{2}'.format(
                 self.monitor_url,
                 base_path,
-                urllib.parse.urlencode({'name': self.hosts[host].real_name}, quote_via=quote)
+                urllib.parse.urlencode({'name': self.hosts[host].real_name}, quote_via=urllib.parse.quote)
             )
         else:
             # Handle URL for service monitoring
