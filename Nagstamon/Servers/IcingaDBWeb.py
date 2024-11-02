@@ -210,9 +210,14 @@ class IcingaDBWebServer(GenericServer):
                             self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'][int(h['state']['soft_state'])]
 
                         if h['state']['last_update'].replace(".", "").isnumeric(): # new version of icingadb doesnt return unix timestamp
-                            self.new_hosts[host_name].last_check = datetime.datetime.fromtimestamp(int(float(h['state']['last_update'])))
+                            #self.new_hosts[host_name].last_check = datetime.datetime.fromtimestamp(int(float(h['state']['last_update'])))
+                            utc_time = datetime.datetime.fromtimestamp(int(float(h['state']['last_update'])), tz=timezone.utc)
                         else:
-                            self.new_hosts[host_name].last_check = datetime.datetime.fromisoformat(h['state']['last_update'])
+                            #self.new_hosts[host_name].last_check = datetime.datetime.fromisoformat(h['state']['last_update'])
+                            utc_time = datetime.datetime.fromisoformat(h['state']['last_update'])
+
+                        local_time = utc_time.astimezone()
+                        self.new_hosts[host_name].last_check = local_time.strftime("%Y-%m-%d %H:%M:%S")  # format without microseconds and tz
                         
                         self.new_hosts[host_name].attempt = "{}/{}".format(h['state']['check_attempt'],h['max_check_attempts'])
                         self.new_hosts[host_name].status_information = BeautifulSoup(str(h['state']['output']).replace('\n', ' ').strip(), 'html.parser').text
@@ -313,9 +318,14 @@ class IcingaDBWebServer(GenericServer):
                             self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][int(s['state']['soft_state'])]
 
                         if s['state']['last_update'].replace(".", "").isnumeric(): # new version of icingadb doesnt return unix timestamp
-                            self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(int(float(s['state']['last_update'])))
+                            #self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(int(float(s['state']['last_update'])))
+                            utc_time = datetime.datetime.fromtimestamp(int(float(s['state']['last_update'])), tz=timezone.utc)
                         else:
-                            self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromisoformat(s['state']['last_update'])
+                            #self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromisoformat(s['state']['last_update'])
+                            utc_time = datetime.datetime.fromisoformat(s['state']['last_update'])
+
+                        local_time = utc_time.astimezone()
+                        self.new_hosts[host_name].services[service_name].last_check = local_time.strftime("%Y-%m-%d %H:%M:%S")  # format without microseconds and tz
 
                         self.new_hosts[host_name].services[service_name].attempt = "{}/{}".format(s['state']['check_attempt'],s['max_check_attempts'])
                         self.new_hosts[host_name].services[service_name].status_information = BeautifulSoup(str(s['state']['output']).replace('\n', ' ').strip(), 'html.parser').text
