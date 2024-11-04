@@ -65,7 +65,7 @@ class ZabbixServer(GenericServer):
             '5': 'DISASTER'}
 
         # Entries for monitor default actions in context menu
-        self.MENU_ACTIONS = ["Acknowledge", "Downtime"]
+        self.MENU_ACTIONS = ["Monitor", "Acknowledge", "Downtime"]
         # URLs for browser shortlinks/buttons on popup window
         self.BROWSER_URLS = {'monitor': '$MONITOR$',
                              'hosts': '$MONITOR-CGI$/hosts.php?ddreset=1',
@@ -465,12 +465,8 @@ class ZabbixServer(GenericServer):
         """
             open monitor from treeview context menu
         """
-        if service == "":
-            url = self.urls['human_host'] + urllib.parse.urlencode(
-                {'x': 'site=' + self.hosts[host].site + '&host=' + host}).replace('x=', '%26')
-        else:
-            url = self.urls['human_service'] + urllib.parse.urlencode(
-                {'x': 'site=' + self.hosts[host].site + '&host=' + host + '&service=' + service}).replace('x=', '%26')
+        host_id = self.hosts[host].hostid
+        url = f"{self.monitor_url}/zabbix.php?action=problem.view&hostids%5B%5D={host_id}&filter_set=1&show_suppressed=1"
 
         if conf.debug_mode is True:
             self.debug(server=self.get_name(), host=host, service=service,
