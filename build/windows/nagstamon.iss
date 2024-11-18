@@ -23,7 +23,7 @@ Compression=lzma
 SolidCompression=true
 SourceDir={#source}
 ArchitecturesAllowed={#archs_allowed}
-ArchitecturesInstallIn64BitMode=x64
+ArchitecturesInstallIn64BitMode=x64compatible
 CloseApplications=no
 WizardStyle=modern
 [Icons]
