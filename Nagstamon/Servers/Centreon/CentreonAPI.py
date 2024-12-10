@@ -324,9 +324,9 @@ class CentreonServer(GenericServer):
         # replace )( by )|(
         self.re_service_filter = ''
         self.re_host_filter = ''
-        if conf.re_service_enabled is True and conf.re_service_reverse is False:
+        if conf.re_service_enabled is True and conf.re_service_reverse is True:
             self.re_service_filter = '&search={"name":{"$rg":"' + str(conf.re_service_pattern) + '"}}'
-        if conf.re_host_enabled is True and conf.re_host_reverse is False:
+        if conf.re_host_enabled is True and conf.re_host_reverse is True:
             self.re_host_filter = '&search={"name":{"$rg":"' + str(conf.re_host_pattern) + '"}}'
         
         # Services URL
