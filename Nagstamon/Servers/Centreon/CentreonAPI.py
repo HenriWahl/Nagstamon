@@ -325,9 +325,9 @@ class CentreonServer(GenericServer):
         self.re_service_filter = ''
         self.re_host_filter = ''
         if conf.re_service_enabled is True and conf.re_service_reverse is True:
-            self.re_service_filter = '&search={"name":{"$rg":"' + str(conf.re_service_pattern) + '"}}'
+            self.re_service_filter = '&search={"s.description":{"$rg":"' + str(conf.re_service_pattern) + '"}}'
         if conf.re_host_enabled is True and conf.re_host_reverse is True:
-            self.re_host_filter = '&search={"name":{"$rg":"' + str(conf.re_host_pattern) + '"}}'
+            self.re_host_filter = '&search={"h.name":{"$rg":"' + str(conf.re_host_pattern) + '"}}'
         
         # Services URL
         # https://demo.centreon.com/centreon/api/latest/monitoring/resources?page=1&limit=30&sort_by={"status_severity_code":"asc","last_status_change":"desc"}&types=["service"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]
