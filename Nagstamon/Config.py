@@ -19,6 +19,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 from argparse import ArgumentParser
+from importlib import resources
 import os
 import platform
 import sys
@@ -1063,12 +1064,10 @@ try:
     if os.path.exists(os.path.normcase(os.sep.join((executable_dir, "resources")))):
         RESOURCES = os.path.normcase(os.sep.join((executable_dir, "resources")))
     else:
-        import pkg_resources
-
-        RESOURCES = pkg_resources.resource_filename("Nagstamon", "resources")
+        RESOURCES = resources.files("Nagstamon").joinpath("resources")
 
 except Exception as err:
-    # get resources directory from current directory - only if not being set before by pkg_resources
+    # get resources directory from current directory - only if not being set before
     # try-excepts necessary for platforms like Windows .EXE
     paths_to_check = [os.path.normcase(os.path.join(os.getcwd(), "Nagstamon", "resources")),
                       os.path.normcase(os.path.join(os.getcwd(), "resources"))]
