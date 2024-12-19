@@ -2,6 +2,7 @@ arrow
 beautifulsoup4
 keyring
 lxml
+packaging
 psutil
 pyinstaller
 pyobjc-framework-ApplicationServices

@@ -23,6 +23,7 @@ Requires:      python3-dateutil
 Requires:      python3-dbus
 Requires:      python3-keyring
 Requires:      python3-lxml
+Requires:      python3-packaging
 Requires:      python3-psutil
 Requires:      python3-pysocks
 Requires:      python3-pyqt6

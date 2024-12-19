@@ -3,6 +3,7 @@ beautifulsoup4
 keyring
 lxml
 pip-system-certs
+packaging
 psutil
 pyinstaller
 pypiwin32
