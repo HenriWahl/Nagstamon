@@ -1064,7 +1064,7 @@ try:
     if os.path.exists(os.path.normcase(os.sep.join((executable_dir, "resources")))):
         RESOURCES = os.path.normcase(os.sep.join((executable_dir, "resources")))
     else:
-        RESOURCES = resources.files("Nagstamon").joinpath("resources")
+        RESOURCES = str(resources.files("Nagstamon").joinpath("resources"))
 
 except Exception as err:
     # get resources directory from current directory - only if not being set before
