@@ -209,7 +209,7 @@ jobs:
           name: ${{ github.job }}
 
   macos-intel:
-    runs-on: macos-12
+    runs-on: macos-13
     needs: test
     steps:
       - uses: actions/checkout@v4

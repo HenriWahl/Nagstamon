@@ -1,9 +1,14 @@
-nagstamon (3.17-20241102) unstable; urgency=low
+nagstamon (3.17-20241219) unstable; urgency=low
+  * New upstream
+
+ -- Henri Wahl <henri@nagstamon.de> Thu, Dec 19 2024 08:00:00 +0200
+
+nagstamon (3.16.2) stable; urgency=low
   * New upstream
     - fix sound problem
     - fix IncingaDBWeb
 
- -- Henri Wahl <henri@nagstamon.de> Sat, Nov 02 2024 08:00:00 +0200
+ -- Henri Wahl <henri@nagstamon.de> Mon, Oct 21 2024 08:00:00 +0200
 
 nagstamon (3.16.1) stable; urgency=low
   * New upstream

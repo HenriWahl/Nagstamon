@@ -99,6 +99,7 @@ if OS not in ['Windows', 'Darwin']:
                                           'python3-dateutil '
                                           'python3-keyring '
                                           'python3-lxml '
+                                          'python3-packaging '
                                           'python3-psutil '
                                           'python3-pysocks '
                                           'python3-qt5 '

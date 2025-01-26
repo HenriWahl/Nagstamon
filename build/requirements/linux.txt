@@ -3,6 +3,7 @@ beautifulsoup4
 dbus-python
 keyring
 lxml
+packaging
 psutil
 pyqt6
 pyqt6-qt6
