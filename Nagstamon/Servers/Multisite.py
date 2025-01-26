@@ -650,7 +650,8 @@ class MultisiteServer(GenericServer):
         # since Checkmk 2.0 it seems to be a problem if service is empty so fill it with a definitively existing one
         if not service:
             service = "PING"
-        csrf_token = self.fetch_url(self.urls["transid"].replace("$HOST$", host).replace("$SERVICE$", service.replace(" ", "+")), "obj").result.find(attrs={"name": "csrf_token"})["value"]
+        csrf_token = self.fetch_url(self.urls["transid"].replace("$HOST$", host).replace("$SERVICE$", service.replace(" ", "+")),
+                                    "obj").result.find(attrs={"name": ["csrf_token", "_csrf_token"]})["value"]
         return csrf_token
 
 
