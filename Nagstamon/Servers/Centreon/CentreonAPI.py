@@ -315,16 +315,30 @@ class CentreonServer(GenericServer):
                     result.error = 'Connection error'
                 return result
 
+        # filter regexep to reduce network traffic
+        # waiting to find a solution to reverse regexp
+        # my first idea is 
+        # begin by (^(?!(.*
+        # ending by )))
+        # replace | by )))(^(?!(.*
+        # replace )( by )|(
+        self.re_service_filter = ''
+        self.re_host_filter = ''
+        if conf.re_service_enabled is True and conf.re_service_reverse is True:
+            self.re_service_filter = '&search={"s.description":{"$rg":"' + str(conf.re_service_pattern) + '"}}'
+        if conf.re_host_enabled is True and conf.re_host_reverse is True:
+            self.re_host_filter = '&search={"h.name":{"$rg":"' + str(conf.re_host_pattern) + '"}}'
+        
         # Services URL
         # https://demo.centreon.com/centreon/api/latest/monitoring/resources?page=1&limit=30&sort_by={"status_severity_code":"asc","last_status_change":"desc"}&types=["service"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]
         url_services = self.urls_centreon[
-                           'services'] + '?types=["metaservice","service"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]&limit=' + str(
+                           'services'] + '?types=["metaservice","service"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]' + self.re_service_filter + '&limit=' + str(
             self.limit_services_number)
 
         # Hosts URL
         # https://demo.centreon.com/centreon/api/latest/monitoring/resources?page=1&limit=30&sort_by={"status_severity_code":"asc","last_status_change":"desc"}&types=["host"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]
         url_hosts = self.urls_centreon[
-                        'hosts'] + '?types=["host"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]&limit=' + str(
+                        'hosts'] + '?types=["host"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]' + self.re_host_filter + '&limit=' + str(
             self.limit_services_number)
 
         # Hosts
