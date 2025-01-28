@@ -18,3 +18,5 @@ requests-ecp
 requests-kerberos
 setuptools
 wheel
+tzdata
+tzlocal
