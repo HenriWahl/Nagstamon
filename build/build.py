@@ -199,17 +199,32 @@ def macmain():
     for dmg_file in glob.iglob('*.dmg'):
         os.unlink(dmg_file)
 
-    # create DMG
-    subprocess.call([f'hdiutil create -srcfolder "Nagstamon {VERSION} Staging DMG" '
-                          f'-volname "Nagstamon {VERSION}" -fs HFS+ -format UDRW -size 100M '
-                          f'"Nagstamon {VERSION} uncompressed.dmg"'], shell=True)
+    subprocess.call(['brew install create-dmg'], shell=True)
 
-    # Compress DMG
-    subprocess.call([f'hdiutil convert "Nagstamon {VERSION} uncompressed".dmg '
-                          f'-format UDZO -imagekey zlib-level=9 -o "Nagstamon {VERSION} {ARCH_MACOS_NAMES[ARCH_MACOS]}.dmg"'], shell=True)
+    subprocess.call([f'create-dmg '
+                     f'-volname "Nagstamon {VERSION}" '
+                     f'--volicon "..\\Nagstamon\\resources\\nagstamon.ico" '
+                     f'--window-pos 200 120 '
+                     f'--window-size 600 300 '
+                     f'--icon-size 100 '
+                     f'--icon "Nagstamon.app" 175 120 '
+                     f'--hide-extension "Nagstamon.app" '
+                     f'--app-drop-link 425 120 '
+                     f'dist/Nagstamon {VERSION} {ARCH_MACOS_NAMES[ARCH_MACOS]}.dmg '
+                     f'dist/Nagstamon {VERSION} Staging DMG/'
+                     ], shell=True)
 
-    # Delete uncompressed DMG file as it is no longer needed
-    os.unlink(f'Nagstamon {VERSION} uncompressed.dmg')
+    # # create DMG
+    # subprocess.call([f'hdiutil create -srcfolder "Nagstamon {VERSION} Staging DMG" '
+    #                       f'-volname "Nagstamon {VERSION}" -fs HFS+ -format UDRW -size 100M '
+    #                       f'"Nagstamon {VERSION} uncompressed.dmg"'], shell=True)
+
+    # # Compress DMG
+    # subprocess.call([f'hdiutil convert "Nagstamon {VERSION} uncompressed".dmg '
+    #                       f'-format UDZO -imagekey zlib-level=9 -o "Nagstamon {VERSION} {ARCH_MACOS_NAMES[ARCH_MACOS]}.dmg"'], shell=True)
+
+    # # Delete uncompressed DMG file as it is no longer needed
+    # os.unlink(f'Nagstamon {VERSION} uncompressed.dmg')
 
 
 def debmain():
