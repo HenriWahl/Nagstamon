@@ -202,17 +202,18 @@ def macmain():
     subprocess.call(['brew install create-dmg'], shell=True)
 
     subprocess.call(['ls -alh dist/'], shell=True)
-    subprocess.call(['ls -alh dist/Nagstamon\ {VERSION}\ Staging\ DMG/'], shell=True)
-    subprocess.call(['ls -alh dist/../'], shell=True)
+    subprocess.call(['ls -alh Nagstamon\ {VERSION}\ Staging\ DMG/'], shell=True)
+    subprocess.call(['pwd && ls -alh '], shell=True)
+    subprocess.call(['ls -alh ../'], shell=True)
     subprocess.call(['ls -alh dist/../../'], shell=True)
     subprocess.call(['ls -alh dist/../../../'], shell=True)
     subprocess.call(['ls -alh dist/../../../../'], shell=True)
-    subprocess.call(['ls -alh dist/../Nagstamon/'], shell=True)
-    subprocess.call(['ls -alh dist/../Nagstamon/resources/'], shell=True)
+    subprocess.call(['ls -alh ../Nagstamon/'], shell=True)
+    subprocess.call(['ls -alh ../Nagstamon/resources/'], shell=True)
 
     subprocess.call([f'create-dmg '
                      f'--volname "Nagstamon {VERSION}" '
-                     f'--volicon "../Nagstamon/resources/nagstamon.ico" '
+                     f'--volicon "../../Nagstamon/resources/nagstamon.ico" '
                      f'--window-pos 200 120 '
                      f'--window-size 600 300 '
                      f'--icon-size 100 '
@@ -220,7 +221,7 @@ def macmain():
                      f'--hide-extension "Nagstamon.app" '
                      f'--app-drop-link 425 120 '
                      f'"dist/Nagstamon {VERSION} {ARCH_MACOS_NAMES[ARCH_MACOS]}.dmg" '
-                     f'dist/Nagstamon {VERSION} Staging DMG/'
+                     f'Nagstamon {VERSION} Staging DMG/'
                      ], shell=True)
 
     # # create DMG
