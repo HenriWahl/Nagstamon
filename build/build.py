@@ -192,7 +192,7 @@ def macmain():
     # create staging DMG folder for later compressing of DMG
     shutil.rmtree('Nagstamon {0} Staging DMG'.format(VERSION), ignore_errors=True)
 
-    # copy app bundle folder
+    # move app bundle folder
     shutil.move('dist/Nagstamon.app', 'Nagstamon {0} Staging DMG/Nagstamon.app'.format(VERSION))
 
     # copy icon to staging folder
@@ -203,12 +203,6 @@ def macmain():
         os.unlink(dmg_file)
 
     subprocess.call(['brew install create-dmg'], shell=True)
-
-    subprocess.call(['ls -alh Nagstamon\ 3.17-20241219\ Staging\ DMG/'], shell=True)
-    subprocess.call(['pwd && ls -alh '], shell=True)
-    subprocess.call(['ls -alh ../Nagstamon/resources/'], shell=True)
-    subprocess.call(['cd ../Nagstamon/resources/ && pwd'], shell=True)
-    subprocess.call(['pwd'], shell=True)
 
     subprocess.call([f'create-dmg '
                      f'--volname "Nagstamon\ {VERSION}" '
@@ -222,6 +216,9 @@ def macmain():
                      f'"dist/Nagstamon\ {VERSION}\ {ARCH_MACOS_NAMES[ARCH_MACOS]}.dmg" '
                      f'Nagstamon\ {VERSION}\ Staging\ DMG/'
                      ], shell=True)
+
+    # move dmg
+    shutil.move('dist/Nagstamon\ {VERSION}\ {ARCH_MACOS_NAMES[ARCH_MACOS]}.dmg', '.')
 
     # # create DMG
     # subprocess.call([f'hdiutil create -srcfolder "Nagstamon {VERSION} Staging DMG" '
