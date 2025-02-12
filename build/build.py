@@ -202,11 +202,17 @@ def macmain():
     subprocess.call(['brew install create-dmg'], shell=True)
 
     subprocess.call(['ls -alh dist/'], shell=True)
-    subprocess.call(['ls -alh dist/Nagstamon {VERSION} Staging DMG/'], shell=True)
+    subprocess.call(['ls -alh dist/Nagstamon\ {VERSION}\ Staging\ DMG/'], shell=True)
+    subprocess.call(['ls -alh dist/../'], shell=True)
+    subprocess.call(['ls -alh dist/../../'], shell=True)
+    subprocess.call(['ls -alh dist/../../../'], shell=True)
+    subprocess.call(['ls -alh dist/../../../../'], shell=True)
+    subprocess.call(['ls -alh dist/../Nagstamon/'], shell=True)
+    subprocess.call(['ls -alh dist/../Nagstamon/resources/'], shell=True)
 
     subprocess.call([f'create-dmg '
                      f'--volname "Nagstamon {VERSION}" '
-                     f'--volicon "..\\Nagstamon\\resources\\nagstamon.ico" '
+                     f'--volicon "../Nagstamon/resources/nagstamon.ico" '
                      f'--window-pos 200 120 '
                      f'--window-size 600 300 '
                      f'--icon-size 100 '
