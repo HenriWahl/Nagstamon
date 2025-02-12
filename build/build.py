@@ -204,7 +204,7 @@ def macmain():
 
     subprocess.call(['brew install create-dmg'], shell=True)
 
-    subprocess.call(['ls -alh Nagstamon\ {0}\ Staging\ DMG/'], shell=True)
+    subprocess.call(['ls -alh Nagstamon\ 3.17-20241219\ Staging\ DMG/'], shell=True)
     subprocess.call(['pwd && ls -alh '], shell=True)
     subprocess.call(['ls -alh ../Nagstamon/resources/'], shell=True)
     subprocess.call(['cd ../Nagstamon/resources/ && pwd'], shell=True)
