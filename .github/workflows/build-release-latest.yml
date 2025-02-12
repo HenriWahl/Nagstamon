@@ -17,216 +17,216 @@ env:
   release: latest
 
 jobs:
-  # test:
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       python-version: [3.9, 3.11]
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9, 3.11]
 
-  #   steps:
-  #   - uses: actions/checkout@v4
-  #   # somehow weird way to get the hash over the requirements to be aware if they changed
-  #   - id: requirements_hash
-  #     run: echo "HASH=$(md5sum build/requirements/linux.txt | cut -d\  -f1)" >> $GITHUB_OUTPUT
-  #     # docker login is needed for pushing the test image
-  #   - uses: docker/login-action@v3
-  #     with:
-  #       registry: ghcr.io
-  #       username: ${{ github.actor }}
-  #       password: ${{ secrets.GITHUB_TOKEN }}
-  #   # if image defined by hash over requirements is not pullable aka does not exist it will be created and pushed
-  #   - run: docker pull ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }} --build-arg VERSION=${{ matrix.python-version }} --build-arg REQUIREMENTS="$(cat build/requirements/linux.txt | base64 --wrap=0)" -f build/docker/Dockerfile-${{ github.job }} .
-  #   - run: docker push ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }}
-  #   # - name: Lint with flake8
-  #   #   run: |
-  #   #     # stop the build if there are Python syntax errors or undefined names
-  #   #     flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-  #   #     # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-  #   #     flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-  #   - name: Test with unittest
-  #     # using the tests in precompiled image makes them way faster instead of creating the test environment every time from scratch
-  #     run: docker run --rm -v $PWD:/src --workdir /src ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }} python -m unittest tests/test_*.py
+    steps:
+    - uses: actions/checkout@v4
+    # somehow weird way to get the hash over the requirements to be aware if they changed
+    - id: requirements_hash
+      run: echo "HASH=$(md5sum build/requirements/linux.txt | cut -d\  -f1)" >> $GITHUB_OUTPUT
+      # docker login is needed for pushing the test image
+    - uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    # if image defined by hash over requirements is not pullable aka does not exist it will be created and pushed
+    - run: docker pull ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }} --build-arg VERSION=${{ matrix.python-version }} --build-arg REQUIREMENTS="$(cat build/requirements/linux.txt | base64 --wrap=0)" -f build/docker/Dockerfile-${{ github.job }} .
+    - run: docker push ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }}
+    # - name: Lint with flake8
+    #   run: |
+    #     # stop the build if there are Python syntax errors or undefined names
+    #     flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+    #     # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+    #     flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: Test with unittest
+      # using the tests in precompiled image makes them way faster instead of creating the test environment every time from scratch
+      run: docker run --rm -v $PWD:/src --workdir /src ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }} python -m unittest tests/test_*.py
 
-  # debian:
-  #   runs-on: ubuntu-latest
-  #   needs: test
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     # docker login is needed for pushing the build image
-  #     - uses: docker/login-action@v3
-  #       with:
-  #         registry: ghcr.io
-  #         username: ${{ github.actor }}
-  #         password: ${{ secrets.GITHUB_TOKEN }}
-  #     # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
-  #     - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
-  #     - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-  #     # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
-  #     - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon -e DEB_BUILD_OPTIONS=nocheck ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         path: build/*.deb
-  #         retention-days: 1
-  #         if-no-files-found: error
-  #         name: ${{ github.job }}
+  debian:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      # docker login is needed for pushing the build image
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
+      - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
+      - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
+      # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
+      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon -e DEB_BUILD_OPTIONS=nocheck ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
+      - uses: actions/upload-artifact@v4
+        with:
+          path: build/*.deb
+          retention-days: 1
+          if-no-files-found: error
+          name: ${{ github.job }}
 
-  # fedora-38:
-  #   runs-on: ubuntu-latest
-  #   needs: test
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     # docker login is needed for pushing the build image
-  #     - uses: docker/login-action@v3
-  #       with:
-  #         registry: ghcr.io
-  #         username: ${{ github.actor }}
-  #         password: ${{ secrets.GITHUB_TOKEN }}
-  #     # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
-  #     - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
-  #     - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-  #     # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
-  #     - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         path: build/*.rpm
-  #         retention-days: 1
-  #         if-no-files-found: error
-  #         name: ${{ github.job }}
+  fedora-38:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      # docker login is needed for pushing the build image
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
+      - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
+      - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
+      # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
+      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
+      - uses: actions/upload-artifact@v4
+        with:
+          path: build/*.rpm
+          retention-days: 1
+          if-no-files-found: error
+          name: ${{ github.job }}
 
-  # fedora-39:
-  #   runs-on: ubuntu-latest
-  #   needs: test
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     # docker login is needed for pushing the build image
-  #     - uses: docker/login-action@v3
-  #       with:
-  #         registry: ghcr.io
-  #         username: ${{ github.actor }}
-  #         password: ${{ secrets.GITHUB_TOKEN }}
-  #     # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
-  #     - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
-  #     - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-  #     # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
-  #     - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         path: build/*.rpm
-  #         retention-days: 1
-  #         if-no-files-found: error
-  #         name: ${{ github.job }}
+  fedora-39:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      # docker login is needed for pushing the build image
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
+      - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
+      - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
+      # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
+      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
+      - uses: actions/upload-artifact@v4
+        with:
+          path: build/*.rpm
+          retention-days: 1
+          if-no-files-found: error
+          name: ${{ github.job }}
 
-  # fedora-40:
-  #   runs-on: ubuntu-latest
-  #   needs: test
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     # docker login is needed for pushing the build image
-  #     - uses: docker/login-action@v3
-  #       with:
-  #         registry: ghcr.io
-  #         username: ${{ github.actor }}
-  #         password: ${{ secrets.GITHUB_TOKEN }}
-  #     # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
-  #     - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
-  #     - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-  #     # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
-  #     - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         path: build/*.rpm
-  #         retention-days: 1
-  #         if-no-files-found: error
-  #         name: ${{ github.job }}
+  fedora-40:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      # docker login is needed for pushing the build image
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
+      - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
+      - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
+      # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
+      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
+      - uses: actions/upload-artifact@v4
+        with:
+          path: build/*.rpm
+          retention-days: 1
+          if-no-files-found: error
+          name: ${{ github.job }}
 
-  # fedora-41:
-  #   runs-on: ubuntu-latest
-  #   needs: test
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     # docker login is needed for pushing the build image
-  #     - uses: docker/login-action@v3
-  #       with:
-  #         registry: ghcr.io
-  #         username: ${{ github.actor }}
-  #         password: ${{ secrets.GITHUB_TOKEN }}
-  #     # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
-  #     - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
-  #     - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-  #     # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
-  #     - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         path: build/*.rpm
-  #         retention-days: 1
-  #         if-no-files-found: error
-  #         name: ${{ github.job }}
+  fedora-41:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      # docker login is needed for pushing the build image
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
+      - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
+      - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
+      # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
+      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
+      - uses: actions/upload-artifact@v4
+        with:
+          path: build/*.rpm
+          retention-days: 1
+          if-no-files-found: error
+          name: ${{ github.job }}
 
-  # fedora-42:
-  #   runs-on: ubuntu-latest
-  #   needs: test
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     # docker login is needed for pushing the build image
-  #     - uses: docker/login-action@v3
-  #       with:
-  #         registry: ghcr.io
-  #         username: ${{ github.actor }}
-  #         password: ${{ secrets.GITHUB_TOKEN }}
-  #     # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
-  #     - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
-  #     - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-  #     # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
-  #     - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         path: build/*.rpm
-  #         retention-days: 1
-  #         if-no-files-found: error
-  #         name: ${{ github.job }}
+  fedora-42:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      # docker login is needed for pushing the build image
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
+      - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
+      - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
+      # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
+      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
+      - uses: actions/upload-artifact@v4
+        with:
+          path: build/*.rpm
+          retention-days: 1
+          if-no-files-found: error
+          name: ${{ github.job }}
 
-  # rhel-9:
-  #   runs-on: ubuntu-latest
-  #   needs: test
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     # docker login is needed for pushing the build image
-  #     - uses: docker/login-action@v3
-  #       with:
-  #         registry: ghcr.io
-  #         username: ${{ github.actor }}
-  #         password: ${{ secrets.GITHUB_TOKEN }}
-  #     # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
-  #     - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
-  #     - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-  #     # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
-  #     - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         path: build/*.rpm
-  #         retention-days: 1
-  #         if-no-files-found: error
-  #         name: ${{ github.job }}
+  rhel-9:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      # docker login is needed for pushing the build image
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
+      - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
+      - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
+      # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
+      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
+      - uses: actions/upload-artifact@v4
+        with:
+          path: build/*.rpm
+          retention-days: 1
+          if-no-files-found: error
+          name: ${{ github.job }}
 
-  # macos-intel:
-  #   runs-on: macos-13
-  #   #needs: test
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - run: pip3 install --no-warn-script-location -r build/requirements/macos.txt
-  #     - run: cd ${{ github.workspace }}/build; python3 build.py
-  #       env:
-  #         PYTHONPATH: ${{ github.workspace }}
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         path: build/dist/*.dmg
-  #         retention-days: 1
-  #         if-no-files-found: error
-  #         name: ${{ github.job }}
+  macos-intel:
+    runs-on: macos-13
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip3 install --no-warn-script-location -r build/requirements/macos.txt
+      - run: cd ${{ github.workspace }}/build; python3 build.py
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+      - uses: actions/upload-artifact@v4
+        with:
+          path: build/dist/*.dmg
+          retention-days: 1
+          if-no-files-found: error
+          name: ${{ github.job }}
 
   macos-arm:
     runs-on: macos-14
-    #needs: test
+    needs: test
     steps:
       - uses: actions/checkout@v4
       - run: pip3 install --no-warn-script-location --break-system-packages -r build/requirements/macos.txt
@@ -240,222 +240,220 @@ jobs:
           if-no-files-found: error
           name: ${{ github.job }}
 
-  # windows-32:
-  #   # better depend on stable build image
-  #   runs-on: windows-2022
-  #   needs: test
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-python@v5
-  #       with:
-  #         python-version: ${{ env.python_win_version }}
-  #         architecture: x86
-  #     #  no PyQt6 for win32 available on pypi.org
-  #     - run: ((Get-Content -path build/requirements/windows.txt -Raw) -replace 'pyqt6.*','pyqt5') | Set-Content -Path build/requirements/windows.txt
-  #     - run: python -m pip install --no-warn-script-location -r build/requirements/windows.txt
-  #     # pretty hacky but no other idea to avoid gssapi being installed which breaks requests-kerberos
-  #     - run: python -m pip uninstall -y gssapi requests-gssapi
-  #     - run: cd ${{ github.workspace }}/build; python build.py
-  #       env:
-  #         PYTHONPATH: ${{ github.workspace }}
-  #         WIN_SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
-  #         WIN_SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         path: |
-  #           build/dist/*.zip
-  #           build/dist/*.exe
-  #         retention-days: 1
-  #         if-no-files-found: error
-  #         name: ${{ github.job }}
+  windows-32:
+    # better depend on stable build image
+    runs-on: windows-2022
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.python_win_version }}
+          architecture: x86
+      #  no PyQt6 for win32 available on pypi.org
+      - run: ((Get-Content -path build/requirements/windows.txt -Raw) -replace 'pyqt6.*','pyqt5') | Set-Content -Path build/requirements/windows.txt
+      - run: python -m pip install --no-warn-script-location -r build/requirements/windows.txt
+      # pretty hacky but no other idea to avoid gssapi being installed which breaks requests-kerberos
+      - run: python -m pip uninstall -y gssapi requests-gssapi
+      - run: cd ${{ github.workspace }}/build; python build.py
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          WIN_SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
+          WIN_SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+      - uses: actions/upload-artifact@v4
+        with:
+          path: |
+            build/dist/*.zip
+            build/dist/*.exe
+          retention-days: 1
+          if-no-files-found: error
+          name: ${{ github.job }}
 
-  # windows-64:
-  #   # better depend on stable build image
-  #   runs-on: windows-2022
-  #   needs: test
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-python@v5
-  #       with:
-  #         python-version: ${{ env.python_win_version }}
-  #         architecture: x64
-  #     - run: python -m pip install --no-warn-script-location -r build/requirements/windows.txt
-  #     # pretty hacky but no other idea to avoid gssapi being installed which breaks requests-kerberos
-  #     - run: python -m pip uninstall -y gssapi requests-gssapi
-  #     - run: cd ${{ github.workspace }}/build; python build.py
-  #       env:
-  #         PYTHONPATH: ${{ github.workspace }}
-  #         WIN_SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
-  #         WIN_SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         path: |
-  #           build/dist/*.zip
-  #           build/dist/*.exe
-  #         retention-days: 1
-  #         if-no-files-found: error
-  #         name: ${{ github.job }}
+  windows-64:
+    # better depend on stable build image
+    runs-on: windows-2022
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.python_win_version }}
+          architecture: x64
+      - run: python -m pip install --no-warn-script-location -r build/requirements/windows.txt
+      # pretty hacky but no other idea to avoid gssapi being installed which breaks requests-kerberos
+      - run: python -m pip uninstall -y gssapi requests-gssapi
+      - run: cd ${{ github.workspace }}/build; python build.py
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          WIN_SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
+          WIN_SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+      - uses: actions/upload-artifact@v4
+        with:
+          path: |
+            build/dist/*.zip
+            build/dist/*.exe
+          retention-days: 1
+          if-no-files-found: error
+          name: ${{ github.job }}
 
-  # windows-64-debug:
-  #   # better depend on stable build image
-  #   runs-on: windows-2022
-  #   needs: test
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-python@v5
-  #       with:
-  #         python-version: ${{ env.python_win_version }}
-  #         architecture: x64
-  #     - run: python -m pip install --no-warn-script-location -r build/requirements/windows.txt
-  #     # pretty hacky but no other idea to avoid gssapi being installed which breaks requests-kerberos
-  #     - run: python -m pip uninstall -y gssapi requests-gssapi
-  #     - run: cd ${{ github.workspace }}/build; python build.py debug
-  #       env:
-  #         PYTHONPATH: ${{ github.workspace }}
-  #         WIN_SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
-  #         WIN_SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         path: |
-  #           build/dist/*.zip
-  #         retention-days: 1
-  #         if-no-files-found: error
-  #         name: ${{ github.job }}
+  windows-64-debug:
+    # better depend on stable build image
+    runs-on: windows-2022
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.python_win_version }}
+          architecture: x64
+      - run: python -m pip install --no-warn-script-location -r build/requirements/windows.txt
+      # pretty hacky but no other idea to avoid gssapi being installed which breaks requests-kerberos
+      - run: python -m pip uninstall -y gssapi requests-gssapi
+      - run: cd ${{ github.workspace }}/build; python build.py debug
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          WIN_SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
+          WIN_SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+      - uses: actions/upload-artifact@v4
+        with:
+          path: |
+            build/dist/*.zip
+          retention-days: 1
+          if-no-files-found: error
+          name: ${{ github.job }}
 
 # borrowed from dhcpy6d
-  # repo-debian:
-  #   runs-on: ubuntu-latest
-  #   # try to avoid race condition and start uploading only after the last install package has been build
-  #   # needs: [debian, fedora-38, fedora-39, fedora-40, fedora-41, fedora-42, rhel-9, macos-intel, macos-arm, windows-32, windows-64, windows-64-debug]
-  #   needs: [macos-arm]
-  #   env:
-  #     family: debian
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     # get binaries created by other jobs
-  #     - uses: actions/download-artifact@v4
-  #       with:
-  #         pattern: 'debian*'
-  #         path: artifact
-  #         merge-multiple: true
-  #     # get secret signing key
-  #     - run: echo "${{ secrets.PACKAGE_SIGNING_KEY }}" >  signing_key.asc
-  #     # organize SSH deploy key for nagstamon-jekyll repo
-  #     - run: mkdir ~/.ssh
-  #     - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
-  #     - run: chmod -R go-rwx ~/.ssh
-  #     # get and prepare nagstamon-jekyll
-  #     - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
-  #     - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.dist }}/${{ env.release }}
-  #     - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.dist }}/${{ env.release }}
-  #     # create deb repo via Debian build container
-  #     - run: |
-  #         /usr/bin/docker run --rm \
-  #         -v ${{ github.workspace }}:/workspace \
-  #         -v $PWD/${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}:/repo \
-  #         ${{ env.cr_image }}-${{ env.family }}:${{ env.cr_image_version }} \
-  #         /bin/sh -c "cd /workspace && \
-  #                     gpg --import signing_key.asc && \
-  #                     cp -r artifact/*.deb nagstamon-jekyll/docs/repo/${{ env.family }}/${{ env.release }} && \
-  #                     cd nagstamon-jekyll/docs/repo/${{ env.family }}/${{ env.release }}
-  #                     dpkg-scanpackages . > Packages && \
-  #                     gzip -k -f Packages && \
-  #                     apt-ftparchive release . > Release && \
-  #                     gpg -abs -o Release.gpg Release && \
-  #                     gpg --clearsign -o InRelease Release && \
-  #                     gpg --output key.gpg --armor --export"
-  #     # commit and push new binaries to nagstamon-jekyll
-  #     - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
-  #     - run: cd ${{ env.repo_dir }} && git add . && git commit -am "new ${{ env.release }} repo ${{ env.family }}" && git push
+  repo-debian:
+    runs-on: ubuntu-latest
+    # try to avoid race condition and start uploading only after the last install package has been build
+    needs: [debian, fedora-38, fedora-39, fedora-40, fedora-41, fedora-42, rhel-9, macos-intel, macos-arm, windows-32, windows-64, windows-64-debug]
+    env:
+      family: debian
+    steps:
+      - uses: actions/checkout@v4
+      # get binaries created by other jobs
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: 'debian*'
+          path: artifact
+          merge-multiple: true
+      # get secret signing key
+      - run: echo "${{ secrets.PACKAGE_SIGNING_KEY }}" >  signing_key.asc
+      # organize SSH deploy key for nagstamon-jekyll repo
+      - run: mkdir ~/.ssh
+      - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
+      - run: chmod -R go-rwx ~/.ssh
+      # get and prepare nagstamon-jekyll
+      - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
+      - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.dist }}/${{ env.release }}
+      - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.dist }}/${{ env.release }}
+      # create deb repo via Debian build container
+      - run: |
+          /usr/bin/docker run --rm \
+          -v ${{ github.workspace }}:/workspace \
+          -v $PWD/${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}:/repo \
+          ${{ env.cr_image }}-${{ env.family }}:${{ env.cr_image_version }} \
+          /bin/sh -c "cd /workspace && \
+                      gpg --import signing_key.asc && \
+                      cp -r artifact/*.deb nagstamon-jekyll/docs/repo/${{ env.family }}/${{ env.release }} && \
+                      cd nagstamon-jekyll/docs/repo/${{ env.family }}/${{ env.release }}
+                      dpkg-scanpackages . > Packages && \
+                      gzip -k -f Packages && \
+                      apt-ftparchive release . > Release && \
+                      gpg -abs -o Release.gpg Release && \
+                      gpg --clearsign -o InRelease Release && \
+                      gpg --output key.gpg --armor --export"
+      # commit and push new binaries to nagstamon-jekyll
+      - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
+      - run: cd ${{ env.repo_dir }} && git add . && git commit -am "new ${{ env.release }} repo ${{ env.family }}" && git push
 
-  # repo-rpm-fedora:
-  #   runs-on: ubuntu-latest
-  #   # if not all are ready there might be trouble when downloading artifacts
-  #   # maybe faster now with build containers
-  #   needs: [repo-debian]
-  #   env:
-  #     family: fedora
-  #     # which image to use for packaging
-  #     cr_image_latest: 40
-  #   steps:
-  #     # get binaries created by other jobs
-  #     - uses: actions/download-artifact@v4
-  #       with:
-  #         pattern: 'fedora*'
-  #         path: artifact
-  #         merge-multiple: true
-  #     # docker login is needed for pushing the build image
-  #     - uses: docker/login-action@v3
-  #       with:
-  #         registry: ghcr.io
-  #         username: ${{ github.actor }}
-  #         password: ${{ secrets.GITHUB_TOKEN }}
-  #     # organize SSH deploy key for nagstamon-repo
-  #     - run: mkdir ~/.ssh
-  #     - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
-  #     - run: chmod -R go-rwx ~/.ssh
-  #     # get and prepare nagstamon-jekyll
-  #     - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
-  #     - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
-  #     - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
-  #     # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
-  #     # only needed for fedora
-  #     - run: docker pull ${{ env.cr_image }}-${{ env.family }}-${{ env.cr_image_latest }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ env.family }}-${{ env.cr_image_latest }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
-  #     - run: docker push ${{ env.cr_image }}-${{ env.family }}-${{ env.cr_image_latest }}:${{ env.cr_image_version }}
-  #     # copy *.rpm files into nagstamon-jekyll and create repodata
-  #     - run: |
-  #           version=${{ env.release }} && \
-  #           mkdir -p mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${version} && \
-  #           cp -r artifact/*.${{ env.family }}* ${{ env.repo_dir }}/${{ env.family }}/${version} && \
-  #           docker run --rm -v ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}:/repo \
-  #             ${{ env.cr_image }}-${{ env.family }}-${{ env.cr_image_latest }}:${{ env.cr_image_version }} \
-  #             /bin/bash -c "createrepo --verbose --workers 1 /repo" && \
-  #           ls -laR ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}
-  #     # commit and push new binaries to nagstamon-repo
-  #     - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
-  #     - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ env.family }}" && git push
+  repo-rpm-fedora:
+    runs-on: ubuntu-latest
+    # if not all are ready there might be trouble when downloading artifacts
+    # maybe faster now with build containers
+    needs: [repo-debian]
+    env:
+      family: fedora
+      # which image to use for packaging
+      cr_image_latest: 40
+    steps:
+      # get binaries created by other jobs
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: 'fedora*'
+          path: artifact
+          merge-multiple: true
+      # docker login is needed for pushing the build image
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # organize SSH deploy key for nagstamon-repo
+      - run: mkdir ~/.ssh
+      - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
+      - run: chmod -R go-rwx ~/.ssh
+      # get and prepare nagstamon-jekyll
+      - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
+      - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
+      - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
+      # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
+      # only needed for fedora
+      - run: docker pull ${{ env.cr_image }}-${{ env.family }}-${{ env.cr_image_latest }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ env.family }}-${{ env.cr_image_latest }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
+      - run: docker push ${{ env.cr_image }}-${{ env.family }}-${{ env.cr_image_latest }}:${{ env.cr_image_version }}
+      # copy *.rpm files into nagstamon-jekyll and create repodata
+      - run: |
+            version=${{ env.release }} && \
+            mkdir -p mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${version} && \
+            cp -r artifact/*.${{ env.family }}* ${{ env.repo_dir }}/${{ env.family }}/${version} && \
+            docker run --rm -v ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}:/repo \
+              ${{ env.cr_image }}-${{ env.family }}-${{ env.cr_image_latest }}:${{ env.cr_image_version }} \
+              /bin/bash -c "createrepo --verbose --workers 1 /repo" && \
+            ls -laR ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}
+      # commit and push new binaries to nagstamon-repo
+      - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
+      - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ env.family }}" && git push
 
-  # repo-rpm-rhel:
-  #   runs-on: ubuntu-latest
-  #   # if not all are ready there might be trouble when downloading artifacts
-  #   # maybe faster now with build containers
-  #   needs: [repo-rpm-fedora]
-  #   env:
-  #     family: rhel
-  #     # currently just one version available
-  #     version: 9
-  #   steps:
-  #     # get binaries created by other jobs
-  #     - uses: actions/download-artifact@v4
-  #       with:
-  #         pattern: 'rhel*'
-  #         path: artifact
-  #         merge-multiple: true
-  #     # organize SSH deploy key for nagstamon-repo
-  #     - run: mkdir ~/.ssh
-  #     - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
-  #     - run: chmod -R go-rwx ~/.ssh
-  #     # get and prepare nagstamon-jekyll
-  #     - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
-  #     - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
-  #     - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
-  #     # copy *.rpm files into nagstamon-jekyll and create repodata
-  #     - run: |
-  #           version=${{ env.release }} && \
-  #           mkdir -p mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${version} && \
-  #           cp -r artifact/*.${{ env.family }}* ${{ env.repo_dir }}/${{ env.family }}/${version} && \
-  #           docker run --rm -v ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}:/repo \
-  #             ${{ env.cr_image }}-${{ env.family }}-${{ env.version }}:${{ env.cr_image_version }} \
-  #             /bin/bash -c "createrepo --verbose --workers 1 /repo" && \
-  #           ls -laR ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}
-  #     # commit and push new binaries to nagstamon-repo
-  #     - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
-  #     - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ env.family }}" && git push
+  repo-rpm-rhel:
+    runs-on: ubuntu-latest
+    # if not all are ready there might be trouble when downloading artifacts
+    # maybe faster now with build containers
+    needs: [repo-rpm-fedora]
+    env:
+      family: rhel
+      # currently just one version available
+      version: 9
+    steps:
+      # get binaries created by other jobs
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: 'rhel*'
+          path: artifact
+          merge-multiple: true
+      # organize SSH deploy key for nagstamon-repo
+      - run: mkdir ~/.ssh
+      - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
+      - run: chmod -R go-rwx ~/.ssh
+      # get and prepare nagstamon-jekyll
+      - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
+      - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
+      - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
+      # copy *.rpm files into nagstamon-jekyll and create repodata
+      - run: |
+            version=${{ env.release }} && \
+            mkdir -p mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${version} && \
+            cp -r artifact/*.${{ env.family }}* ${{ env.repo_dir }}/${{ env.family }}/${version} && \
+            docker run --rm -v ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}:/repo \
+              ${{ env.cr_image }}-${{ env.family }}-${{ env.version }}:${{ env.cr_image_version }} \
+              /bin/bash -c "createrepo --verbose --workers 1 /repo" && \
+            ls -laR ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}
+      # commit and push new binaries to nagstamon-repo
+      - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
+      - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ env.family }}" && git push
 
   github-release:
     runs-on: ubuntu-latest
-    needs: [macos-arm]
-    # needs: [repo-rpm-rhel]
+    needs: [repo-rpm-rhel]
     steps:
       - uses: actions/download-artifact@v4
         with:
