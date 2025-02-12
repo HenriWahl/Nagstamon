@@ -326,7 +326,8 @@ jobs:
   repo-debian:
     runs-on: ubuntu-latest
     # try to avoid race condition and start uploading only after the last install package has been build
-    needs: [debian, fedora-38, fedora-39, fedora-40, fedora-41, fedora-42, rhel-9, macos-intel, macos-arm, windows-32, windows-64, windows-64-debug]
+    # needs: [debian, fedora-38, fedora-39, fedora-40, fedora-41, fedora-42, rhel-9, macos-intel, macos-arm, windows-32, windows-64, windows-64-debug]
+    needs: [macos-arm]
     env:
       family: debian
     steps:
@@ -453,7 +454,8 @@ jobs:
 
   github-release:
     runs-on: ubuntu-latest
-    needs: [repo-rpm-rhel]
+    needs: [macos-arm]
+    # needs: [repo-rpm-rhel]
     steps:
       - uses: actions/download-artifact@v4
         with:
