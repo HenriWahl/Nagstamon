@@ -210,9 +210,11 @@ def macmain():
     subprocess.call(['ls -alh dist/../../../../'], shell=True)
     subprocess.call(['ls -alh ../Nagstamon/'], shell=True)
     subprocess.call(['ls -alh ../Nagstamon/resources/'], shell=True)
+    subprocess.call(['cd ../Nagstamon/resources/ && pwd'], shell=True)
+    subprocess.call(['pwd'], shell=True)
 
     subprocess.call([f'create-dmg '
-                     f'--volname "Nagstamon {VERSION}" '
+                     f'--volname "Nagstamon\ {VERSION}" '
                      f'--volicon "../../Nagstamon/resources/nagstamon.ico" '
                      f'--window-pos 200 120 '
                      f'--window-size 600 300 '
@@ -220,8 +222,8 @@ def macmain():
                      f'--icon "Nagstamon.app" 175 120 '
                      f'--hide-extension "Nagstamon.app" '
                      f'--app-drop-link 425 120 '
-                     f'"dist/Nagstamon {VERSION} {ARCH_MACOS_NAMES[ARCH_MACOS]}.dmg" '
-                     f'Nagstamon {VERSION} Staging DMG/'
+                     f'"dist/Nagstamon\ {VERSION}\ {ARCH_MACOS_NAMES[ARCH_MACOS]}.dmg" '
+                     f'Nagstamon\ {VERSION}\ Staging\ DMG/'
                      ], shell=True)
 
     # # create DMG
