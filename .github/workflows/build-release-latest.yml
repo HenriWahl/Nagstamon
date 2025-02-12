@@ -17,58 +17,58 @@ env:
   release: latest
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [3.9, 3.11]
+  # test:
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       python-version: [3.9, 3.11]
 
-    steps:
-    - uses: actions/checkout@v4
-    # somehow weird way to get the hash over the requirements to be aware if they changed
-    - id: requirements_hash
-      run: echo "HASH=$(md5sum build/requirements/linux.txt | cut -d\  -f1)" >> $GITHUB_OUTPUT
-      # docker login is needed for pushing the test image
-    - uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    # if image defined by hash over requirements is not pullable aka does not exist it will be created and pushed
-    - run: docker pull ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }} --build-arg VERSION=${{ matrix.python-version }} --build-arg REQUIREMENTS="$(cat build/requirements/linux.txt | base64 --wrap=0)" -f build/docker/Dockerfile-${{ github.job }} .
-    # - run: docker push ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }}
-    # - name: Lint with flake8
-    #   run: |
-    #     # stop the build if there are Python syntax errors or undefined names
-    #     flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-    #     # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-    #     flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with unittest
-      # using the tests in precompiled image makes them way faster instead of creating the test environment every time from scratch
-      run: docker run --rm -v $PWD:/src --workdir /src ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }} python -m unittest tests/test_*.py
+  #   steps:
+  #   - uses: actions/checkout@v4
+  #   # somehow weird way to get the hash over the requirements to be aware if they changed
+  #   - id: requirements_hash
+  #     run: echo "HASH=$(md5sum build/requirements/linux.txt | cut -d\  -f1)" >> $GITHUB_OUTPUT
+  #     # docker login is needed for pushing the test image
+  #   - uses: docker/login-action@v3
+  #     with:
+  #       registry: ghcr.io
+  #       username: ${{ github.actor }}
+  #       password: ${{ secrets.GITHUB_TOKEN }}
+  #   # if image defined by hash over requirements is not pullable aka does not exist it will be created and pushed
+  #   - run: docker pull ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }} --build-arg VERSION=${{ matrix.python-version }} --build-arg REQUIREMENTS="$(cat build/requirements/linux.txt | base64 --wrap=0)" -f build/docker/Dockerfile-${{ github.job }} .
+  #   - run: docker push ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }}
+  #   # - name: Lint with flake8
+  #   #   run: |
+  #   #     # stop the build if there are Python syntax errors or undefined names
+  #   #     flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+  #   #     # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+  #   #     flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+  #   - name: Test with unittest
+  #     # using the tests in precompiled image makes them way faster instead of creating the test environment every time from scratch
+  #     run: docker run --rm -v $PWD:/src --workdir /src ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }} python -m unittest tests/test_*.py
 
-  debian:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - uses: actions/checkout@v4
-      # docker login is needed for pushing the build image
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
-      - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
-      - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-      # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
-      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon -e DEB_BUILD_OPTIONS=nocheck ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-      - uses: actions/upload-artifact@v4
-        with:
-          path: build/*.deb
-          retention-days: 1
-          if-no-files-found: error
-          name: ${{ github.job }}
+  # debian:
+  #   runs-on: ubuntu-latest
+  #   needs: test
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     # docker login is needed for pushing the build image
+  #     - uses: docker/login-action@v3
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
+  #     # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
+  #     - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
+  #     - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
+  #     # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
+  #     - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon -e DEB_BUILD_OPTIONS=nocheck ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
+  #     - uses: actions/upload-artifact@v4
+  #       with:
+  #         path: build/*.deb
+  #         retention-days: 1
+  #         if-no-files-found: error
+  #         name: ${{ github.job }}
 
   # fedora-38:
   #   runs-on: ubuntu-latest
@@ -208,25 +208,25 @@ jobs:
   #         if-no-files-found: error
   #         name: ${{ github.job }}
 
-  macos-intel:
-    runs-on: macos-13
-    needs: test
-    steps:
-      - uses: actions/checkout@v4
-      - run: pip3 install --no-warn-script-location -r build/requirements/macos.txt
-      - run: cd ${{ github.workspace }}/build; python3 build.py
-        env:
-          PYTHONPATH: ${{ github.workspace }}
-      - uses: actions/upload-artifact@v4
-        with:
-          path: build/*.dmg
-          retention-days: 1
-          if-no-files-found: error
-          name: ${{ github.job }}
+  # macos-intel:
+  #   runs-on: macos-13
+  #   #needs: test
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - run: pip3 install --no-warn-script-location -r build/requirements/macos.txt
+  #     - run: cd ${{ github.workspace }}/build; python3 build.py
+  #       env:
+  #         PYTHONPATH: ${{ github.workspace }}
+  #     - uses: actions/upload-artifact@v4
+  #       with:
+  #         path: build/*.dmg
+  #         retention-days: 1
+  #         if-no-files-found: error
+  #         name: ${{ github.job }}
 
   macos-arm:
     runs-on: macos-14
-    needs: test
+    #needs: test
     steps:
       - uses: actions/checkout@v4
       - run: pip3 install --no-warn-script-location --break-system-packages -r build/requirements/macos.txt

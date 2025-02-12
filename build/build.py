@@ -202,7 +202,7 @@ def macmain():
     subprocess.call(['brew install create-dmg'], shell=True)
 
     subprocess.call([f'create-dmg '
-                     f'-volname "Nagstamon {VERSION}" '
+                     f'--volname "Nagstamon {VERSION}" '
                      f'--volicon "..\\Nagstamon\\resources\\nagstamon.ico" '
                      f'--window-pos 200 120 '
                      f'--window-size 600 300 '
