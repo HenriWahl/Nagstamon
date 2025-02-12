@@ -462,6 +462,7 @@ jobs:
           pattern: '*'
           path: artifact
           merge-multiple: true
+      - run: ls -alh artifact/
       - run: ls -alh artifact/Nagstamon/3.17-20241219/
       - run: cd artifact && md5sum *agstamon* > md5sums.txt
       - run: cd artifact && sha256sum *agstamon* > sha256sums.txt
