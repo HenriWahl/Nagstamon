@@ -207,28 +207,15 @@ def macmain():
     subprocess.call([f'create-dmg '
                      f'--volname "Nagstamon {VERSION}" '
                      f'--volicon "nagstamon.ico" '
-                     f'--window-pos 200 120 '
-                     f'--window-size 600 300 '
+                     f'--window-pos 400 300 '
+                     f'--window-size 600 320 '
                      f'--icon-size 100 '
-                     f'--icon "Nagstamon.app" 175 120 '
+                     f'--icon "Nagstamon.app" 175 110 '
                      f'--hide-extension "Nagstamon.app" '
-                     f'--app-drop-link 425 120 '
+                     f'--app-drop-link 425 110 '
                      f'"dist/Nagstamon {VERSION} {ARCH_MACOS_NAMES[ARCH_MACOS]}.dmg" '
                      f'Nagstamon\ {VERSION}\ Staging\ DMG/'
                      ], shell=True)
-
-    # # create DMG
-    # subprocess.call([f'hdiutil create -srcfolder "Nagstamon {VERSION} Staging DMG" '
-    #                       f'-volname "Nagstamon {VERSION}" -fs HFS+ -format UDRW -size 100M '
-    #                       f'"Nagstamon {VERSION} uncompressed.dmg"'], shell=True)
-
-    # # Compress DMG
-    # subprocess.call([f'hdiutil convert "Nagstamon {VERSION} uncompressed".dmg '
-    #                       f'-format UDZO -imagekey zlib-level=9 -o "Nagstamon {VERSION} {ARCH_MACOS_NAMES[ARCH_MACOS]}.dmg"'], shell=True)
-
-    # # Delete uncompressed DMG file as it is no longer needed
-    # os.unlink(f'Nagstamon {VERSION} uncompressed.dmg')
-
 
 def debmain():
     shutil.rmtree(SCRIPTS_DIR, ignore_errors=True)

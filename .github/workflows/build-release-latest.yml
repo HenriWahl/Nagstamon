@@ -323,50 +323,50 @@ jobs:
   #         name: ${{ github.job }}
 
 # borrowed from dhcpy6d
-  repo-debian:
-    runs-on: ubuntu-latest
-    # try to avoid race condition and start uploading only after the last install package has been build
-    # needs: [debian, fedora-38, fedora-39, fedora-40, fedora-41, fedora-42, rhel-9, macos-intel, macos-arm, windows-32, windows-64, windows-64-debug]
-    needs: [macos-arm]
-    env:
-      family: debian
-    steps:
-      - uses: actions/checkout@v4
-      # get binaries created by other jobs
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: 'debian*'
-          path: artifact
-          merge-multiple: true
-      # get secret signing key
-      - run: echo "${{ secrets.PACKAGE_SIGNING_KEY }}" >  signing_key.asc
-      # organize SSH deploy key for nagstamon-jekyll repo
-      - run: mkdir ~/.ssh
-      - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
-      - run: chmod -R go-rwx ~/.ssh
-      # get and prepare nagstamon-jekyll
-      - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
-      - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.dist }}/${{ env.release }}
-      - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.dist }}/${{ env.release }}
-      # create deb repo via Debian build container
-      - run: |
-          /usr/bin/docker run --rm \
-          -v ${{ github.workspace }}:/workspace \
-          -v $PWD/${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}:/repo \
-          ${{ env.cr_image }}-${{ env.family }}:${{ env.cr_image_version }} \
-          /bin/sh -c "cd /workspace && \
-                      gpg --import signing_key.asc && \
-                      cp -r artifact/*.deb nagstamon-jekyll/docs/repo/${{ env.family }}/${{ env.release }} && \
-                      cd nagstamon-jekyll/docs/repo/${{ env.family }}/${{ env.release }}
-                      dpkg-scanpackages . > Packages && \
-                      gzip -k -f Packages && \
-                      apt-ftparchive release . > Release && \
-                      gpg -abs -o Release.gpg Release && \
-                      gpg --clearsign -o InRelease Release && \
-                      gpg --output key.gpg --armor --export"
-      # commit and push new binaries to nagstamon-jekyll
-      - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
-      - run: cd ${{ env.repo_dir }} && git add . && git commit -am "new ${{ env.release }} repo ${{ env.family }}" && git push
+  # repo-debian:
+  #   runs-on: ubuntu-latest
+  #   # try to avoid race condition and start uploading only after the last install package has been build
+  #   # needs: [debian, fedora-38, fedora-39, fedora-40, fedora-41, fedora-42, rhel-9, macos-intel, macos-arm, windows-32, windows-64, windows-64-debug]
+  #   needs: [macos-arm]
+  #   env:
+  #     family: debian
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     # get binaries created by other jobs
+  #     - uses: actions/download-artifact@v4
+  #       with:
+  #         pattern: 'debian*'
+  #         path: artifact
+  #         merge-multiple: true
+  #     # get secret signing key
+  #     - run: echo "${{ secrets.PACKAGE_SIGNING_KEY }}" >  signing_key.asc
+  #     # organize SSH deploy key for nagstamon-jekyll repo
+  #     - run: mkdir ~/.ssh
+  #     - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
+  #     - run: chmod -R go-rwx ~/.ssh
+  #     # get and prepare nagstamon-jekyll
+  #     - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
+  #     - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.dist }}/${{ env.release }}
+  #     - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.dist }}/${{ env.release }}
+  #     # create deb repo via Debian build container
+  #     - run: |
+  #         /usr/bin/docker run --rm \
+  #         -v ${{ github.workspace }}:/workspace \
+  #         -v $PWD/${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}:/repo \
+  #         ${{ env.cr_image }}-${{ env.family }}:${{ env.cr_image_version }} \
+  #         /bin/sh -c "cd /workspace && \
+  #                     gpg --import signing_key.asc && \
+  #                     cp -r artifact/*.deb nagstamon-jekyll/docs/repo/${{ env.family }}/${{ env.release }} && \
+  #                     cd nagstamon-jekyll/docs/repo/${{ env.family }}/${{ env.release }}
+  #                     dpkg-scanpackages . > Packages && \
+  #                     gzip -k -f Packages && \
+  #                     apt-ftparchive release . > Release && \
+  #                     gpg -abs -o Release.gpg Release && \
+  #                     gpg --clearsign -o InRelease Release && \
+  #                     gpg --output key.gpg --armor --export"
+  #     # commit and push new binaries to nagstamon-jekyll
+  #     - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
+  #     - run: cd ${{ env.repo_dir }} && git add . && git commit -am "new ${{ env.release }} repo ${{ env.family }}" && git push
 
   # repo-rpm-fedora:
   #   runs-on: ubuntu-latest
