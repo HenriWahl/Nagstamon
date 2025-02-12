@@ -196,7 +196,7 @@ def macmain():
     shutil.move('dist/Nagstamon.app', 'Nagstamon {0} Staging DMG/Nagstamon.app'.format(VERSION))
 
     # copy icon to staging folder
-    shutil.copy('../Nagstamon/resources/nagstamon.ico', 'Nagstamon {0} Staging DMG/nagstamon.ico'.format(VERSION))
+    shutil.copy('../Nagstamon/resources/nagstamon.ico', 'nagstamon.ico'.format(VERSION))
 
     # cleanup before new images get created
     for dmg_file in glob.iglob('*.dmg'):
@@ -205,8 +205,8 @@ def macmain():
     subprocess.call(['brew install create-dmg'], shell=True)
 
     subprocess.call([f'create-dmg '
-                     f'--volname "Nagstamon\ {VERSION}" '
-                     f'--volicon "Nagstamon {VERSION} Staging DMG/nagstamon.ico" '
+                     f'--volname "Nagstamon {VERSION}" '
+                     f'--volicon "nagstamon.ico" '
                      f'--window-pos 200 120 '
                      f'--window-size 600 300 '
                      f'--icon-size 100 '
