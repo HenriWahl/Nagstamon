@@ -219,7 +219,7 @@ jobs:
   #         PYTHONPATH: ${{ github.workspace }}
   #     - uses: actions/upload-artifact@v4
   #       with:
-  #         path: build/*.dmg
+  #         path: build/dist/*.dmg
   #         retention-days: 1
   #         if-no-files-found: error
   #         name: ${{ github.job }}
@@ -462,6 +462,7 @@ jobs:
           pattern: '*'
           path: artifact
           merge-multiple: true
+      - run: ls -alh artifact
       - run: cd artifact && md5sum *agstamon* > md5sums.txt
       - run: cd artifact && sha256sum *agstamon* > sha256sums.txt
       #- uses: marvinpinto/action-automatic-releases@latest
