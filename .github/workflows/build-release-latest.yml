@@ -327,7 +327,7 @@ jobs:
     runs-on: ubuntu-latest
     # try to avoid race condition and start uploading only after the last install package has been build
     # needs: [debian, fedora-38, fedora-39, fedora-40, fedora-41, fedora-42, rhel-9, macos-intel, macos-arm, windows-32, windows-64, windows-64-debug]
-    needs: [macos-arm, macos-intel]
+    needs: [macos-arm]
     env:
       family: debian
     steps:
