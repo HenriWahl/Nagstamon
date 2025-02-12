@@ -217,9 +217,6 @@ def macmain():
                      f'Nagstamon\ {VERSION}\ Staging\ DMG/'
                      ], shell=True)
 
-    # move dmg
-    shutil.move('dist/Nagstamon\ {0}\ {1[2]}.dmg', '.',format(VERSION, ARCH_MACOS_NAMES, ARCH_MACOS))
-
     # # create DMG
     # subprocess.call([f'hdiutil create -srcfolder "Nagstamon {VERSION} Staging DMG" '
     #                       f'-volname "Nagstamon {VERSION}" -fs HFS+ -format UDRW -size 100M '
