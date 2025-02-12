@@ -212,7 +212,7 @@ def macmain():
 
     subprocess.call([f'create-dmg '
                      f'--volname "Nagstamon\ {VERSION}" '
-                     f'--volicon "Nagstamon\ {VERSION}\ Staging\ DMG/nagstamon.ico" '
+                     f'--volicon "Nagstamon {VERSION} Staging DMG/nagstamon.ico" '
                      f'--window-pos 200 120 '
                      f'--window-size 600 300 '
                      f'--icon-size 100 '
