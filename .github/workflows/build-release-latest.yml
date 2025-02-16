@@ -475,6 +475,8 @@ jobs:
           makeLatest: true
           prerelease: true
           tag: latest
+          removeArtifacts: true
+          replacesArtifacts: true
           #files: |
           #  artifact/*
           artifacts: "artifact/*"
