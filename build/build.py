@@ -192,25 +192,32 @@ def macmain():
     # create staging DMG folder for later compressing of DMG
     shutil.rmtree('Nagstamon {0} Staging DMG'.format(VERSION), ignore_errors=True)
 
-    # copy app bundle folder
+    # move app bundle folder
     shutil.move('dist/Nagstamon.app', 'Nagstamon {0} Staging DMG/Nagstamon.app'.format(VERSION))
+
+    # copy icon to staging folder
+    shutil.copy('../Nagstamon/resources/nagstamon.ico', 'nagstamon.ico'.format(VERSION))
 
     # cleanup before new images get created
     for dmg_file in glob.iglob('*.dmg'):
         os.unlink(dmg_file)
 
-    # create DMG
-    subprocess.call([f'hdiutil create -srcfolder "Nagstamon {VERSION} Staging DMG" '
-                          f'-volname "Nagstamon {VERSION}" -fs HFS+ -format UDRW -size 100M '
-                          f'"Nagstamon {VERSION} uncompressed.dmg"'], shell=True)
+    # install create-dmg via preinstalled brew
+    subprocess.call(['brew install create-dmg'], shell=True)
 
-    # Compress DMG
-    subprocess.call([f'hdiutil convert "Nagstamon {VERSION} uncompressed".dmg '
-                          f'-format UDZO -imagekey zlib-level=9 -o "Nagstamon {VERSION} {ARCH_MACOS_NAMES[ARCH_MACOS]}.dmg"'], shell=True)
-
-    # Delete uncompressed DMG file as it is no longer needed
-    os.unlink(f'Nagstamon {VERSION} uncompressed.dmg')
-
+    # create dmg file
+    subprocess.call([f'create-dmg '
+                     f'--volname "Nagstamon {VERSION}" '
+                     f'--volicon "nagstamon.ico" '
+                     f'--window-pos 400 300 '
+                     f'--window-size 600 320 '
+                     f'--icon-size 100 '
+                     f'--icon "Nagstamon.app" 175 110 '
+                     f'--hide-extension "Nagstamon.app" '
+                     f'--app-drop-link 425 110 '
+                     f'"dist/Nagstamon {VERSION} {ARCH_MACOS_NAMES[ARCH_MACOS]}.dmg" '
+                     f'Nagstamon\ {VERSION}\ Staging\ DMG/'
+                     ], shell=True)
 
 def debmain():
     shutil.rmtree(SCRIPTS_DIR, ignore_errors=True)

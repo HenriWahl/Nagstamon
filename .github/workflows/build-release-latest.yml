@@ -219,7 +219,7 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
       - uses: actions/upload-artifact@v4
         with:
-          path: build/*.dmg
+          path: build/dist/*.dmg
           retention-days: 1
           if-no-files-found: error
           name: ${{ github.job }}
@@ -235,7 +235,7 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
       - uses: actions/upload-artifact@v4
         with:
-          path: build/*.dmg
+          path: build/dist/*.dmg
           retention-days: 1
           if-no-files-found: error
           name: ${{ github.job }}
