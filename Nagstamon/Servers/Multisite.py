@@ -27,7 +27,6 @@ import copy
 import html
 import tzlocal
 from datetime import datetime
-from zoneinfo import ZoneInfo
 
 from Nagstamon.Objects import (GenericHost,
                                GenericService,
