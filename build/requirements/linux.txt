@@ -12,4 +12,5 @@ python-dateutil
 requests
 requests-kerberos
 requests-ecp
+requests-pkcs12
 setuptools
