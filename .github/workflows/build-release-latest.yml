@@ -471,6 +471,7 @@ jobs:
         with:
           #repo_token: "${{ secrets.GITHUB_TOKEN }}"
           #automatic_release_tag: "latest"
+          allowUpdates: true
           makeLatest: true
           prerelease: true
           tag: latest
