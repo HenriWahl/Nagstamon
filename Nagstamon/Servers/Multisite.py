@@ -25,6 +25,7 @@ import urllib.request, urllib.parse, urllib.error
 import time
 import copy
 import html
+import tzlocal
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -551,8 +552,8 @@ class MultisiteServer(GenericServer):
             }
 
             # Only timezone aware dates are allowed
-            iso_start_time =  datetime.strptime(start_time, "%Y-%m-%d %H:%M").replace(tzinfo=ZoneInfo('localtime')).isoformat()
-            iso_end_time =  datetime.strptime(end_time, "%Y-%m-%d %H:%M").replace(tzinfo=ZoneInfo('localtime')).isoformat()
+            iso_start_time = datetime.strptime(start_time, "%Y-%m-%d %H:%M").replace(tzinfo=tzlocal.get_localzone()).isoformat()
+            iso_end_time = datetime.strptime(end_time, "%Y-%m-%d %H:%M").replace(tzinfo=tzlocal.get_localzone()).isoformat()
             # Set parameters for host downtimes
             url = self.urls["omd_host_downtime"]
             params = {
