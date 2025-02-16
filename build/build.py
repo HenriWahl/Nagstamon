@@ -212,7 +212,7 @@ def macmain():
                      f'--icon "Nagstamon.app" 175 110 '
                      f'--hide-extension "Nagstamon.app" '
                      f'--app-drop-link 425 110 '
-                     f'"dist/Nagstamon {VERSION} {ARCH_MACOS_NAMES[ARCH_MACOS]}.dmg" '
+                     f'"dist/Nagstamon_{VERSION}_{ARCH_MACOS_NAMES[ARCH_MACOS]}.dmg" '
                      f'Nagstamon\ {VERSION}\ Staging\ DMG/'
                      ], shell=True)
 
