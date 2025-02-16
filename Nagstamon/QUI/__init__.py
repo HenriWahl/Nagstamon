@@ -1,6 +1,6 @@
 # encoding: utf-8
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2024 Henri Wahl <henri@nagstamon.de> et al.
+# Copyright (C) 2008-2025 Henri Wahl <henri@nagstamon.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -140,6 +140,11 @@ if QT_VERSION_MAJOR < 6:
 
 # global application instance
 APP = QApplication(sys.argv)
+
+# as long as Windows 11 + Qt6 looks that ugly it's better to choose another app style
+# might be mitigated with Qt 6.5.3, so commented out now
+#if OS == OS_WINDOWS and platform.release() >= '11':
+#    APP.setStyle('fusion')
 
 # fixed shortened and lowered color names for cells, also used by statusbar label snippets
 COLORS = OrderedDict([('DOWN', 'color_down_'),
@@ -723,7 +728,7 @@ class PushButton_BrowserURL(Button):
         url = url.replace('$MONITOR-CGI$', self.server.monitor_cgi_url)
 
         if conf.debug_mode:
-            self.server.Debug(server=self.server.get_name(), debug='Open {0} web page {1}'.format(self.url_type, url))
+            self.server.debug(server=self.server.get_name(), debug='Open {0} web page {1}'.format(self.url_type, url))
 
         # use Python method to open browser
         webbrowser_open(url)
@@ -2074,7 +2079,7 @@ class StatusWindow(QWidget):
 
         for server in get_enabled_servers():
             if conf.debug_mode:
-                server.Debug(server=server.name, debug='Refreshing all hosts and services')
+                server.debug(server=server.name, debug='Refreshing all hosts and services')
 
             # manipulate server thread counter so get_status loop will refresh when next looking
             # at thread counter
@@ -2394,7 +2399,7 @@ class StatusWindow(QWidget):
                 execute custom action
             """
             if conf.debug_mode:
-                servers[server_name].Debug(debug='NOTIFICATION: ' + custom_action_string)
+                servers[server_name].debug(debug='NOTIFICATION: ' + custom_action_string)
             subprocess.Popen(custom_action_string, shell=True)
 
         def get_worst_notification_status(self):
@@ -3237,7 +3242,10 @@ class TreeView(QTreeView):
                               QTreeView::item:hover {margin: 0px;
                                                      color: white;
                                                      background-color: dimgrey;}
-                           ''')
+                              QTreeView::item:selected {margin: 0px;
+                                                        color: white;
+                                                        background-color: grey;}
+                            ''')
 
         # set application font
         self.set_font()
@@ -3323,6 +3331,8 @@ class TreeView(QTreeView):
 
         ## display mode - all or only header to display error
         #self.is_shown = False
+
+
 
     @Slot()
     def set_font(self):
@@ -3628,7 +3638,7 @@ class TreeView(QTreeView):
 
             # get data to send to action
             server = self.server.get_name()
-            address = self.server.GetHost(miserable_host).result
+            address = self.server.get_host(miserable_host).result
             monitor = self.server.monitor_url
             monitor_cgi = self.server.monitor_cgi_url
             username = self.server.username
@@ -3792,7 +3802,7 @@ class TreeView(QTreeView):
                     'host': host,
                     'service': service,
                     'status-info': status,
-                    'address': self.server.GetHost(host).result,
+                    'address': self.server.get_host(host).result,
                     'monitor': self.server.monitor_url,
                     'monitor-cgi': self.server.monitor_cgi_url,
                     'username': self.server.username,
@@ -3923,11 +3933,20 @@ class TreeView(QTreeView):
             # item to access all properties of host/service object
             # defaults to host
             item = self.server.hosts[host]
-            text += 'Host: {0}\n'.format(host)
+            text += f'Host: {host}\n'
             # if it is a service switch to service object
-            if service != '' and item.services.get(service):
-                item = item.services[service]
-                text += 'Service: {0}\n'.format(service)
+            if service != '':
+                if item.services.get(service):
+                    item = item.services[service]
+                    text += f'Service: {service}\n'
+                # finally solve https://github.com/HenriWahl/Nagstamon/issues/1024
+                elif self.server.TYPE == 'Zabbix':
+                    for service_item in item.services.values():
+                        if service_item.name == service:
+                            item = service_item
+                            text += f'Service: {service}\n'
+                            break
+
             # the other properties belong to both hosts and services
             text += 'Status: {0}\n'.format(item.status)
             text += 'Last check: {0}\n'.format(item.last_check)
@@ -4063,7 +4082,7 @@ class TreeView(QTreeView):
                     # reflect status retrieval attempt on server vbox label
                     self.change_label_status.emit('Refreshing...', '')
 
-                    status = self.server.GetStatus()
+                    status = self.server.get_status()
 
                     # all is OK if no error info came back
                     if self.server.status_description == '' and \
@@ -4291,9 +4310,9 @@ class TreeView(QTreeView):
             if conf.debug_mode:
                 # host
                 if info_dict['service'] == '':
-                    self.server.Debug(server=self.server.name, debug='Rechecking host {0}'.format(info_dict['host']))
+                    self.server.debug(server=self.server.name, debug='Rechecking host {0}'.format(info_dict['host']))
                 else:
-                    self.server.Debug(server=self.server.name,
+                    self.server.debug(server=self.server.name,
                                       debug='Rechecking service {0} on host {1}'.format(info_dict['service'],
                                                                                         info_dict['host']))
 
@@ -4312,7 +4331,7 @@ class TreeView(QTreeView):
                 # change label of server vbox
                 self.change_label_status.emit('Rechecking all...', '')
                 if conf.debug_mode:
-                    self.server.Debug(server=self.server.name, debug='Start rechecking all')
+                    self.server.debug(server=self.server.name, debug='Start rechecking all')
                 # special treatment for Checkmk Multisite because there is only one URL call necessary
                 if self.server.type != 'Checkmk Multisite':
                     # make a copy to preserve hosts/service to recheck - just in case something changes meanwhile
@@ -4320,14 +4339,14 @@ class TreeView(QTreeView):
                     for status in nagitems_filtered['hosts'].items():
                         for host in status[1]:
                             if conf.debug_mode:
-                                self.server.Debug(server=self.server.name,
+                                self.server.debug(server=self.server.name,
                                                   debug='Rechecking host {0}'.format(host.name))
                             # call server recheck method
                             self.server.set_recheck({'host': host.name, 'service': ''})
                     for status in nagitems_filtered['services'].items():
                         for service in status[1]:
                             if conf.debug_mode:
-                                self.server.Debug(server=self.server.name,
+                                self.server.debug(server=self.server.name,
                                                   debug='Rechecking service {0} on host {1}'.format(service.name,
                                                                                                     service.host))
                             # call server recheck method
@@ -4342,7 +4361,7 @@ class TreeView(QTreeView):
                 self.restore_label_status.emit()
             else:
                 if conf.debug_mode:
-                    self.server.Debug(server=self.server.name, debug='Already rechecking all')
+                    self.server.debug(server=self.server.name, debug='Already rechecking all')
 
         @Slot(str, str)
         def get_start_end(self, server_name, host):
@@ -4409,13 +4428,13 @@ class TreeView(QTreeView):
                 if action['type'] == 'browser':
                     # debug
                     if conf.debug_mode is True:
-                        self.server.Debug(server=self.server.name, host=info['host'], service=info['service'],
+                        self.server.debug(server=self.server.name, host=info['host'], service=info['service'],
                                           debug='ACTION: BROWSER ' + string)
                     webbrowser_open(string)
                 elif action['type'] == 'command':
                     # debug
                     if conf.debug_mode is True:
-                        self.server.Debug(server=self.server.name, host=info['host'], service=info['service'],
+                        self.server.debug(server=self.server.name, host=info['host'], service=info['service'],
                                           debug='ACTION: COMMAND ' + string)
                     subprocess.Popen(string, shell=True)
                 elif action['type'] == 'url':
@@ -4428,18 +4447,18 @@ class TreeView(QTreeView):
                         string = self._URLify(string)
                     # debug
                     if conf.debug_mode is True:
-                        self.server.Debug(server=self.server.name, host=info['host'], service=info['service'],
+                        self.server.debug(server=self.server.name, host=info['host'], service=info['service'],
                                           debug='ACTION: URL in background ' + string)
-                    servers[info['server']].FetchURL(string)
+                    servers[info['server']].fetch_url(string)
                 # used for example by Op5Monitor.py
                 elif action['type'] == 'url-post':
                     # make string ready for URL
                     string = self._URLify(string)
                     # debug
                     if conf.debug_mode is True:
-                        self.server.Debug(server=self.server.name, host=info['host'], service=info['service'],
+                        self.server.debug(server=self.server.name, host=info['host'], service=info['service'],
                                           debug='ACTION: URL-POST in background ' + string)
-                    servers[info['server']].FetchURL(string, cgi_data=cgi_data, multipart=True)
+                    servers[info['server']].fetch_url(string, cgi_data=cgi_data, multipart=True)
 
                 if action['recheck']:
                     self.recheck(info)
@@ -7011,9 +7030,9 @@ class CheckVersion(QObject):
                     message = 'Cannot reach version check at <a href={0}>{0}</<a>.'.format(
                         f'https://{download_server}{AppInfo.VERSION_PATH}')
                     # retrieve VERSION_URL without auth information
-                    response = server.FetchURL(f'https://{download_server}{AppInfo.VERSION_PATH}',
-                                               giveback='raw',
-                                               no_auth=True)
+                    response = server.fetch_url(f'https://{download_server}{AppInfo.VERSION_PATH}',
+                                                giveback='raw',
+                                                no_auth=True)
                     # stop searching the available download URLs
                     if response.error == "" and \
                             not response.result.startswith('<') and \

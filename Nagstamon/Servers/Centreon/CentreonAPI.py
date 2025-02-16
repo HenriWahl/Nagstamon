@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2024 Henri Wahl <henri@nagstamon.de> et al.
+# Copyright (C) 2008-2025 Henri Wahl <henri@nagstamon.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -70,7 +70,7 @@ class CentreonServer(GenericServer):
         init_config, called at thread start
         '''
         # Version check
-        result = self.FetchURL(f'{self.monitor_cgi_url}/api/latest/platform/versions', no_auth=True, giveback='raw')
+        result = self.fetch_url(f'{self.monitor_cgi_url}/api/latest/platform/versions', no_auth=True, giveback='raw')
 
         data = json.loads(result.result)
         error = result.error
@@ -84,7 +84,7 @@ class CentreonServer(GenericServer):
         self.centreon_version_major = int(data["web"]["major"])
         self.centreon_version_minor = int(data["web"]["minor"])
         if conf.debug_mode is True:
-            self.Debug(server='[' + self.get_name() + ']', debug='Centreon version detected : ' + str(self.centreon_version_major) + '.' + str(self.centreon_version_minor))
+            self.debug(server='[' + self.get_name() + ']', debug='Centreon version detected : ' + str(self.centreon_version_major) + '.' + str(self.centreon_version_minor))
 
         if self.centreon_version_major >= 21:
             # URLs for browser shortlinks/buttons on popup window
@@ -106,11 +106,11 @@ class CentreonServer(GenericServer):
             else:
                 self.restapi_version = "v24.04"
             if conf.debug_mode is True:
-                self.Debug(server='[' + self.get_name() + ']', debug='Centreon API version used : ' + self.restapi_version)
+                self.debug(server='[' + self.get_name() + ']', debug='Centreon API version used : ' + self.restapi_version)
 
         else:
             if conf.debug_mode is True:
-                self.Debug(server='[' + self.get_name() + ']', debug='Unsupported Centreon version, must be >= 21')
+                self.debug(server='[' + self.get_name() + ']', debug='Unsupported Centreon version, must be >= 21')
 
         # Changed this because define_url was called 2 times
         if not self.tls_error and self.urls_centreon is None:
@@ -156,14 +156,14 @@ class CentreonServer(GenericServer):
 
             # Post json
             json_string = json.dumps(cgi_data)
-            result = self.FetchURL(self.urls_centreon['login'], cgi_data=json_string, giveback='raw')
+            result = self.fetch_url(self.urls_centreon['login'], cgi_data=json_string, giveback='raw')
 
             data = json.loads(result.result)
             error = result.error
             status_code = result.status_code
 
             if conf.debug_mode:
-                self.Debug(server=self.get_name(),
+                self.debug(server=self.get_name(),
                            debug="Fetched JSON: " + pprint.pformat(data))
 
             # check if any error occured
@@ -176,7 +176,7 @@ class CentreonServer(GenericServer):
             user_id = data["contact"]["id"]
 
             if conf.debug_mode:
-                self.Debug(server='[' + self.get_name() + ']',
+                self.debug(server='[' + self.get_name() + ']',
                            debug='API login : ' + self.username + ' / ' + self.password + ' > Token : ' + token + ' > User ID : ' + str(
                                user_id))
 
@@ -186,16 +186,16 @@ class CentreonServer(GenericServer):
 
         except:
             traceback.print_exc(file=sys.stdout)
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
-    def GetHost(self, host):
+    def get_host(self, host):
         # https://demo.centreon.com/centreon/api/latest/monitoring/resources?page=1&limit=30&sort_by={"status_severity_code":"asc","last_status_change":"desc"}&types=["host"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]
         url_hosts = self.urls_centreon['hosts'] + '?types=["host"]&search={"h.name":"' + host + '"}'
 
         try:
             # Get json
-            result = self.FetchURL(url_hosts, giveback='raw')
+            result = self.fetch_url(url_hosts, giveback='raw')
 
             data = json.loads(result.result)
             error = result.error
@@ -209,7 +209,7 @@ class CentreonServer(GenericServer):
             fqdn = str(data["result"][0]["fqdn"])
 
             if conf.debug_mode:
-                self.Debug(server='[' + self.get_name() + ']',
+                self.debug(server='[' + self.get_name() + ']',
                            debug='Get Host FQDN or address : ' + host + " / " + fqdn)
 
             # Give back host or ip
@@ -219,7 +219,7 @@ class CentreonServer(GenericServer):
             traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
     def get_host_and_service_id(self, host, service=''):
@@ -230,7 +230,7 @@ class CentreonServer(GenericServer):
 
             try:
                 # Get json
-                result = self.FetchURL(url_hosts, giveback='raw')
+                result = self.fetch_url(url_hosts, giveback='raw')
 
                 data = json.loads(result.result)
                 error = result.error
@@ -244,14 +244,14 @@ class CentreonServer(GenericServer):
                 host_id = data["result"][0]["id"]
 
                 if conf.debug_mode:
-                    self.Debug(server='[' + self.get_name() + ']', debug='Get Host ID : ' + host + " / " + str(host_id))
+                    self.debug(server='[' + self.get_name() + ']', debug='Get Host ID : ' + host + " / " + str(host_id))
                 return host_id
 
             except:
                 traceback.print_exc(file=sys.stdout)
                 # set checking flag back to False
                 self.isChecking = False
-                result, error = self.Error(sys.exc_info())
+                result, error = self.error(sys.exc_info())
                 return Result(result=result, error=error)
         else:
             # Host + Service
@@ -264,7 +264,7 @@ class CentreonServer(GenericServer):
 
             try:
                 # Get json
-                result = self.FetchURL(url_service, giveback='raw')
+                result = self.fetch_url(url_service, giveback='raw')
 
                 data = json.loads(result.result)
                 error = result.error
@@ -282,7 +282,7 @@ class CentreonServer(GenericServer):
                 service_id = data["result"][0]["id"]
 
                 if conf.debug_mode:
-                    self.Debug(server='[' + self.get_name() + ']',
+                    self.debug(server='[' + self.get_name() + ']',
                                debug='Get Host / Service ID : ' + str(host_id) + " / " + str(service_id))
                 return host_id, service_id
 
@@ -290,7 +290,7 @@ class CentreonServer(GenericServer):
                 traceback.print_exc(file=sys.stdout)
                 # set checking flag back to False
                 self.isChecking = False
-                result, error = self.Error(sys.exc_info())
+                result, error = self.error(sys.exc_info())
                 return Result(result=result, error=error)
 
     def get_start_end(self, host):
@@ -315,30 +315,40 @@ class CentreonServer(GenericServer):
                     result.error = 'Connection error'
                 return result
 
+        # filter regexep to reduce network traffic
+        # waiting to find a solution to reverse regexp
+        # my first idea is 
+        # begin by (^(?!(.*
+        # ending by )))
+        # replace | by )))(^(?!(.*
+        # replace )( by )|(
+        self.re_service_filter = ''
+        self.re_host_filter = ''
+        if conf.re_service_enabled is True and conf.re_service_reverse is True:
+            self.re_service_filter = '&search={"s.description":{"$rg":"' + str(conf.re_service_pattern) + '"}}'
+        if conf.re_host_enabled is True and conf.re_host_reverse is True:
+            self.re_host_filter = '&search={"h.name":{"$rg":"' + str(conf.re_host_pattern) + '"}}'
+        
         # Services URL
         # https://demo.centreon.com/centreon/api/latest/monitoring/resources?page=1&limit=30&sort_by={"status_severity_code":"asc","last_status_change":"desc"}&types=["service"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]
         url_services = self.urls_centreon[
-                           'services'] + '?types=["metaservice","service"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]&limit=' + str(
+                           'services'] + '?types=["metaservice","service"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]' + self.re_service_filter + '&limit=' + str(
             self.limit_services_number)
 
         # Hosts URL
         # https://demo.centreon.com/centreon/api/latest/monitoring/resources?page=1&limit=30&sort_by={"status_severity_code":"asc","last_status_change":"desc"}&types=["host"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]
         url_hosts = self.urls_centreon[
-                        'hosts'] + '?types=["host"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]&limit=' + str(
+                        'hosts'] + '?types=["host"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]' + self.re_host_filter + '&limit=' + str(
             self.limit_services_number)
 
         # Hosts
         try:
             # Get json
-            result = self.FetchURL(url_hosts, giveback='raw')
+            result = self.fetch_url(url_hosts, giveback='raw')
 
             data = json.loads(result.result)
             error = result.error
             status_code = result.status_code
-
-            # if conf.debug_mode:
-            #     self.Debug(server=self.get_name(),
-            #                debug="Get Hosts status Fetched JSON: " + pprint.pformat(data))
 
             # check if any error occured
             errors_occured = self.check_for_error(data, error, status_code)
@@ -346,7 +356,7 @@ class CentreonServer(GenericServer):
                 return (errors_occured)
 
             if data["meta"]["total"] == 0:
-                self.Debug(server='[' + self.get_name() + ']', debug='No host down')
+                self.debug(server='[' + self.get_name() + ']', debug='No host down')
             else:
                 for alerts in data["result"]:
                     new_host = alerts["name"]
@@ -382,27 +392,23 @@ class CentreonServer(GenericServer):
                         self.new_hosts[new_host].status_type = self.HARD_SOFT['(S)']
                     else:
                         self.new_hosts[new_host].status_type = self.HARD_SOFT['(H)']
-                    self.Debug(server='[' + self.get_name() + ']', debug='Host indexed : ' + new_host)
+                    self.debug(server='[' + self.get_name() + ']', debug='Host indexed : ' + new_host)
 
         except:
             traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         # Services
         try:
             # Get json
-            result = self.FetchURL(url_services, giveback='raw')
+            result = self.fetch_url(url_services, giveback='raw')
 
             data = json.loads(result.result)
             error = result.error
             status_code = result.status_code
-
-            # if conf.debug_mode:
-            #     self.Debug(server=self.get_name(),
-            #                debug="Get Services status Fetched JSON: " + pprint.pformat(data))
 
             # check if any error occured
             errors_occured = self.check_for_error(data, error, status_code)
@@ -410,7 +416,7 @@ class CentreonServer(GenericServer):
                 return (errors_occured)
 
             if data["meta"]["total"] == 0:
-                self.Debug(server='[' + self.get_name() + ']', debug='No service down')
+                self.debug(server='[' + self.get_name() + ']', debug='No service down')
             else:
                 for alerts in data["result"]:
                     if alerts["type"] == "metaservice":
@@ -425,7 +431,7 @@ class CentreonServer(GenericServer):
                         self.new_hosts[new_host].status = 'UP'
                     self.new_hosts[new_host].services[new_service] = GenericService()
                     # Attributs à remplir
-                    self.Debug(server='[' + self.get_name() + ']',
+                    self.debug(server='[' + self.get_name() + ']',
                                debug='Service indexed : ' + new_host + ' / ' + new_service)
 
                     self.new_hosts[new_host].services[new_service].server = self.name
@@ -466,7 +472,7 @@ class CentreonServer(GenericServer):
             traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         # return True if all worked well
@@ -512,14 +518,14 @@ class CentreonServer(GenericServer):
                 # Post json
                 json_string = json.dumps(acknowledgements)
                 # {protocol}://{server}:{port}/centreon/api/{version}/monitoring/hosts/{host_id}/acknowledgements
-                result = self.FetchURL(self.urls_centreon['resources'] + '/acknowledge', cgi_data=json_string,
-                                       giveback='raw')
+                result = self.fetch_url(self.urls_centreon['resources'] + '/acknowledge', cgi_data=json_string,
+                                        giveback='raw')
 
                 error = result.error
                 status_code = result.status_code
 
                 if conf.debug_mode:
-                    self.Debug(server='[' + self.get_name() + ']',
+                    self.debug(server='[' + self.get_name() + ']',
                                debug="Set Ack on Host, status code : " + str(status_code))
 
             # Service
@@ -550,27 +556,27 @@ class CentreonServer(GenericServer):
 
                     acknowledgements["resources"].append(new_resource)
                     if conf.debug_mode:
-                        self.Debug(server='[' + self.get_name() + ']',
+                        self.debug(server='[' + self.get_name() + ']',
                                    debug="Stack ack for Host (" + host + ") / Service (" + service + ")")
 
                 # Post json
                 json_string = json.dumps(acknowledgements)
                 # {protocol}://{server}:{port}/centreon/api/{version}/monitoring/services/acknowledgements
-                result = self.FetchURL(self.urls_centreon['resources'] + '/acknowledge', cgi_data=json_string,
-                                       giveback='raw')
+                result = self.fetch_url(self.urls_centreon['resources'] + '/acknowledge', cgi_data=json_string,
+                                        giveback='raw')
 
                 error = result.error
                 status_code = result.status_code
 
                 if conf.debug_mode:
-                    self.Debug(server='[' + self.get_name() + ']',
+                    self.debug(server='[' + self.get_name() + ']',
                                debug="Set Acks, status code : " + str(status_code))
 
         except:
             traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
     def _set_recheck(self, host, service):
@@ -604,13 +610,13 @@ class CentreonServer(GenericServer):
                 # Post json
                 json_string = json.dumps(rechecks)
                 # {protocol}://{server}:{port}/centreon/api/{version}/monitoring/resources/check
-                result = self.FetchURL(self.urls_centreon['resources'] + '/check', cgi_data=json_string, giveback='raw')
+                result = self.fetch_url(self.urls_centreon['resources'] + '/check', cgi_data=json_string, giveback='raw')
 
                 error = result.error
                 status_code = result.status_code
 
                 if conf.debug_mode:
-                    self.Debug(server='[' + self.get_name() + ']',
+                    self.debug(server='[' + self.get_name() + ']',
                                debug="Recheck on Host : " + host + ", status code : " + str(status_code))
 
             # Service
@@ -638,13 +644,13 @@ class CentreonServer(GenericServer):
                 # Post json
                 json_string = json.dumps(rechecks)
                 # {protocol}://{server}:{port}/centreon/api/{version}/monitoring/resources/check
-                result = self.FetchURL(self.urls_centreon['resources'] + '/check', cgi_data=json_string, giveback='raw')
+                result = self.fetch_url(self.urls_centreon['resources'] + '/check', cgi_data=json_string, giveback='raw')
 
                 error = result.error
                 status_code = result.status_code
 
                 if conf.debug_mode:
-                    self.Debug(server='[' + self.get_name() + ']',
+                    self.debug(server='[' + self.get_name() + ']',
                                debug="Reckeck on Host (" + host + ") / Service (" + service + "), status code : " + str(
                                    status_code))
 
@@ -652,7 +658,7 @@ class CentreonServer(GenericServer):
             traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
@@ -701,14 +707,14 @@ class CentreonServer(GenericServer):
                 # Post json
                 json_string = json.dumps(downtimes)
                 # {protocol}://{server}:{port}/centreon/api/{version}/monitoring/resources/downtime
-                result = self.FetchURL(self.urls_centreon['resources'] + '/downtime', cgi_data=json_string,
-                                       giveback='raw')
+                result = self.fetch_url(self.urls_centreon['resources'] + '/downtime', cgi_data=json_string,
+                                        giveback='raw')
 
                 error = result.error
                 status_code = result.status_code
 
                 if conf.debug_mode:
-                    self.Debug(server='[' + self.get_name() + ']',
+                    self.debug(server='[' + self.get_name() + ']',
                                debug="Downtime on Host : " + host + ", status code : " + str(status_code))
 
             # Service
@@ -738,14 +744,14 @@ class CentreonServer(GenericServer):
                 # Post json
                 json_string = json.dumps(downtimes)
                 # {protocol}://{server}:{port}/centreon/api/{version}/monitoring/resources/downtime
-                result = self.FetchURL(self.urls_centreon['resources'] + '/downtime', cgi_data=json_string,
-                                       giveback='raw')
+                result = self.fetch_url(self.urls_centreon['resources'] + '/downtime', cgi_data=json_string,
+                                        giveback='raw')
 
                 error = result.error
                 status_code = result.status_code
 
                 if conf.debug_mode:
-                    self.Debug(server='[' + self.get_name() + ']',
+                    self.debug(server='[' + self.get_name() + ']',
                                debug="Downtime on Host (" + host + ") / Service (" + service + "), status code : " + str(
                                    status_code))
 
@@ -754,24 +760,24 @@ class CentreonServer(GenericServer):
             traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
     def check_session(self):
         if conf.debug_mode:
-            self.Debug(server='[' + self.get_name() + ']', debug='Checking session status')
+            self.debug(server='[' + self.get_name() + ']', debug='Checking session status')
 
         try:
             if conf.debug_mode:
-                self.Debug(server='[' + self.get_name() + ']',
+                self.debug(server='[' + self.get_name() + ']',
                            debug='Check-session, the token expire if not been used for more than one hour. Current Token = ' + str(
                                self.token))
 
             cgi_data = {'limit': '0'}
             # Get en empty service list, to check the status of the current token
             # This request must be done in a GET, so just encode the parameters and fetch
-            result = self.FetchURL(self.urls_centreon['resources'] + '?' + urllib.parse.urlencode(cgi_data),
-                                   giveback="raw")
+            result = self.fetch_url(self.urls_centreon['resources'] + '?' + urllib.parse.urlencode(cgi_data),
+                                    giveback="raw")
 
            # If we got an 403 or 401 (and 500 for version 21.), the token expired and must be renewed
             if self.centreon_version_major == 21:
@@ -782,9 +788,9 @@ class CentreonServer(GenericServer):
             if result.status_code in ressources_response_list:
                 self.token = self.get_token().result
                 if conf.debug_mode:
-                    self.Debug(server='[' + self.get_name() + ']', debug='Check-session, session renewed')
-                result = self.FetchURL(self.urls_centreon['resources'] + '?' + urllib.parse.urlencode(cgi_data),
-                                       giveback="raw")
+                    self.debug(server='[' + self.get_name() + ']', debug='Check-session, session renewed')
+                result = self.fetch_url(self.urls_centreon['resources'] + '?' + urllib.parse.urlencode(cgi_data),
+                                        giveback="raw")
             if not 'ConnectTimeoutError' in result.error and \
                     not 'NewConnectionError' in result.error:
                 data = json.loads(result.result)
@@ -795,12 +801,12 @@ class CentreonServer(GenericServer):
                               error='Connection error')
 
             if conf.debug_mode:
-                self.Debug(server=self.get_name(),
+                self.debug(server=self.get_name(),
                            debug="Check-session, Fetched JSON: " + pprint.pformat(data))
-                self.Debug(server=self.get_name(),
+                self.debug(server=self.get_name(),
                            debug="Check-session, Error : " + error + ", Status code : " + str(status_code))
 
         except:
             traceback.print_exc(file=sys.stdout)
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)

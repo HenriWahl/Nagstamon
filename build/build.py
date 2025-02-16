@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2024 Henri Wahl <henri@nagstamon.de> et al.
+# Copyright (C) 2008-2025 Henri Wahl <henri@nagstamon.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ VERSION = AppInfo.VERSION
 
 ARCH_WINDOWS = platform.architecture()[0][0:2]
 ARCH_WINDOWS_OPTS = {'32': ('win32', 'win32', '', 'x86'),
-             '64': ('win-amd64', 'amd64', '(X86)', 'x64')}
+                     '64': ('win-amd64', 'amd64', '(X86)', 'x64compatible')}
 
 ARCH_MACOS = platform.machine()
 ARCH_MACOS_NAMES = {'x86_64': 'Intel',
@@ -112,8 +112,11 @@ def winmain():
             except:
                 os.remove(file)
 
-    # now with pyinstaller - dev version is able to run with Python 3.6
-    subprocess.call(['{0}\\Scripts\\pyinstaller'.format(sys.base_prefix),
+    # pyinstaller seems also to be installed not in \Scripts folder - if so, try without path
+    pyinstaller_path = f'{sys.base_prefix}\\Scripts\\pyinstaller'
+    if not Path(pyinstaller_path).exists():
+        pyinstaller_path = 'pyinstaller'
+    subprocess.call([pyinstaller_path,
                      '--noconfirm',
                      '--add-data=..\\Nagstamon/resources;resources',
                      '--icon=..\\Nagstamon\\resources\\nagstamon.ico',
@@ -126,7 +129,7 @@ def winmain():
 
     if SIGNING:
         # environment variables will be used by powershell script for signing
-        subprocess.run(['pwsh.exe', './windows/code_signing.ps1', 'build/Nagstamon/Nagstamon.exe'])
+        subprocess.run(['pwsh.exe', './windows/code_signing.ps1', 'build/Nagstamon/*.exe'])
 
     # rename output
     os.rename(DIR_BUILD_EXE, DIR_BUILD_NAGSTAMON)
@@ -150,6 +153,7 @@ def winmain():
         for root, dirs, files in os.walk(os.path.basename(DIR_BUILD_NAGSTAMON)):
             for file in files:
                 zip_archive.write('{0}{1}{2}'.format(root, os.sep, file))
+        zip_archive.close()
 
     if not DEBUG:
         # for some reason out of nowhere the old path SetupIconFile={#resources}\nagstamon.ico
@@ -188,25 +192,29 @@ def macmain():
     # create staging DMG folder for later compressing of DMG
     shutil.rmtree('Nagstamon {0} Staging DMG'.format(VERSION), ignore_errors=True)
 
-    # copy app bundle folder
+    # move app bundle folder
     shutil.move('dist/Nagstamon.app', 'Nagstamon {0} Staging DMG/Nagstamon.app'.format(VERSION))
+
+    # copy icon to staging folder
+    shutil.copy('../Nagstamon/resources/nagstamon.ico', 'nagstamon.ico'.format(VERSION))
 
     # cleanup before new images get created
     for dmg_file in glob.iglob('*.dmg'):
         os.unlink(dmg_file)
 
-    # create DMG
-    subprocess.call([f'hdiutil create -srcfolder "Nagstamon {VERSION} Staging DMG" '
-                          f'-volname "Nagstamon {VERSION}" -fs HFS+ -format UDRW -size 100M '
-                          f'"Nagstamon {VERSION} uncompressed.dmg"'], shell=True)
-
-    # Compress DMG
-    subprocess.call([f'hdiutil convert "Nagstamon {VERSION} uncompressed".dmg '
-                          f'-format UDZO -imagekey zlib-level=9 -o "Nagstamon {VERSION} {ARCH_MACOS_NAMES[ARCH_MACOS]}.dmg"'], shell=True)
-
-    # Delete uncompressed DMG file as it is no longer needed
-    os.unlink(f'Nagstamon {VERSION} uncompressed.dmg')
-
+    # create dmg file with create-dmg insttaled via brew
+    subprocess.call([f'create-dmg '
+                     f'--volname "Nagstamon {VERSION}" '
+                     f'--volicon "nagstamon.ico" '
+                     f'--window-pos 400 300 '
+                     f'--window-size 600 320 '
+                     f'--icon-size 100 '
+                     f'--icon "Nagstamon.app" 175 110 '
+                     f'--hide-extension "Nagstamon.app" '
+                     f'--app-drop-link 425 110 '
+                     f'"dist/Nagstamon {VERSION} {ARCH_MACOS_NAMES[ARCH_MACOS]}.dmg" '
+                     f'Nagstamon\ {VERSION}\ Staging\ DMG/'
+                     ], shell=True)
 
 def debmain():
     shutil.rmtree(SCRIPTS_DIR, ignore_errors=True)

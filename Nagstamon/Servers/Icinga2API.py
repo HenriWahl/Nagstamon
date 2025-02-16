@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2024 Henri Wahl <henri@nagstamon.de> et al.
+# Copyright (C) 2008-2025 Henri Wahl <henri@nagstamon.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -116,7 +116,7 @@ class Icinga2APIServer(GenericServer):
         except Exception as e:
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             log.exception(e)
             return Result(result=result, error=error)
 
@@ -158,7 +158,7 @@ class Icinga2APIServer(GenericServer):
             log.exception(e)
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         # dummy return in case all is OK
@@ -166,7 +166,7 @@ class Icinga2APIServer(GenericServer):
 
     def _list_objects(self, object_type, filter):
         """List objects"""
-        result = self.FetchURL(
+        result = self.fetch_url(
             f'{self.url}/objects/{object_type}?{urllib.parse.urlencode({"filter": filter})}',
             giveback='raw'
         )
@@ -200,24 +200,24 @@ class Icinga2APIServer(GenericServer):
     def _trigger_action(self, action, **data):
         """Trigger on action using Icinga2 API"""
         action_data = {k: v for k, v in data.items() if v is not None}
-        self.Debug(server=self.get_name(), debug=f"Trigger action {action} with data={action_data}")
+        self.debug(server=self.get_name(), debug=f"Trigger action {action} with data={action_data}")
         try:
             response = self.session.post(
                 f'{self.url}/actions/{action}',
                 headers={'Accept': 'application/json'},
                 json=action_data,
             )
-            self.Debug(
+            self.debug(
                 server=self.get_name(),
                 debug=f"API return on triggering action {action} (status={response.status_code}): "
                 f"{response.text}"
             )
             if 200 <= response.status_code <= 299:
                 return True
-            self.Error(f"Fail to trigger action {action}: {response.json().get('status', 'Unknown error')}")
+            self.error(f"Fail to trigger action {action}: {response.json().get('status', 'Unknown error')}")
         except IOError as err:
             log.exception("Fail to trigger action %s with data %s", action, data)
-            self.Error(f"Fail to trigger action {action}: {err}")
+            self.error(f"Fail to trigger action {action}: {err}")
 
     def _set_recheck(self, host, service):
         """

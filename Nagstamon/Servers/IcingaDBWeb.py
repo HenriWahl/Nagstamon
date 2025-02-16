@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2024 Henri Wahl <henri@nagstamon.de> et al.
+# Copyright (C) 2008-2025 Henri Wahl <henri@nagstamon.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -100,7 +100,7 @@ class IcingaDBWebServer(GenericServer):
         if not self.no_cookie_auth:
             if 'cookies' not in dir(self.session) or len(self.session.cookies) == 0:
                 # get login page, thus automatically a cookie
-                login = self.FetchURL('{0}/authentication/login'.format(self.monitor_url))
+                login = self.fetch_url('{0}/authentication/login'.format(self.monitor_url))
                 if login.error == '' and login.status_code == 200:
                     form = login.result.find('form')
                     form_inputs = {}
@@ -113,7 +113,7 @@ class IcingaDBWebServer(GenericServer):
                     form_inputs['password'] = self.password
 
                     # fire up login button with all needed data
-                    self.FetchURL('{0}/authentication/login'.format(self.monitor_url), cgi_data=form_inputs)
+                    self.fetch_url('{0}/authentication/login'.format(self.monitor_url), cgi_data=form_inputs)
 
 
     def _get_status(self):
@@ -139,14 +139,14 @@ class IcingaDBWebServer(GenericServer):
         try:
             for status_type in 'hard', 'soft':
                 # first attempt
-                result = self.FetchURL(self.cgiurl_hosts[status_type], giveback='raw')
+                result = self.fetch_url(self.cgiurl_hosts[status_type], giveback='raw')
                 # authentication errors get a status code 200 too back because its
                 # HTML works fine :-(
                 if result.status_code < 400 and\
                    result.result.startswith('<'):
                     # in case of auth error reset HTTP session and try again
                     self.reset_HTTP()
-                    result = self.FetchURL(self.cgiurl_hosts[status_type], giveback='raw')
+                    result = self.fetch_url(self.cgiurl_hosts[status_type], giveback='raw')
                     # if it does not work again tell GUI there is a problem
                     if result.status_code < 400 and\
                        result.result.startswith('<'):
@@ -172,7 +172,7 @@ class IcingaDBWebServer(GenericServer):
                     pass
                     # TODO: Health checks for IcingaDB and icinga-redis
                     # try:
-                    #     result = self.FetchURL(self.cgiurl_monitoring_health, giveback='raw')
+                    #     result = self.fetch_url(self.cgiurl_monitoring_health, giveback='raw')
                     #     monitoring_health = json.loads(result.result)[0]
                     #     if (monitoring_health['is_currently_running'] == '0'):
                     #         return Result(result=monitoring_health,
@@ -210,9 +210,14 @@ class IcingaDBWebServer(GenericServer):
                             self.new_hosts[host_name].status = self.STATES_MAPPING['hosts'][int(h['state']['soft_state'])]
 
                         if h['state']['last_update'].replace(".", "").isnumeric(): # new version of icingadb doesnt return unix timestamp
-                            self.new_hosts[host_name].last_check = datetime.datetime.fromtimestamp(int(float(h['state']['last_update'])))
+                            #self.new_hosts[host_name].last_check = datetime.datetime.fromtimestamp(int(float(h['state']['last_update'])))
+                            utc_time = datetime.datetime.fromtimestamp(int(float(h['state']['last_update'])), tz=timezone.utc)
                         else:
-                            self.new_hosts[host_name].last_check = datetime.datetime.fromisoformat(h['state']['last_update'])
+                            #self.new_hosts[host_name].last_check = datetime.datetime.fromisoformat(h['state']['last_update'])
+                            utc_time = datetime.datetime.fromisoformat(h['state']['last_update'])
+
+                        local_time = utc_time.astimezone()
+                        self.new_hosts[host_name].last_check = local_time.strftime("%Y-%m-%d %H:%M:%S")  # format without microseconds and tz
                         
                         self.new_hosts[host_name].attempt = "{}/{}".format(h['state']['check_attempt'],h['max_check_attempts'])
                         self.new_hosts[host_name].status_information = BeautifulSoup(str(h['state']['output']).replace('\n', ' ').strip(), 'html.parser').text
@@ -254,13 +259,13 @@ class IcingaDBWebServer(GenericServer):
 
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         # services
         try:
             for status_type in 'hard', 'soft':
-                result = self.FetchURL(self.cgiurl_services[status_type], giveback='raw')
+                result = self.fetch_url(self.cgiurl_services[status_type], giveback='raw')
                 # purify JSON result of unnecessary control sequence \n
                 jsonraw, error, status_code = copy.deepcopy(result.result.replace('\n', '')),\
                                               copy.deepcopy(result.error),\
@@ -313,9 +318,14 @@ class IcingaDBWebServer(GenericServer):
                             self.new_hosts[host_name].services[service_name].status = self.STATES_MAPPING['services'][int(s['state']['soft_state'])]
 
                         if s['state']['last_update'].replace(".", "").isnumeric(): # new version of icingadb doesnt return unix timestamp
-                            self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(int(float(s['state']['last_update'])))
+                            #self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromtimestamp(int(float(s['state']['last_update'])))
+                            utc_time = datetime.datetime.fromtimestamp(int(float(s['state']['last_update'])), tz=timezone.utc)
                         else:
-                            self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromisoformat(s['state']['last_update'])
+                            #self.new_hosts[host_name].services[service_name].last_check = datetime.datetime.fromisoformat(s['state']['last_update'])
+                            utc_time = datetime.datetime.fromisoformat(s['state']['last_update'])
+
+                        local_time = utc_time.astimezone()
+                        self.new_hosts[host_name].services[service_name].last_check = local_time.strftime("%Y-%m-%d %H:%M:%S")  # format without microseconds and tz
 
                         self.new_hosts[host_name].services[service_name].attempt = "{}/{}".format(s['state']['check_attempt'],s['max_check_attempts'])
                         self.new_hosts[host_name].services[service_name].status_information = BeautifulSoup(str(s['state']['output']).replace('\n', ' ').strip(), 'html.parser').text
@@ -362,7 +372,7 @@ class IcingaDBWebServer(GenericServer):
 
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         # some cleanup
@@ -385,7 +395,7 @@ class IcingaDBWebServer(GenericServer):
                                                                                            self.hosts[host].services[service].real_name,
                                                                                            self.hosts[host].real_name
                                                                                            )
-        result = self.FetchURL(url, giveback='raw')
+        result = self.fetch_url(url, giveback='raw')
 
         if result.error != '':
             return result
@@ -394,22 +404,13 @@ class IcingaDBWebServer(GenericServer):
 
         pagesoup = BeautifulSoup(pageraw, 'html.parser')
         print(pagesoup.prettify())
-        
-        ## Super debug
-        #if conf.debug_mode:
-        #    self.Debug(server=self.get_name(), host=host, service=service,
-        #        debug='[Recheck] Retrieve html from {0}: \n{1}'.format(url,pagesoup.prettify()))
 
         # Extract the relevant form element values
-        
         formtag = pagesoup.select_one('form[action*="check-now"]')
-        #print('-----------------')
-        #print(formtag.prettify())
-        #print('-----------------')
-        
+
         if conf.debug_mode:
-            self.Debug(server=self.get_name(), host=host, service=service,
-                debug='[Recheck] Retrieve html form from {0}: \n{1}'.format(url,formtag.prettify()))
+            self.debug(server=self.get_name(), host=host, service=service,
+                       debug='[Recheck] Retrieve html form from {0}: \n{1}'.format(url,formtag.prettify()))
 
         btn_submit = formtag.findNext('button', {'name':'btn_submit'})['value']
         CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
@@ -427,23 +428,23 @@ class IcingaDBWebServer(GenericServer):
                                                                                            self.hosts[host].real_name
                                                                                            )
         
-        response = self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+        response = self.fetch_url(url, giveback='raw', cgi_data=cgi_data)
 
         # Some debug data
         data = response.result
         error = response.error
         status_code = response.status_code
         if conf.debug_mode:
-            self.Debug(server=self.get_name(), host=host, service=service,
-                debug='Recheck response')
-            self.Debug(server=self.get_name(), host=host, service=service,
-                debug="- response: {0}".format(response))
-            self.Debug(server=self.get_name(), host=host, service=service,
-                debug="- data: {0}".format(data))
-            self.Debug(server=self.get_name(), host=host, service=service,
-                debug="- error: {0}".format(error))
-            self.Debug(server=self.get_name(), host=host, service=service,
-                debug="- status_code: {0}".format(status_code))
+            self.debug(server=self.get_name(), host=host, service=service,
+                       debug='Recheck response')
+            self.debug(server=self.get_name(), host=host, service=service,
+                       debug="- response: {0}".format(response))
+            self.debug(server=self.get_name(), host=host, service=service,
+                       debug="- data: {0}".format(data))
+            self.debug(server=self.get_name(), host=host, service=service,
+                       debug="- error: {0}".format(error))
+            self.debug(server=self.get_name(), host=host, service=service,
+                       debug="- status_code: {0}".format(status_code))
 
 
     # Overwrite function from generic server to add expire_time value
@@ -473,7 +474,7 @@ class IcingaDBWebServer(GenericServer):
         except:
             import traceback
             traceback.print_exc(file=sys.stdout)
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
 
@@ -492,7 +493,7 @@ class IcingaDBWebServer(GenericServer):
                                                                                            self.hosts[host].real_name
                                                                                            )
 
-        result = self.FetchURL(url, giveback='raw')
+        result = self.fetch_url(url, giveback='raw')
 
         if result.error != '':
             return result
@@ -501,21 +502,15 @@ class IcingaDBWebServer(GenericServer):
 
         pagesoup = BeautifulSoup(pageraw, 'html.parser')
 
-        ## Super debug
-        #if conf.debug_mode:
-        #    self.Debug(server=self.get_name(), host=host, service=service,
-        #        debug='[Acknowledge] Retrieve html from {0}: {1}'.format(url,pagesoup.prettify()))
-
         # Extract the relevant form element values
-
         formtag = pagesoup.select_one('form[action*="acknowledge"]')
         #print('-----------------')
         #print(formtag.prettify())
         #print('-----------------')
 
         if conf.debug_mode:
-            self.Debug(server=self.get_name(), host=host, service=service,
-                debug='[Acknowledge] Retrieve html form from {0}: \n{1}'.format(url,formtag.prettify()))
+            self.debug(server=self.get_name(), host=host, service=service,
+                       debug='[Acknowledge] Retrieve html form from {0}: \n{1}'.format(url,formtag.prettify()))
                 
         btn_submit = formtag.findNext('input', {'name':'btn_submit'})['value']
         CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
@@ -534,23 +529,23 @@ class IcingaDBWebServer(GenericServer):
         else:
             cgi_data['expire'] = 'n'
 
-        response = self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+        response = self.fetch_url(url, giveback='raw', cgi_data=cgi_data)
 
         # Some debug data
         data = response.result
         error = response.error
         status_code = response.status_code
         if conf.debug_mode:
-            self.Debug(server=self.get_name(), host=host, service=service,
-                debug='Achnowledgement response')
-            self.Debug(server=self.get_name(), host=host, service=service,
-                debug="- response: {0}".format(response))
-            self.Debug(server=self.get_name(), host=host, service=service,
-                debug="- data: {0}".format(data))
-            self.Debug(server=self.get_name(), host=host, service=service,
-                debug="- error: {0}".format(error))
-            self.Debug(server=self.get_name(), host=host, service=service,
-                debug="- status_code: {0}".format(status_code))
+            self.debug(server=self.get_name(), host=host, service=service,
+                       debug='Achnowledgement response')
+            self.debug(server=self.get_name(), host=host, service=service,
+                       debug="- response: {0}".format(response))
+            self.debug(server=self.get_name(), host=host, service=service,
+                       debug="- data: {0}".format(data))
+            self.debug(server=self.get_name(), host=host, service=service,
+                       debug="- error: {0}".format(error))
+            self.debug(server=self.get_name(), host=host, service=service,
+                       debug="- status_code: {0}".format(status_code))
 
         if len(all_services) > 0:
             for s in all_services:
@@ -575,7 +570,7 @@ class IcingaDBWebServer(GenericServer):
                                                                                            )
             status = self.STATES_MAPPING_REV['services'][state.upper()]
 
-        result = self.FetchURL(url, giveback='raw')
+        result = self.fetch_url(url, giveback='raw')
 
         if result.error != '':
             return result
@@ -584,21 +579,15 @@ class IcingaDBWebServer(GenericServer):
 
         pagesoup = BeautifulSoup(pageraw, 'html.parser')
 
-        ## Super debug
-        #if conf.debug_mode:
-        #    self.Debug(server=self.get_name(), host=host, service=service,
-        #        debug='[Submit check result] Retrieve html from {0}: \n{1}'.format(url,pagesoup.prettify()))
-
         # Extract the relevant form element values
-
         formtag = pagesoup.select_one('form[action*="process-checkresult"]')
         #print('-----------------')
         #print(formtag.prettify())
         #print('-----------------')
         
         if conf.debug_mode:
-            self.Debug(server=self.get_name(), host=host, service=service,
-                debug='[Submit check result] Retrieve html form from {0}: \n{1}'.format(url,formtag.prettify()))
+            self.debug(server=self.get_name(), host=host, service=service,
+                       debug='[Submit check result] Retrieve html form from {0}: \n{1}'.format(url,formtag.prettify()))
 
         btn_submit = formtag.findNext('input', {'name':'btn_submit'})['value']
         CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
@@ -612,23 +601,23 @@ class IcingaDBWebServer(GenericServer):
         cgi_data['output'] = check_output
         cgi_data['perfdata'] = performance_data
 
-        response = self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+        response = self.fetch_url(url, giveback='raw', cgi_data=cgi_data)
 
         # Some debug data
         data = response.result
         error = response.error
         status_code = response.status_code
         if conf.debug_mode:
-            self.Debug(server=self.get_name(), host=host, service=service,
-                debug='Achnowledgement response')
-            self.Debug(server=self.get_name(), host=host, service=service,
-                debug="- response: {0}".format(response))
-            self.Debug(server=self.get_name(), host=host, service=service,
-                debug="- data: {0}".format(data))
-            self.Debug(server=self.get_name(), host=host, service=service,
-                debug="- error: {0}".format(error))
-            self.Debug(server=self.get_name(), host=host, service=service,
-                debug="- status_code: {0}".format(status_code))
+            self.debug(server=self.get_name(), host=host, service=service,
+                       debug='Achnowledgement response')
+            self.debug(server=self.get_name(), host=host, service=service,
+                       debug="- response: {0}".format(response))
+            self.debug(server=self.get_name(), host=host, service=service,
+                       debug="- data: {0}".format(data))
+            self.debug(server=self.get_name(), host=host, service=service,
+                       debug="- error: {0}".format(error))
+            self.debug(server=self.get_name(), host=host, service=service,
+                       debug="- status_code: {0}".format(status_code))
 
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
@@ -646,7 +635,7 @@ class IcingaDBWebServer(GenericServer):
                                                                                            self.hosts[host].real_name
                                                                                            )
                     
-        result = self.FetchURL(url, giveback='raw')
+        result = self.fetch_url(url, giveback='raw')
 
         if result.error != '':
             return result
@@ -655,21 +644,15 @@ class IcingaDBWebServer(GenericServer):
 
         pagesoup = BeautifulSoup(pageraw, 'html.parser')
 
-        ## Super debug
-        #if conf.debug_mode:
-        #    self.Debug(server=self.get_name(), host=host, service=service,
-        #        debug='[Set downtime] Retrieve html from {0}: \n{1}'.format(url,pagesoup.prettify()))
-
         # Extract the relevant form element values
-        
         formtag = pagesoup.select_one('form[action*="schedule-downtime"]')
         #print('-----------------')
         #print(formtag.prettify())
         #print('-----------------')
         
         if conf.debug_mode:
-            self.Debug(server=self.get_name(), host=host, service=service,
-                debug='[Set downtime] Retrieve html form from {0}: \n{1}'.format(url,formtag.prettify()))
+            self.debug(server=self.get_name(), host=host, service=service,
+                       debug='[Set downtime] Retrieve html form from {0}: \n{1}'.format(url,formtag.prettify()))
         
         btn_submit = formtag.findNext('input', {'name':'btn_submit'})['value']
         CSRFToken = formtag.findNext('input', {'name':'CSRFToken'})['value']
@@ -697,23 +680,23 @@ class IcingaDBWebServer(GenericServer):
         cgi_data['start'] = start
         cgi_data['end'] = end
 
-        response = self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+        response = self.fetch_url(url, giveback='raw', cgi_data=cgi_data)
 
         # Some debug data
         data = response.result
         error = response.error
         status_code = response.status_code
         if conf.debug_mode:
-            self.Debug(server=self.get_name(), host=host, service=service,
-                debug='Achnowledgement response')
-            self.Debug(server=self.get_name(), host=host, service=service,
-                debug="- response: {0}".format(response))
-            self.Debug(server=self.get_name(), host=host, service=service,
-                debug="- data: {0}".format(data))
-            self.Debug(server=self.get_name(), host=host, service=service,
-                debug="- error: {0}".format(error))
-            self.Debug(server=self.get_name(), host=host, service=service,
-                debug="- status_code: {0}".format(status_code))
+            self.debug(server=self.get_name(), host=host, service=service,
+                       debug='Achnowledgement response')
+            self.debug(server=self.get_name(), host=host, service=service,
+                       debug="- response: {0}".format(response))
+            self.debug(server=self.get_name(), host=host, service=service,
+                       debug="- data: {0}".format(data))
+            self.debug(server=self.get_name(), host=host, service=service,
+                       debug="- error: {0}".format(error))
+            self.debug(server=self.get_name(), host=host, service=service,
+                       debug="- status_code: {0}".format(status_code))
 
 
     def get_start_end(self, host):
@@ -727,7 +710,7 @@ class IcingaDBWebServer(GenericServer):
 
         try:
             url = '{0}/icingadb/host/schedule-downtime?name={1}'.format(self.monitor_cgi_url, self.hosts[host].real_name)
-            downtime = self.FetchURL(url, giveback='raw')
+            downtime = self.fetch_url(url, giveback='raw')
 
             if downtime.error != '':
                 return 'n/a', 'n/a'
@@ -742,15 +725,15 @@ class IcingaDBWebServer(GenericServer):
         
             # Super debug
             if conf.debug_mode:
-                self.Debug(server=self.get_name(), host=host, service='',
-                    debug='[Get downtime start/end] Retrieve html from {0}: {1}'.format(url,pagesoup.prettify()))
+                self.debug(server=self.get_name(), host=host, service='',
+                           debug='[Get downtime start/end] Retrieve html from {0}: {1}'.format(url,pagesoup.prettify()))
 
             start = pagesoup.find('input', {'name': 'start'})['value']
             end = pagesoup.find('input', {'name': 'end'})['value']
             # give values back as tuple
             return start, end
         except:
-            self.Error(sys.exc_info())
+            self.error(sys.exc_info())
             return 'n/a', 'n/a'
 
 
@@ -763,24 +746,32 @@ class IcingaDBWebServer(GenericServer):
             print("Cannot find {}::{}. Skipping!".format(host, service))
             return
 
-        # only type is important so do not care of service '' in case of host monitor
+        # Generate the base path for the URL
+        base_path = urllib.parse.urlparse(self.monitor_url).path
+
+        # Handle URL for host monitoring
         if service == '':
-            url = '{0}/icingadb/hosts?host.state.is_problem=y&sort=host.state.severity#!{1}/icingadb/host?{2}'.format(self.monitor_url,
-                                                                                                                     (urllib.parse.urlparse(self.monitor_url).path),
-                                                                                                                     urllib.parse.urlencode(
-                                                                                                                        {'name': self.hosts[host].real_name}).replace('+', ' '))
+            url = '{0}/icingadb/hosts?host.state.is_problem=y&sort=host.state.severity#!{1}/icingadb/host?{2}'.format(
+                self.monitor_url,
+                base_path,
+                urllib.parse.urlencode({'name': self.hosts[host].real_name}, quote_via=urllib.parse.quote)
+            )
         else:
-            url = '{0}/icingadb/services?service.state.is_problem=y&sort=service.state.severity%20desc#!{1}/icingadb/service?{2}'.format(self.monitor_url,
-                                                                                                                                   (urllib.parse.urlparse(self.monitor_url).path),
-                                                                                                                                    urllib.parse.urlencode(
-                                                                                                                                        {'name': self.hosts[host].services[service].real_name,
-                                                                                                                                         'host.name': self.hosts[host].real_name}).replace('+', ' '))
+            # Handle URL for service monitoring
+            url = '{0}/icingadb/services?service.state.is_problem=y&sort=service.state.severity%20desc#!{1}/icingadb/service?{2}'.format(
+                self.monitor_url,
+                base_path,
+                urllib.parse.urlencode({
+                    'name': self.hosts[host].services[service].real_name,
+                    'host.name': self.hosts[host].real_name
+                }, quote_via=urllib.parse.quote)
+            )
         if conf.debug_mode:
-            self.Debug(server=self.get_name(), host=host, service=service,
+            self.debug(server=self.get_name(), host=host, service=service,
                        debug='[Open monitor] Open host/service monitor web page {0}'.format(url))
         webbrowser_open(url)
 
-    def GetHost(self, host):
+    def get_host(self, host):
         '''
             find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
             have their ip saved in Icinga
@@ -801,7 +792,7 @@ class IcingaDBWebServer(GenericServer):
         cgiurl_host = self.monitor_cgi_url + '/icingadb/hosts?name={0}&columns=host.address&format=json'.format(host)
 
         # get host info
-        hostobj = self.FetchURL(cgiurl_host, giveback='raw')
+        hostobj = self.fetch_url(cgiurl_host, giveback='raw')
         jsonhost = hostobj.result
 
         try:
@@ -811,7 +802,7 @@ class IcingaDBWebServer(GenericServer):
 
             # print IP in debug mode
             if conf.debug_mode is True:
-                self.Debug(server=self.get_name(), host=host, debug='IP of %s:' % (host) + ' ' + ip)
+                self.debug(server=self.get_name(), host=host, debug='IP of %s:' % (host) + ' ' + ip)
 
             # when connection by DNS is not configured do it by IP
             if conf.connect_by_dns is True:
@@ -823,7 +814,7 @@ class IcingaDBWebServer(GenericServer):
             else:
                 address = ip
         except Exception:
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         # do some cleanup

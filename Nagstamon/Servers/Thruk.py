@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2024 Henri Wahl <henri@nagstamon.de> et al.
+# Copyright (C) 2008-2025 Henri Wahl <henri@nagstamon.de> et al.
 # Thruk additions copyright by dcec@Github
 #
 # This program is free software; you can redistribute it and/or modify
@@ -82,7 +82,7 @@ class ThrukServer(GenericServer):
             if self.session is None or self.session.cookies.get('thruk_auth') is None:
                 self.login()
         except:
-            self.Error(sys.exc_info())
+            self.error(sys.exc_info())
 
 
     def init_config(self):
@@ -109,7 +109,7 @@ class ThrukServer(GenericServer):
 
     def login(self):
         """
-            use pure session instead of FetchURL to get Thruk session
+            use pure session instead of fetch_url to get Thruk session
         """
         if self.session is None:
             self.refresh_authentication = False
@@ -118,7 +118,7 @@ class ThrukServer(GenericServer):
         if self.use_autologin is True:
             req = self.session.post(self.monitor_cgi_url + '/user.cgi?', data={}, headers={'X-Thruk-Auth-Key':self.autologin_key.strip()})
             if conf.debug_mode:
-                self.Debug(server=self.get_name(), debug='Auto Login status: ' + req.url + ' http code : ' + str(req.status_code))
+                self.debug(server=self.get_name(), debug='Auto Login status: ' + req.url + ' http code : ' + str(req.status_code))
             if req.status_code != 200:
                 self.refresh_authentication = True
                 return Result(result=None, error="Login failed")
@@ -130,7 +130,7 @@ class ThrukServer(GenericServer):
                                     'password': self.get_password(),
                                     'submit': 'Login'})
             if conf.debug_mode:
-                self.Debug(server=self.get_name(), debug='Login status: ' + req.url + ' http code : ' + str(req.status_code))
+                self.debug(server=self.get_name(), debug='Login status: ' + req.url + ' http code : ' + str(req.status_code))
             if req.status_code != 200:
                 self.refresh_authentication = True
                 return Result(result=None, error="Login failed")
@@ -150,7 +150,7 @@ class ThrukServer(GenericServer):
             url = self.monitor_cgi_url + '/extinfo.cgi?type=2&' + urllib.parse.urlencode( { 'host': host, 'service': self.hosts[host].services[ service ].real_name })
 
         if conf.debug_mode:
-            self.Debug(server=self.get_name(), host=host, service=service,
+            self.debug(server=self.get_name(), host=host, service=service,
                        debug='Open host/service monitor web page {0}'.format(url))
         webbrowser_open(url)
 
@@ -191,14 +191,14 @@ class ThrukServer(GenericServer):
         if sticky is True:
             cgi_data['sticky_ack'] = 'on'
 
-        self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+        self.fetch_url(url, giveback='raw', cgi_data=cgi_data)
 
         # acknowledge all services on a host
         if all_services:
             for s in all_services:
                 cgi_data['cmd_typ'] = '34'
                 cgi_data['service'] = self.hosts[host].services[ s ].real_name
-                self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+                self.fetch_url(url, giveback='raw', cgi_data=cgi_data)
 
     def _set_recheck(self, host, service):
         self.session.headers.update({'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'})
@@ -209,7 +209,7 @@ class ThrukServer(GenericServer):
                 return
         try:
             # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
-            result = self.FetchURL(
+            result = self.fetch_url(
                 self.monitor_cgi_url + '/cmd.cgi?' + urllib.parse.urlencode({'cmd_typ': '96', 'host': host}))
             self.start_time = dict(result.result.find(attrs={'name': 'start_time'}).attrs)['value']
             # decision about host or service - they have different URLs
@@ -230,7 +230,7 @@ class ThrukServer(GenericServer):
                                                ('force_check', 'on'),
                                                ('btnSubmit', 'Commit')])
             # execute POST request
-            self.FetchURL(self.monitor_cgi_url + '/cmd.cgi', giveback='raw', cgi_data=cgi_data)
+            self.fetch_url(self.monitor_cgi_url + '/cmd.cgi', giveback='raw', cgi_data=cgi_data)
         except:
             traceback.print_exc(file=sys.stdout)
 
@@ -262,7 +262,7 @@ class ThrukServer(GenericServer):
         cgi_data['btnSubmit'] = 'Commit'
 
         # running remote cgi command
-        self.FetchURL(url, giveback='raw', cgi_data=cgi_data)
+        self.fetch_url(url, giveback='raw', cgi_data=cgi_data)
 
     def _get_status(self):
         """
@@ -276,7 +276,7 @@ class ThrukServer(GenericServer):
         # hosts must be analyzed separately
         try:
             # JSON experiments
-            result = self.FetchURL(self.cgiurl_hosts, giveback='raw')
+            result = self.fetch_url(self.cgiurl_hosts, giveback='raw')
             jsonraw, error, status_code = copy.deepcopy(result.result),\
                                           copy.deepcopy(result.error),\
                                           result.status_code
@@ -318,13 +318,13 @@ class ThrukServer(GenericServer):
             traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         # services
         try:
             # JSON experiments
-            result = self.FetchURL(self.cgiurl_services, giveback="raw")
+            result = self.fetch_url(self.cgiurl_services, giveback="raw")
             jsonraw, error, status_code = copy.deepcopy(result.result),\
                                           copy.deepcopy(result.error),\
                                           result.status_code
@@ -383,7 +383,7 @@ class ThrukServer(GenericServer):
             traceback.print_exc(file=sys.stdout)
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         # dummy return in case all is OK

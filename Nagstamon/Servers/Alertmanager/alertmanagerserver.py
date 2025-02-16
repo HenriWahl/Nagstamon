@@ -194,11 +194,11 @@ class AlertmanagerServer(GenericServer):
         # get all alerts from the API server
         try:
             if self.alertmanager_filter != '':
-                result = self.FetchURL(self.monitor_url + self.API_PATH_ALERTS + self.API_FILTERS
+                result = self.fetch_url(self.monitor_url + self.API_PATH_ALERTS + self.API_FILTERS
                                         + self.alertmanager_filter, giveback="raw")
             else:
-                result = self.FetchURL(self.monitor_url + self.API_PATH_ALERTS,
-                                       giveback="raw")
+                result = self.fetch_url(self.monitor_url + self.API_PATH_ALERTS,
+                                        giveback="raw")
 
             if result.status_code == 200:
                 log.debug("received status code '%s' with this content in result.result: \n\
@@ -258,7 +258,7 @@ class AlertmanagerServer(GenericServer):
         except Exception as the_exception:
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             log.exception(the_exception)
             return Result(result=result, error=error)
 
@@ -353,6 +353,6 @@ class AlertmanagerServer(GenericServer):
         cgi_data["createdBy"] = author or "Nagstamon"
         cgi_data = json.dumps(cgi_data)
 
-        result = self.FetchURL(self.monitor_url + self.API_PATH_SILENCES, giveback="raw",
-                               cgi_data=cgi_data)
+        result = self.fetch_url(self.monitor_url + self.API_PATH_SILENCES, giveback="raw",
+                                cgi_data=cgi_data)
         return result

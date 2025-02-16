@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2024 Henri Wahl <henri@nagstamon.de> et al.
+# Copyright (C) 2008-2025 Henri Wahl <henri@nagstamon.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 from argparse import ArgumentParser
+from importlib import resources
 import os
 import platform
 import sys
@@ -131,9 +132,9 @@ class AppInfo(object):
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '3.15-20240729'
+    VERSION = '3.17-20250216'
     WEBSITE = 'https://nagstamon.de'
-    COPYRIGHT = '©2008-2024 Henri Wahl et al.'
+    COPYRIGHT = '©2008-2025 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
     # dict of servers to offer for downloads if an update is available
     DOWNLOAD_SERVERS = {'nagstamon.de': 'https://github.com/HenriWahl/Nagstamon/releases'}
@@ -1063,12 +1064,10 @@ try:
     if os.path.exists(os.path.normcase(os.sep.join((executable_dir, "resources")))):
         RESOURCES = os.path.normcase(os.sep.join((executable_dir, "resources")))
     else:
-        import pkg_resources
-
-        RESOURCES = pkg_resources.resource_filename("Nagstamon", "resources")
+        RESOURCES = str(resources.files("Nagstamon").joinpath("resources"))
 
 except Exception as err:
-    # get resources directory from current directory - only if not being set before by pkg_resources
+    # get resources directory from current directory - only if not being set before
     # try-excepts necessary for platforms like Windows .EXE
     paths_to_check = [os.path.normcase(os.path.join(os.getcwd(), "Nagstamon", "resources")),
                       os.path.normcase(os.path.join(os.getcwd(), "resources"))]

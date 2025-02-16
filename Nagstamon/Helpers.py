@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2024 Henri Wahl <henri@nagstamon.de> et al.
+# Copyright (C) 2008-2025 Henri Wahl <henri@nagstamon.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -459,7 +459,7 @@ def get_distro():
             # Since CentOS Linux got retired by Red Hat, there are various RHEL derivatives/clones; flow is:
             # CentOS Stream -> Red Hat Enterprise Linux -> (AlmaLinux, EuroLinux, Oracle Linux, Rocky Linux)
             # Goal of this hack is to rule them all as Red Hat Enterprise Linux, the baseline distribution.
-            if re.search('^platform:el\d+$', os_release_dict.get('PLATFORM_ID', 'unknown')):
+            if re.search(r'^platform:el\d+$', os_release_dict.get('PLATFORM_ID', 'unknown')):
                 os_release_dict['ID'] = 'rhel'
                 os_release_dict['VERSION_ID'] = os_release_dict.get('VERSION_ID', 'unknown').split('.', 1)[0]
                 os_release_dict['NAME'] = 'Red Hat Enterprise Linux'

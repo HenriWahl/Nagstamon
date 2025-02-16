@@ -2,11 +2,13 @@ arrow
 beautifulsoup4
 keyring
 lxml
+packaging
 psutil
 pyinstaller
 pyobjc-framework-ApplicationServices
-pyqt6
-pyqt6-qt6
+# 6.7.3 has no sound
+pyqt6==6.6.1
+pyqt6-qt6==6.6.1
 pysocks
 python-dateutil
 requests
@@ -14,3 +16,4 @@ requests-ecp
 # gssapi instead kerberos
 requests-gssapi
 setuptools
+tzlocal

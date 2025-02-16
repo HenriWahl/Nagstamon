@@ -13,9 +13,9 @@ Vcs-Browser: https://codeload.github.com/HenriWahl/Nagstamon/zip/master
 Package: nagstamon
 Architecture: all
 Depends: ${python3:Depends}, ${misc:Depends}, python3-pkg-resources, python3-bs4, python3-lxml,
- python3-pyqt5, python3-pyqt5.qtsvg, python3-pyqt5.qtmultimedia, libqt5multimedia5-plugins,
- python3-requests, python3-requests-kerberos, python3-psutil, python3-dbus.mainloop.pyqt5,
- python3-keyring, python3-ewmh, python3-arrow
+ python3-packaging, python3-pyqt5, python3-pyqt5.qtsvg, python3-pyqt5.qtmultimedia,
+ libqt5multimedia5-plugins, python3-requests, python3-requests-kerberos, python3-psutil,
+ python3-dbus.mainloop.pyqt5, python3-keyring, python3-ewmh, python3-arrow, python3-tzlocal
 Recommends: python3-secretstorage
 Description: Nagios status monitor which takes place in systray or on desktop
  Nagstamon is a Nagios status monitor which takes place in systray or 

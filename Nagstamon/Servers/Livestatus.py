@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2024 Henri Wahl <henri@nagstamon.de> et al.
+# Copyright (C) 2008-2025 Henri Wahl <henri@nagstamon.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -68,7 +68,7 @@ class LivestatusServer(GenericServer):
         log.info(self.monitor_url)
         # we abuse the monitor_url for the connection information
         self.address = ('localhost', 6558)
-        m = re.match('.*?://([^:/]+?)(?::(\d+))?(?:/|$)', self.monitor_url)
+        m = re.match(r'.*?://([^:/]+?)(?::(\d+))?(?:/|$)', self.monitor_url)
         if m:
             host, port = m.groups()
             if not port:

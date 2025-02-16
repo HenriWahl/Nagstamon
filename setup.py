@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2024 Henri Wahl <henri@nagstamon.de> et al.
+# Copyright (C) 2008-2025 Henri Wahl <henri@nagstamon.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -99,12 +99,14 @@ if OS not in ['Windows', 'Darwin']:
                                           'python3-dateutil '
                                           'python3-keyring '
                                           'python3-lxml '
+                                          'python3-packaging '
                                           'python3-psutil '
                                           'python3-pysocks '
                                           'python3-qt5 '
                                           'python3-requests '
                                           'python3-requests-kerberos '
                                           'python3-SecretStorage '
+                                          'python3-tzlocal '
                                           'qt5-qtmultimedia '
                                           'qt5-qtsvg ',
                                  dist_dir='./build')
@@ -122,6 +124,7 @@ if OS not in ['Windows', 'Darwin']:
                                           'python3-requests '
                                           'python3-requests-kerberos '
                                           'python3-SecretStorage '
+                                          'python3-tzlocal '
                                           'qt6-qtmultimedia '
                                           'qt6-qtsvg ',
                                  dist_dir='./build')

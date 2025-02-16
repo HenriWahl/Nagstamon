@@ -1,7 +1,7 @@
 # encoding: utf-8
-
+import json
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2024 Henri Wahl <henri@nagstamon.de> et al.
+# Copyright (C) 2008-2025 Henri Wahl <henri@nagstamon.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,8 +25,8 @@ import urllib.request, urllib.parse, urllib.error
 import time
 import copy
 import html
+import tzlocal
 from datetime import datetime
-from zoneinfo import ZoneInfo
 
 from Nagstamon.Objects import (GenericHost,
                                GenericService,
@@ -161,7 +161,7 @@ class MultisiteServer(GenericServer):
         return False
 
     def _get_url(self, url):
-        result = self.FetchURL(url, 'raw')
+        result = self.fetch_url(url, 'raw')
         content, error, status_code = result.result, result.error, result.status_code
 
         if error != '' or status_code >= 400:
@@ -173,7 +173,7 @@ class MultisiteServer(GenericServer):
             c = content.split('\n')
 
             # Print non ERRORS to the log in debug mode
-            self.Debug(server=self.get_name(), debug=c[0])
+            self.debug(server=self.get_name(), debug=c[0])
 
             raise MultisiteError(False, Result(result='\n'.join(c[1:]),
                                                error=c[0],
@@ -197,7 +197,7 @@ class MultisiteServer(GenericServer):
             # if first attempt login and then try to get data again
             if not self._is_auth_in_cookies():
                 self._get_cookie_login()
-                result = self.FetchURL(url, 'raw')
+                result = self.fetch_url(url, 'raw')
                 content, error = result.result, result.error
                 if content.startswith('<') or\
                 '<!DOCTYPE html>' in content:
@@ -224,9 +224,9 @@ class MultisiteServer(GenericServer):
         # get cookie from login page via url retrieving as with other urls
         try:
             # login and get cookie
-            self.FetchURL(self.monitor_url + '/login.py', cgi_data=login_data, multipart=True)
+            self.fetch_url(self.monitor_url + '/login.py', cgi_data=login_data, multipart=True)
         except:
-            self.Error(sys.exc_info())
+            self.error(sys.exc_info())
 
 
     def _get_status(self):
@@ -312,7 +312,7 @@ class MultisiteServer(GenericServer):
             traceback.print_exc(file=sys.stdout)
 
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         # Add filters to the url which should only be applied to the service request
@@ -407,7 +407,7 @@ class MultisiteServer(GenericServer):
 
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=copy.deepcopy(result), error=copy.deepcopy(error))
 
         del url_params
@@ -426,11 +426,11 @@ class MultisiteServer(GenericServer):
             url = self.urls['human_service'] + urllib.parse.urlencode({'x': 'site='+self.hosts[host].site+'&host='+host+'&service='+service}).replace('x=', '%26')
 
         if conf.debug_mode:
-            self.Debug(server=self.get_name(), host=host, service=service, debug='Open host/service monitor web page ' + url)
+            self.debug(server=self.get_name(), host=host, service=service, debug='Open host/service monitor web page ' + url)
         webbrowser_open(url)
 
 
-    def GetHost(self, host):
+    def get_host(self, host):
         """
             find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
             have their ip saved in Nagios
@@ -447,7 +447,7 @@ class MultisiteServer(GenericServer):
                 ip = self.hosts[host].address
 
             if conf.debug_mode:
-                self.Debug(server=self.get_name(), host=host, debug ='IP of %s:' % (host) + ' ' + ip)
+                self.debug(server=self.get_name(), host=host, debug ='IP of %s:' % (host) + ' ' + ip)
 
             if conf.connect_by_dns:
                 try:
@@ -457,7 +457,7 @@ class MultisiteServer(GenericServer):
             else:
                 address = ip
         except:
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         return Result(result=address)
@@ -488,10 +488,10 @@ class MultisiteServer(GenericServer):
         url = url.replace('?_transid=-1&', '?_transid=%s&' % (transid))
 
         if conf.debug_mode:
-            self.Debug(server=self.get_name(), host=host, debug ='Submitting action: ' + url + '&' + urllib.parse.urlencode(params))
+            self.debug(server=self.get_name(), host=host, debug ='Submitting action: ' + url + '&' + urllib.parse.urlencode(params))
 
         # apply action
-        self.FetchURL(url + '&' + urllib.parse.urlencode(params))
+        self.fetch_url(url + '&' + urllib.parse.urlencode(params))
 
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
@@ -534,7 +534,7 @@ class MultisiteServer(GenericServer):
             self._action(self.hosts[host].site, host, service, params)
         except:
             if conf.debug_mode:
-                self.Debug(server=self.get_name(), host=host,
+                self.debug(server=self.get_name(), host=host,
                            debug='Invalid start/end date/time given')
 
 
@@ -551,8 +551,8 @@ class MultisiteServer(GenericServer):
             }
 
             # Only timezone aware dates are allowed
-            iso_start_time =  datetime.strptime(start_time, "%Y-%m-%d %H:%M").replace(tzinfo=ZoneInfo('localtime')).isoformat()
-            iso_end_time =  datetime.strptime(end_time, "%Y-%m-%d %H:%M").replace(tzinfo=ZoneInfo('localtime')).isoformat()
+            iso_start_time = datetime.strptime(start_time, "%Y-%m-%d %H:%M").replace(tzinfo=tzlocal.get_localzone()).isoformat()
+            iso_end_time = datetime.strptime(end_time, "%Y-%m-%d %H:%M").replace(tzinfo=tzlocal.get_localzone()).isoformat()
             # Set parameters for host downtimes
             url = self.urls["omd_host_downtime"]
             params = {
@@ -565,17 +565,16 @@ class MultisiteServer(GenericServer):
 
             # Downtime type is "flexible" if "duration" is set
             if fixed == 0:
-                params["duration"] = hours * 60 + minutes
+                params['duration'] = hours * 60 + minutes
             # Parameter overrides for service downtimes
             if service:
-                url = self.urls["omd_svc_downtime"]
-                params["downtime_type"] = "service"
-                params["service_descriptions"] = [service]
-
-            self.session.post(url, headers=headers, json=params)
-        except:
+                url = self.urls['omd_svc_downtime']
+                params['downtime_type'] = 'service'
+                params['service_descriptions'] = [service]
+            self.fetch_url(url, headers=headers, cgi_data=json.dumps(params))
+        except Exception as error:
             if conf.debug_mode:
-                self.Debug(server=self.get_name(), host=host,
+                self.debug(server=self.get_name(), host=host,
                            debug='Invalid start/end date/time given')
 
 
@@ -615,7 +614,7 @@ class MultisiteServer(GenericServer):
             "wait_svc": service,
             "csrf_token": csrf_token,
         }
-        self.FetchURL(self.urls["recheck"], cgi_data=data)
+        self.fetch_url(self.urls["recheck"], cgi_data=data)
 
 
     def recheck_all(self):
@@ -627,9 +626,9 @@ class MultisiteServer(GenericServer):
         url = self.urls['api_svcprob_act']
 
         if conf.debug_mode:
-            self.Debug(server=self.get_name(), debug ='Rechecking all action: ' + url + '&' + urllib.parse.urlencode(params))
+            self.debug(server=self.get_name(), debug ='Rechecking all action: ' + url + '&' + urllib.parse.urlencode(params))
 
-        result = self.FetchURL(url + '&' + urllib.parse.urlencode(params), giveback = 'raw')
+        result = self.fetch_url(url + '&' + urllib.parse.urlencode(params), giveback ='raw')
 
 
     def _get_transid(self, host, service):
@@ -639,7 +638,7 @@ class MultisiteServer(GenericServer):
         # since Checkmk 2.0 it seems to be a problem if service is empty so fill it with a definitively existing one
         if not service:
             service = 'PING'
-        transid = self.FetchURL(self.urls['transid'].replace('$HOST$', host).replace('$SERVICE$', service.replace(' ', '+')),
+        transid = self.fetch_url(self.urls['transid'].replace('$HOST$', host).replace('$SERVICE$', service.replace(' ', '+')),
                                 'obj').result.find(attrs={'name' : '_transid'})['value']
         return transid
 
@@ -651,7 +650,8 @@ class MultisiteServer(GenericServer):
         # since Checkmk 2.0 it seems to be a problem if service is empty so fill it with a definitively existing one
         if not service:
             service = "PING"
-        csrf_token = self.FetchURL(self.urls["transid"].replace("$HOST$", host).replace("$SERVICE$", service.replace(" ", "+")), "obj").result.find(attrs={"name": "csrf_token"})["value"]
+        csrf_token = self.fetch_url(self.urls["transid"].replace("$HOST$", host).replace("$SERVICE$", service.replace(" ", "+")),
+                                    "obj").result.find(attrs={"name": ["csrf_token", "_csrf_token"]})["value"]
         return csrf_token
 
 
@@ -660,7 +660,7 @@ class MultisiteServer(GenericServer):
            get version of OMD Checkmk as [major_version, minor_version]
         """
         try:
-            version = [int(v) for v in self.session.get(self.urls["omd_version"]).json()["versions"]["checkmk"].split(".")[:2]]
+            version = [int(x) for x in self.fetch_url(self.urls['omd_version'], 'json').result['versions']['checkmk'].split('.')[:2]]
         # If /version api is not supported, return the lowest non-negative pair
         except:
             version = [0, 0]

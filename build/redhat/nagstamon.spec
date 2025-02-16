@@ -23,12 +23,14 @@ Requires:      python3-dateutil
 Requires:      python3-dbus
 Requires:      python3-keyring
 Requires:      python3-lxml
+Requires:      python3-packaging
 Requires:      python3-psutil
 Requires:      python3-pysocks
 Requires:      python3-pyqt6
 Requires:      python3-requests
 Requires:      python3-requests-kerberos
 Requires:      python3-SecretStorage
+Requires:      python3-tzlocal
 Requires:      qt6-qtsvg
 Requires:      qt6-qtmultimedia
 

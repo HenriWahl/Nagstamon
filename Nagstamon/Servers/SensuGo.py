@@ -39,14 +39,14 @@ class SensuGoServer(GenericServer):
             try:
                 self._sensugo_api.auth(self.username, self.password, verify)
             except Exception:
-                self.Error(sys.exc_info())
+                self.error(sys.exc_info())
 
     def _get_status(self):
         try:
             response_code, events = self._sensugo_api.get_all_events()
             self._create_services(events)
         except Exception:
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             print(traceback.format_exc())
             return Result(result=result, error=error)
         return Result()

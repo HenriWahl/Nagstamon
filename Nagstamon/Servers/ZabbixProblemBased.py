@@ -4,7 +4,7 @@ import sys
 import time
 import logging
 import requests
-from pkg_resources import parse_version
+from packaging import version
 
 from Nagstamon.Helpers import HumanReadableDurationFromTimestamp
 from Nagstamon.Config import conf
@@ -204,7 +204,7 @@ class ZabbixProblemBasedServer(GenericServer):
                         self.new_hosts[host_id].scheduled_downtime = True
 
                     #old api shows host interfaces status in host object
-                    if parse_version(self.zbx_version) < parse_version("5.4.0"):
+                    if version.parse(self.zbx_version) < version.parse("5.4.0"):
 
                         #host not available via agent
                         if trigger[0]['hosts'][0].get('available', '0') == "2":
@@ -266,7 +266,7 @@ class ZabbixProblemBasedServer(GenericServer):
         except ZabbixLightApiException:
             # set checking flag back to False
             self.isChecking = False
-            result, error = self.Error(sys.exc_info())
+            result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
 
         return Result()

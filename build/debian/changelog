@@ -1,7 +1,34 @@
-nagstamon (3.15-20240729) unstable; urgency=low
+nagstamon (3.17-20250216) unstable; urgency=low
   * New upstream
 
- -- Henri Wahl <henri@nagstamon.de> Mon, Jul 29 2024 08:00:00 +0200
+ -- Henri Wahl <henri@nagstamon.de> Sun, Feb 16 2025 08:00:00 +0200
+
+nagstamon (3.16.2) stable; urgency=low
+  * New upstream
+    - fix sound problem
+    - fix IncingaDBWeb
+
+ -- Henri Wahl <henri@nagstamon.de> Mon, Oct 21 2024 08:00:00 +0200
+
+nagstamon (3.16.1) stable; urgency=low
+  * New upstream
+    - fix ridiculous Windows 11 appearance
+    - fix Zabbix all information copy action
+
+ -- Henri Wahl <henri@nagstamon.de> Sun, Oct 20 2024 08:00:00 +0200
+
+nagstamon (3.16.0) stable; urgency=low
+  * New upstream
+    - Apple Silicon native support
+    - fixes for Centreon
+    - fixes for Checkmk
+    - fixes for Icinga2
+    - fixes for IcingaDBWeb
+    - fixes for Zabbix
+    - fixes for pyinstaller
+    - updated Qt6
+
+ -- Henri Wahl <henri@nagstamon.de> Thu, Oct 10 2024 08:00:00 +0200
 
 nagstamon (3.14.0) stable; urgency=low
   * New upstream
