@@ -106,6 +106,7 @@ if OS not in ['Windows', 'Darwin']:
                                           'python3-requests '
                                           'python3-requests-kerberos '
                                           'python3-SecretStorage '
+                                          'python3-tzlocal '
                                           'qt5-qtmultimedia '
                                           'qt5-qtsvg ',
                                  dist_dir='./build')
@@ -123,6 +124,7 @@ if OS not in ['Windows', 'Darwin']:
                                           'python3-requests '
                                           'python3-requests-kerberos '
                                           'python3-SecretStorage '
+                                          'python3-tzlocal '
                                           'qt6-qtmultimedia '
                                           'qt6-qtsvg ',
                                  dist_dir='./build')

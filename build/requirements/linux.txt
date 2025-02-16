@@ -13,3 +13,4 @@ requests
 requests-kerberos
 requests-ecp
 setuptools
+tzlocal

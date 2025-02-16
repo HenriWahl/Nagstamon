@@ -30,6 +30,7 @@ Requires:      python3-pyqt6
 Requires:      python3-requests
 Requires:      python3-requests-kerberos
 Requires:      python3-SecretStorage
+Requires:      python3-tzlocal
 Requires:      qt6-qtsvg
 Requires:      qt6-qtmultimedia
 

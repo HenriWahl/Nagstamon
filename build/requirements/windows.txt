@@ -16,7 +16,7 @@ requests
 requests-ecp
 # maybe requests-gssapi might become usable with https://github.com/pythongssapi/python-gssapi/issues/244#issuecomment-827404287
 requests-kerberos
+tzlocal
 setuptools
 wheel
-tzdata
-tzlocal
+

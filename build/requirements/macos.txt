@@ -16,3 +16,4 @@ requests-ecp
 # gssapi instead kerberos
 requests-gssapi
 setuptools
+tzlocal
