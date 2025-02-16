@@ -202,10 +202,7 @@ def macmain():
     for dmg_file in glob.iglob('*.dmg'):
         os.unlink(dmg_file)
 
-    # install create-dmg via preinstalled brew
-    subprocess.call(['brew install create-dmg'], shell=True)
-
-    # create dmg file
+    # create dmg file with create-dmg insttaled via brew
     subprocess.call([f'create-dmg '
                      f'--volname "Nagstamon {VERSION}" '
                      f'--volicon "nagstamon.ico" '
