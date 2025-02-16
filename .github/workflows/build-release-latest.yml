@@ -464,19 +464,14 @@ jobs:
           merge-multiple: true
       - run: cd artifact && md5sum *agstamon* > md5sums.txt
       - run: cd artifact && sha256sum *agstamon* > sha256sums.txt
-      #- uses: marvinpinto/action-automatic-releases@latest
-      # the dciborow action is outdated as well :-(
-      #- uses: dciborow/action-github-releases@v1.0.1
+      # finally some maintained solution for creating releases
+      # https://github.com/marketplace/actions/create-release
       - uses: ncipollo/release-action@v1
         with:
-          #repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          #automatic_release_tag: "latest"
           allowUpdates: true
           makeLatest: true
           prerelease: true
           tag: latest
           removeArtifacts: true
           replacesArtifacts: true
-          #files: |
-          #  artifact/*
           artifacts: "artifact/*"
