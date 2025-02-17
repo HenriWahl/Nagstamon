@@ -224,7 +224,7 @@ class AlertmanagerServer(GenericServer):
             for alert in data:
                 alert_data = self._process_alert(alert)
                 if not alert_data:
-                    break
+                    continue
 
                 service = AlertmanagerService()
                 service.host = alert_data['host']
