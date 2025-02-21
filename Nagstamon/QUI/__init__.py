@@ -4347,8 +4347,9 @@ class TreeView(QTreeView):
                         for service in status[1]:
                             if conf.debug_mode:
                                 self.server.debug(server=self.server.name,
-                                                  debug='Rechecking service {0} on host {1}'.format(service.name,
-                                                                                                    service.host))
+                                                  debug='Rechecking service {0} on host {1}'.format(
+                                                        service.get_service_name(),
+                                                        service.host))
                             # call server recheck method
                             self.server.set_recheck({'host': service.host, 'service': service.name})
                     del (nagitems_filtered, status)
