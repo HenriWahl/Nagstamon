@@ -348,7 +348,7 @@ jobs:
           if-no-files-found: error
           name: ${{ github.job }}
 
-# borrowed from dhcpy6d
+  # borrowed from dhcpy6d
   repo-debian:
     runs-on: ubuntu-latest
     # try to avoid race condition and start uploading only after the last install package has been build

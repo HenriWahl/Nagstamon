@@ -241,11 +241,11 @@ def package_linux_deb():
 
     shutil.copytree('{0}{1}debian{1}'.format(CURRENT_DIR, os.sep), '{0}{1}debian'.format(NAGSTAMON_DIR, os.sep))
 
-    os.chmod('{0}{1}debian{1}rules'.format(CURRENT_DIR, os.sep), 0o755)
-
     # just in case some Windows commit converted linebreaks
-    for debian_file in glob.iglob('debian/*'):
-        subprocess.call(['dos2unix', f'{debian_file}'])
+    # for debian_file in glob.iglob('debian/*'):
+    #     subprocess.call(['dos2unix', f'{debian_file}'])
+
+    os.chmod(f'{CURRENT_DIR}/debian/rules', 0o755)
 
     subprocess.call(['fakeroot', 'debian/rules', 'build'])
 
