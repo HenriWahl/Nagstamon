@@ -370,7 +370,7 @@ jobs:
       - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.dist }}/${{ env.release }}
       # somehow weird way to get the hash over the Dockerfile to be aware if it changed
       - id: dockerfile_hash
-        run: echo "HASH=$(md5sum build/docker/Dockerfile-${{ github.job }} | cut -d\  -f1)" >> $GITHUB_OUTPUT
+        run: echo "HASH=$(md5sum build/docker/Dockerfile-${{ env.family }} | cut -d\  -f1)" >> $GITHUB_OUTPUT
       # create deb repo via Debian build container
       - run: |
           /usr/bin/docker run --rm \
