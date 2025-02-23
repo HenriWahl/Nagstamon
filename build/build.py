@@ -232,15 +232,16 @@ def debmain():
     os.chmod('{0}{1}debian{1}rules'.format(CURRENT_DIR, os.sep), 0o755)
 
     # just in case some Windows commit converted linebreaks
-    subprocess.call(['dos2unix', 'debian/rules'])
+    for debian_file in glob.iglob('debian/*'):
+        subprocess.call(['dos2unix', f'debian/{debian_file}'])
 
     subprocess.call(['fakeroot', 'debian/rules', 'build'])
 
     subprocess.call(['fakeroot', 'debian/rules', 'binary'])
 
     # copy .deb file to current directory
-    for deb in glob.iglob('../nagstamon*.deb'):
-        shutil.move(deb, CURRENT_DIR)
+    for debian_package in glob.iglob('../nagstamon*.deb'):
+        shutil.move(debian_package, CURRENT_DIR)
 
 
 def rpmmain():
