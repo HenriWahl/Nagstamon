@@ -80,6 +80,7 @@ if 'WIN_SIGNING_CERT_BASE64' in environ \
 
 def zip_manpage():
     # workaround for manpage gzipping bug in bdist_rpm
+    os.chdir(NAGSTAMON_DIR)
     man = open('Nagstamon/resources/nagstamon.1', 'rb')
     mangz = gzip.open('Nagstamon/resources/nagstamon.1.gz', 'wb')
     mangz.writelines(man)
