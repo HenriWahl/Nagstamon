@@ -1542,7 +1542,7 @@ class GenericServer(object):
                     # cleanup
                     del temporary_session
 
-            except Exception:
+            except:
                 if conf.debug_mode:
                     self.error(sys.exc_info())
                 result, error = self.error(sys.exc_info())
@@ -1580,7 +1580,7 @@ class GenericServer(object):
                               status_code=response.status_code)
 
 
-        except Exception:
+        except:
             self.error(sys.exc_info())
             result, error = self.error(sys.exc_info())
             return Result(result=result, error=error, status_code=response.status_code)
