@@ -1086,7 +1086,7 @@ class GenericServer(object):
 
             for service in host.services.values():
                 # add service name for sorting
-                service.service = service.name
+                service.service = service.get_service_name()
                 # Some generic filtering
                 if service.acknowledged is True and conf.filter_acknowledged_hosts_services is True:
                     if conf.debug_mode:
