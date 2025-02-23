@@ -203,10 +203,10 @@ def package_macos():
     subprocess.call(['pyinstaller --noconfirm macos/nagstamon.spec'], shell=True)
 
     # create staging DMG folder for later compressing of DMG
-    shutil.rmtree('Nagstamon {0} Staging DMG'.format(VERSION), ignore_errors=True)
+    shutil.rmtree(f'Nagstamon_{VERSION}_Staging_DMG/', ignore_errors=True)
 
     # move app bundle folder
-    shutil.move('dist/Nagstamon.app', 'Nagstamon {0} Staging DMG/Nagstamon.app'.format(VERSION))
+    shutil.move('dist/Nagstamon.app', f'Nagstamon_{VERSION}_Staging_DMG/')
 
     # copy icon to staging folder
     shutil.copy('../Nagstamon/resources/nagstamon.ico', 'nagstamon.ico'.format(VERSION))
@@ -226,7 +226,7 @@ def package_macos():
                      f'--hide-extension "Nagstamon.app" '
                      f'--app-drop-link 425 110 '
                      f'"dist/Nagstamon-{VERSION}-{ARCH_MACOS_NAMES[ARCH_MACOS]}.dmg" '
-                     f'Nagstamon\ {VERSION}\ Staging\ DMG/'
+                     f'Nagstamon_{VERSION}_Staging_DMG/'
                      ], shell=True)
 
 def package_linux_deb():
