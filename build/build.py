@@ -140,7 +140,8 @@ def winmain():
         os.chdir(DIR_BUILD_NAGSTAMON)
         batch_file = Path('nagstamon-debug.bat')
         # cmd /k keeps the console window open to get some debug output
-        batch_file.write_text('cmd /k nagstamon.exe')
+        batch_file.write_text('set \n'
+                              'cmd /k nagstamon.exe')
 
     # after cleaning start zipping and setup.exe-building - go back to original directory
     os.chdir(CURRENT_DIR)
