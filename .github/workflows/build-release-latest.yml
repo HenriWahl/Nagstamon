@@ -422,6 +422,7 @@ jobs:
       - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
       - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
       # somehow weird way to get the hash over the Dockerfile to be aware if it changed
+      - run: ls -lR
       - id: dockerfile_hash
         run: echo "HASH=$(md5sum build/docker/Dockerfile-${{ env.family }}-${{ env.cr_image_latest }} | cut -d\  -f1)" >> $GITHUB_OUTPUT
       # if image defined by variable steps.dockerfile_hash.outputs.HASH is not pullable aka does not exist it will be created and pushed
