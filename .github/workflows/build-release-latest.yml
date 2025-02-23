@@ -432,7 +432,7 @@ jobs:
       # copy *.rpm files into nagstamon-jekyll and create repodata
       - run: |
             version=${{ env.release }} && \
-            mkdir -p mkdir -p ${{ env.repo_dir }}/${{ encr_image_latestv.family }}/${version} && \
+            mkdir -p mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${version} && \
             cp -r artifact/*.${{ env.family }}* ${{ env.repo_dir }}/${{ env.family }}/${version} && \
             docker run --rm -v ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}:/repo \
               ${{ env.cr_image }}-${{ env.family }}-${{ env.cr_image_latest }}:${{ steps.dockerfile_hash.outputs.HASH }} \
