@@ -2,3 +2,4 @@
 
 %:
 	dh $@ --with python3 --buildsystem=pybuild
+
