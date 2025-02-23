@@ -233,7 +233,7 @@ def debmain():
 
     # just in case some Windows commit converted linebreaks
     for debian_file in glob.iglob('debian/*'):
-        subprocess.call(['dos2unix', f'debian/{debian_file}'])
+        subprocess.call(['dos2unix', f'{debian_file}'])
 
     subprocess.call(['fakeroot', 'debian/rules', 'build'])
 
