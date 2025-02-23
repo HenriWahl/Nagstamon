@@ -344,7 +344,7 @@ class GenericServer(object):
 
         return session
 
-    def proxify(self, requester):
+    def proxify(self, session):
         '''
             add proxy information to session or single request
         '''
@@ -352,11 +352,11 @@ class GenericServer(object):
         if self.use_proxy is True:
             if self.use_proxy_from_os is True:
                 # get proxies from system directly instead of via trust_env
-                requester.proxies = getproxies()
+                session.proxies = getproxies()
                 # check for missing '/' to make proxies work
-                for scheme, proxy_url in requester.proxies.items():
+                for scheme, proxy_url in session.proxies.items():
                     if not proxy_url.endswith('/'):
-                        requester.proxies[scheme] = proxy_url + '/'
+                        session.proxies[scheme] = proxy_url + '/'
                 pass
             else:
                 # check if username and password are given and provide credentials if needed
@@ -375,9 +375,10 @@ class GenericServer(object):
                     # merge proxy URL
                     proxy_url = f'{scheme}//{user_pass}@{host_port}/'
                     # fill session.proxies for both protocols
-                    requester.proxies = {'http': proxy_url, 'https': proxy_url}
+                    session.proxies = {'http': proxy_url, 'https': proxy_url}
         else:
-            requester.proxies = None
+            session.proxies = None
+            session.trust_env = False
 
     def reset_HTTP(self):
         '''
