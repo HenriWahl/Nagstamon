@@ -231,6 +231,9 @@ def debmain():
 
     os.chmod('{0}{1}debian{1}rules'.format(CURRENT_DIR, os.sep), 0o755)
 
+    # just in case some Windows commit converted linebreaks
+    subprocess.call(['dos2unix', 'debian/*'])
+
     subprocess.call(['fakeroot', 'debian/rules', 'build'])
 
     subprocess.call(['fakeroot', 'debian/rules', 'binary'])
