@@ -206,7 +206,7 @@ def package_macos():
     shutil.rmtree(f'Nagstamon_{VERSION}_Staging_DMG/', ignore_errors=True)
 
     # move app bundle folder
-    shutil.move('dist/Nagstamon.app', f'Nagstamon_{VERSION}_Staging_DMG/')
+    shutil.move('dist/Nagstamon.app', f'Nagstamon_{VERSION}_Staging_DMG/Nagstamon.app')
 
     # copy icon to staging folder
     shutil.copy('../Nagstamon/resources/nagstamon.ico', 'nagstamon.ico'.format(VERSION))
