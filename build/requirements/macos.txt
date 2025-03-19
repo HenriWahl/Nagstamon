@@ -13,6 +13,7 @@ pysocks
 python-dateutil
 requests
 requests-ecp
+requests-pkcs12
 # gssapi instead kerberos
 requests-gssapi
 setuptools

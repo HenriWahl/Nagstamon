@@ -31,6 +31,7 @@ from urllib.request import getproxies
 
 from bs4 import BeautifulSoup
 import requests
+from requests_pkcs12 import Pkcs12Adapter
 
 # check ECP authentication support availability
 try:
@@ -164,6 +165,9 @@ class GenericServer(object):
         self.proxy_address = ''
         self.proxy_username = ''
         self.proxy_password = ''
+        self.use_client_cert = False
+        self.client_cert_path = ''
+        self.client_cert_password = ''
         self.auth_type = ''
         self.encoding = None
         self.hosts = dict()
@@ -341,6 +345,10 @@ class GenericServer(object):
 
         # add proxy information
         self.proxify(session)
+
+        # add client certificates
+        if self.use_client_cert is True:
+            session.mount(self.monitor_url, Pkcs12Adapter(pkcs12_filename=self.client_cert_path, pkcs12_password=self.client_cert_password))
 
         return session
 
