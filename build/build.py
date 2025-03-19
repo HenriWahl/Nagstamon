@@ -18,15 +18,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-from pathlib import Path
-import platform
+import glob
+import gzip
 import os, os.path
 from os import environ
-import sys
+from pathlib import Path
+import platform
 import shutil
 import subprocess
+import sys
 import zipfile
-import glob
+
 
 CURRENT_DIR = os.getcwd()
 NAGSTAMON_DIR = os.path.normpath('{0}{1}..{1}'.format(CURRENT_DIR, os.sep))
@@ -76,7 +78,17 @@ if 'WIN_SIGNING_CERT_BASE64' in environ \
     SIGNING = True
 
 
-def winmain():
+def zip_manpage():
+    # workaround for manpage gzipping bug in bdist_rpm
+    os.chdir(NAGSTAMON_DIR)
+    man = open('Nagstamon/resources/nagstamon.1', 'rb')
+    mangz = gzip.open('Nagstamon/resources/nagstamon.1.gz', 'wb')
+    mangz.writelines(man)
+    mangz.close()
+    man.close()
+
+
+def package_windows():
     """
         execute steps necessary for compilation of Windows binaries and setup.exe
     """
@@ -140,7 +152,8 @@ def winmain():
         os.chdir(DIR_BUILD_NAGSTAMON)
         batch_file = Path('nagstamon-debug.bat')
         # cmd /k keeps the console window open to get some debug output
-        batch_file.write_text('cmd /k nagstamon.exe')
+        batch_file.write_text('set \n'
+                              'cmd /k nagstamon.exe')
 
     # after cleaning start zipping and setup.exe-building - go back to original directory
     os.chdir(CURRENT_DIR)
@@ -179,7 +192,7 @@ def winmain():
         # environment variables will be used by powershell script for signing
         subprocess.run(['pwsh.exe', '../windows/code_signing.ps1', '*.exe'])
 
-def macmain():
+def package_macos():
     """
         execute steps necessary for compilation of MacOS X binaries and .dmg file
     """
@@ -190,10 +203,10 @@ def macmain():
     subprocess.call(['pyinstaller --noconfirm macos/nagstamon.spec'], shell=True)
 
     # create staging DMG folder for later compressing of DMG
-    shutil.rmtree('Nagstamon {0} Staging DMG'.format(VERSION), ignore_errors=True)
+    shutil.rmtree(f'Nagstamon_{VERSION}_Staging_DMG/', ignore_errors=True)
 
     # move app bundle folder
-    shutil.move('dist/Nagstamon.app', 'Nagstamon {0} Staging DMG/Nagstamon.app'.format(VERSION))
+    shutil.move('dist/Nagstamon.app', f'Nagstamon_{VERSION}_Staging_DMG/Nagstamon.app')
 
     # copy icon to staging folder
     shutil.copy('../Nagstamon/resources/nagstamon.ico', 'nagstamon.ico'.format(VERSION))
@@ -213,10 +226,10 @@ def macmain():
                      f'--hide-extension "Nagstamon.app" '
                      f'--app-drop-link 425 110 '
                      f'"dist/Nagstamon-{VERSION}-{ARCH_MACOS_NAMES[ARCH_MACOS]}.dmg" '
-                     f'Nagstamon\ {VERSION}\ Staging\ DMG/'
+                     f'Nagstamon_{VERSION}_Staging_DMG/'
                      ], shell=True)
 
-def debmain():
+def package_linux_deb():
     shutil.rmtree(SCRIPTS_DIR, ignore_errors=True)
     shutil.rmtree('{0}{1}.pybuild'.format(CURRENT_DIR, os.sep), ignore_errors=True)
     shutil.rmtree('{0}{1}debian'.format(NAGSTAMON_DIR, os.sep), ignore_errors=True)
@@ -228,18 +241,22 @@ def debmain():
 
     shutil.copytree('{0}{1}debian{1}'.format(CURRENT_DIR, os.sep), '{0}{1}debian'.format(NAGSTAMON_DIR, os.sep))
 
-    os.chmod('{0}{1}debian{1}rules'.format(CURRENT_DIR, os.sep), 0o755)
+    # just in case some Windows commit converted linebreaks
+    # for debian_file in glob.iglob('debian/*'):
+    #     subprocess.call(['dos2unix', f'{debian_file}'])
+
+    os.chmod(f'{CURRENT_DIR}/debian/rules', 0o755)
 
     subprocess.call(['fakeroot', 'debian/rules', 'build'])
 
     subprocess.call(['fakeroot', 'debian/rules', 'binary'])
 
     # copy .deb file to current directory
-    for deb in glob.iglob('../nagstamon*.deb'):
-        shutil.move(deb, CURRENT_DIR)
+    for debian_package in glob.iglob('../nagstamon*.deb'):
+        shutil.move(debian_package, CURRENT_DIR)
 
 
-def rpmmain():
+def package_linux_rpm():
     """
         create .rpm file via setup.py bdist_rpm - most settings are in setup.py
     """
@@ -248,14 +265,6 @@ def rpmmain():
 
     # masquerade .py file as .py-less
     shutil.copyfile('nagstamon.py', 'nagstamon')
-
-    # workaround for manpage gzipping bug in bdist_rpm
-    import gzip
-    man = open('Nagstamon/resources/nagstamon.1', 'rb')
-    mangz = gzip.open('Nagstamon/resources/nagstamon.1.gz', 'wb')
-    mangz.writelines(man)
-    mangz.close()
-    man.close()
 
     # run setup.py for rpm creation
     subprocess.call(['python3', 'setup.py', 'bdist_rpm'], shell=False)
@@ -270,21 +279,22 @@ def rpmmain():
 
 
 DISTS = {
-    'debian': debmain,
-    'ubuntu': debmain,
-    'linuxmint': debmain,
-    'fedora': rpmmain,
-    'rhel': rpmmain
+    'debian': package_linux_deb,
+    'ubuntu': package_linux_deb,
+    'linuxmint': package_linux_deb,
+    'fedora': package_linux_rpm,
+    'rhel': package_linux_rpm
 }
 
 if __name__ == '__main__':
     if platform.system() == 'Windows':
-        winmain()
+        package_windows()
     elif platform.system() == 'Darwin':
-        macmain()
+        package_macos()
     else:
         dist = get_distro()[0]
         if dist in DISTS:
+            zip_manpage()
             DISTS[dist]()
         else:
             print('Your system is not supported for automated build yet')

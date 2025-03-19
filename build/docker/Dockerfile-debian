@@ -1,4 +1,4 @@
-FROM debian:10
+FROM debian:11
 LABEL maintainer=henri@nagstamon.de
 
 RUN apt -y update
@@ -7,6 +7,7 @@ RUN apt -y install apt-utils
 # python3-pysocks in debian:8 becomes python3-socks in later versions
 RUN apt -y install debhelper \
                    dh-python \
+                   dos2unix \
                    fakeroot \
                    git \
                    make \

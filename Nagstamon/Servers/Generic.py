@@ -344,7 +344,7 @@ class GenericServer(object):
 
         return session
 
-    def proxify(self, requester):
+    def proxify(self, session):
         '''
             add proxy information to session or single request
         '''
@@ -352,11 +352,11 @@ class GenericServer(object):
         if self.use_proxy is True:
             if self.use_proxy_from_os is True:
                 # get proxies from system directly instead of via trust_env
-                requester.proxies = getproxies()
+                session.proxies = getproxies()
                 # check for missing '/' to make proxies work
-                for scheme, proxy_url in requester.proxies.items():
+                for scheme, proxy_url in session.proxies.items():
                     if not proxy_url.endswith('/'):
-                        requester.proxies[scheme] = proxy_url + '/'
+                        session.proxies[scheme] = proxy_url + '/'
                 pass
             else:
                 # check if username and password are given and provide credentials if needed
@@ -375,9 +375,10 @@ class GenericServer(object):
                     # merge proxy URL
                     proxy_url = f'{scheme}//{user_pass}@{host_port}/'
                     # fill session.proxies for both protocols
-                    requester.proxies = {'http': proxy_url, 'https': proxy_url}
+                    session.proxies = {'http': proxy_url, 'https': proxy_url}
         else:
-            requester.proxies = None
+            session.proxies = None
+            session.trust_env = False
 
     def reset_HTTP(self):
         '''
@@ -1086,7 +1087,7 @@ class GenericServer(object):
 
             for service in host.services.values():
                 # add service name for sorting
-                service.service = service.name
+                service.service = service.get_service_name()
                 # Some generic filtering
                 if service.acknowledged is True and conf.filter_acknowledged_hosts_services is True:
                     if conf.debug_mode:
@@ -1542,7 +1543,7 @@ class GenericServer(object):
                     # cleanup
                     del temporary_session
 
-            except Exception:
+            except:
                 if conf.debug_mode:
                     self.error(sys.exc_info())
                 result, error = self.error(sys.exc_info())
@@ -1580,7 +1581,7 @@ class GenericServer(object):
                               status_code=response.status_code)
 
 
-        except Exception:
+        except:
             self.error(sys.exc_info())
             result, error = self.error(sys.exc_info())
             return Result(result=result, error=error, status_code=response.status_code)

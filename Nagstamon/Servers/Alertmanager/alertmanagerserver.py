@@ -224,11 +224,12 @@ class AlertmanagerServer(GenericServer):
             for alert in data:
                 alert_data = self._process_alert(alert)
                 if not alert_data:
-                    break
+                    continue
 
                 service = AlertmanagerService()
                 service.host = alert_data['host']
-                service.name = alert_data['name']
+                service.name = alert_data['fingerprint']
+                service.display_name = alert_data['name']
                 service.server = alert_data['server']
                 service.status = alert_data['status']
                 service.labels = alert_data['labels']
@@ -248,12 +249,6 @@ class AlertmanagerServer(GenericServer):
                     self.new_hosts[service.host].name = str(service.host)
                     self.new_hosts[service.host].server = self.name
                 self.new_hosts[service.host].services[service.name] = service
-                if service.name not in self.new_hosts[service.host].services:
-                    self.new_hosts[service.host].services[service.name] = service
-                else:
-                    # Compare the labels if they match do *not* create a new "instance" of alert
-                    if not service.labels == self.new_hosts[service.host].services[service.name].labels:
-                        self.new_hosts[service.host].services[service.name + service.fingerprint[0:4]] = service
 
         except Exception as the_exception:
             # set checking flag back to False
