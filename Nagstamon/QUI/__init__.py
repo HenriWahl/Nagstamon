@@ -5334,7 +5334,7 @@ class Dialog_Settings(Dialog):
             del (row, count)
 
         # delete server config file from disk
-        conf.delete_file('servers', 'server_{0}.conf'.format(quote(server.name)))
+        conf.delete_file('servers', 'server_{0}.conf'.format(quote(server.name, safe='')))
         del server
 
     def refresh_list(self, list_widget, list_conf, current=''):
@@ -5408,7 +5408,7 @@ class Dialog_Settings(Dialog):
             del (row, count)
 
         # delete action config file from disk
-        conf.delete_file('actions', 'action_{0}.conf'.format(quote(action.name)))
+        conf.delete_file('actions', 'action_{0}.conf'.format(quote(action.name, safe='')))
         del action
 
     def choose_sound_file_decoration(method):
@@ -6158,7 +6158,7 @@ class Dialog_Server(Dialog):
             # delete old server .conf file to reflect name changes
             # new one will be written soon
             if self.previous_server_conf is not None:
-                conf.delete_file('servers', 'server_{0}.conf'.format(quote(self.previous_server_conf.name)))
+                conf.delete_file('servers', 'server_{0}.conf'.format(quote(self.previous_server_conf.name, safe='')))
 
             # store server settings
             conf.SaveMultipleConfig('servers', 'server')
@@ -6378,7 +6378,7 @@ class Dialog_Action(Dialog):
             # delete old action .conf file to reflect name changes
             # new one will be written soon
             if self.previous_action_conf is not None:
-                conf.delete_file('actions', 'action_{0}.conf'.format(quote(self.previous_action_conf.name)))
+                conf.delete_file('actions', 'action_{0}.conf'.format(quote(self.previous_action_conf.name, safe='')))
 
             # store server settings
             conf.SaveMultipleConfig('actions', 'action')
