@@ -145,9 +145,6 @@ def package_windows():
 
     # rename output
     print('debug:', DIR_BUILD_EXE, DIR_BUILD_NAGSTAMON)
-    subprocess.run(['pwsh.exe', 'dir', DIR_BUILD_EXE])
-    subprocess.run(['pwsh.exe', 'dir', DIR_BUILD_NAGSTAMON])
-
     os.rename(DIR_BUILD_EXE, DIR_BUILD_NAGSTAMON)
 
     # create simple batch file for debugging
