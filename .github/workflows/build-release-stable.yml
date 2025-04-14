@@ -244,7 +244,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.python_win_version }}
+          python-version: '${{ env.python_win_version }}'
           architecture: x86
       #  no PyQt6 for win32 available on pypi.org
       - run: ((Get-Content -path build/requirements/windows.txt -Raw) -replace 'pyqt6.*','pyqt5') | Set-Content -Path build/requirements/windows.txt
@@ -273,7 +273,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.python_win_version }}
+          python-version: '${{ env.python_win_version }}'
           architecture: x64
       - run: python -m pip install --no-warn-script-location -r build/requirements/windows.txt
       # pretty hacky but no other idea to avoid gssapi being installed which breaks requests-kerberos
@@ -300,7 +300,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.python_win_version }}
+          python-version: '${{ env.python_win_version }}'
           architecture: x64
       - run: python -m pip install --no-warn-script-location -r build/requirements/windows.txt
       # pretty hacky but no other idea to avoid gssapi being installed which breaks requests-kerberos
