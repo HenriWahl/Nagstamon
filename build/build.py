@@ -144,6 +144,10 @@ def package_windows():
         subprocess.run(['pwsh.exe', './windows/code_signing.ps1', 'build/Nagstamon/*.exe'])
 
     # rename output
+    print('debug:', DIR_BUILD_EXE, DIR_BUILD_NAGSTAMON)
+    subprocess.run(['pwsh.exe', 'dir', DIR_BUILD_EXE])
+    subprocess.run(['pwsh.exe', 'dir', DIR_BUILD_NAGSTAMON])
+
     os.rename(DIR_BUILD_EXE, DIR_BUILD_NAGSTAMON)
 
     # create simple batch file for debugging
