@@ -4,8 +4,10 @@ LABEL maintainer=henri@nagstamon.de
 # avoid Cisco OpenH264 plugin causing upgrade failure
 RUN dnf config-manager setopt fedora-cisco-openh264.enabled=false
 
+# Upgrade first
 RUN dnf -y upgrade
 
+# Install dependencies
 RUN dnf -y install createrepo_c \
                    desktop-file-utils \
                    git \
@@ -27,5 +29,6 @@ RUN dnf -y install createrepo_c \
                    qt6-qtmultimedia \
                    rpm-build
 
+# Finally build
 CMD cd /nagstamon/build && \
     /usr/bin/python3 build.py
