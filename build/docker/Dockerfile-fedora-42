@@ -1,6 +1,10 @@
 FROM fedora:42
 LABEL maintainer=henri@nagstamon.de
 
+# Because it happened that fedora:42 image actually was a fedora:43 image but stayed so
+# due to caching the image I add some random characters to force a rebuild of the image if needed:
+# 1 2 1 2 keep it on...
+
 # avoid Cisco OpenH264 plugin causing upgrade failure
 RUN dnf config-manager setopt fedora-cisco-openh264.enabled=false
 
