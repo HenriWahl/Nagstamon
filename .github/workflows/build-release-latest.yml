@@ -90,8 +90,6 @@ jobs:
       # somehow weird way to get the hash over the Dockerfile to be aware if it changed
       - id: dockerfile_hash
         run: echo "HASH=$(md5sum build/docker/Dockerfile-${{ github.job }}-${{ matrix.version }} | cut -d\  -f1)" >> $GITHUB_OUTPUT
-      - run: echo ${{ github.job }}
-      - run: ls -l build/docker/Dockerfile-${{ github.job }}-${{ matrix.version }}
       # if image defined by variable steps.dockerfile_hash.outputs.HASH is not pullable aka does not exist it will be created and pushed
       - run: docker pull ${{ env.cr_image }}-${{ github.job }}-${{ matrix.version }}:${{ steps.dockerfile_hash.outputs.HASH }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}-${{ matrix.version }}:${{ steps.dockerfile_hash.outputs.HASH }} -f build/docker/Dockerfile-${{ github.job }}-${{ matrix.version }} .
       - run: docker push ${{ env.cr_image }}-${{ github.job }}-${{ matrix.version }}:${{ steps.dockerfile_hash.outputs.HASH }}
@@ -119,7 +117,8 @@ jobs:
       - id: dockerfile_hash
         run: echo "HASH=$(md5sum build/docker/Dockerfile-${{ github.job }} | cut -d\  -f1)" >> $GITHUB_OUTPUT
       # if image defined by variable steps.dockerfile_hash.outputs.HASH is not pullable aka does not exist it will be created and pushed
-      - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }} -f build/docker/Dockerfile-${{ github.job }} .
+      #- run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }} -f build/docker/Dockerfile-${{ github.job }} .
+      - run: /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }} -f build/docker/Dockerfile-${{ github.job }} .
       - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }}
       # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
       - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }}
