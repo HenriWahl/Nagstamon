@@ -122,6 +122,7 @@ class ZabbixServer(GenericServer):
         # create Nagios items dictionary with to lists for services and hosts
         # every list will contain a dictionary for every failed service/host
         # this dictionary is only temporarily
+        now = time.time()
         nagitems = {"services": [], "hosts": []}
 
         # Create URLs for the configured filters
@@ -141,6 +142,7 @@ class ZabbixServer(GenericServer):
                 "output": ["active_since", "active_till", "tags"],
                 "selectTags": "extend"
             })
+            #"%s - Took %s seconds to get maintenances" % (self.name, time.time() - now))
             for m in maintenances:
                 if int(m["active_since"]) > now_ts or int(m["active_till"]) < now_ts:
                     continue
@@ -154,22 +156,31 @@ class ZabbixServer(GenericServer):
         try:
             try:
                 # Get a list of all issues (AKA tripped triggers)
-                services = self.zapi.trigger.get({'only_true': True,
+                # add Pagination
+                chunk_size = 200
+                services_ids = self.zapi.trigger.get({'only_true': True,
                                                   'skipDependent': True,
                                                   'monitored': True,
                                                   'active': True,
-                                                  'output': ['triggerid', 'description', 'lastchange', 'manual_close'],
-                                                  # 'expandDescription': True,
-                                                  # 'expandComment': True,
-                                                  'selectLastEvent': ['eventid', 'name', 'ns', 'clock', 'acknowledged',
-                                                                      'value', 'severity'],
-                                                  'selectHosts': ["hostid", "host", "name", "status", "available",
-                                                                  "maintenance_status", "maintenance_from"],
-                                                  'selectItems': ['name', 'lastvalue', 'state', 'lastclock'],
-                                                  # thats for zabbix api 2.0+
-                                                  'filter': {'value': 1},
+                                                  'output': ['triggerid']
                                                   })
-
+                services = []
+                for i in range(0, len(services_ids), chunk_size):
+                    services.extend(self.zapi.trigger.get({'only_true': True,
+                                                           'skipDependent': True,
+                                                           'monitored': True,
+                                                           'active': True,
+                                                           'output': ['triggerid', 'description', 'lastchange', 'manual_close'],
+                                                           # 'expandDescription': True,
+                                                           # 'expandComment': True,
+                                                           'triggerids': [trigger['triggerid'] for trigger in services_ids[i:i + chunk_size]],
+                                                           'selectLastEvent': ['eventid', 'name', 'ns', 'clock', 'acknowledged',
+                                                                               'value', 'severity'],
+                                                           'selectHosts': ["hostid", "host", "name", "status", "available",
+                                                                     "active_available", "maintenance_status", "maintenance_from"],
+                                                           'selectItems': ['name', 'lastvalue', 'state', 'lastclock']
+                                                        }))
+                #print("%s - Took %s seconds to get triggers" % (self.name, time.time() - now))
                 # https://github.com/HenriWahl/Nagstamon/issues/826 Zabbix 5.0 may have an empty list for
                 # the 'lastEvent' key if the trigger has no associated events
                 for service in services:
@@ -199,148 +210,107 @@ class ZabbixServer(GenericServer):
                     service = e.result.content
                     ret = e.result
 
-            # =========================================
-            # Hosts Zabbix API data
-            # =========================================
-            # Create Hostids for shorten Query
-            try:
-                hosts = []
-                if self.zapi.api_version > '5.4':  # For Version 5.4 and higher
-                    # Some performance improvement for 5.4
-                    hostids = []
-                    # get just involved Hosts.
-                    for service in services:
-                        for host in service["hosts"]:
-                            hostids.append(host["hostid"])
+            hosts = []
+            # get just involved Hosts.
+            for service in services:
+                for host in service["hosts"]:
+                    hosts.append(host)
+            # get All Hosts.
+            # 1. Store data in cache (to be used by events)
+            # 2. We store as faulty two kinds of hosts incidences:
+            #    - Disabled hosts
+            #    - Hosts with issues trying to connect to agent/service
+            #    - In maintenance
+            # status = 1 -> Disabled
+            # available ZBX: 0 -> No agents 1 -> available 2-> Agent access error
+            # ipmi_available IPMI: 0 -> No agents 1 -> available 2-> Agent access error
+            # maintenance_status = 1 In maintenance
+            for host in hosts:
+                n = {
+                    'host': host['host'],
+                    'name': host['name'],
+                    'server': self.name,
+                    'status': 'UP',  # Host is OK by default
+                    'last_check': 'n/a',
+                    'duration': '',
+                    'attempt': 'N/A',
+                    'status_information': '',
+                    # status flags
+                    'passiveonly': False,
+                    'notifications_disabled': False,
+                    'flapping': False,
+                    'acknowledged': False,
+                    'scheduled_downtime': False,
+                    # Zabbix backend data
+                    'hostid': host['hostid'],
+                    'site': '',
+                    # 'address': host['interfaces'][0]['ip'],
+                }
 
-                    try:
-                        hosts = self.zapi.host.get({"output": ["hostid", "host", "name", "status", "available",
-                                                               "maintenance_status", "maintenance_from"],
-                                                    "hostids": hostids,
-                                                    "selectInterfaces": ["ip"],
-                                                    "filter": {}
-                                                    })
-                    except (ZabbixError, ZabbixAPIException, APITimeout, Already_Exists):
-                        # set checking flag back to False
-                        self.isChecking = False
-                        result, error = self.error(sys.exc_info())
-                        return Result(result=result, error=error)
-                else:
-                    try:
-                        # TODO: This Query can be removed when Zabbix Version 4 Support is dropped.
-                        hosts = self.zapi.host.get({"output": ["hostid", "host", "name", "status", "available",
-                                                               "error", "errors_from", # dropped in Version 5.4
-                                                               "snmp_available", "snmp_error", "snmp_errors_from", # dropped in Version 5.4
-                                                               "ipmi_available", "ipmi_error", "ipmi_errors_from", # dropped in Version 5.4
-                                                               "jmx_available", "jmx_error", "jmx_errors_from", # dropped in Version 5.4
-                                                               "maintenance_status", "maintenance_from"],
-                                                    "selectInterfaces": ["ip"],
-                                                    "filter": {}
-                                                    })
-                    except (ZabbixError, ZabbixAPIException, APITimeout, Already_Exists):
-                        # set checking flag back to False
-                        self.isChecking = False
-                        result, error = self.error(sys.exc_info())
-                        return Result(result=result, error=error)
-                # get All Hosts.
-                # 1. Store data in cache (to be used by events)
-                # 2. We store as faulty two kinds of hosts incidences:
-                #    - Disabled hosts
-                #    - Hosts with issues trying to connect to agent/service
-                #    - In maintenance
-                # status = 1 -> Disabled
-                # available ZBX: 0 -> No agents 1 -> available 2-> Agent access error
-                # ipmi_available IPMI: 0 -> No agents 1 -> available 2-> Agent access error
-                # maintenance_status = 1 In maintenance
-                for host in hosts:
-                    n = {
-                        'host': host['host'],
-                        'name': host['name'],
-                        'server': self.name,
-                        'status': 'UP',  # Host is OK by default
-                        'last_check': 'n/a',
-                        'duration': '',
-                        'attempt': 'N/A',
-                        'status_information': '',
-                        # status flags
-                        'passiveonly': False,
-                        'notifications_disabled': False,
-                        'flapping': False,
-                        'acknowledged': False,
-                        'scheduled_downtime': False,
-                        # Zabbix backend data
-                        'hostid': host['hostid'],
-                        'site': '',
-                        # 'address': host['interfaces'][0]['ip'],
-                    }
+                # try to fix https://github.com/HenriWahl/Nagstamon/issues/687
+                #
+                # if interface exists, get ip addres
+                n['address'] = host['interfaces'][0]['ip'] if 'interfaces' in host and len(host['interfaces']) > 0 else ''
 
-                    # try to fix https://github.com/HenriWahl/Nagstamon/issues/687
-                    #
-                    n['address'] = host['interfaces'][0]['ip'] if len(host['interfaces']) > 0 else ''
+                if host['maintenance_status'] == '1':
+                    n['scheduled_downtime'] = True
 
-                    if host['maintenance_status'] == '1':
-                        n['scheduled_downtime'] = True
+                if host['status'] == '1':
+                    # filter services and hosts by "filter_hosts_services_disabled_notifications"
+                    n['notifications_disabled'] = True
+                    # Filter only hosts by filter "Host & services with disabled checks"
+                    n['passiveonly'] = True
+                # attempt to fix https://github.com/HenriWahl/Nagstamon/issues/535
+                # TODO: This can be simplified if Zabbix Version 5.0 Support is dropped.
+                # if host['available'] == '0' and host['snmp_available'] == '0' and host['ipmi_available'] == '0' and host['jmx_available'] == '0':
+                #     n['status']             = 'UNREACHABLE'
+                #     n['status_information'] = 'Host agents in unknown state'
+                #     n['duration']           = 'Unknown'
+                if host.get('ipmi_available', '0') == '2':
+                    n['status'] = 'DOWN'
+                    n['status_information'] = host['ipmi_error']
+                    n['duration'] = HumanReadableDurationFromTimestamp(host['ipmi_errors_from'])
+                if host.get('snmp_available', '0') == '2':
+                    n['status'] = 'DOWN'
+                    n['status_information'] = host['snmp_error']
+                    n['duration'] = HumanReadableDurationFromTimestamp(host['snmp_errors_from'])
+                if host.get('jmx_available', '0') == '2':
+                    n['status'] = 'DOWN'
+                    n['status_information'] = host['jmx_error']
+                    n['duration'] = HumanReadableDurationFromTimestamp(host['jmx_errors_from'])
+                if host.get('available', '0') == '2' or host.get('active_available', '0') == '2':
+                    n['status'] = 'DOWN'
+                    n['status_information'] = host['error']
+                    n['duration'] = HumanReadableDurationFromTimestamp(host['errors_from'])
+                # Zabbix shows OK hosts too - kick 'em!
+                if not n['status'] == 'UP':
+                    # add dictionary full of information about this host item to nagitems
+                    nagitems["hosts"].append(n)
 
-                    if host['status'] == '1':
-                        # filter services and hosts by "filter_hosts_services_disabled_notifications"
-                        n['notifications_disabled'] = True
-                        # Filter only hosts by filter "Host & services with disabled checks"
-                        n['passiveonly'] = True
-                    # attempt to fix https://github.com/HenriWahl/Nagstamon/issues/535
-                    # TODO: This can be simplified if Zabbix Version 5.0 Support is dropped.
-                    # if host['available'] == '0' and host['snmp_available'] == '0' and host['ipmi_available'] == '0' and host['jmx_available'] == '0':
-                    #     n['status']             = 'UNREACHABLE'
-                    #     n['status_information'] = 'Host agents in unknown state'
-                    #     n['duration']           = 'Unknown'
-                    if host.get('ipmi_available', '0') == '2':
-                        n['status'] = 'DOWN'
-                        n['status_information'] = host['ipmi_error']
-                        n['duration'] = HumanReadableDurationFromTimestamp(host['ipmi_errors_from'])
-                    if host.get('snmp_available', '0') == '2':
-                        n['status'] = 'DOWN'
-                        n['status_information'] = host['snmp_error']
-                        n['duration'] = HumanReadableDurationFromTimestamp(host['snmp_errors_from'])
-                    if host.get('jmx_available', '0') == '2':
-                        n['status'] = 'DOWN'
-                        n['status_information'] = host['jmx_error']
-                        n['duration'] = HumanReadableDurationFromTimestamp(host['jmx_errors_from'])
-                    if host.get('available', '0') == '2':
-                        n['status'] = 'DOWN'
-                        n['status_information'] = host['error']
-                        n['duration'] = HumanReadableDurationFromTimestamp(host['errors_from'])
-                    # Zabbix shows OK hosts too - kick 'em!
-                    if not n['status'] == 'UP':
-                        # add dictionary full of information about this host item to nagitems
-                        nagitems["hosts"].append(n)
+                # after collection data in nagitems create objects from its informations
+                # host objects contain service objects
+                # key_host = n["host"]
+                key_host = n["name"] if len(n['name']) != 0 else n["host"]
 
-                    # after collection data in nagitems create objects from its informations
-                    # host objects contain service objects
-                    # key_host = n["host"]
-                    key_host = n["name"] if len(n['name']) != 0 else n["host"]
+                # key_host = n["hostid"]
+                if key_host not in self.new_hosts:
+                    self.new_hosts[key_host] = GenericHost()
+                    self.new_hosts[key_host].hostid = n["hostid"]
+                    self.new_hosts[key_host].host = n["host"]
+                    self.new_hosts[key_host].name = n["name"]
+                    self.new_hosts[key_host].status = n["status"]
+                    self.new_hosts[key_host].last_check = n["last_check"]
+                    self.new_hosts[key_host].duration = n["duration"]
+                    self.new_hosts[key_host].attempt = n["attempt"]
+                    self.new_hosts[key_host].status_information = n["status_information"]
+                    self.new_hosts[key_host].site = n["site"]
+                    self.new_hosts[key_host].address = n["address"]
+                    self.new_hosts[key_host].notifications_disabled = n["notifications_disabled"]
+                    self.new_hosts[key_host].scheduled_downtime = n["scheduled_downtime"]
+                    self.new_hosts[key_host].passiveonly = n["passiveonly"]
+                    self.new_hosts[key_host].acknowledged = n["acknowledged"]
+                    self.new_hosts[key_host].flapping = n["flapping"]
 
-                    # key_host = n["hostid"]
-                    if key_host not in self.new_hosts:
-                        self.new_hosts[key_host] = GenericHost()
-                        self.new_hosts[key_host].hostid = n["hostid"]
-                        self.new_hosts[key_host].host = n["host"]
-                        self.new_hosts[key_host].name = n["name"]
-                        self.new_hosts[key_host].status = n["status"]
-                        self.new_hosts[key_host].last_check = n["last_check"]
-                        self.new_hosts[key_host].duration = n["duration"]
-                        self.new_hosts[key_host].attempt = n["attempt"]
-                        self.new_hosts[key_host].status_information = n["status_information"]
-                        self.new_hosts[key_host].site = n["site"]
-                        self.new_hosts[key_host].address = n["address"]
-                        self.new_hosts[key_host].notifications_disabled = n["notifications_disabled"]
-                        self.new_hosts[key_host].scheduled_downtime = n["scheduled_downtime"]
-                        self.new_hosts[key_host].passiveonly = n["passiveonly"]
-                        self.new_hosts[key_host].acknowledged = n["acknowledged"]
-                        self.new_hosts[key_host].flapping = n["flapping"]
-
-            except ZabbixError:
-                self.isChecking = False
-                result, error = self.error(sys.exc_info())
-                return Result(result=result, error=error)
             ###
             for service in services:
                 # Zabbix probably shows OK services too - kick 'em!
@@ -446,7 +416,7 @@ class ZabbixServer(GenericServer):
             result, error = self.error(sys.exc_info())
             print(sys.exc_info())
             return Result(result=result, error=error)
-
+        #print("%s - Took %s seconds to finish." % (self.name, time.time() - now))
         return ret
 
     def _open_browser(self, url):
