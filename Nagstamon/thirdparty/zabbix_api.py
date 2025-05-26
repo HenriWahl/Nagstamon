@@ -235,7 +235,7 @@ class ZabbixAPI(object):
 
         if self.api_version > '6.4':
             headers['Authorization'] = 'Bearer ' + self.auth
-        if self.httpuser:
+        if self.httpuser and "Authorization" not in headers.keys():
             self.debug(logging.INFO, "HTTP Auth enabled")
             auth = 'Basic ' + string.strip(base64.encodestring(self.httpuser + ':' + self.httppasswd))
             headers['Authorization'] = auth
