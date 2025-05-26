@@ -122,13 +122,13 @@ class ZabbixServer(GenericServer):
         # create Nagios items dictionary with to lists for services and hosts
         # every list will contain a dictionary for every failed service/host
         # this dictionary is only temporarily
-        now = time.time()
+        # Debugging
+        #now = time.time()
         nagitems = {"services": [], "hosts": []}
 
         # Create URLs for the configured filters
         self._login()
         # print(self.name)
-
         # =========================================
         # Service
         # =========================================
@@ -142,6 +142,7 @@ class ZabbixServer(GenericServer):
                 "output": ["active_since", "active_till", "tags"],
                 "selectTags": "extend"
             })
+            #Debugging
             #"%s - Took %s seconds to get maintenances" % (self.name, time.time() - now))
             for m in maintenances:
                 if int(m["active_since"]) > now_ts or int(m["active_till"]) < now_ts:
@@ -159,11 +160,11 @@ class ZabbixServer(GenericServer):
                 # add Pagination
                 chunk_size = 200
                 services_ids = self.zapi.trigger.get({'only_true': True,
-                                                  'skipDependent': True,
-                                                  'monitored': True,
-                                                  'active': True,
-                                                  'output': ['triggerid']
-                                                  })
+                                                      'skipDependent': True,
+                                                      'monitored': True,
+                                                      'active': True,
+                                                      'output': ['triggerid']
+                                                      })
                 services = []
                 for i in range(0, len(services_ids), chunk_size):
                     services.extend(self.zapi.trigger.get({'only_true': True,
@@ -180,6 +181,7 @@ class ZabbixServer(GenericServer):
                                                                      "active_available", "maintenance_status", "maintenance_from"],
                                                            'selectItems': ['name', 'lastvalue', 'state', 'lastclock']
                                                         }))
+                # Debugging
                 #print("%s - Took %s seconds to get triggers" % (self.name, time.time() - now))
                 # https://github.com/HenriWahl/Nagstamon/issues/826 Zabbix 5.0 may have an empty list for
                 # the 'lastEvent' key if the trigger has no associated events
@@ -418,6 +420,7 @@ class ZabbixServer(GenericServer):
             result, error = self.error(sys.exc_info())
             print(sys.exc_info())
             return Result(result=result, error=error)
+        # Debugging
         #print("%s - Took %s seconds to finish." % (self.name, time.time() - now))
         return ret
 
