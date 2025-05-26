@@ -209,6 +209,8 @@ class ZabbixServer(GenericServer):
                 else:
                     service = e.result.content
                     ret = e.result
+            except Exception:
+                print(sys.exc_info())
 
             hosts = []
             # get just involved Hosts.
