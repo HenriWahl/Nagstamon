@@ -94,6 +94,8 @@ class ZabbixServer(GenericServer):
         except ZabbixAPIException:
             result, error = self.error(sys.exc_info())
             return Result(result=result, error=error)
+        except ZabbixAPIException as e:
+            raise e
 
     def getLastApp(self, this_item):
         if len(this_item) > 0:
@@ -127,7 +129,11 @@ class ZabbixServer(GenericServer):
         nagitems = {"services": [], "hosts": []}
 
         # Create URLs for the configured filters
-        self._login()
+        try:
+            self._login()
+        except Exception:
+            result, error = self.error(sys.exc_info())
+            return Result(result=result, error=error)
         # print(self.name)
         # =========================================
         # Service
@@ -153,6 +159,8 @@ class ZabbixServer(GenericServer):
         # Don't really care if this fails, just means we won't exclude any downtimed services
         except Exception:
             print(sys.exc_info())
+            result, error = self.error(sys.exc_info())
+            return Result(result=result, error=error)
 
         try:
             try:
@@ -212,7 +220,9 @@ class ZabbixServer(GenericServer):
                     service = e.result.content
                     ret = e.result
             except Exception:
+                result, error = self.error(sys.exc_info())
                 print(sys.exc_info())
+                return Result(result=result, error=error)
 
             hosts = []
             # get just involved Hosts.
