@@ -89,11 +89,14 @@ class ZabbixServer(GenericServer):
                 self.zapi = ZabbixAPI(server=self.monitor_url, path="", log_level=self.log_level,
                                       validate_certs=self.validate_certs, timeout=self.timeout)
             # login if not yet logged in, or if login was refused previously
-            if not self.zapi.logged_in():
-                self.zapi.login(self.username, self.password)
-        except ZabbixAPIException:
-            result, error = self.error(sys.exc_info())
-            return Result(result=result, error=error)
+            if self.authentication == 'bearer':
+                if not self.zapi.logged_in(bearer=True):
+                    self.zapi.login(self.username, self.password, bearer=True)
+            elif self.authentication == 'basic':
+                if not self.zapi.logged_in():
+                    self.zapi.login(self.username, self.password)
+            else:
+                raise Exception("Invalid authentication method")
         except ZabbixAPIException as e:
             raise e
 
