@@ -139,7 +139,10 @@ class ZabbixAPI(object):
         self._setuplogging()
         self.set_log_level(log_level)
         self.server = server
-        self.url = server + '/api_jsonrpc.php'
+        if "/api_jsonrpc.php" not in server:
+            self.url = server + '/api_jsonrpc.php'
+        else:
+            self.url = server
         self.proto = self.server.split("://")[0]
         # self.proto=proto
         self.httpuser = user
