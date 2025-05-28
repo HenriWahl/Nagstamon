@@ -471,7 +471,11 @@ class ZabbixServer(GenericServer):
             self.debug(server=self.get_name(),
                        debug="Set Acknowledge Host: " + host + " Service: " + service + " Sticky: " + str(
                            sticky) + " persistent:" + str(persistent) + " All services: " + str(all_services))
-        self._login()
+        try:
+            self._login()
+        except Exception:
+            self.error(sys.exc_info())
+            return
         eventids = set()
         unclosable_events = set()
         if all_services is None:
@@ -525,7 +529,7 @@ class ZabbixServer(GenericServer):
                 except ZabbixAPIException as e:
                     if "Incorrect user name or password or account is temporarily blocked" in str(e):
                         self.error(str(e))
-                        pass
+                        return
                     else:
                         raise e
 
