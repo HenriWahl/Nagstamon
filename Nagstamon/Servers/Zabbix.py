@@ -500,6 +500,11 @@ class ZabbixServer(GenericServer):
             # 4 - add message
             # 8 - change severity
             # 16 - unacknowledge event
+            # 32 - suppress event;
+            # 64 - unsuppress event;
+            # 128 - change event rank to cause;
+            # 256 - change event rank to symptom.
+            # sticky = close problem  # TODO: make visible in GUI
             actions = 2
             if comment:
                 actions |= 4
@@ -515,8 +520,14 @@ class ZabbixServer(GenericServer):
             else:
                 if sticky:
                     actions |= 1
-                # print("Events to acknowledge: " + str(eventids) + " Close: " + str(actions))
-                self.zapi.event.acknowledge({'eventids': list(eventids), 'message': comment, 'action': actions})
+                try:
+                    self.zapi.event.acknowledge({'eventids': list(eventids), 'message': comment, 'action': actions})
+                except ZabbixAPIException as e:
+                    if "Incorrect user name or password or account is temporarily blocked" in str(e):
+                        self.error(str(e))
+                        pass
+                    else:
+                        raise e
 
     def _set_downtime(self, hostname, service, author, comment, fixed, start_time, end_time, hours, minutes):
         # Check if there is an associated Application tag with this trigger/item
