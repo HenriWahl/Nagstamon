@@ -95,7 +95,6 @@ class Already_Exists(ZabbixAPIException):
 
 
 class InvalidProtoError(ZabbixAPIException):
-
     """ Recived an invalid proto """
     pass
 
@@ -192,7 +191,10 @@ class ZabbixAPI(object):
 
         return json.dumps(obj)
 
-    def login(self, user='', password='', save=True):
+    def login(self, user='', password='', bearer=False, save=True):
+        if bearer:
+            self.auth = password
+            return
         if user != '':
             l_user = user
             l_password = password
@@ -220,8 +222,10 @@ class ZabbixAPI(object):
         result = self.do_request(obj)
         self.auth = result['result']
 
-    def test_login(self):
-        if self.auth != '':
+    def test_login(self, bearer=False):
+        if bearer:
+            obj = self.json_obj('user.checkAuthentication', {'token': self.auth})
+        else:
             obj = self.json_obj('user.checkAuthentication', {'sessionid': self.auth})
             result = self.do_request(obj)
 
@@ -231,6 +235,12 @@ class ZabbixAPI(object):
             return True  # auth hash good
         else:
             return False
+        result = self.do_request(obj, auth_header=False)
+        if not result['result']:
+            self.auth = ''
+            return False  # auth hash bad
+        return True  # auth hash good
+
 
     def do_request(self, json_obj):
         headers = {'Content-Type': 'application/json-rpc',
@@ -261,7 +271,7 @@ class ZabbixAPI(object):
             http_handler = urllib2.HTTPHandler(debuglevel=0)
             opener = urllib2.build_opener(http_handler)
         else:
-            raise ZabbixAPIException("Unknow protocol %s" % self.proto)
+            raise ZabbixAPIException(f"Unknown protocol {self.proto}")
 
         urllib2.install_opener(opener)
         try:
@@ -304,9 +314,10 @@ class ZabbixAPI(object):
                 raise ZabbixAPIException(msg, jobj['error']['code'])
         return jobj
 
-    def logged_in(self):
+    def logged_in(self, bearer=False):
         if self.auth != '':
-            return True
+            if self.test_login(bearer):
+                return True
         return False
 
     def get_api_version(self, **options):
