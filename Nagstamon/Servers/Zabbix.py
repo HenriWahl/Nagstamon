@@ -49,6 +49,7 @@ class ZabbixServer(GenericServer):
         GenericServer.__init__(self, **kwds)
 
         # Prepare all urls needed by nagstamon -
+        self.authentication = conf.servers[self.get_name()].authentication
         self.urls = {}
         # self.statemap = {}
         self.statemap = {
