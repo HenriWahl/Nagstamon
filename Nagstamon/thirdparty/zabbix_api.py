@@ -95,7 +95,6 @@ class Already_Exists(ZabbixAPIException):
 
 
 class InvalidProtoError(ZabbixAPIException):
-
     """ Recived an invalid proto """
     pass
 
@@ -139,7 +138,10 @@ class ZabbixAPI(object):
         self._setuplogging()
         self.set_log_level(log_level)
         self.server = server
-        self.url = server + '/api_jsonrpc.php'
+        if "/api_jsonrpc.php" not in server:
+            self.url = server + '/api_jsonrpc.php'
+        else:
+            self.url = server
         self.proto = self.server.split("://")[0]
         # self.proto=proto
         self.httpuser = user
@@ -189,7 +191,10 @@ class ZabbixAPI(object):
 
         return json.dumps(obj)
 
-    def login(self, user='', password='', save=True):
+    def login(self, user='', password='', bearer=False, save=True):
+        if bearer:
+            self.auth = password
+            return
         if user != '':
             l_user = user
             l_password = password
@@ -217,33 +222,94 @@ class ZabbixAPI(object):
         result = self.do_request(obj)
         self.auth = result['result']
 
-    def test_login(self):
-        if self.auth != '':
-            obj = self.json_obj('user.checkAuthentication', {'sessionid': self.auth})
-            result = self.do_request(obj)
-
-            if not result['result']:
-                self.auth = ''
-                return False  # auth hash bad
-            return True  # auth hash good
+    def test_login(self, bearer=False):
+        if bearer:
+            obj = self.json_obj('user.checkAuthentication', {'token': self.auth})
         else:
-            return False
+            obj = self.json_obj('user.checkAuthentication', {'sessionid': self.auth})
+        result = self.do_request(obj, auth_header=False)
+        if not result['result']:
+            self.auth = ''
+            return False  # auth hash bad
+        return True  # auth hash good
 
-    def do_request(self, json_obj):
-        headers = {'Content-Type': 'application/json-rpc',
-                   'User-Agent': 'python/zabbix_api'}
+    def do_request(self, json_obj, auth_header=True):
+        """
+        Send a request to the Zabbix API and handle the response.
 
-        if self.api_version > '6.4':
-            headers['Authorization'] = 'Bearer ' + self.auth
-        if self.httpuser and "Authorization" not in headers.keys():
-            self.debug(logging.INFO, "HTTP Auth enabled")
-            auth = 'Basic ' + string.strip(base64.encodestring(self.httpuser + ':' + self.httppasswd))
-            headers['Authorization'] = auth
+        Args:
+            json_obj: The JSON object to send
+            auth_header: Whether to include authentication headers
+
+        Returns:
+            dict: The JSON response from the API
+
+        Raises:
+            ZabbixAPIException: For various API and connection errors
+            APITimeout: When the request times out
+        """
+        headers = self._prepare_headers(auth_header)
         self.r_query.append(str(json_obj))
         self.debug(logging.INFO, "Sending: " + str(json_obj))
         self.debug(logging.DEBUG, "Sending headers: " + str(headers))
 
         request = urllib2.Request(url=self.url, data=json_obj.encode('utf-8'), headers=headers)
+        opener = self._create_url_opener()
+        urllib2.install_opener(opener)
+
+        try:
+            response = opener.open(request, timeout=self.timeout)
+        except ssl.SSLError as e:
+            error_message = e.message if hasattr(e, 'message') else str(e)
+            raise ZabbixAPIException(f"ssl.SSLError - {error_message}")
+        except socket.timeout:
+            raise APITimeout("HTTP read timeout")
+        except urllib2.URLError as e:
+            error_message = e.message if hasattr(e, 'message') else str(e)
+            raise ZabbixAPIException(f"urllib2.URLError - {error_message}")
+
+        self.debug(logging.INFO, f"Response Code: {response.code}")
+
+        if response.code != 200:
+            raise ZabbixAPIException(f"HTTP ERROR {response.status}: {response.reason}")
+
+        response_data = response.read()
+        if len(response_data) == 0:
+            raise ZabbixAPIException("Received zero answer")
+
+        try:
+            json_response = json.loads(response_data.decode('utf-8'))
+        except ValueError:
+            self.debug(logging.ERROR, f"Unable to decode response: {response_data}")
+            raise ZabbixAPIException("Unable to decode answer")
+
+        self.debug(logging.DEBUG, f"Response Body: {json_response}")
+        self.id += 1
+
+        if 'error' in json_response:
+            self._handle_api_error(json_response, json_obj)
+
+        return json_response
+
+    def _prepare_headers(self, auth_header):
+        """Prepare request headers including authentication if needed."""
+        headers = {
+            'Content-Type': 'application/json-rpc',
+            'User-Agent': 'python/zabbix_api'
+        }
+
+        if auth_header:
+            if self.api_version > '6.4':
+                headers['Authorization'] = f'Bearer {self.auth}'
+            elif self.httpuser and "Authorization" not in headers:
+                self.debug(logging.INFO, "HTTP Auth enabled")
+                auth_string = base64.encodestring(f"{self.httpuser}:{self.httppasswd}").strip()
+                headers['Authorization'] = f'Basic {auth_string}'
+
+        return headers
+
+    def _create_url_opener(self):
+        """Create and return the appropriate URL opener based on protocol."""
         if self.proto == "https":
             if HAS_SSLCONTEXT and not self.validate_certs:
                 ssl._create_default_https_context = ssl._create_unverified_context
@@ -258,52 +324,29 @@ class ZabbixAPI(object):
             http_handler = urllib2.HTTPHandler(debuglevel=0)
             opener = urllib2.build_opener(http_handler)
         else:
-            raise ZabbixAPIException("Unknow protocol %s" % self.proto)
+            raise ZabbixAPIException(f"Unknown protocol {self.proto}")
 
-        urllib2.install_opener(opener)
-        try:
-            response = opener.open(request, timeout=self.timeout)
-        except ssl.SSLError as e:
-            if hasattr(e, 'message'):
-                e = e.message
-            raise ZabbixAPIException("ssl.SSLError - %s" % e)
-        except socket.timeout as e:
-            raise APITimeout("HTTP read timeout",)
-        except urllib2.URLError as e:
-            if hasattr(e, 'message'):
-                e = e.message
-            raise ZabbixAPIException("urllib2.URLError - %s" % e)
-        self.debug(logging.INFO, "Response Code: " + str(response.code))
+        return opener
 
-        # NOTE: Getting a 412 response code means the headers are not in the
-        # list of allowed headers.
-        if response.code != 200:
-            raise ZabbixAPIException("HTTP ERROR %s: %s"
-                    % (response.status, response.reason))
-        reads = response.read()
-        if len(reads) == 0:
-            raise ZabbixAPIException("Received zero answer")
-        try:
-            jobj = json.loads(reads.decode('utf-8'))
-        except ValueError as msg:
-            print ("unable to decode. returned string: %s" % reads)
-            raise ZabbixAPIException("Unable to decode answer")
-        self.debug(logging.DEBUG, "Response Body: " + str(jobj))
+    def _handle_api_error(self, json_response, json_obj):
+        """Handle API error responses and raise appropriate exceptions."""
+        error = json_response['error']
 
-        self.id += 1
+        # Special handling for authentication failures to prevent sensitive data exposure
+        if error['code'] == -32500:
+            raise ZabbixAPIException("Incorrect user name or password or account is temporarily blocked.")
 
-        if 'error' in jobj:  # some exception
-            msg = 'Error %s: %s, %s while sending %s' % (jobj['error']['code'],
-                    jobj['error']['message'], jobj['error']['data'], str(json_obj))
-            if re.search(r'.*already\sexists.*', jobj['error']['data'], re.I):  # already exists
-                raise Already_Exists(msg, jobj['error']['code'])
-            else:
-                raise ZabbixAPIException(msg, jobj['error']['code'])
-        return jobj
+        error_msg = f"Error {error['code']}: {error['message']}, {error['data']} while sending {json_obj}"
 
-    def logged_in(self):
+        if re.search(r'.*already\sexists.*', error['data'], re.I):
+            raise Already_Exists(error_msg, error['code'])
+        else:
+            raise ZabbixAPIException(error_msg, error['code'])
+
+    def logged_in(self, bearer=False):
         if self.auth != '':
-            return True
+            if self.test_login(bearer):
+                return True
         return False
 
     def get_api_version(self, **options):

@@ -49,6 +49,7 @@ class ZabbixServer(GenericServer):
         GenericServer.__init__(self, **kwds)
 
         # Prepare all urls needed by nagstamon -
+        self.authentication = conf.servers[self.get_name()].authentication
         self.urls = {}
         # self.statemap = {}
         self.statemap = {
@@ -89,11 +90,16 @@ class ZabbixServer(GenericServer):
                 self.zapi = ZabbixAPI(server=self.monitor_url, path="", log_level=self.log_level,
                                       validate_certs=self.validate_certs, timeout=self.timeout)
             # login if not yet logged in, or if login was refused previously
-            if not self.zapi.logged_in():
-                self.zapi.login(self.username, self.password)
-        except ZabbixAPIException:
-            result, error = self.error(sys.exc_info())
-            return Result(result=result, error=error)
+            if self.authentication == 'bearer':
+                if not self.zapi.logged_in(bearer=True):
+                    self.zapi.login(self.username, self.password, bearer=True)
+            elif self.authentication == 'basic':
+                if not self.zapi.logged_in():
+                    self.zapi.login(self.username, self.password)
+            else:
+                raise Exception("Invalid authentication method")
+        except ZabbixAPIException as e:
+            raise e
 
     def getLastApp(self, this_item):
         if len(this_item) > 0:
@@ -127,7 +133,11 @@ class ZabbixServer(GenericServer):
         nagitems = {"services": [], "hosts": []}
 
         # Create URLs for the configured filters
-        self._login()
+        try:
+            self._login()
+        except Exception:
+            result, error = self.error(sys.exc_info())
+            return Result(result=result, error=error)
         # print(self.name)
         # =========================================
         # Service
@@ -153,6 +163,8 @@ class ZabbixServer(GenericServer):
         # Don't really care if this fails, just means we won't exclude any downtimed services
         except Exception:
             print(sys.exc_info())
+            result, error = self.error(sys.exc_info())
+            return Result(result=result, error=error)
 
         try:
             try:
@@ -212,7 +224,9 @@ class ZabbixServer(GenericServer):
                     service = e.result.content
                     ret = e.result
             except Exception:
+                result, error = self.error(sys.exc_info())
                 print(sys.exc_info())
+                return Result(result=result, error=error)
 
             hosts = []
             # get just involved Hosts.
@@ -457,7 +471,11 @@ class ZabbixServer(GenericServer):
             self.debug(server=self.get_name(),
                        debug="Set Acknowledge Host: " + host + " Service: " + service + " Sticky: " + str(
                            sticky) + " persistent:" + str(persistent) + " All services: " + str(all_services))
-        self._login()
+        try:
+            self._login()
+        except Exception:
+            self.error(sys.exc_info())
+            return
         eventids = set()
         unclosable_events = set()
         if all_services is None:
@@ -486,6 +504,11 @@ class ZabbixServer(GenericServer):
             # 4 - add message
             # 8 - change severity
             # 16 - unacknowledge event
+            # 32 - suppress event;
+            # 64 - unsuppress event;
+            # 128 - change event rank to cause;
+            # 256 - change event rank to symptom.
+            # sticky = close problem  # TODO: make visible in GUI
             actions = 2
             if comment:
                 actions |= 4
@@ -501,8 +524,14 @@ class ZabbixServer(GenericServer):
             else:
                 if sticky:
                     actions |= 1
-                # print("Events to acknowledge: " + str(eventids) + " Close: " + str(actions))
-                self.zapi.event.acknowledge({'eventids': list(eventids), 'message': comment, 'action': actions})
+                try:
+                    self.zapi.event.acknowledge({'eventids': list(eventids), 'message': comment, 'action': actions})
+                except ZabbixAPIException as e:
+                    if "Incorrect user name or password or account is temporarily blocked" in str(e):
+                        self.error(str(e))
+                        return
+                    else:
+                        raise e
 
     def _set_downtime(self, hostname, service, author, comment, fixed, start_time, end_time, hours, minutes):
         # Check if there is an associated Application tag with this trigger/item
