@@ -353,9 +353,7 @@ class ZabbixServer(GenericServer):
                     #     srvc = self.nagiosify_service(service['comments'])
                     # else:
                     #     srvc = "Not Implemented"
-                    status_information = ""
-                    for item in service['items']:
-                        status_information = item['name'] + ": " + item['lastvalue'] + ", " + status_information
+                    status_information = ", ".join([f"{item['name']}: {item['lastvalue']}" for item in service['items']])
                     n = {
                         'host': service['hosts'][0]['host'],
                         'hostid': service['hosts'][0]['hostid'],
@@ -367,7 +365,7 @@ class ZabbixServer(GenericServer):
                         'attempt': '',
                         'duration': HumanReadableDurationFromTimestamp(service['lastchange']),
                         'status_information': status_information,
-                        'last_check': time.strftime("%d/%m/%Y %H:%M:%S", time.localtime(lastcheck)),
+                        'last_check': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastcheck)),
                         'site': '',
                         'command': 'zabbix',
                         # status flags

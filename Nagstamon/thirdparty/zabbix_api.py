@@ -181,11 +181,12 @@ class ZabbixAPI(object):
         obj = {'jsonrpc': '2.0',
                'method': method,
                'params': params,
-               'auth': self.auth,  # deprecated in 6.4
                'id': self.id
                }
-        if not auth or self.api_version > '6.4':
-            del obj['auth']
+
+        # Only include auth parameter for Zabbix versions before 6.4
+        if auth and self.auth and self.api_version < '6.4':
+            obj['auth'] = self.auth
 
         self.debug(logging.DEBUG, "json_obj: " + str(obj))
 
@@ -224,9 +225,9 @@ class ZabbixAPI(object):
 
     def test_login(self, bearer=False):
         if bearer:
-            obj = self.json_obj('user.checkAuthentication', {'token': self.auth})
+            obj = self.json_obj('user.checkAuthentication', {'token': self.auth}, auth=False)
         else:
-            obj = self.json_obj('user.checkAuthentication', {'sessionid': self.auth})
+            obj = self.json_obj('user.checkAuthentication', {'sessionid': self.auth}, auth=False)
         result = self.do_request(obj, auth_header=False)
         if not result['result']:
             self.auth = ''
