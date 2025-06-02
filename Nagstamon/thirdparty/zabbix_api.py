@@ -224,9 +224,9 @@ class ZabbixAPI(object):
 
     def test_login(self, bearer=False):
         if bearer:
-            obj = self.json_obj('user.checkAuthentication', {'token': self.auth})
+            obj = self.json_obj('user.checkAuthentication', {'token': self.auth}, auth=False)
         else:
-            obj = self.json_obj('user.checkAuthentication', {'sessionid': self.auth})
+            obj = self.json_obj('user.checkAuthentication', {'sessionid': self.auth}, auth=False)
         result = self.do_request(obj, auth_header=False)
         if not result['result']:
             self.auth = ''
