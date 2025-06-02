@@ -367,7 +367,7 @@ class ZabbixServer(GenericServer):
                         'attempt': '',
                         'duration': HumanReadableDurationFromTimestamp(service['lastchange']),
                         'status_information': status_information,
-                        'last_check': time.strftime("%d/%m/%Y %H:%M:%S", time.localtime(lastcheck)),
+                        'last_check': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(lastcheck)),
                         'site': '',
                         'command': 'zabbix',
                         # status flags
