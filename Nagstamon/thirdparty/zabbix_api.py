@@ -181,11 +181,12 @@ class ZabbixAPI(object):
         obj = {'jsonrpc': '2.0',
                'method': method,
                'params': params,
-               'auth': self.auth,  # deprecated in 6.4
                'id': self.id
                }
-        if not auth or self.api_version > '6.4':
-            del obj['auth']
+
+        # Only include auth parameter for Zabbix versions before 6.4
+        if auth and self.auth and self.api_version < '6.4':
+            obj['auth'] = self.auth
 
         self.debug(logging.DEBUG, "json_obj: " + str(obj))
 
