@@ -5379,7 +5379,7 @@ class Dialog_Settings(Dialog):
         action = conf.actions[self.window.list_actions.currentItem().text()]
 
         reply = QMessageBox.question(self.window, 'Nagstamon',
-                                     'Do you really want to delete action <b>{action.name}</b>?',
+                                     f'Do you really want to delete action <b>{action.name}</b>?',
                                      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                                      QMessageBox.StandardButton.No)
 
