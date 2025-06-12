@@ -1,0 +1,18 @@
+FROM fedora:42
+LABEL maintainer=henri@nagstamon.de
+
+# Because it happened that fedora:42 image actually was a fedora:43 image but stayed so
+# due to caching the image I add some random characters to force a rebuild of the image if needed:
+# 1 2 1 2 keep it on...
+
+# Upgrade first
+RUN dnf -y upgrade
+
+# Needed packages for installation and partly building of Python modules
+dnf -y install dbus-devel \
+               gcc \
+               glib2-devel \
+               krb5-devel \
+               python3 \
+               python3-devel \
+               python3-virtualenv
