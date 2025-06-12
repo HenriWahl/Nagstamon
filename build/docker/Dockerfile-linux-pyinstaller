@@ -9,10 +9,10 @@ LABEL maintainer=henri@nagstamon.de
 RUN dnf -y upgrade
 
 # Needed packages for installation and partly building of Python modules
-dnf -y install dbus-devel \
-               gcc \
-               glib2-devel \
-               krb5-devel \
-               python3 \
-               python3-devel \
-               python3-virtualenv
+RUN dnf -y install dbus-devel \
+                   gcc \
+                   glib2-devel \
+                   krb5-devel \
+                   python3 \
+                   python3-devel \
+                   python3-virtualenv
