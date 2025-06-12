@@ -26,4 +26,4 @@ CMD cd /nagstamon && \
     pip3 install -r build/requirements/linux.txt && \
     pip3 install pyinstaller && \
     pyinstaller --add-data="Nagstamon/resources:Nagstamon/resources" --noconfirm --name=Nagstamon --onefile --collect-submodules gssapi.raw nagstamon.py && \
-    mv /nagstamon/dist/Nagstamon /nagstamon/build/nagstamon-${VERSION}-linux-x86_64
+    mv /nagstamon/dist/Nagstamon /nagstamon/dist/nagstamon-${VERSION}-linux-x86_64
