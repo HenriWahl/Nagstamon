@@ -149,7 +149,6 @@ jobs:
       - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }}
       # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
       - run: /usr/bin/docker run --volume ${{ github.workspace }}:/nagstamon --env VERSION=${{ steps.app_version.outputs.VERSION }} ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }}
-      - run: ls -lR
       - uses: actions/upload-artifact@v4
         with:
           path: dist/*
