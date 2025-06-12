@@ -126,9 +126,10 @@ jobs:
           if-no-files-found: error
           name: ${{ github.job }}
 
+  # see https://github.com/HenriWahl/Nagstamon/issues/1090
   linux-pyinstaller:
     runs-on: ubuntu-latest
-    needs: test
+    ###needs: test
     steps:
       - uses: actions/checkout@v4
         # docker login is needed for pushing the build image
@@ -144,15 +145,7 @@ jobs:
       - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }} -f build/docker/Dockerfile-${{ github.job }} .
       - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }}
       # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
-      #- run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon -e DEB_BUILD_OPTIONS=nocheck ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }}
-      # see https://github.com/HenriWahl/Nagstamon/issues/1090
-      - run: |
-            cd Nagstamon && \
-            virtualenv venv && \
-            . venv/bin/activate && \
-            pip3 install -r build/requirements/linux.txt && \
-            pip3 install && \
-            pyinstaller --add-data="Nagstamon/resources:Nagstamon/resources" --noconfirm --name=Nagstamon --onefile --collect-submodules gssapi.raw nagstamon.py
+      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon -e DEB_BUILD_OPTIONS=nocheck ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }}
       - uses: actions/upload-artifact@v4
         with:
           path: build/dist/nagstamon
