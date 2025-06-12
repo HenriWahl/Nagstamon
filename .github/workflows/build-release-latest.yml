@@ -147,17 +147,11 @@ jobs:
       #- run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon -e DEB_BUILD_OPTIONS=nocheck ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }}
       # see https://github.com/HenriWahl/Nagstamon/issues/1090
       - run: |
-            # go into the code directory
-            cd Nagstamon
-            # create the virtual Python environment later containing all Nagstamon dependencies
-            virtualenv venv
-            # activate virtual environment
-            . venv/bin/activate
-            # install all dependencies
-            pip3 install -r build/requirements/linux.txt
-            # add pyinstaller for building one-file binary
-            pip3 install
-            # build one-file binary
+            cd Nagstamon && \
+            virtualenv venv && \
+            . venv/bin/activate && \
+            pip3 install -r build/requirements/linux.txt && \
+            pip3 install && \
             pyinstaller --add-data="Nagstamon/resources:Nagstamon/resources" --noconfirm --name=Nagstamon --onefile --collect-submodules gssapi.raw nagstamon.py
       - uses: actions/upload-artifact@v4
         with:
