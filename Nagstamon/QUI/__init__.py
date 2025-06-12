@@ -5276,66 +5276,72 @@ class Dialog_Settings(Dialog):
         """
             edit existing server
         """
-        dialogs.server.edit()
+        # issue #1114 - do not allow editing of servers when no server is selected nor doesn't exist
+        if dialogs.settings.window.list_servers.currentItem():
+            dialogs.server.edit()
 
     @Slot()
     def copy_server(self):
         """
             copy existing server
         """
-        dialogs.server.copy()
+        # issue #1114 - do not allow editing of servers when no server is selected nor doesn't exist
+        if dialogs.settings.window.list_servers.currentItem():
+            dialogs.server.copy()
 
     @Slot()
     def delete_server(self):
         """
             delete server, stop its thread, remove from config and list
         """
-        # server to delete from current row in servers list
-        server = conf.servers[self.window.list_servers.currentItem().text()]
+        # issue #1114 - do not allow editing of servers when no server is selected nor doesn't exist
+        if dialogs.settings.window.list_servers.currentItem():
+            # server to delete from current row in servers list
+            server = conf.servers[self.window.list_servers.currentItem().text()]
 
-        reply = QMessageBox.question(self.window, 'Nagstamon',
-                                     f'Do you really want to delete monitor server <b>{server.name}</b>?',
-                                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                                     QMessageBox.StandardButton.No)
+            reply = QMessageBox.question(self.window, 'Nagstamon',
+                                         f'Do you really want to delete monitor server <b>{server.name}</b>?',
+                                         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                         QMessageBox.StandardButton.No)
 
-        if reply == QMessageBox.StandardButton.Yes:
-            # in case server is enabled delete its vbox
-            if server.enabled:
-                for vbox in statuswindow.servers_vbox.children():
-                    if vbox.server.name == server.name:
-                        # stop thread by falsificate running flag
-                        vbox.table.worker.running = False
-                        vbox.table.worker.finish.emit()
-                        break
+            if reply == QMessageBox.StandardButton.Yes:
+                # in case server is enabled delete its vbox
+                if server.enabled:
+                    for vbox in statuswindow.servers_vbox.children():
+                        if vbox.server.name == server.name:
+                            # stop thread by falsificate running flag
+                            vbox.table.worker.running = False
+                            vbox.table.worker.finish.emit()
+                            break
 
-            # kick server out of server instances
-            servers.pop(server.name)
-            # dito from config items
-            conf.servers.pop(server.name)
+                # kick server out of server instances
+                servers.pop(server.name)
+                # dito from config items
+                conf.servers.pop(server.name)
 
-            # refresh list
-            # row index 0 to x
-            row = self.window.list_servers.currentRow()
-            # count real number, 1 to x
-            count = self.window.list_servers.count()
+                # refresh list
+                # row index 0 to x
+                row = self.window.list_servers.currentRow()
+                # count real number, 1 to x
+                count = self.window.list_servers.count()
 
-            # if deleted row was the last line the new current row has to be the new last line, accidently the same as count
-            if row == count - 1:
-                # use the penultimate item as the new current one
-                row = count - 2
-            else:
-                # go down one row
-                row = row + 1
+                # if deleted row was the last line the new current row has to be the new last line, accidently the same as count
+                if row == count - 1:
+                    # use the penultimate item as the new current one
+                    row = count - 2
+                else:
+                    # go down one row
+                    row = row + 1
 
-            # refresh list and mark new current row
-            self.refresh_list(list_widget=self.window.list_servers,
-                              list_conf=conf.servers,
-                              current=self.window.list_servers.item(row).text())
-            del (row, count)
+                # refresh list and mark new current row
+                self.refresh_list(list_widget=self.window.list_servers,
+                                  list_conf=conf.servers,
+                                  current=self.window.list_servers.item(row).text())
+                del (row, count)
 
-        # delete server config file from disk
-        conf.delete_file('servers', 'server_{0}.conf'.format(quote(server.name, safe='')))
-        del server
+            # delete server config file from disk
+            conf.delete_file('servers', 'server_{0}.conf'.format(quote(server.name, safe='')))
+            del server
 
     def refresh_list(self, list_widget, list_conf, current=''):
         """
@@ -6022,6 +6028,7 @@ class Dialog_Server(Dialog):
             edit existing server
             when called by Edit button in ServerVBox use given server_name to get server config
         """
+
         self.mode = 'edit'
         # shorter server conf
         if server_name is None:
