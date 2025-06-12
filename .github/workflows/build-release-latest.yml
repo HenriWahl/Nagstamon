@@ -142,16 +142,13 @@ jobs:
       - id: dockerfile_hash
         run: echo "HASH=$(md5sum build/docker/Dockerfile-${{ github.job }} | cut -d\  -f1)" >> $GITHUB_OUTPUT
       - id: app_version
-        env:
-          # avoid import of keyring in Config.py
-          XDG_SESSION_DESKTOP: kde
-        run: python3 -c "from Nagstamon.Config import AppInfo; print(AppInfo.VERSION)" >> $GITHUB_OUTPUT
+        run: grep "VERSION = '" Nagstamon/Config.py | cut -d\' -f2 >> $GITHUB_OUTPUT
       # if image defined by variable steps.dockerfile_hash.outputs.HASH is not pullable aka does not exist it will be created and pushed
       - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }} -f build/docker/Dockerfile-${{ github.job }} .
       - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }}
       # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
       - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon -e DEB_BUILD_OPTIONS=nocheck ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }}
-      - run: echo ${{ steps.app_version.outputs.APP_VERSION }}
+      - run: echo ${{ steps.app_version.outputs }}
       - uses: actions/upload-artifact@v4
         with:
           path: dist/nagstamon
