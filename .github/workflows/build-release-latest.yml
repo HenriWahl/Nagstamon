@@ -148,7 +148,7 @@ jobs:
       - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon -e DEB_BUILD_OPTIONS=nocheck ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }}
       - uses: actions/upload-artifact@v4
         with:
-          path: build/dist/nagstamon
+          path: dist/nagstamon
           retention-days: 1
           if-no-files-found: error
           name: ${{ github.job }}
