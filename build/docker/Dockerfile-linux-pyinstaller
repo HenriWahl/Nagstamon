@@ -22,5 +22,5 @@ CMD cd /nagstamon && \
     virtualenv venv && \
     . venv/bin/activate && \
     pip3 install -r build/requirements/linux.txt && \
-    pip3 install && \
+    pip3 install pyinstaller && \
     pyinstaller --add-data="Nagstamon/resources:Nagstamon/resources" --noconfirm --name=Nagstamon --onefile --collect-submodules gssapi.raw nagstamon.py
