@@ -129,7 +129,7 @@ jobs:
   # see https://github.com/HenriWahl/Nagstamon/issues/1090
   linux-pyinstaller:
     runs-on: ubuntu-latest
-    ###needs: test
+    needs: test
     steps:
       - uses: actions/checkout@v4
         # docker login is needed for pushing the build image
@@ -148,7 +148,6 @@ jobs:
       - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }}
       # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
       - run: /usr/bin/docker run --volume ${{ github.workspace }}:/nagstamon --env VERSION=${{ steps.app_version.outputs.VERSION }} ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }}
-      - run: ls -lR
       - uses: actions/upload-artifact@v4
         with:
           path: dist/*
@@ -276,7 +275,7 @@ jobs:
   repo-debian:
     runs-on: ubuntu-latest
     # try to avoid race condition and start uploading only after the last install package has been build
-    needs: [debian, fedora, rhel-9, macos-intel, macos-arm, windows-32, windows-64, windows-64-debug]
+    needs: [debian, fedora, linux-pyinstaller, macos-arm, macos-intel, rhel-9, windows-32, windows-64, windows-64-debug]
     env:
       family: debian
     steps:
