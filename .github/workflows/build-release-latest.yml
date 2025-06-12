@@ -147,9 +147,7 @@ jobs:
       - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }} -f build/docker/Dockerfile-${{ github.job }} .
       - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }}
       # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
-      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }}
-      - run: echo ${{ steps.app_version.outputs.VERSION }}
-      - run: mv dist/Nagstamon dist/nagstamon-${{ steps.app_version.outputs.VERSION }}-linux-x86_64
+      - run: /usr/bin/docker run --volume ${{ github.workspace }}:/nagstamon --build-arg VERSION=${{ steps.app_version.outputs.VERSION }} ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }}
       - uses: actions/upload-artifact@v4
         with:
           path: dist/*

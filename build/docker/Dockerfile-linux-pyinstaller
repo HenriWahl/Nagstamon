@@ -1,6 +1,8 @@
 FROM fedora:42
 LABEL maintainer=henri@nagstamon.de
 
+ARG VERSION=0.0.0
+
 # Because it happened that fedora:42 image actually was a fedora:43 image but stayed so
 # due to caching the image I add some random characters to force a rebuild of the image if needed:
 # 1 2 1 2 keep it on...
@@ -24,4 +26,4 @@ CMD cd /nagstamon && \
     pip3 install -r build/requirements/linux.txt && \
     pip3 install pyinstaller && \
     pyinstaller --add-data="Nagstamon/resources:Nagstamon/resources" --noconfirm --name=Nagstamon --onefile --collect-submodules gssapi.raw nagstamon.py && \
-    chmod +rwx /nagstamon/dist/*
+    mv /nagstamon/dist/Nagstamon /nagstamon/build/nagstamon-${VERSION}-linux-x86_64
