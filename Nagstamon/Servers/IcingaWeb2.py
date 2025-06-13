@@ -638,7 +638,7 @@ class IcingaWeb2Server(GenericServer):
         try:
             # take ip from json output
             result = json.loads(jsonhost)[0]
-            ip = result["host_address"]
+            ip = result["address"]
 
             # print IP in debug mode
             if conf.debug_mode is True:
