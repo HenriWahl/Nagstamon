@@ -143,28 +143,6 @@ class ZabbixServer(GenericServer):
         # Service
         # =========================================
         services = []
-        services_in_maintenance = set()
-
-        try:
-            now_ts = int(datetime.datetime.utcnow().timestamp())
-            # only the maintenance object knows about services "in downtime"
-            maintenances = self.zapi.maintenance.get({
-                "output": ["active_since", "active_till", "tags"],
-                "selectTags": "extend"
-            })
-            #Debugging
-            #"%s - Took %s seconds to get maintenances" % (self.name, time.time() - now))
-            for m in maintenances:
-                if int(m["active_since"]) > now_ts or int(m["active_till"]) < now_ts:
-                    continue
-                for tag in m["tags"]:
-                    if tag["tag"] == "triggerid":
-                        services_in_maintenance.add(tag["value"])
-        # Don't really care if this fails, just means we won't exclude any downtimed services
-        except Exception:
-            print(sys.exc_info())
-            result, error = self.error(sys.exc_info())
-            return Result(result=result, error=error)
 
         try:
             try:
@@ -216,7 +194,6 @@ class ZabbixServer(GenericServer):
                 result, error = self.error(sys.exc_info())
                 print(sys.exc_info())
                 return Result(result=result, error=error)
-
             except ZabbixError as e:
                 if e.terminate:
                     return e.result
@@ -354,6 +331,12 @@ class ZabbixServer(GenericServer):
                     # else:
                     #     srvc = "Not Implemented"
                     status_information = ", ".join([f"{item['name']}: {item['lastvalue']}" for item in service['items']])
+
+                    # Add opdata to status information if available (from problem API)
+                    if 'opdata' in service['lastEvent']:
+                        if service['lastEvent']['opdata'] != "":
+                            status_information = service['lastEvent']['name'] + " (" + service['lastEvent']['opdata'] + ")"
+
                     n = {
                         'host': service['hosts'][0]['host'],
                         'hostid': service['hosts'][0]['hostid'],
@@ -370,10 +353,10 @@ class ZabbixServer(GenericServer):
                         'command': 'zabbix',
                         # status flags
                         'passiveonly': False,
-                        'notifications_disabled': service['triggerid'] in services_in_maintenance,
+                        'notifications_disabled': service['hosts'][0]['maintenance_status'] == '1' if len(service['hosts']) > 0 else False,
                         'flapping': False,
                         'acknowledged': bool(int(service['lastEvent']['acknowledged'])),
-                        'scheduled_downtime': service['triggerid'] in services_in_maintenance,
+                        'scheduled_downtime': service['hosts'][0]['maintenance_status'] == '1' if len(service['hosts']) > 0 else False,
                         # Zabbix data
                         'triggerid': service['triggerid'],
                         'eventid': service['lastEvent']['eventid'],
@@ -381,10 +364,6 @@ class ZabbixServer(GenericServer):
                     }
 
                     key = n["hostname"] if len(n['hostname']) != 0 else n["host"]
-                    # key = n["hostid"];
-
-                    if self.new_hosts[key].scheduled_downtime:
-                        n['scheduled_downtime'] = True
 
                     nagitems["services"].append(n)
 
