@@ -22,9 +22,7 @@
 
 
 # NOTES:
-# The API requires zabbix 1.8 or later.
-# Currently, not all of the API is implemented, and some functionality is
-# broken. This is a work in progress.
+# The API requires zabbix 6.0 or later.
 
 import base64
 import hashlib
@@ -33,18 +31,10 @@ import string
 import sys
 import ssl
 import socket
-try:
-    import urllib2
-except ImportError:
-    import urllib.request as urllib2  # python3
+import requests
+from requests.exceptions import RequestException, Timeout, SSLError
 import re
 from collections import deque
-
-try:
-    from ssl import _create_unverified_context
-    HAS_SSLCONTEXT = True
-except ImportError:
-    HAS_SSLCONTEXT = False
 
 
 default_log_handler = logging.StreamHandler(sys.stdout)
@@ -254,34 +244,36 @@ class ZabbixAPI(object):
         self.debug(logging.INFO, "Sending: " + str(json_obj))
         self.debug(logging.DEBUG, "Sending headers: " + str(headers))
 
-        request = urllib2.Request(url=self.url, data=json_obj.encode('utf-8'), headers=headers)
-        opener = self._create_url_opener()
-        urllib2.install_opener(opener)
-
         try:
-            response = opener.open(request, timeout=self.timeout)
-        except ssl.SSLError as e:
-            error_message = e.message if hasattr(e, 'message') else str(e)
-            raise ZabbixAPIException(f"ssl.SSLError - {error_message}")
-        except socket.timeout:
+            response = requests.post(
+                url=self.url,
+                data=json_obj.encode('utf-8'),
+                headers=headers,
+                timeout=self.timeout,
+                verify=self.validate_certs
+            )
+            response.raise_for_status()  # Raise exception for 4XX/5XX responses
+        except SSLError as e:
+            error_message = str(e)
+            raise ZabbixAPIException(f"SSL Error - {error_message}")
+        except Timeout:
             raise APITimeout("HTTP read timeout")
-        except urllib2.URLError as e:
-            error_message = e.message if hasattr(e, 'message') else str(e)
-            raise ZabbixAPIException(f"urllib2.URLError - {error_message}")
+        except RequestException as e:
+            error_message = str(e)
+            raise ZabbixAPIException(f"Request Error - {error_message}")
 
-        self.debug(logging.INFO, f"Response Code: {response.code}")
+        self.debug(logging.INFO, f"Response Code: {response.status_code}")
 
-        if response.code != 200:
-            raise ZabbixAPIException(f"HTTP ERROR {response.status}: {response.reason}")
+        if response.status_code != 200:
+            raise ZabbixAPIException(f"HTTP ERROR {response.status_code}: {response.reason}")
 
-        response_data = response.read()
-        if len(response_data) == 0:
+        if not response.content:
             raise ZabbixAPIException("Received zero answer")
 
         try:
-            json_response = json.loads(response_data.decode('utf-8'))
+            json_response = response.json()
         except ValueError:
-            self.debug(logging.ERROR, f"Unable to decode response: {response_data}")
+            self.debug(logging.ERROR, f"Unable to decode response: {response.text}")
             raise ZabbixAPIException("Unable to decode answer")
 
         self.debug(logging.DEBUG, f"Response Body: {json_response}")
@@ -304,30 +296,12 @@ class ZabbixAPI(object):
                 headers['Authorization'] = f'Bearer {self.auth}'
             elif self.httpuser and "Authorization" not in headers:
                 self.debug(logging.INFO, "HTTP Auth enabled")
-                auth_string = base64.encodestring(f"{self.httpuser}:{self.httppasswd}").strip()
-                headers['Authorization'] = f'Basic {auth_string}'
+                auth_bytes = f"{self.httpuser}:{self.httppasswd}".encode('utf-8')
+                auth_b64 = base64.b64encode(auth_bytes).decode('utf-8')
+                headers['Authorization'] = f'Basic {auth_b64}'
 
         return headers
 
-    def _create_url_opener(self):
-        """Create and return the appropriate URL opener based on protocol."""
-        if self.proto == "https":
-            if HAS_SSLCONTEXT and not self.validate_certs:
-                ssl._create_default_https_context = ssl._create_unverified_context
-                ctx = ssl.create_default_context()
-                ctx.check_hostname = False
-                ctx.verify_mode = ssl.CERT_NONE
-                https_handler = urllib2.HTTPSHandler(debuglevel=0, context=ctx)
-            else:
-                https_handler = urllib2.HTTPSHandler(debuglevel=0)
-            opener = urllib2.build_opener(https_handler)
-        elif self.proto == "http":
-            http_handler = urllib2.HTTPHandler(debuglevel=0)
-            opener = urllib2.build_opener(http_handler)
-        else:
-            raise ZabbixAPIException(f"Unknown protocol {self.proto}")
-
-        return opener
 
     def _handle_api_error(self, json_response, json_obj):
         """Handle API error responses and raise appropriate exceptions."""
