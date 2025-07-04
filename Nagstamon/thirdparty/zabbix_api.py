@@ -71,7 +71,6 @@ def dojson(fn):
 
 
 class ZabbixAPIException(Exception):
-
     """ generic zabbix api exception
     code list:
          -32602 - Invalid params (eg already exists)
