@@ -108,25 +108,6 @@ class ZabbixServer(GenericServer):
         except ZabbixAPIException as e:
             raise e
 
-    def getLastApp(self, this_item):
-        if len(this_item) > 0:
-            if "applications" not in this_item[0]:
-                if 'tags' in this_item[0]:
-                    app = "NO APP"
-                    for tag in this_item[0]['tags']:
-                        if tag['tag'] == 'Application':
-                            app = tag['value']
-                    return app
-                else:
-                    return "NO APP"
-            last_app = len(this_item[0]['applications']) - 1  # use it to get the last application name
-            if last_app > -1:
-                return "%s" % this_item[0]['applications'][last_app]['name']
-            else:
-                return "NO APP"
-        else:
-            return "Web scenario"
-
     def _get_status(self):
         """
             Get status from Zabbix Server
