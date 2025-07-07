@@ -56,8 +56,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      # debug
-      - run: ls -lR
       # somehow weird way to get the hash over the Dockerfile to be aware if it changed
       - id: dockerfile_hash
         run: echo "HASH=$(md5sum build/docker/Dockerfile-${{ github.job }} | cut -d\  -f1)" >> $GITHUB_OUTPUT
@@ -124,6 +122,35 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           path: build/*.rpm
+          retention-days: 1
+          if-no-files-found: error
+          name: ${{ github.job }}
+
+  # see https://github.com/HenriWahl/Nagstamon/issues/1090
+  linux-pyinstaller:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+        # docker login is needed for pushing the build image
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # somehow weird way to get the hash over the Dockerfile to be aware if it changed
+      - id: dockerfile_hash
+        run: echo "HASH=$(md5sum build/docker/Dockerfile-${{ github.job }} | cut -d\  -f1)" >> $GITHUB_OUTPUT
+      - id: app_version
+        run: echo "VERSION=$(grep VERSION\ =\ \' Nagstamon/Config.py | cut -d\' -f2)" >> $GITHUB_OUTPUT
+      # if image defined by variable steps.dockerfile_hash.outputs.HASH is not pullable aka does not exist it will be created and pushed
+      - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }} -f build/docker/Dockerfile-${{ github.job }} .
+      - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }}
+      # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
+      - run: /usr/bin/docker run --volume ${{ github.workspace }}:/nagstamon --env VERSION=${{ steps.app_version.outputs.VERSION }} ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }}
+      - uses: actions/upload-artifact@v4
+        with:
+          path: dist/*
           retention-days: 1
           if-no-files-found: error
           name: ${{ github.job }}
@@ -248,7 +275,7 @@ jobs:
   repo-debian:
     runs-on: ubuntu-latest
     # try to avoid race condition and start uploading only after the last install package has been build
-    needs: [debian, fedora, rhel-9, macos-intel, macos-arm, windows-32, windows-64, windows-64-debug]
+    needs: [debian, fedora, linux-pyinstaller, macos-arm, macos-intel, rhel-9, windows-32, windows-64, windows-64-debug]
     env:
       family: debian
     steps:
