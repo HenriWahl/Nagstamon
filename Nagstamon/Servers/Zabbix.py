@@ -10,6 +10,7 @@ import time
 import logging
 import datetime
 import socket
+from packaging import version
 
 from Nagstamon.Helpers import (HumanReadableDurationFromTimestamp,
                                webbrowser_open)
@@ -89,6 +90,12 @@ class ZabbixServer(GenericServer):
             if self.zapi is None:
                 self.zapi = ZabbixAPI(server=self.monitor_url, path="", log_level=self.log_level,
                                       validate_certs=self.validate_certs, timeout=self.timeout)
+
+                # Check if Zabbix version is supported (>= 6.0)
+                zabbix_version = self.zapi.api_version
+                if version.parse(zabbix_version) < version.parse("6.0"):
+                    raise ZabbixAPIException(f"Unsupported Zabbix version: {zabbix_version}. Nagstamon requires Zabbix 6.0 or later.")
+
             # login if not yet logged in, or if login was refused previously
             if self.authentication == 'bearer':
                 if not self.zapi.logged_in(bearer=True):
