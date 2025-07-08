@@ -16,7 +16,9 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 from Nagstamon.QUI.qt import QFileDialog
-
+from Nagstamon.QUI.widgets.dialogs.settings import DialogSettings
+from Nagstamon.QUI.widgets.dialogs.about import DialogAbout
+from Nagstamon.QUI.widgets.dialogs.check_version import check_version
 
 class Dialogs():
     """
@@ -174,3 +176,5 @@ class Dialogs():
 
 
 dialogs = Dialogs()
+dialogs.initialize_dialog_settings(DialogSettings())
+dialogs.initialize_dialog_about(DialogAbout())
