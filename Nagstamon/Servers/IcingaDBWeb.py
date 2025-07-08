@@ -43,8 +43,7 @@ from bs4 import BeautifulSoup
 from Nagstamon.Objects import (GenericHost,
                                GenericService,
                                Result)
-from Nagstamon.Config import (conf,
-                              AppInfo)
+from Nagstamon.Config import conf
 from Nagstamon.Helpers import webbrowser_open
 
 

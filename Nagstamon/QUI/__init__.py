@@ -1,4 +1,3 @@
-# encoding: utf-8
 # Nagstamon - Nagios status monitor for your desktop
 # Copyright (C) 2008-2025 Henri Wahl <henri@nagstamon.de> et al.
 #
@@ -31,8 +30,37 @@ import time
 import traceback
 from urllib.parse import quote
 
+
+from Nagstamon.QUI.widgets.app import app
+from Nagstamon.QUI.constants import (COLORS,
+                                     COLOR_STATE_NAMES,
+                                     COLOR_STATUS_LABEL,
+                                     QBRUSHES,
+                                     HEADERS,
+                                     HEADERS_HEADERS,
+                                     HEADERS_HEADERS_COLUMNS,
+                                     HEADERS_HEADERS_KEYS,
+                                     HEADERS_KEYS_COLUMNS,
+                                     HEADERS_KEYS_HEADERS,
+                                     SORT_ORDER,
+                                     SORT_COLUMNS_INDEX,
+                                     SPACE,
+                                     NUMBER_OF_DISPLAY_CHANGES,
+                                     WINDOW_FLAGS)
+
+from Nagstamon.QUI.widgets.button import (Button,
+                                          CSS_CLOSE_BUTTON,
+                                          PushButtonHamburger)
+from Nagstamon.QUI.widgets.dialogs import dialogs
+from Nagstamon.QUI.widgets.dialogs.about import DialogAbout
+from Nagstamon.QUI.widgets.dialogs.dialog import Dialog
+from Nagstamon.QUI.helpers import hide_macos_dock_icon
+from Nagstamon.QUI.widgets.icon import QIconWithFilename
+from Nagstamon.QUI.widgets.layout import HBoxLayout
+from Nagstamon.QUI.widgets.menu import MenuAtCursor
+
 # for details of imports look into qt.py
-from .qt import *
+from Nagstamon.QUI.qt import *
 
 from Nagstamon.Config import (Action,
                               AppInfo,
@@ -102,6 +130,7 @@ if OS == OS_MACOS:
 # check ECP authentication support availability
 try:
     from requests_ecp import HTTPECPAuth
+
     ECP_AVAILABLE = True
 except ImportError:
     ECP_AVAILABLE = False
@@ -115,6 +144,7 @@ if OS == OS_MACOS:
         import numbers
         import gssapi.raw.cython_converters
         from requests_gssapi import HTTPSPNEGOAuth as HTTPSKerberos
+
         KERBEROS_AVAILABLE = True
     except ImportError as error:
         print(error)
@@ -124,122 +154,13 @@ else:
         # requests_gssapi needs installation of KfW - Kerberos for Windows
         # requests_kerberoes doesn't
         from requests_kerberos import HTTPKerberosAuth as HTTPSKerberos
+
         KERBEROS_AVAILABLE = True
     except ImportError as error:
         print(error)
 
-# since Qt6 HighDPI-awareness is default behaviour
-if QT_VERSION_MAJOR < 6:
-    # enable HighDPI-awareness to avoid https://github.com/HenriWahl/Nagstamon/issues/618
-    try:
-        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-    except AttributeError:
-        pass
-    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
-
-# global application instance
-APP = QApplication(sys.argv)
-
-# as long as Windows 11 + Qt6 looks that ugly it's better to choose another app style
-# might be mitigated with sometimes, so commented out now
-if OS == OS_WINDOWS and platform.release() >= '11':
-    APP.setStyle('fusion')
-
-# fixed shortened and lowered color names for cells, also used by statusbar label snippets
-COLORS = OrderedDict([('DOWN', 'color_down_'),
-                      ('UNREACHABLE', 'color_unreachable_'),
-                      ('DISASTER', 'color_disaster_'),
-                      ('CRITICAL', 'color_critical_'),
-                      ('HIGH', 'color_high_'),
-                      ('AVERAGE', 'color_average_'),
-                      ('WARNING', 'color_warning_'),
-                      ('INFORMATION', 'color_information_'),
-                      ('UNKNOWN', 'color_unknown_')])
-
-# states to be used in statusbar if long version is used
-COLOR_STATE_NAMES = {'DOWN': {True: 'DOWN', False: ''},
-                     'UNREACHABLE': {True: 'UNREACHABLE', False: ''},
-                     'DISASTER': {True: 'DISASTER', False: ''},
-                     'CRITICAL': {True: 'CRITICAL', False: ''},
-                     'HIGH': {True: 'HIGH', False: ''},
-                     'AVERAGE': {True: 'AVERAGE', False: ''},
-                     'WARNING': {True: 'WARNING', False: ''},
-                     'INFORMATION': {True: 'INFORMATION', False: ''},
-                     'UNKNOWN': {True: 'UNKNOWN', False: ''}}
-
-# colors for server status label in ServerVBox
-COLOR_STATUS_LABEL = {'critical': 'lightsalmon',
-                      'error': 'orange',
-                      'unknown': 'gray'}
-
-# QBrushes made of QColors for treeview model data() method
-# 2 flavours for alternating backgrounds
-# filled by create_brushes()
-QBRUSHES = {0: {}, 1: {}}
-
-# headers for tablewidgets
-HEADERS = OrderedDict([('host', {'header': 'Host',
-                                 'column': 0}),
-                       ('host_flags', {'header': '',
-                                       'column': 0}),
-                       ('service', {'header': 'Service',
-                                    'column': 2}),
-                       ('service_flags', {'header': '',
-                                          'column': 2}),
-                       ('status', {'header': 'Status',
-                                   'column': 4}),
-                       ('last_check', {'header': 'Last Check',
-                                       'column': 5}),
-                       ('duration', {'header': 'Duration',
-                                     'column': 6}),
-                       ('attempt', {'header': 'Attempt',
-                                    'column': 7}),
-                       ('status_information', {'header': 'Status Information',
-                                               'column': 8}),
-                       ('dummy_column', {'header': '',
-                                         'column': 8})])
-
-# various headers-key-columns variations needed in different parts
-HEADERS_HEADERS = list()
-for item in HEADERS.values():
-    HEADERS_HEADERS.append(item['header'])
-
-HEADERS_HEADERS_COLUMNS = dict()
-for item in HEADERS.values():
-    HEADERS_HEADERS_COLUMNS[item['header']] = item['column']
-
-HEADERS_HEADERS_KEYS = dict()
-for item in HEADERS.keys():
-    HEADERS_HEADERS_KEYS[HEADERS[item]['header']] = item
-
-HEADERS_KEYS_COLUMNS = dict()
-for item in HEADERS.keys():
-    HEADERS_KEYS_COLUMNS[item] = HEADERS[item]['column']
-
-HEADERS_KEYS_HEADERS = dict()
-for item in HEADERS.keys():
-    HEADERS_KEYS_HEADERS[item] = HEADERS[item]['header']
-
-# sorting order for tablewidgets
-SORT_ORDER = {'descending': 1, 'ascending': 0, 0: Qt.SortOrder.DescendingOrder, 1: Qt.SortOrder.AscendingOrder}
-
-# bend columns 1 and 3 to 0 and 2 to avoid sorting the extra flag icons of hosts and services
-SORT_COLUMNS_INDEX = {0: 0,
-                      1: 0,
-                      2: 2,
-                      3: 2,
-                      4: 4,
-                      5: 5,
-                      6: 6,
-                      7: 7,
-                      8: 8,
-                      9: 8}
-
-# space used in LayoutBoxes
-SPACE = 10
-
 # save default font to be able to reset to it
-DEFAULT_FONT = APP.font()
+DEFAULT_FONT = app.font()
 
 # take global FONT from conf if it exists
 if conf.font != '':
@@ -254,51 +175,14 @@ QFontDatabase.addApplicationFont('{0}{1}nagstamon.ttf'.format(RESOURCES, os.sep)
 # always stay in normal weight without any italic
 ICONS_FONT = QFont('Nagstamon', FONT.pointSize() + 2, QFont.Weight.Normal, False)
 
-# completely silly but no other rescue for Windows-hides-statusbar-after-display-mode-change problem
-NUMBER_OF_DISPLAY_CHANGES = 0
-
-# Flags for statusbar - experiment with Qt.ToolTip for Windows because
-# statusbar permanently seems to vanish at some users desktops
-# see https://github.com/HenriWahl/Nagstamon/issues/222
-WINDOW_FLAGS = Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.FramelessWindowHint | Qt.WindowType.Tool
-
-# icon for dialogs
-ICON = QIcon('{0}{1}nagstamon.ico'.format(RESOURCES, os.sep))
-
 # set style for tooltips globally - to sad not all properties can be set here
-APP.setStyleSheet('''QToolTip { margin: 3px;
+app.setStyleSheet('''QToolTip { margin: 3px;
                                 }''')
 
 # store default sounds as buffers to avoid https://github.com/HenriWahl/Nagstamon/issues/578
 # meanwhile used as backup copy in case they had been deleted by macOS
 # https://github.com/HenriWahl/Nagstamon/issues/578
 RESOURCE_FILES = FilesDict(RESOURCES)
-
-
-class HBoxLayout(QHBoxLayout):
-    """
-        Apparently necessary to get a HBox which is able to hide its children
-    """
-
-    def __init__(self, spacing=None, parent=None):
-        QHBoxLayout.__init__(self, parent)
-
-        if spacing is None:
-            self.setSpacing(0)
-        else:
-            self.setSpacing(spacing)
-        self.setContentsMargins(0, 0, 0, 0)  # no margin
-
-
-class QIconWithFilename(QIcon):
-    """
-    extend QIcon with a filename property
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if type(args[0]) == str:
-            self.filename = args[0]
 
 
 class SystemTrayIcon(QSystemTrayIcon):
@@ -502,35 +386,6 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.error_shown = False
 
 
-class MenuAtCursor(QMenu):
-    """
-        open menu at position of mouse pointer - normal .exec() shows menu at (0, 0)
-    """
-    # flag to avoid too fast popping up menus
-    # available = True
-
-    is_shown = Signal(bool)
-
-    def __init__(self, parent=None):
-        QMenu.__init__(self, parent=parent)
-
-    @Slot()
-    def show_at_cursor(self):
-        """
-            pop up at mouse pointer position, lock itself to avoid permamently popping menus on Windows
-        """
-        # get cursor coordinates and decrease them to show menu under mouse pointer
-        x = QCursor.pos().x() - 10
-        y = QCursor.pos().y() - 10
-        # tell the world that the menu will be shown
-        self.is_shown.emit(True)
-        # show menu
-        self.exec(QPoint(x, y))
-        # tell world that menu will be closed
-        self.is_shown.emit(False)
-        del (x, y)
-
-
 class MenuContext(MenuAtCursor):
     """
         class for universal context menu, used at systray icon and hamburger menu
@@ -594,7 +449,7 @@ class MenuContext(MenuAtCursor):
 
         if conf.statusbar_floating:
             self.action_save_position = QAction('Save position', self)
-            self.action_save_position.triggered.connect(self.save_position)
+            self.action_save_position.triggered.connect(statuswindow.store_position_to_conf)
             self.addAction(self.action_save_position)
 
         self.addSeparator()
@@ -609,14 +464,6 @@ class MenuContext(MenuAtCursor):
 
         # tell all widgets to use the new menu
         self.menu_ready.emit(self)
-
-    def save_position(self):
-        """
-            save position from window into config
-        """
-
-        statuswindow.store_position_to_conf()
-        conf.SaveConfig()
 
 
 class MenuContextSystrayicon(MenuContext):
@@ -654,58 +501,6 @@ class MenuContextSystrayicon(MenuContext):
             self.insertSeparator(self.action_refresh)
 
 
-class FlatButton(QToolButton):
-    """
-        QToolButton acting as push button
-    """
-
-    def __init__(self, text='', parent=None, server=None, url_type=''):
-        QToolButton.__init__(self, parent=parent)
-        self.setAutoRaise(True)
-        self.setStyleSheet('''padding: 3px;''')
-        self.setText(text)
-
-
-# OSX does not support flat QToolButtons so keep the neat default ones
-if OS == OS_MACOS:
-    Button = QPushButton
-    CSS_CLOSE_BUTTON = '''QPushButton {border-width: 0px;
-                                       border-style: none;
-                                       margin-right: 5px;}
-                          QPushButton:hover {background-color: white;
-                                             border-radius: 4px;}'''
-    CSS_HAMBURGER_MENU = '''QPushButton {border-width: 0px;
-                                         border-style: none;}
-                            QPushButton::menu-indicator{image:url(none.jpg)};
-                            QPushButton:hover {background-color: white;
-                                               border-radius: 4px;}'''
-else:
-    Button = FlatButton
-    CSS_CLOSE_BUTTON = '''margin-right: 5px;'''
-    CSS_HAMBURGER_MENU = '''FlatButton::menu-indicator{image:url(none.jpg);}'''
-
-
-class PushButton_Hamburger(Button):
-    """
-        Pushbutton with menu for hamburger
-    """
-
-    pressed = Signal()
-
-    def __init__(self):
-        # ##QPushButton.__init__(self)
-        Button.__init__(self)
-        self.setStyleSheet(CSS_HAMBURGER_MENU)
-
-    def mousePressEvent(self, event):
-        self.pressed.emit()
-        self.showMenu()
-
-    @Slot(QMenu)
-    def set_menu(self, menu):
-        self.setMenu(menu)
-
-
 # ##class PushButton_BrowserURL(QPushButton):
 class PushButton_BrowserURL(Button):
     """
@@ -723,7 +518,7 @@ class PushButton_BrowserURL(Button):
             open URL from BROWSER_URLS in webbrowser
         """
         # BROWSER_URLS come with $MONITOR$ instead of real monitor url - heritage from actions
-        url = self.server.BROWSER_URLS[self.url_type]
+        url = self.server.BROWSER_URLS[self.uQSystemTrayIconrl_type]
         url = url.replace('$MONITOR$', self.server.monitor_url)
         url = url.replace('$MONITOR-CGI$', self.server.monitor_cgi_url)
 
@@ -804,13 +599,6 @@ class DraggableWidget(QWidget):
     # @Slot(QMenu)
     def set_menu(self, menu):
         self.menu = menu
-
-    def save_position(self):
-        """
-            save position from window into config
-        """
-        statuswindow.store_position_to_conf()
-        conf.SaveConfig()
 
     def mousePressEvent(self, event):
         """
@@ -992,7 +780,7 @@ class StatusWindow(QWidget):
             self.ewmh = EWMH()
 
         # avoid quitting when using Qt.Tool flag and closing settings dialog
-        APP.setQuitOnLastWindowClosed(False)
+        app.setQuitOnLastWindowClosed(False)
 
         # show tooltips even if popup window has no focus
         self.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips)
@@ -1205,7 +993,7 @@ class StatusWindow(QWidget):
     def get_screen(self):
         """
             very hackish fix for https://github.com/HenriWahl/Nagstamon/issues/865
-            should actually fit into qt.py but due to the reference to APP it could only
+            should actually fit into qt.py but due to the reference to `app` it could only
             be solved here
         """
         # Qt6 has .screen() as replacement for QDesktopWidget...
@@ -1213,7 +1001,7 @@ class StatusWindow(QWidget):
             return self.screen()
         # ...and .screen() exists since Qt5 5.15...
         elif QT_VERSION_MINOR < 15:
-            return APP.desktop()
+            return app.desktop()
         # ...so newer ones can use .screen() again
         else:
             return self.screen()
@@ -1471,7 +1259,6 @@ class StatusWindow(QWidget):
         self.servers_scrollarea.contentsMargins().setTop(0)
         self.servers_scrollarea.contentsMargins().setBottom(0)
 
-
         del vboxes_dict
 
     def create_ServerVBoxes(self):
@@ -1646,7 +1433,7 @@ class StatusWindow(QWidget):
         mouse_pos = QCursor.pos()
         # Check mouse cursor over window and an opened context menu or dropdown list
         if self.geometry().contains(mouse_pos.x(), mouse_pos.y()) or \
-                not APP.activePopupWidget() is None or \
+                not app.activePopupWidget() is None or \
                 self.is_shown:
             return False
 
@@ -2034,6 +1821,7 @@ class StatusWindow(QWidget):
         """
         self.is_shown = True
 
+    @Slot()
     def store_position_to_conf(self):
         """
             store position of statuswindow/statusbar
@@ -2049,6 +1837,8 @@ class StatusWindow(QWidget):
             conf.position_y = self.y()
             conf.position_width = self.width()
             conf.position_height = self.height()
+        # store position of statuswindow/statusbar
+        conf.save_config()
 
     @Slot(str, str)
     def show_message(self, msg_type, message):
@@ -2060,7 +1850,7 @@ class StatusWindow(QWidget):
             return QMessageBox.warning(statuswindow, title, message)
 
         elif msg_type == 'information':
-            return QMessageBox.information(statuswindow,title, message)
+            return QMessageBox.information(statuswindow, title, message)
 
     @Slot()
     def recheck_all(self):
@@ -2129,7 +1919,7 @@ class StatusWindow(QWidget):
         if OS == OS_WINDOWS and \
                 not conf.fullscreen and \
                 not conf.windowed and \
-                APP.activePopupWidget() == None:
+                app.activePopupWidget() == None:
             try:
                 self.raise_()
             except Exception as error:
@@ -2574,7 +2364,7 @@ class StatusBar(QWidget):
             are shown at the same time - which is very likely the case
         """
         # take height for logo
-        #height = 0
+        # height = 0
 
         # run through labels to set font and get height for logo
         for label in self.color_labels.values():
@@ -2693,7 +2483,7 @@ class TopArea(QWidget):
         self.combobox_servers.fill()
 
         # hambuger menu
-        self.button_hamburger_menu = PushButton_Hamburger()
+        self.button_hamburger_menu = PushButtonHamburger()
         self.button_hamburger_menu.setIcon(self.icons['menu'])
         self.hamburger_menu = MenuAtCursor()
         action_exit = QAction("Exit", self)
@@ -2730,7 +2520,7 @@ class TopArea(QWidget):
         """
 
         # get rgb values of current foreground color to be used for SVG icons (menu)
-        r, g, b, a = APP.palette().color(QPalette.ColorRole.Text).getRgb()
+        r, g, b, a = app.palette().color(QPalette.ColorRole.Text).getRgb()
 
         for icon in 'nagstamon_logo_toparea', 'close', 'menu':
             # get template from file
@@ -2977,7 +2767,7 @@ class ServerVBox(QVBoxLayout):
         self.label_stretcher.show()
         # special table treatment
         self.table.show()
-        #self.table.is_shown = True
+        # self.table.is_shown = True
 
     @Slot()
     def show_only_header(self):
@@ -2996,7 +2786,7 @@ class ServerVBox(QVBoxLayout):
         self.label_stretcher.show()
         # special table treatment
         self.table.hide()
-        #self.table.is_shown = False
+        # self.table.is_shown = False
 
     @Slot()
     def hide_all(self):
@@ -3015,7 +2805,7 @@ class ServerVBox(QVBoxLayout):
         self.label_stretcher.hide()
         # special table treatment
         self.table.hide()
-        #self.table.is_shown = False
+        # self.table.is_shown = False
 
     @Slot()
     def delete(self):
@@ -3330,9 +3120,7 @@ class TreeView(QTreeView):
         self.request_action.connect(self.worker.execute_action)
 
         ## display mode - all or only header to display error
-        #self.is_shown = False
-
-
+        # self.is_shown = False
 
     @Slot()
     def set_font(self):
@@ -3969,9 +3757,9 @@ class TreeView(QTreeView):
             # do nothing if window is moving to avoid lagging movement
             if not statuswindow.moving:
                 ## get_status table cells with new data by thread
-                #if len(self.model().data_array) > 0:
+                # if len(self.model().data_array) > 0:
                 #    self.is_shown = True
-                #else:
+                # else:
                 #    self.is_shown = False
                 # tell statusbar it should update
                 self.refreshed.emit()
@@ -4078,7 +3866,7 @@ class TreeView(QTreeView):
             # if counter is at least update interval get status
             if self.server.thread_counter >= conf.update_interval_seconds:
                 # only if no multiple selection is done at the moment and no context action menu is open
-                if not APP.keyboardModifiers() and APP.activePopupWidget() is None:
+                if not app.keyboardModifiers() and app.activePopupWidget() is None:
                     # reflect status retrieval attempt on server vbox label
                     self.change_label_status.emit('Refreshing...', '')
 
@@ -4173,7 +3961,7 @@ class TreeView(QTreeView):
                          'services_flags_column_needed': False, }
 
             # only refresh table if there is no popup opened
-            if not APP.activePopupWidget():
+            if not app.activePopupWidget():
                 # avoid race condition when waiting for password dialog
                 if len(QBRUSHES[0]) > 0:
                     # cruising the whole nagitems structure
@@ -4348,8 +4136,8 @@ class TreeView(QTreeView):
                             if conf.debug_mode:
                                 self.server.debug(server=self.server.name,
                                                   debug='Rechecking service {0} on host {1}'.format(
-                                                        service.get_service_name(),
-                                                        service.host))
+                                                      service.get_service_name(),
+                                                      service.host))
                             # call server recheck method
                             self.server.set_recheck({'host': service.host, 'service': service.name})
                     del (nagitems_filtered, status)
@@ -4481,260 +4269,80 @@ class TreeView(QTreeView):
                 self.server.events_history[event] = False
 
 
-class Dialogs(object):
-    """
-        class for accessing all dialogs
-    """
-    windows = list()
-
-    def __init__(self):
-        # settings main dialog
-        self.settings = Dialog_Settings('settings_main')
-        self.settings.initialize()
-        self.windows.append(self.settings.window)
-
-        # server settings dialog
-        self.server = Dialog_Server('settings_server')
-        self.server.initialize()
-        self.windows.append(self.server.window)
-
-        # action settings dialog
-        self.action = Dialog_Action('settings_action')
-        self.action.initialize()
-        self.windows.append(self.action.window)
-
-        # acknowledge dialog for miserable item context menu
-        self.acknowledge = Dialog_Acknowledge('dialog_acknowledge')
-        self.acknowledge.initialize()
-        self.windows.append(self.acknowledge.window)
-
-        # downtime dialog for miserable item context menu
-        self.downtime = Dialog_Downtime('dialog_downtime')
-        self.downtime.initialize()
-        self.windows.append(self.downtime.window)
-
-        # open defaults settings on button click
-        self.downtime.window.button_change_defaults_downtime.clicked.connect(self.settings.show_defaults)
-        self.downtime.window.button_change_defaults_downtime.clicked.connect(self.downtime.window.close)
-        self.acknowledge.window.button_change_defaults_acknowledge.clicked.connect(self.settings.show_defaults)
-        self.acknowledge.window.button_change_defaults_acknowledge.clicked.connect(self.acknowledge.window.close)
-
-        # downtime dialog for miserable item context menu
-        self.submit = Dialog_Submit('dialog_submit')
-        self.submit.initialize()
-        self.windows.append(self.submit.window)
-
-        # authentication dialog for username/password
-        self.authentication = Dialog_Authentication('dialog_authentication')
-        self.authentication.initialize()
-        self.windows.append(self.authentication.window)
-
-        # dialog for asking about disabled or not configured servers
-        self.server_missing = Dialog_Server_missing('dialog_server_missing')
-        self.server_missing.initialize()
-        self.windows.append(self.server_missing.window)
-
-        # open server creation dialog
-        self.server_missing.window.button_create_server.clicked.connect(self.settings.show_new_server)
-        self.server_missing.window.button_enable_server.clicked.connect(self.settings.show)
-
-        # about dialog
-        self.about = Dialog_About('dialog_about')
-        self.windows.append(self.about.window)
-
-        # file chooser Dialog
-        self.file_chooser = QFileDialog()
-
-        # check if special widgets have to be shown
-        self.server.edited.connect(self.settings.toggle_zabbix_widgets)
-        self.server.edited.connect(self.settings.toggle_op5monitor_widgets)
-        self.server.edited.connect(self.settings.toggle_expire_time_widgets)
-
-    def get_shown_dialogs(self):
-        """
-            get list of currently show dialog windows - needed for macOS hide dock icon stuff
-        """
-        return [x for x in self.windows if x.isVisible()]
-
-
-class Dialog(QObject):
-    """
-        one single dialog
-    """
-    # send signal e.g. to statuswindow if dialog pops up
-    show_dialog = Signal()
-
-    # dummy toggle dependencies
-    TOGGLE_DEPS = {}
-    # auxiliary list of checkboxes which HIDE some other widgets if triggered - for example proxy OS settings
-    TOGGLE_DEPS_INVERTED = []
-    # widgets that might be enabled/disebled depending on monitor server type
-    VOLATILE_WIDGETS = {}
-    # names of widgets and their defaults
-    WIDGET_NAMES = {}
-    # style stuff used by settings dialog for servers/actions listwidget
-    GRAY = QBrush(Qt.GlobalColor.gray)
-
-    def __init__(self, dialog):
-        QObject.__init__(self)
-
-        # load UI file from resources
-        self.window = uic.loadUi(f'{RESOURCES}/qui/{dialog}.ui')
-
-        # explicitly set window flags to avoid '?' button on Windows
-        self.window.setWindowFlags(Qt.WindowType.WindowCloseButtonHint)
-
-        # hoping to avoid overly large dialogs
-        self.window.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
-
-        # set small titlebar icon
-        self.window.setWindowIcon(ICON)
-
-        # treat dialog content after pressing OK button
-        if 'button_box' in dir(self.window):
-            self.window.button_box.accepted.connect(self.ok)
-            self.window.button_box.rejected.connect(self.cancel)
-
-        # QSignalMapper needed to connect all toggle-needing-checkboxes/radiobuttons to one .toggle()-method which
-        # decides which sender to use as key in self.TOGGLE_DEPS
-        self.signalmapper_toggles = QSignalMapper()
-
-        # try to get and keep focus
-        self.window.setWindowModality(Qt.WindowModality.ApplicationModal)
-
-    def initialize(self):
-        """
-            dummy initialize method
-        """
-        pass
-
-    def show(self, tab=0):
-        """
-            simple how method, to be enriched
-        """
-        # if running on macOS with disabled dock icon the dock icon might have to be made visible
-        # to make Nagstamon accept keyboard input
-        self.show_macos_dock_icon_if_necessary()
-
-        # in case dock icon is configured invisible in macOS it has to be shown while dialog is shown
-        # to be able to get keyboard focus
-        if OS == OS_MACOS and \
-                conf.icon_in_systray and \
-                conf.hide_macos_dock_icon:
-            hide_macos_dock_icon(False)
-
-        # tell the world that dialog pops up
-        self.show_dialog.emit()
-
-        # reset window if only needs smaller screen estate
-        self.window.adjustSize()
-        self.window.show()
-        # make sure dialog window will be the topmost
-        self.window.raise_()
-        # hidden dock icon on macOS needs extra activation
-        if OS == OS_MACOS and \
-                conf.icon_in_systray and \
-                conf.hide_macos_dock_icon:
-            NSApp.activateIgnoringOtherApps_(True)
-
-    def toggle_visibility(self, checkbox, widgets=[]):
-        """
-            state of checkbox toggles visibility of widgets
-            some checkboxes might trigger an inverted behaviour - thus the 'inverted' value
-        """
-        if checkbox in self.TOGGLE_DEPS_INVERTED:
-            if checkbox.isChecked():
-                for widget in widgets:
-                    widget.hide()
-            else:
-                for widget in widgets:
-                    widget.show()
-        # normal case - click on checkbox activates more options
-        else:
-            if checkbox.isChecked():
-                for widget in widgets:
-                    widget.show()
-            else:
-                for widget in widgets:
-                    widget.hide()
-
-    @Slot(str)
-    def toggle(self, checkbox):
-        """
-            change state of depending widgets, slot for signals from checkboxes in UI
-        """
-        # Due to older Qt5 in Ubuntu 14.04 signalmapper has to use strings
-        self.toggle_visibility(self.window.__dict__[checkbox],
-                               self.TOGGLE_DEPS[self.window.__dict__[checkbox]])
-
-        # adjust dialog window size after UI changes
-        self.window.adjustSize()
-
-    def toggle_toggles(self):
-        # apply toggle-dependencies between checkboxes as certain widgets
-        for checkbox, widgets in self.TOGGLE_DEPS.items():
-            # toggle visibility
-            self.toggle_visibility(checkbox, widgets)
-            # multiplex slot .toggle() by signal-mapping
-            # Due to older Qt5 in Ubuntu 14.04 signalmapper has to use strings
-            self.signalmapper_toggles.setMapping(checkbox, checkbox.objectName())
-            checkbox.toggled.connect(self.signalmapper_toggles.map)
-            checkbox.toggled.connect(self.window.adjustSize)
-
-        # finally map signals with .sender() - [QWidget] is important!
-        self.signalmapper_toggles.mappedString[str].connect(self.toggle)
-
-    def fill_list(self, listwidget, config):
-        """
-             fill listwidget with items from config
-        """
-        for configitem in sorted(config, key=str.lower):
-            listitem = QListWidgetItem(configitem)
-            if config[configitem].enabled is False:
-                listitem.setForeground(self.GRAY)
-            listwidget.addItem(listitem)
-
-    @Slot()
-    def ok(self):
-        """
-            as default closes dialog - might be refined, for example by settings dialog
-        """
-        self.window.close()
-        # en reverse the dock icon might be hidden again after a potential keyboard input
-        self.hide_macos_dock_icon_if_necessary()
-
-    @Slot()
-    def cancel(self):
-        """
-            as default closes dialog - might be refined, for example by settings dialog
-        """
-        self.window.close()
-        # en reverse the dock icon might be hidden again after a potential keyboard input
-        self.hide_macos_dock_icon_if_necessary()
-
-    def show_macos_dock_icon_if_necessary(self):
-        """
-            show macOS dock icon again if it is configured to be hidden
-            was only necessary to show up to let dialog get keyboard focus
-        """
-        if OS == OS_MACOS and \
-                conf.icon_in_systray and \
-                conf.hide_macos_dock_icon:
-            # if no window is shown already show dock icon
-            if not len(dialogs.get_shown_dialogs()):
-                hide_macos_dock_icon(False)
-
-    def hide_macos_dock_icon_if_necessary(self):
-        """
-            hide macOS dock icon again if it is configured to be hidden
-            was only necessary to show up to let dialog get keyboard focus
-        """
-        if OS == OS_MACOS and \
-                conf.icon_in_systray and \
-                conf.hide_macos_dock_icon:
-            # if no window is shown anymore hide dock icon
-            if not len(dialogs.get_shown_dialogs()):
-                hide_macos_dock_icon(True)
+# class Dialogs():
+#     """
+#         class for accessing all dialogs
+#     """
+#     windows = list()
+#
+#     def __init__(self):
+#         # settings main dialog
+#         self.settings = Dialog_Settings('settings_main')
+#         self.settings.initialize()
+#         self.windows.append(self.settings.window)
+#
+#         # server settings dialog
+#         self.server = Dialog_Server('settings_server')
+#         self.server.initialize()
+#         self.windows.append(self.server.window)
+#
+#         # action settings dialog
+#         self.action = Dialog_Action('settings_action')
+#         self.action.initialize()
+#         self.windows.append(self.action.window)
+#
+#         # acknowledge dialog for miserable item context menu
+#         self.acknowledge = Dialog_Acknowledge('dialog_acknowledge')
+#         self.acknowledge.initialize()
+#         self.windows.append(self.acknowledge.window)
+#
+#         # downtime dialog for miserable item context menu
+#         self.downtime = Dialog_Downtime('dialog_downtime')
+#         self.downtime.initialize()
+#         self.windows.append(self.downtime.window)
+#
+#         # open defaults settings on button click
+#         self.downtime.window.button_change_defaults_downtime.clicked.connect(self.settings.show_defaults)
+#         self.downtime.window.button_change_defaults_downtime.clicked.connect(self.downtime.window.close)
+#         self.acknowledge.window.button_change_defaults_acknowledge.clicked.connect(self.settings.show_defaults)
+#         self.acknowledge.window.button_change_defaults_acknowledge.clicked.connect(self.acknowledge.window.close)
+#
+#         # downtime dialog for miserable item context menu
+#         self.submit = Dialog_Submit('dialog_submit')
+#         self.submit.initialize()
+#         self.windows.append(self.submit.window)
+#
+#         # authentication dialog for username/password
+#         self.authentication = Dialog_Authentication('dialog_authentication')
+#         self.authentication.initialize()
+#         self.windows.append(self.authentication.window)
+#
+#         # dialog for asking about disabled or not configured servers
+#         self.server_missing = Dialog_Server_missing('dialog_server_missing')
+#         self.server_missing.initialize()
+#         self.windows.append(self.server_missing.window)
+#
+#         # open server creation dialog
+#         self.server_missing.window.button_create_server.clicked.connect(self.settings.show_new_server)
+#         self.server_missing.window.button_enable_server.clicked.connect(self.settings.show)
+#
+#         # about dialog
+#         self.about = Dialog_About('dialog_about')
+#         self.windows.append(self.about.window)
+#
+#         # file chooser Dialog
+#         self.file_chooser = QFileDialog()
+#
+#         # check if special widgets have to be shown
+#         self.server.edited.connect(self.settings.toggle_zabbix_widgets)
+#         self.server.edited.connect(self.settings.toggle_op5monitor_widgets)
+#         self.server.edited.connect(self.settings.toggle_expire_time_widgets)
+#
+#     def get_shown_dialogs(self):
+#         """
+#             get list of currently show dialog windows - needed for macOS hide dock icon stuff
+#         """
+#         return [x for x in self.windows if x.isVisible()]
 
 
 class Dialog_Settings(Dialog):
@@ -5056,7 +4664,7 @@ class Dialog_Settings(Dialog):
         self.window.input_combobox_default_sort_order.setCurrentText(conf.default_sort_order.title())
 
         # fill combobox with screens for fullscreen
-        for screen in APP.screens():
+        for screen in app.screens():
             self.window.input_combobox_fullscreen_display.addItem(str(screen.name()))
         self.window.input_combobox_fullscreen_display.setCurrentText(str(conf.fullscreen_display))
 
@@ -5113,8 +4721,8 @@ class Dialog_Settings(Dialog):
         self.window.tabs.setCurrentIndex(tab)
 
         # reset window if only needs smaller screen estate
-        #self.window.adjustSize()
-        #self.window.exec()
+        # self.window.adjustSize()
+        # self.window.exec()
         super().show()
 
     @Slot()
@@ -5209,7 +4817,7 @@ class Dialog_Settings(Dialog):
         create_brushes()
 
         # save configuration
-        conf.SaveConfig()
+        conf.save_config()
 
         # when display mode was changed its the easiest to destroy the old status window and create a new one
         # store display_mode to decide if statuswindow has to be recreated
@@ -6071,9 +5679,9 @@ class Dialog_Server(Dialog):
                  self.mode == 'edit' and self.server_conf != conf.servers[server_name]):
             # cry if duplicate name exists
             QMessageBox.critical(self.window,
-                        'Nagstamon',
-                        f'The monitor server name <b>{server_name}</b> is already used.',
-                        QMessageBox.StandardButton.Ok)
+                                 'Nagstamon',
+                                 f'The monitor server name <b>{server_name}</b> is already used.',
+                                 QMessageBox.StandardButton.Ok)
         else:
             # get configuration from UI
             for widget in self.window.__dict__:
@@ -6168,7 +5776,7 @@ class Dialog_Server(Dialog):
                 conf.delete_file('servers', 'server_{0}.conf'.format(quote(self.previous_server_conf.name, safe='')))
 
             # store server settings
-            conf.SaveMultipleConfig('servers', 'server')
+            conf.save_multiple_config('servers', 'server')
 
         # call close and macOS dock icon treatment from ancestor
         super().ok()
@@ -6340,8 +5948,8 @@ class Dialog_Action(Dialog):
                  self.mode == 'edit' and self.action_conf != conf.actions[self.window.input_lineedit_name.text()]):
             # cry if duplicate name exists
             QMessageBox.critical(self.window, 'Nagstamon',
-                                      f'The action name <b>{self.window.input_lineedit_name.text()}</b> is already used.',
-                                      QMessageBox.StandardButton.Ok)
+                                 f'The action name <b>{self.window.input_lineedit_name.text()}</b> is already used.',
+                                 QMessageBox.StandardButton.Ok)
         else:
             # get configuration from UI
             for widget in self.window.__dict__:
@@ -6388,7 +5996,7 @@ class Dialog_Action(Dialog):
                 conf.delete_file('actions', 'action_{0}.conf'.format(quote(self.previous_action_conf.name, safe='')))
 
             # store server settings
-            conf.SaveMultipleConfig('actions', 'action')
+            conf.save_multiple_config('actions', 'action')
 
         # call close and macOS dock icon treatment from ancestor
         super().ok()
@@ -6526,6 +6134,7 @@ class Dialog_Acknowledge(Dialog):
                                    'expire_time': expire_datetime})
         # call close and macOS dock icon treatment from ancestor
         super().ok()
+
 
 class Dialog_Downtime(Dialog):
     """
@@ -6806,7 +6415,7 @@ class Dialog_Authentication(Dialog):
             conf.servers[self.server.name].password = self.server.password
             conf.servers[self.server.name].save_password = self.window.input_checkbox_save_password.isChecked()
             # store server settings
-            conf.SaveMultipleConfig('servers', 'server')
+            conf.save_multiple_config('servers', 'server')
 
         # Centreon
         if self.server.type in ['Centreon', 'Thruk']:
@@ -6814,7 +6423,7 @@ class Dialog_Authentication(Dialog):
                 conf.servers[self.server.name].use_autologin = self.window.input_checkbox_use_autologin.isChecked()
                 conf.servers[self.server.name].autologin_key = self.window.input_lineedit_autologin_key.text()
                 # store server settings
-                conf.SaveMultipleConfig('servers', 'server')
+                conf.save_multiple_config('servers', 'server')
 
         # reset server connection
         self.server.reset_HTTP()
@@ -6891,44 +6500,45 @@ class Dialog_Server_missing(Dialog):
             self.window.button_create_server.hide()
 
 
-class Dialog_About(Dialog):
-    """
-        About information dialog
-    """
-
-    def __init__(self, dialog):
-        Dialog.__init__(self, dialog)
-        # first add the logo on top - no idea how to achive in Qt Designer
-        logo = QSvgWidget(f'{RESOURCES}{os.sep}nagstamon.svg')
-        logo.setFixedSize(100, 100)
-        self.window.vbox_about.insertWidget(1, logo, 0, Qt.AlignmentFlag.AlignHCenter)
-        # update version information
-        self.window.label_nagstamon.setText(f'<h1>{AppInfo.NAME} {AppInfo.VERSION}</h1>')
-        self.window.label_nagstamon_long.setText('<h2>Nagios¹ status monitor for your desktop</2>')
-        self.window.label_copyright.setText(AppInfo.COPYRIGHT)
-        self.window.label_website.setText(f'<a href={AppInfo.WEBSITE}>{AppInfo.WEBSITE}</a>')
-        self.window.label_website.setOpenExternalLinks(True)
-        self.window.label_versions.setText(f'Python: {platform.python_version()}, Qt: {QT_VERSION_STR}')
-        self.window.label_contribution.setText(f'<a href={AppInfo.WEBSITE}/contribution>Contribution</a> | <a href=https://paypal.me/nagstamon>Donation</a>')
-        self.window.label_footnote.setText('<small>¹ meanwhile many more monitors...</small>')
-
-        # fill in license information
-        license_file = open('{0}{1}LICENSE'.format(RESOURCES, os.sep))
-        license = license_file.read()
-        license_file.close()
-        self.window.textedit_license.setPlainText(license)
-        self.window.textedit_license.setReadOnly(True)
-
-        # fill in credits information
-        credits_file = open(f'{RESOURCES}{os.sep}CREDITS', encoding='utf-8')
-        credits = credits_file.read()
-        credits_file.close()
-        self.window.textedit_credits.setText(credits)
-        self.window.textedit_credits.setOpenExternalLinks(True)
-        self.window.textedit_credits.setReadOnly(True)
-
-        self.window.tabs.setCurrentIndex(0)
-
+# class DialogAbout(Dialog):
+#     """
+#     About information dialog
+#     """
+#
+#     def __init__(self):
+#         Dialog.__init__(self, 'dialog_about')
+#         # first add the logo on top - no idea how to achive in Qt Designer
+#         logo = QSvgWidget(f'{RESOURCES}{os.sep}nagstamon.svg')
+#         logo.setFixedSize(100, 100)
+#         self.window.vbox_about.insertWidget(1, logo, 0, Qt.AlignmentFlag.AlignHCenter)
+#         # update version information
+#         self.window.label_nagstamon.setText(f'<h1>{AppInfo.NAME} {AppInfo.VERSION}</h1>')
+#         self.window.label_nagstamon_long.setText('<h2>Nagios¹ status monitor for your desktop</2>')
+#         self.window.label_copyright.setText(AppInfo.COPYRIGHT)
+#         self.window.label_website.setText(f'<a href={AppInfo.WEBSITE}>{AppInfo.WEBSITE}</a>')
+#         self.window.label_website.setOpenExternalLinks(True)
+#         self.window.label_versions.setText(f'Python: {platform.python_version()}, Qt: {QT_VERSION_STR}')
+#         self.window.label_contribution.setText(
+#             f'<a href={AppInfo.WEBSITE}/contribution>Contribution</a> | <a href=https://paypal.me/nagstamon>Donation</a>')
+#         self.window.label_footnote.setText('<small>¹ meanwhile many more monitors...</small>')
+#
+#         # fill in license information
+#         license_file = open('{0}{1}LICENSE'.format(RESOURCES, os.sep))
+#         license = license_file.read()
+#         license_file.close()
+#         self.window.textedit_license.setPlainText(license)
+#         self.window.textedit_license.setReadOnly(True)
+#
+#         # fill in credits information
+#         credits_file = open(f'{RESOURCES}{os.sep}CREDITS', encoding='utf-8')
+#         credits = credits_file.read()
+#         credits_file.close()
+#         self.window.textedit_credits.setText(credits)
+#         self.window.textedit_credits.setOpenExternalLinks(True)
+#         self.window.textedit_credits.setReadOnly(True)
+#
+#         self.window.tabs.setCurrentIndex(0)
+#
 
 class CheckVersion(QObject):
     """
@@ -7197,7 +6807,7 @@ def get_screen_name(x, y):
 
     # QApplication (using Qt5 and/or its Python binding on RHEL/CentOS 7) has no attribute 'screenAt'
     try:
-        screen = APP.screenAt(QPoint(x, y))
+        screen = app.screenAt(QPoint(x, y))
         del x, y
         if screen:
             return screen.name
@@ -7211,12 +6821,12 @@ def get_screen_geometry(screen_name):
     """
         set screen for fullscreen
     """
-    for screen in APP.screens():
+    for screen in app.screens():
         if screen.name() == screen_name:
             return screen.geometry()
 
     # if screen_name didn't match available use primary screen
-    return APP.primaryScreen().geometry()
+    return app.primaryScreen().geometry()
 
 
 @Slot()
@@ -7228,7 +6838,7 @@ def exit():
     statuswindow.store_position_to_conf()
 
     # save configuration
-    conf.SaveConfig()
+    conf.save_config()
 
     # hide statuswindow first to avoid lag when waiting for finished threads
     statuswindow.hide()
@@ -7241,7 +6851,7 @@ def exit():
     for server_vbox in statuswindow.servers_vbox.children():
         server_vbox.table.worker.finish.emit()
 
-    APP.exit()
+    app.exit()
 
 
 def check_servers():
@@ -7257,27 +6867,20 @@ def check_servers():
         dialogs.server_missing.show()
         dialogs.server_missing.initialize('no_server_enabled')
 
-def hide_macos_dock_icon(hide=False):
-    """
-    small helper to make dock icon visible or not in macOS
-    inspired by https://stackoverflow.com/questions/6796028/start-a-gui-process-in-mac-os-x-without-dock-icon
-    """
-    if hide:
-        NSApp.setActivationPolicy_(NSApplicationPresentationHideDock)
-    else:
-        NSApp.setActivationPolicy_(NSApplicationPresentationDefault)
 
 # check for updates
 check_version = CheckVersion()
 
 # access to clipboard
-clipboard = APP.clipboard()
+clipboard = app.clipboard()
 
 # DBus initialization
 dbus_connection = DBus()
 
 # access dialogs
-dialogs = Dialogs()
+# dialogs = Dialogs()
+
+dialogs.initialize_dialog_about(DialogAbout())
 
 # system tray icon
 systrayicon = SystemTrayIcon()

@@ -42,7 +42,7 @@ try:
             sys.exit(1)
 
         # get GUI
-        from Nagstamon.QUI import (APP,
+        from Nagstamon.QUI import (app,
                                    statuswindow,
                                    check_version,
                                    check_servers,
@@ -60,7 +60,7 @@ try:
         if conf.check_for_new_version is True:
             check_version.check(start_mode=True, parent=statuswindow)
 
-        sys.exit(APP.exec())
+        sys.exit(app.exec())
 
 except Exception as err:
     import traceback
