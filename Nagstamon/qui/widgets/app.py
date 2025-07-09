@@ -20,7 +20,7 @@ from sys import argv
 
 from Nagstamon.Config import (OS,
                               OS_WINDOWS)
-from Nagstamon.QUI.qt import (Qt,
+from Nagstamon.qui.qt import (Qt,
                               QApplication,
                               QT_VERSION_MAJOR)
 

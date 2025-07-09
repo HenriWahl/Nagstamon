@@ -21,7 +21,7 @@ from collections import OrderedDict
 from os import sep
 
 from Nagstamon.Config import RESOURCES
-from Nagstamon.QUI.qt import (QIcon,
+from Nagstamon.qui.qt import (QIcon,
                               Qt)
 
 # fixed shortened and lowered color names for cells, also used by statusbar label snippets

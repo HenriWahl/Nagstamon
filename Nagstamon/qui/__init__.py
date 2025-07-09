@@ -31,8 +31,8 @@ import traceback
 from urllib.parse import quote
 
 
-from Nagstamon.QUI.widgets.app import app
-from Nagstamon.QUI.constants import (COLORS,
+from Nagstamon.qui.widgets.app import app
+from Nagstamon.qui.constants import (COLORS,
                                      COLOR_STATE_NAMES,
                                      COLOR_STATUS_LABEL,
                                      QBRUSHES,
@@ -48,19 +48,19 @@ from Nagstamon.QUI.constants import (COLORS,
                                      NUMBER_OF_DISPLAY_CHANGES,
                                      WINDOW_FLAGS)
 
-from Nagstamon.QUI.widgets.button import (Button,
+from Nagstamon.qui.widgets.button import (Button,
                                           CSS_CLOSE_BUTTON,
                                           PushButtonHamburger)
-from Nagstamon.QUI.widgets.dialogs import dialogs
-from Nagstamon.QUI.widgets.dialogs.about import DialogAbout
-from Nagstamon.QUI.widgets.dialogs.dialog import Dialog
-from Nagstamon.QUI.helpers import hide_macos_dock_icon
-from Nagstamon.QUI.widgets.icon import QIconWithFilename
-from Nagstamon.QUI.widgets.layout import HBoxLayout
-from Nagstamon.QUI.widgets.menu import MenuAtCursor
+from Nagstamon.qui.widgets.dialogs import dialogs
+from Nagstamon.qui.widgets.dialogs.about import DialogAbout
+from Nagstamon.qui.widgets.dialogs.dialog import Dialog
+from Nagstamon.qui.helpers import hide_macos_dock_icon
+from Nagstamon.qui.widgets.icon import QIconWithFilename
+from Nagstamon.qui.widgets.layout import HBoxLayout
+from Nagstamon.qui.widgets.menu import MenuAtCursor
 
 # for details of imports look into qt.py
-from Nagstamon.QUI.qt import *
+from Nagstamon.qui.qt import *
 
 from Nagstamon.Config import (Action,
                               AppInfo,

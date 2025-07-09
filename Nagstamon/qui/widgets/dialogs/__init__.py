@@ -15,10 +15,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-from Nagstamon.QUI.qt import QFileDialog
-from Nagstamon.QUI.widgets.dialogs.settings import DialogSettings
-from Nagstamon.QUI.widgets.dialogs.about import DialogAbout
-from Nagstamon.QUI.widgets.dialogs.check_version import check_version
+from Nagstamon.qui.qt import QFileDialog
+from Nagstamon.qui.widgets.dialogs.settings import DialogSettings
+from Nagstamon.qui.widgets.dialogs.about import DialogAbout
+from Nagstamon.qui.widgets.dialogs.check_version import check_version
 
 class Dialogs():
     """

@@ -42,7 +42,7 @@ try:
             sys.exit(1)
 
         # get GUI
-        from Nagstamon.QUI import (app,
+        from Nagstamon.qui import (app,
                                    statuswindow,
                                    check_version,
                                    check_servers,

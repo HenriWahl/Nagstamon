@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 from Nagstamon.Config import AppInfo
-from Nagstamon.QUI.qt import (QMessageBox,
+from Nagstamon.qui.qt import (QMessageBox,
                               QObject,
                               Qt,
                               QThread,

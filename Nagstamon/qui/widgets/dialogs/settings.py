@@ -19,12 +19,12 @@ from Nagstamon.Config import (AppInfo,
                               OS,
                               OS_NON_LINUX,
                               OS_MACOS)
-from Nagstamon.QUI.qt import (Signal,
+from Nagstamon.qui.qt import (Signal,
                               Slot,
                               QWidget)
 
-from Nagstamon.QUI.widgets.dialogs.check_version import check_version
-from Nagstamon.QUI.widgets.dialogs.dialog import Dialog
+from Nagstamon.qui.widgets.dialogs.check_version import check_version
+from Nagstamon.qui.widgets.dialogs.dialog import Dialog
 
 
 class DialogSettings(Dialog):

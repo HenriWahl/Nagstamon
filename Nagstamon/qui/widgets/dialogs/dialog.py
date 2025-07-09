@@ -20,17 +20,17 @@ from Nagstamon.Config import (conf,
                               OS,
                               OS_MACOS)
 
-from Nagstamon.QUI.constants import ICON
-from Nagstamon.QUI.helpers import hide_macos_dock_icon
-from Nagstamon.QUI.qt import (QBrush,
-                   QListWidgetItem,
-                   QObject,
-                   QSignalMapper,
-                   QSizePolicy,
-                   Qt,
-                   Signal,
-                   Slot,
-                   uic)
+from Nagstamon.qui.constants import ICON
+from Nagstamon.qui.helpers import hide_macos_dock_icon
+from Nagstamon.qui.qt import (QBrush,
+                              QListWidgetItem,
+                              QObject,
+                              QSignalMapper,
+                              QSizePolicy,
+                              Qt,
+                              Signal,
+                              Slot,
+                              uic)
 
 # make icon status in macOS dock accessible via NSApp, used by set_macos_dock_icon_visible()
 if OS == OS_MACOS:

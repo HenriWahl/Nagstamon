@@ -1646,7 +1646,7 @@ class GenericServer(object):
 
     def get_items_generator(self):
         '''
-            Generator for plain listing of all filtered items, used in QUI for tableview
+            Generator for plain listing of all filtered items, used in qui for tableview
         '''
 
         # reset number of filtered items
@@ -1749,6 +1749,6 @@ class GenericServer(object):
 
     def get_worst_status_diff(self):
         """
-            hand over the current worst status difference for QUI
+            hand over the current worst status difference for qui
         """
         return self.worst_status_diff
