@@ -16,9 +16,7 @@ from Nagstamon.Objects import (GenericHost,
                                GenericService,
                                Result)
 from Nagstamon.Servers.Generic import GenericServer, BearerAuth
-from Nagstamon.thirdparty.zabbix_api import (ZabbixAPI,
-                                             ZabbixAPIException,
-                                             Already_Exists)
+
 
 class ZabbixError(Exception):
 
@@ -135,7 +133,7 @@ class ZabbixServer(GenericServer):
             if result['error']:
                 self.refresh_authentication = True
         except Exception as e:
-            raise ZabbixAPIException(f"Authentication check failed: {str(e)}")
+            raise RuntimeError(f"Authentication check failed: {str(e)}")
 
     def generate_cgi_data(self, method, params=None, no_auth=False):
         """
@@ -163,7 +161,7 @@ class ZabbixServer(GenericServer):
             result = self.api_request(obj, no_auth=True)
             self.api_version = result['result']
         except Exception as e:
-            raise ZabbixAPIException(f"Failed to set Zabbix version: {str(e)}")
+            raise RuntimeError(f"Failed to set Zabbix version: {str(e)}")
 
     def _get_status(self):
         """
@@ -249,7 +247,7 @@ class ZabbixServer(GenericServer):
         except ZabbixError as e:
             print(f"ZabbixError: {e.result}")
             return Result(result=e.result, error=e.result.content)
-        except (ZabbixAPIException, Exception):
+        except Exception:
             self.isChecking = False
             result, error = self.error(sys.exc_info())
             print(sys.exc_info())
@@ -360,7 +358,7 @@ class ZabbixServer(GenericServer):
                                                    'action': actions
                                                }),
                     )
-                except ZabbixAPIException as e:
+                except RuntimeError as e:
                     if "Incorrect user name or password or account is temporarily blocked" in str(e):
                         self.error(str(e))
                         return
@@ -407,8 +405,11 @@ class ZabbixServer(GenericServer):
             self.api_request(
                 self.generate_cgi_data('maintenance.create', body)
             )
-        except Already_Exists:
-            self.debug(server=self.get_name(), debug=f"Maintanence with name {body['name']} already exists")
+        except ValueError as e:
+            if "already exists" in str(e).lower():
+                self.debug(server=self.get_name(), debug=f"Maintanence with name {body['name']} already exists")
+            else:
+                raise e
 
     def get_start_end(self, host):
         return time.strftime("%Y-%m-%d %H:%M"), time.strftime("%Y-%m-%d %H:%M", time.localtime(time.time() + 7200))
