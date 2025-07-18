@@ -1,13 +1,10 @@
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
 # Zabbix.py based on Checkmk Multisite.py
-
+import base64
+import json
 import sys
-import urllib.request
-import urllib.parse
-import urllib.error
 import time
-import logging
 import datetime
 import socket
 from packaging import version
@@ -18,14 +15,10 @@ from Nagstamon.Config import conf
 from Nagstamon.Objects import (GenericHost,
                                GenericService,
                                Result)
-from Nagstamon.Servers.Generic import GenericServer
+from Nagstamon.Servers.Generic import GenericServer, BearerAuth
 from Nagstamon.thirdparty.zabbix_api import (ZabbixAPI,
                                              ZabbixAPIException,
-                                             APITimeout,
                                              Already_Exists)
-
-log = logging.getLogger('Zabbix')
-
 
 class ZabbixError(Exception):
 
@@ -39,12 +32,6 @@ class ZabbixServer(GenericServer):
        special treatment for Zabbix, taken from Check_MK Multisite JSON API
     """
     TYPE = 'Zabbix'
-    zapi = None
-    if conf.debug_mode is True:
-        log_level = logging.DEBUG
-    else:
-        log_level = logging.WARNING
-    log.setLevel(log_level)
 
     def __init__(self, **kwds):
         GenericServer.__init__(self, **kwds)
@@ -79,34 +66,104 @@ class ZabbixServer(GenericServer):
         self.timeout = conf.servers[self.get_name()].timeout
         self.ignore_cert = conf.servers[self.get_name()].ignore_cert
         self.use_description_name_service = conf.servers[self.get_name()].use_description_name_service
-        if self.ignore_cert is True:
-            self.validate_certs = False
-        else:
-            self.validate_certs = True
+        self.api_version = ''
+        self.auth_token = ''
+        self.monitor_path = '/api_jsonrpc.php'
 
-    def _login(self):
+    def init_HTTP(self):
+        """
+        things to do if HTTP is not initialized
+        """
+        GenericServer.init_HTTP(self)
+
+        # prepare for JSON
+        self.session.headers.update({'Accept': 'application/json',
+                                     'Content-Type': 'application/json-rpc'})
         try:
-            # create ZabbixAPI if not yet created
-            if self.zapi is None:
-                self.zapi = ZabbixAPI(server=self.monitor_url, path="", log_level=self.log_level,
-                                      validate_certs=self.validate_certs, timeout=self.timeout)
+            self.set_zabbix_version()
+            self.check_authentication()
+            if self.refresh_authentication:
+                self.login()
+        except Exception:
+            self.error(sys.exc_info())
+            return
 
-                # Check if Zabbix version is supported (>= 6.0)
-                zabbix_version = self.zapi.api_version
-                if version.parse(zabbix_version) < version.parse("6.0"):
-                    raise ZabbixAPIException(f"Unsupported Zabbix version: {zabbix_version}. Nagstamon requires Zabbix 6.0 or later.")
+    def api_request(self, cgi_data, no_auth=False):
+        """
+            Make a request to the Zabbix API
+            Returns the response as a dictionary
+        """
+        url = self.monitor_url if self.monitor_url.endswith(self.monitor_path) else f"{self.monitor_url}{self.monitor_path}"
+        result = self.fetch_url(url,
+                                  headers=self.session.headers,
+                                  cgi_data=cgi_data,
+                                  giveback='json',
+                                  no_auth=no_auth)
+        # Check if the result is a valid JSON response
+        data = result.result
+        error = result.error
+        status_code = result.status_code
+        if error:
+            raise ZabbixError(terminate=True, result=Result(result=False, error=error, status_code=status_code))
+        return data
 
-            # login if not yet logged in, or if login was refused previously
-            if self.authentication == 'bearer':
-                if not self.zapi.logged_in(bearer=True):
-                    self.zapi.login(self.username, self.password, bearer=True)
-            elif self.authentication == 'basic':
-                if not self.zapi.logged_in():
-                    self.zapi.login(self.username, self.password)
+    def login(self):
+        if conf.servers[self.get_name()].authentication == 'bearer':
+            return
+
+        # check version to use the correct keyword for username which changed since 6.4
+        if version.parse(self.api_version) < version.parse("6.4"):
+            username_keyword = 'user'
+        else:
+            username_keyword = 'username'
+
+        obj = self.generate_cgi_data('user.login', {username_keyword: self.username, 'password': self.password}, no_auth=True)
+        result = self.api_request(obj)
+        self.auth_token = result['result']  # Store the auth token for later use
+        # Use bearer authentication for Zabbix versions 6.4 and above
+        self.authentication = "bearer" if version.parse(self.api_version) >= version.parse("6.4") else "basic"
+        self.session.auth = BearerAuth(self.auth_token)
+        self.refresh_authentication = False  # Reset the flag after successful login
+
+    def check_authentication(self):
+        try:
+            if conf.servers[self.get_name()].authentication == 'bearer':
+                obj = self.generate_cgi_data('user.checkAuthentication', {'token': self.auth_token}, no_auth=True)
             else:
-                raise Exception("Invalid authentication method")
-        except ZabbixAPIException as e:
-            raise e
+                obj = self.generate_cgi_data('user.checkAuthentication', {'sessionid': self.auth_token}, no_auth=True)
+            result = self.api_request(obj, no_auth=True)
+            if result['error']:
+                self.refresh_authentication = True
+        except Exception as e:
+            raise ZabbixAPIException(f"Authentication check failed: {str(e)}")
+
+    def generate_cgi_data(self, method, params=None, no_auth=False):
+        """
+            Generate data for Zabbix API requests
+        """
+        if params is None:
+            params = {}
+        data = {
+            'jsonrpc': '2.0',
+            'method': method,
+            'params': params,
+            'id': 1
+        }
+        # Only include auth parameter for Zabbix versions before 6.4
+        if not no_auth and self.auth_token and version.parse(self.api_version) < version.parse("6.4"):
+            data['auth'] = self.auth_token
+        return json.dumps(data)
+
+    def set_zabbix_version(self):
+        """
+            Set the Zabbix API version and other related attributes
+        """
+        try:
+            obj = self.generate_cgi_data('apiinfo.version', no_auth=True)
+            result = self.api_request(obj, no_auth=True)
+            self.api_version = result['result']
+        except Exception as e:
+            raise ZabbixAPIException(f"Failed to set Zabbix version: {str(e)}")
 
     def _get_status(self):
         """
@@ -117,99 +174,82 @@ class ZabbixServer(GenericServer):
         # every list will contain a dictionary for every failed service/host
         # this dictionary is only temporarily
 
-        # Create URLs for the configured filters
-        try:
-            self._login()
-        except Exception:
-            result, error = self.error(sys.exc_info())
-            return Result(result=result, error=error)
         # =========================================
         # Service
         # =========================================
         try:
-            try:
-                # Get a list of all issues (AKA tripped triggers)
-                # add Pagination
-                chunk_size = 200
-                services_ids = self.zapi.trigger.get({'only_true': True,
-                                                      'skipDependent': True,
-                                                      'monitored': True,
-                                                      'active': True,
-                                                      'output': ['triggerid']
-                                                      })
-                services = []
-                for i in range(0, len(services_ids), chunk_size):
-                    services.extend(self.zapi.trigger.get({'only_true': True,
-                                                           'skipDependent': True,
-                                                           'monitored': True,
-                                                           'active': True,
-                                                           'output': ['triggerid', 'description', 'lastchange', 'manual_close'],
-                                                           # 'expandDescription': True,
-                                                           # 'expandComment': True,
-                                                           'triggerids': [trigger['triggerid'] for trigger in services_ids[i:i + chunk_size]],
-                                                           'selectLastEvent': ['eventid', 'name', 'ns', 'clock', 'acknowledged',
-                                                                               'value', 'severity'],
-                                                           'selectHosts': ["hostid", "host", "name", "status", "available",
-                                                                           "active_available", "maintenance_status", "maintenance_from"],
-                                                           'selectItems': ['name', 'lastvalue', 'state', 'lastclock']
-                                                        }))
-                for service in services:
-                    status_information = ", ".join(
-                        [f"{item['name']}: {item['lastvalue']}" for item in service['items']])
+            # Get a list of all issues (AKA tripped triggers)
+            # add Pagination
+            chunk_size = 200
+            # services_ids will contain all trigger ids of active services
+            results = self.api_request(
+                self.generate_cgi_data('trigger.get',
+                                       {
+                                           'only_true': True,
+                                           'skipDependent': True,
+                                           'monitored': True,
+                                           'active': True,
+                                           'output': ['triggerid']
+                                       }) )
+            services_ids = results['result']
+            services = []
+            for i in range(0, len(services_ids), chunk_size):
+                results = self.api_request(
+                    self.generate_cgi_data('trigger.get',
+                                           {
+                                               'only_true': True,
+                                               'skipDependent': True,
+                                               'monitored': True,
+                                               'active': True,
+                                               'output': ['triggerid', 'description', 'lastchange', 'manual_close'],
+                                               # 'expandDescription': True,
+                                               # 'expandComment': True,
+                                               'triggerids': [trigger['triggerid'] for trigger in services_ids[i:i + chunk_size]],
+                                               'selectLastEvent': ['eventid', 'name', 'ns', 'clock', 'acknowledged',
+                                                                   'value', 'severity'],
+                                               'selectHosts': ["hostid", "host", "name", "status", "available",
+                                                               "active_available", "maintenance_status", "maintenance_from"],
+                                               'selectItems': ['name', 'lastvalue', 'state', 'lastclock']
+                                           }))
+                services.extend(results['result'])
+            for service in services:
+                status_information = ", ".join(
+                    [f"{item['name']}: {item['lastvalue']}" for item in service['items']])
 
-                    # Add opdata to status information if available (from problem API)
-                    if 'opdata' in service['lastEvent']:
-                        if service['lastEvent']['opdata'] != "":
-                            status_information = service['lastEvent']['name'] + " (" + service['lastEvent'][
-                                'opdata'] + ")"
+                # Add opdata to status information if available (from problem API)
+                if 'opdata' in service['lastEvent']:
+                    if service['lastEvent']['opdata'] != "":
+                        status_information = service['lastEvent']['name'] + " (" + service['lastEvent'][
+                            'opdata'] + ")"
 
-                    service_obj = GenericService()
-                    service_obj.name = service['lastEvent']['name']
-                    service_obj.status = self.statemap.get(service['lastEvent']['severity'], service['lastEvent']['severity'])
-                    service_obj.last_check = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(max(int(item['lastclock']) for item in service['items'])))
-                    service_obj.duration = HumanReadableDurationFromTimestamp(service['lastEvent']['clock'])
-                    service_obj.status_information = status_information
-                    service_obj.acknowledged = False if service['lastEvent']['acknowledged'] == '0' else True
-                    #service_obj.address = ''  # Todo: check if address is available
-                    service_obj.triggerid = service['triggerid']
-                    service_obj.eventid = service['lastEvent']['eventid']
-                    service_obj.allow_manual_close = False if str(service['manual_close']) == '0' else True
+                service_obj = GenericService()
+                service_obj.name = service['lastEvent']['name']
+                service_obj.status = self.statemap.get(service['lastEvent']['severity'], service['lastEvent']['severity'])
+                service_obj.last_check = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(max(int(item['lastclock']) for item in service['items'])))
+                service_obj.duration = HumanReadableDurationFromTimestamp(service['lastEvent']['clock'])
+                service_obj.status_information = status_information
+                service_obj.acknowledged = False if service['lastEvent']['acknowledged'] == '0' else True
+                #service_obj.address = ''  # Todo: check if address is available
+                service_obj.triggerid = service['triggerid']
+                service_obj.eventid = service['lastEvent']['eventid']
+                service_obj.allow_manual_close = False if str(service['manual_close']) == '0' else True
 
-                    if service['hosts']:
-                        # Get the first host only, because we only support one host per service
-                        for host in service['hosts']:
-                            self.new_hosts[host['name']] = GenericHost()
-                            self.new_hosts[host['name']].name = host['name']
-                            self.new_hosts[host['name']].server = self.name
-                            self.new_hosts[host['name']].status = 'UP'
-                            self.new_hosts[host['name']].scheduled_downtime = True if host["maintenance_status"] == '1' else False
-                            # Map Stuff from Service to Host
-                            self.new_hosts[host['name']].services[service["triggerid"]] = service_obj
-                            self.new_hosts[host['name']].services[service["triggerid"]].host = host['name']
-                            self.new_hosts[host['name']].services[service["triggerid"]].hostid = host['hostid']
-
-
-            except ZabbixAPIException:
-                # FIXME Is there a cleaner way to handle this? I just borrowed
-                # this code from 80 lines ahead. -- AGV
-                # set checking flag back to False
-                self.isChecking = False
-                result, error = self.error(sys.exc_info())
-                print(sys.exc_info())
-                return Result(result=result, error=error)
-            except ZabbixError as e:
-                if e.terminate:
-                    return e.result
-                else:
-                    service = e.result.content
-                    ret = e.result
-            except Exception:
-                result, error = self.error(sys.exc_info())
-                print(sys.exc_info())
-                return Result(result=result, error=error)
-
-        except (ZabbixError, ZabbixAPIException):
-            # set checking flag back to False
+                if service['hosts']:
+                    # Get the first host only, because we only support one host per service
+                    for host in service['hosts']:
+                        self.new_hosts[host['name']] = GenericHost()
+                        self.new_hosts[host['name']].name = host['name']
+                        self.new_hosts[host['name']].server = self.name
+                        self.new_hosts[host['name']].status = 'UP'
+                        self.new_hosts[host['name']].scheduled_downtime = True if host["maintenance_status"] == '1' else False
+                        # Map Stuff from Service to Host
+                        self.new_hosts[host['name']].services[service["triggerid"]] = service_obj
+                        self.new_hosts[host['name']].services[service["triggerid"]].host = host['name']
+                        self.new_hosts[host['name']].services[service["triggerid"]].hostid = host['hostid']
+        except ZabbixError as e:
+            print(f"ZabbixError: {e.result}")
+            return Result(result=e.result, error=e.result.content)
+        except (ZabbixAPIException, Exception):
             self.isChecking = False
             result, error = self.error(sys.exc_info())
             print(sys.exc_info())
@@ -249,11 +289,6 @@ class ZabbixServer(GenericServer):
             self.debug(server=self.get_name(),
                        debug="Set Acknowledge Host: " + host + " Service: " + service + " Sticky: " + str(
                            sticky) + " persistent:" + str(persistent) + " All services: " + str(all_services))
-        try:
-            self._login()
-        except Exception:
-            self.error(sys.exc_info())
-            return
         eventids = set()
         unclosable_events = set()
         if all_services is None:
@@ -297,13 +332,34 @@ class ZabbixServer(GenericServer):
             if sticky and unclosable_events:
                 closable_actions = actions | 1
                 closable_events = set(e for e in eventids if e not in unclosable_events)
-                self.zapi.event.acknowledge({'eventids': list(closable_events), 'message': comment, 'action': closable_actions})
-                self.zapi.event.acknowledge({'eventids': list(unclosable_events), 'message': comment, 'action': actions})
+                self.api_request(
+                    self.generate_cgi_data('event.acknowledge',
+                                           {
+                                               'eventids': list(closable_events),
+                                               'message': comment,
+                                               'action': closable_actions
+                                           }),
+                )
+                self.api_request(
+                    self.generate_cgi_data('event.acknowledge',
+                                           {
+                                               'eventids': list(unclosable_events),
+                                               'message': comment,
+                                               'action': actions
+                                           }),
+                )
             else:
                 if sticky:
                     actions |= 1
                 try:
-                    self.zapi.event.acknowledge({'eventids': list(eventids), 'message': comment, 'action': actions})
+                    self.api_request(
+                        self.generate_cgi_data('event.acknowledge',
+                                               {
+                                                   'eventids': list(eventids),
+                                                   'message': comment,
+                                                   'action': actions
+                                               }),
+                    )
                 except ZabbixAPIException as e:
                     if "Incorrect user name or password or account is temporarily blocked" in str(e):
                         self.error(str(e))
@@ -348,7 +404,9 @@ class ZabbixServer(GenericServer):
             body['description'] = body['description'] + '(Nagstamon): ' + comment
             body['name'] = f'{hostname}: {service}'
         try:
-            self.zapi.maintenance.create(body)
+            self.api_request(
+                self.generate_cgi_data('maintenance.create', body)
+            )
         except Already_Exists:
             self.debug(server=self.get_name(), debug=f"Maintanence with name {body['name']} already exists")
 
