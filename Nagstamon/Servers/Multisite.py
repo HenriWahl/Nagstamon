@@ -660,7 +660,7 @@ class MultisiteServer(GenericServer):
            get version of OMD Checkmk as [major_version, minor_version]
         """
         try:
-            version = [int(x) for x in self.fetch_url(self.urls['omd_version'], 'json').result['versions']['checkmk'].split('.')[:2]]
+            version = [int(x) for x in self.fetch_url(self.urls['omd_version'], giveback='json', no_auth=True).result['versions']['checkmk'].split('.')[:2]]
         # If /version api is not supported, return the lowest non-negative pair
         except:
             version = [0, 0]
