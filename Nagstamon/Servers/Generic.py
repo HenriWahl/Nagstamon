@@ -1527,10 +1527,10 @@ class GenericServer(object):
                     if multipart is False:
                         if cgi_data is None:
                             #response = temporary_session.get(url, timeout=self.timeout, verify=not self.ignore_cert)
-                            response = temporary_session.get(url, timeout=self.timeout, verify=False)
+                            response = temporary_session.get(url, timeout=self.timeout, verify=False, headers=headers)
                         else:
                             #response = temporary_session.post(url, data=cgi_data, timeout=self.timeout, verify=not self.ignore_cert)
-                            response = temporary_session.post(url, data=cgi_data, timeout=self.timeout, verify=False)
+                            response = temporary_session.post(url, data=cgi_data, timeout=self.timeout, verify=False, headers=headers)
                     else:
                         # Checkmk and Opsview need multipart/form-data encoding
                         # http://stackoverflow.com/questions/23120974/python-requests-post-multipart-form-data-without-filename-in-http-request#23131823
