@@ -165,7 +165,7 @@ class GenericServer(object):
         self.proxy_username = ''
         self.proxy_password = ''
         self.auth_type = ''
-        self.encoding = None
+        self.encoding = 'utf-8'
         self.hosts = dict()
         self.new_hosts = dict()
         self.isChecking = False
@@ -321,7 +321,10 @@ class GenericServer(object):
         # support for different authentication types
         if self.authentication == 'basic':
             # basic authentication
-            session.auth = requests.auth.HTTPBasicAuth(self.username, self.password)
+            # not encoding as 'utf-8' causes trouble with special characters
+            # https://github.com/HenriWahl/Nagstamon/issues/1126
+            # https://github.com/psf/requests/issues/4564#issuecomment-670771785
+            session.auth = (self.username.encode('utf-8'), self.password.encode('utf-8'))
         elif self.authentication == 'digest':
             session.auth = requests.auth.HTTPDigestAuth(self.username, self.password)
         elif self.authentication == 'ecp' and ECP_AVAILABLE:
@@ -1553,8 +1556,8 @@ class GenericServer(object):
                     self.tls_error = False
                 return Result(result=result, error=error, status_code=-1)
 
-            # store encoding in case it is not set yet and is not False
-            if self.encoding is None:
+            # store encoding in case it is not the server side encoding
+            if self.encoding != response.encoding:
                 self.encoding = response.encoding
 
             # give back pure HTML or XML in case giveback is 'raw'
