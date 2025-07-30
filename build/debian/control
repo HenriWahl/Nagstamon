@@ -12,7 +12,7 @@ Vcs-Browser: https://codeload.github.com/HenriWahl/Nagstamon/zip/master
 
 Package: nagstamon
 Architecture: all
-Depends: ${python3:Depends}, ${misc:Depends}, libqt6multimedia6 libqt5multimedia5-plugins , python3-bs4,
+Depends: ${python3:Depends}, ${misc:Depends}, libqt6multimedia6 | libqt5multimedia5-plugins , python3-bs4,
  python3-dbus.mainloop.pyqt6 | python3-dbus.mainloop.pyqt5, python3-lxml, python3-packaging, python3-pkg-resources,
  python3-pyqt6 | python3-pyqt5, pyqt6-dev-tools | pyqt5-dev-tools, python3-pyqt6.qtmultimedia | python3-pyqt5.qtmultimedia,
  python3-pyqt6.qtsvg | python3-pyqt5.qtsvg, python3-requests, python3-requests-kerberos, python3-psutil,
