@@ -1,10 +1,10 @@
 import sys
 import traceback
 from Nagstamon.Servers.Generic import GenericServer
-from Nagstamon.Objects import (GenericHost, GenericService, Result)
-from Nagstamon.Config import conf
+from Nagstamon.objects import (GenericHost, GenericService, Result)
+from Nagstamon.config import conf
 from Nagstamon.thirdparty.sensugo_api import SensuGoAPI, SensuGoAPIException
-from Nagstamon.Helpers import HumanReadableDurationFromTimestamp
+from Nagstamon.helpers import HumanReadableDurationFromTimestamp
 from time import time
 from datetime import datetime
 

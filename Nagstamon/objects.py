@@ -17,14 +17,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-# for python2 and upcomping python3 compatiblity
-from __future__ import print_function, absolute_import, unicode_literals
 
-
-STATES = ['WARNING', 'UNKNOWN', 'CRITICAL', 'UNREACHABLE', 'DOWN', 'INFORMATION', 'AVERAGE', 'HIGH', 'DISASTER']
-
-
-class GenericObject(object):
+class GenericObject:
 
     """
     template for hosts and services
@@ -168,7 +162,7 @@ class GenericService(GenericObject):
         return " ".join((self.server, self.site, self.host, self.name, self.status))
 
 
-class Result(object):
+class Result:
 
     """
     multi purpose result object, used in Servers.Generic.fetch_url()

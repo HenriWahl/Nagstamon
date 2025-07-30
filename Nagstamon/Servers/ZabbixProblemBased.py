@@ -6,9 +6,9 @@ import logging
 import requests
 from packaging import version
 
-from Nagstamon.Helpers import HumanReadableDurationFromTimestamp
-from Nagstamon.Config import conf
-from Nagstamon.Objects import GenericHost, GenericService, Result
+from Nagstamon.helpers import HumanReadableDurationFromTimestamp
+from Nagstamon.config import conf
+from Nagstamon.objects import GenericHost, GenericService, Result
 from Nagstamon.Servers.Generic import GenericServer
 
 class ZabbixLightApi():

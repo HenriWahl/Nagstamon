@@ -15,14 +15,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-from Nagstamon.Config import (AppInfo,
+from Nagstamon.config import (AppInfo,
                               OS,
                               OS_NON_LINUX,
                               OS_MACOS)
+from Nagstamon.qui.globals import FONT
 from Nagstamon.qui.qt import (Signal,
                               Slot,
                               QWidget)
-
 from Nagstamon.qui.widgets.dialogs.check_version import check_version
 from Nagstamon.qui.widgets.dialogs.dialog import Dialog
 
@@ -128,17 +128,17 @@ class DialogSettings(Dialog):
 
         # because this makes only sense in macOS these dependencies will be added here
         if OS == OS_MACOS:
-            # offer option to hide icon in dock on macOS
+            # offer an option to hide icon in dock on macOS
             self.TOGGLE_DEPS.update({
                 self.window.input_radiobutton_icon_in_systray: [self.window.input_checkbox_hide_macos_dock_icon]})
 
-        # show option to enable position fix only on Unices
+        # show an option to enable position fix only on Unices
         if not OS in OS_NON_LINUX:
             self.window.input_checkbox_enable_position_fix.show()
         else:
             self.window.input_checkbox_enable_position_fix.hide()
 
-        # set title to current version
+        # set title to the current version
         self.window.setWindowTitle(' '.join((AppInfo.NAME, AppInfo.VERSION)))
 
         # connect server buttons to server dialog
@@ -147,7 +147,7 @@ class DialogSettings(Dialog):
         self.window.button_copy_server.clicked.connect(self.copy_server)
         self.window.button_delete_server.clicked.connect(self.delete_server)
 
-        # double click on server to edit
+        # double-click on server to edit
         self.window.list_servers.doubleClicked.connect(self.edit_server)
 
         # connect check-for-updates button to update check

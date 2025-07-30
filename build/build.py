@@ -37,8 +37,8 @@ sys.path.insert(1, NAGSTAMON_DIR)
 SCRIPTS_DIR = '{0}{1}scripts-{2}.{3}'.format(CURRENT_DIR, os.sep, sys.version_info.major, sys.version_info.minor)
 
 # has to be imported here after NAGSTAMON_DIR was wadded to sys.path
-from Nagstamon.Config import AppInfo
-from Nagstamon.Helpers import get_distro
+from Nagstamon.config import AppInfo
+from Nagstamon.helpers import get_distro
 
 VERSION = AppInfo.VERSION
 

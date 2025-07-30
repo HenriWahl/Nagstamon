@@ -20,7 +20,7 @@
 from collections import OrderedDict
 from os import sep
 
-from Nagstamon.Config import RESOURCES
+from Nagstamon.config import RESOURCES
 from Nagstamon.qui.qt import (QIcon,
                               Qt)
 

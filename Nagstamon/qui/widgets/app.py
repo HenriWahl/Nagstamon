@@ -18,7 +18,7 @@
 from platform import release
 from sys import argv
 
-from Nagstamon.Config import (OS,
+from Nagstamon.config import (OS,
                               OS_WINDOWS)
 from Nagstamon.qui.qt import (Qt,
                               QApplication,

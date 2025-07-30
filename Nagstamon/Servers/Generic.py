@@ -39,7 +39,7 @@ try:
 except ImportError:
     ECP_AVAILABLE = False
 
-from Nagstamon.Helpers import (host_is_filtered_out_by_re,
+from Nagstamon.helpers import (host_is_filtered_out_by_re,
                                ServiceIsFilteredOutByRE,
                                StatusInformationIsFilteredOutByRE,
                                DurationIsFilteredOutByRE,
@@ -50,11 +50,11 @@ from Nagstamon.Helpers import (host_is_filtered_out_by_re,
                                webbrowser_open,
                                STATES)
 
-from Nagstamon.Objects import (GenericService,
+from Nagstamon.objects import (GenericService,
                                GenericHost,
                                Result)
 
-from Nagstamon.Config import (AppInfo,
+from Nagstamon.config import (AppInfo,
                               conf,
                               debug_queue,
                               OS,
@@ -1330,7 +1330,7 @@ class GenericServer(object):
 
         # in the following lines worst_status_diff only changes from UP to another value if there was some change in the
         # worst status - if it is the same as before it will just keep UP
-        # if both lists are identical there was no status change
+        # if both lists are identical, there was no status change
         if (self.nagitems_filtered_list == new_nagitems_filtered_list):
             self.worst_status_diff = 'UP'
         else:
@@ -1344,7 +1344,7 @@ class GenericServer(object):
             if len(diff) == 0:
                 self.worst_status_diff = 'UP'
             else:
-                # if there are different hosts/services in list of new hosts there must be a notification
+                # if there are different hosts/services in the list of new hosts there must be a notification
                 # get list of states for comparison
                 diff_states = []
                 for d in diff:
@@ -1352,7 +1352,7 @@ class GenericServer(object):
                 # temporary worst state index
                 worst = 0
                 for d in diff_states:
-                    # only check worst state if it is valid
+                    # only check the worst state if it is valid
                     if d in STATES:
                         if STATES.index(d) > worst:
                             worst = STATES.index(d)

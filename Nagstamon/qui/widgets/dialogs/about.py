@@ -18,7 +18,7 @@
 from os import sep
 from platform import python_version
 
-from Nagstamon.Config import (AppInfo,
+from Nagstamon.config import (AppInfo,
                               RESOURCES)
 from Nagstamon.qui.widgets.dialogs.dialog import Dialog
 from Nagstamon.qui.qt import (QSvgWidget,

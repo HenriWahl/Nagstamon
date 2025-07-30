@@ -17,11 +17,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-from Nagstamon.Objects import Result
-from Nagstamon.Objects import GenericHost
-from Nagstamon.Objects import GenericService
+from Nagstamon.objects import Result
+from Nagstamon.objects import GenericHost
+from Nagstamon.objects import GenericService
 from Nagstamon.Servers.Generic import GenericServer
-from Nagstamon.Config import conf
+from Nagstamon.config import conf
 
 import logging
 log = logging.getLogger('Livestatus')

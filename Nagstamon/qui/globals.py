@@ -15,24 +15,24 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-from Nagstamon.config import (OS,
-                              OS_MACOS)
+# Global variables used in different modules
 
+from Nagstamon.qui.qt import QFont
 
-# make icon status in macOS dock accessible via NSApp, used by set_macos_dock_icon_visible()
-if OS == OS_MACOS:
-    from AppKit import (NSApp,
-                        NSApplicationPresentationDefault,
-                        NSApplicationPresentationHideDock)
+from Nagstamon.config import conf
+from Nagstamon.qui.widgets.app import app
 
+# save default font to be able to reset to it
+DEFAULT_FONT = app.font()
 
-def hide_macos_dock_icon(hide=False):
-    """
-    small helper to make dock icon visible or not in macOS
-    inspired by https://stackoverflow.com/questions/6796028/start-a-gui-process-in-mac-os-x-without-dock-icon
-    """
-    if hide:
-        NSApp.setActivationPolicy_(NSApplicationPresentationHideDock)
-    else:
-        NSApp.setActivationPolicy_(NSApplicationPresentationDefault)
+# take global FONT from conf if it exists
+if conf.font != '':
+    FONT = QFont()
+    FONT.fromString(conf.font)
+else:
+    FONT = DEFAULT_FONT
 
+# DBus initialization
+dbus_connection = DBus()
+
+pass

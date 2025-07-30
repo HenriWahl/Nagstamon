@@ -28,12 +28,12 @@ import html
 import tzlocal
 from datetime import datetime
 
-from Nagstamon.Objects import (GenericHost,
+from Nagstamon.objects import (GenericHost,
                                GenericService,
                                Result)
 from Nagstamon.Servers.Generic import GenericServer
-from Nagstamon.Helpers import webbrowser_open
-from Nagstamon.Config import conf
+from Nagstamon.helpers import webbrowser_open
+from Nagstamon.config import conf
 
 class MultisiteError(Exception):
     def __init__(self, terminate, result):

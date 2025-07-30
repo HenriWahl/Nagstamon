@@ -38,12 +38,12 @@ import datetime
 import socket
 
 from bs4 import BeautifulSoup
-from Nagstamon.Objects import (GenericHost,
+from Nagstamon.objects import (GenericHost,
                                GenericService,
                                Result)
-from Nagstamon.Config import (conf,
+from Nagstamon.config import (conf,
                               AppInfo)
-from Nagstamon.Helpers import webbrowser_open
+from Nagstamon.helpers import webbrowser_open
 from Nagstamon.Servers.IcingaDBWeb import IcingaDBWebServer
 
 

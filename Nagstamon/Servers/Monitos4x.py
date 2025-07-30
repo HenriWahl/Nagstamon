@@ -34,10 +34,10 @@ import time
 import requests
 from bs4 import BeautifulSoup
 
-from Nagstamon.Helpers import webbrowser_open
-from Nagstamon.Objects import (GenericHost, GenericService, Result)
+from Nagstamon.helpers import webbrowser_open
+from Nagstamon.objects import (GenericHost, GenericService, Result)
 from Nagstamon.Servers.Generic import GenericServer
-from Nagstamon.Config import conf
+from Nagstamon.config import conf
 
 log = logging.getLogger('monitos4x')
 log.setLevel('INFO')

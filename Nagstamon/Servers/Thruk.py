@@ -20,16 +20,16 @@
 
 from collections import OrderedDict
 from Nagstamon.Servers.Generic import GenericServer
-from Nagstamon.Config import conf
+from Nagstamon.config import conf
 import sys
 import json
 import datetime
 import copy
 import urllib.parse
 
-from Nagstamon.Helpers import HumanReadableDurationFromTimestamp
-from Nagstamon.Helpers import webbrowser_open
-from Nagstamon.Objects import (GenericHost, GenericService, Result)
+from Nagstamon.helpers import HumanReadableDurationFromTimestamp
+from Nagstamon.helpers import webbrowser_open
+from Nagstamon.objects import (GenericHost, GenericService, Result)
 
 
 class ThrukServer(GenericServer):

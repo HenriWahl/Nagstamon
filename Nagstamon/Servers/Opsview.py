@@ -29,12 +29,12 @@ import json
 from datetime import datetime, timedelta
 from ast import literal_eval
 
-from Nagstamon.Config import conf
-from Nagstamon.Objects import (GenericHost,
+from Nagstamon.config import conf
+from Nagstamon.objects import (GenericHost,
                                GenericService,
                                Result)
 from Nagstamon.Servers.Generic import GenericServer
-from Nagstamon.Helpers import (HumanReadableDurationFromSeconds,
+from Nagstamon.helpers import (HumanReadableDurationFromSeconds,
                                webbrowser_open)
 
 

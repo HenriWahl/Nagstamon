@@ -34,8 +34,8 @@ import time
 import requests
 from bs4 import BeautifulSoup
 
-from Nagstamon.Helpers import webbrowser_open
-from Nagstamon.Objects import (GenericHost, GenericService, Result)
+from Nagstamon.helpers import webbrowser_open
+from Nagstamon.objects import (GenericHost, GenericService, Result)
 from Nagstamon.Servers.Generic import GenericServer
 
 log = logging.getLogger('SNAG-View 3')

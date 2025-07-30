@@ -21,7 +21,7 @@ from Nagstamon.qui.qt import (QMenu,
                               Signal,
                               Slot)
 
-from Nagstamon.Config import (OS,
+from Nagstamon.config import (OS,
                               OS_MACOS)
 
 

@@ -7,10 +7,10 @@ from datetime import datetime, timedelta
 
 import requests
 
-from Nagstamon.Config import conf
-from Nagstamon.Objects import (GenericHost,Result)
+from Nagstamon.config import conf
+from Nagstamon.objects import (GenericHost, Result)
 from Nagstamon.Servers.Generic import GenericServer
-from Nagstamon.Helpers import webbrowser_open
+from Nagstamon.helpers import webbrowser_open
 
 from .helpers import (start_logging,
                       get_duration,

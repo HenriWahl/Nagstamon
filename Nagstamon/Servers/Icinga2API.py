@@ -26,9 +26,9 @@ import sys
 import dateutil.parser
 import urllib.parse
 
-from Nagstamon.Config import conf
+from Nagstamon.config import conf
 from Nagstamon.Servers.Generic import GenericServer
-from Nagstamon.Objects import (GenericHost, GenericService, Result)
+from Nagstamon.objects import (GenericHost, GenericService, Result)
 
 log = logging.getLogger(__name__)
 

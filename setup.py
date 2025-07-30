@@ -23,9 +23,9 @@ import sys
 import platform
 import os.path
 
-from Nagstamon.Config import AppInfo, \
+from Nagstamon.config import AppInfo, \
     OS
-from Nagstamon.Helpers import get_distro
+from Nagstamon.helpers import get_distro
 
 # dummy debug queue for compiling
 debug_queue = list()

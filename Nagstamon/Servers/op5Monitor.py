@@ -23,10 +23,10 @@ import time
 
 from datetime import datetime
 
-from Nagstamon.Helpers import webbrowser_open
-from Nagstamon.Objects import (GenericHost, GenericService, Result)
+from Nagstamon.helpers import webbrowser_open
+from Nagstamon.objects import (GenericHost, GenericService, Result)
 from Nagstamon.Servers.Generic import GenericServer
-from Nagstamon.Config import BOOLPOOL
+from Nagstamon.config import BOOLPOOL
 
 def human_duration(start):
     """

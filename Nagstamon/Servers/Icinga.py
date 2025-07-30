@@ -25,8 +25,8 @@ from bs4 import BeautifulSoup
 from collections import OrderedDict
 
 from Nagstamon.Servers.Generic import GenericServer
-from Nagstamon.Objects import (GenericHost, GenericService, Result)
-from Nagstamon.Helpers import not_empty
+from Nagstamon.objects import (GenericHost, GenericService, Result)
+from Nagstamon.helpers import not_empty
 
 
 class IcingaServer(GenericServer):

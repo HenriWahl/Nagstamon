@@ -49,9 +49,9 @@ from Nagstamon.Servers.SensuGo import SensuGoServer
 from Nagstamon.Servers.Prometheus import PrometheusServer
 from Nagstamon.Servers.Alertmanager import AlertmanagerServer
 
-from Nagstamon.Config import conf
+from Nagstamon.config import conf
 
-from Nagstamon.Helpers import STATES
+from Nagstamon.helpers import STATES
 
 
 # dictionary for servers

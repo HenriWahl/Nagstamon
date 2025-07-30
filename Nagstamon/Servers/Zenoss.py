@@ -26,8 +26,8 @@ import datetime
 import traceback
 from datetime import datetime
 
-from Nagstamon.Config import conf
-from Nagstamon.Objects import (GenericHost, GenericService, Result)
+from Nagstamon.config import conf
+from Nagstamon.objects import (GenericHost, GenericService, Result)
 from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.thirdparty.zenoss_api import ZenossAPI
 

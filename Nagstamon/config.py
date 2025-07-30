@@ -79,7 +79,7 @@ if not os.environ.get('QT_QPA_PLATFORMTHEME'):
 # queue.Queue() needs threading module which might be not such a good idea to be used
 # because QThread is already in use
 # maybe not the most logical place here to be defined but at least all
-# modules access Config.py so it can be distributed from here
+# modules access config.py so it can be distributed from here
 debug_queue = list()
 
 # temporary dict for string-to-bool-conversion

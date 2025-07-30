@@ -32,7 +32,7 @@ import webbrowser
 # import md5 for centreon url autologin encoding
 from hashlib import md5
 
-from Nagstamon.Config import (conf,
+from Nagstamon.config import (conf,
                               OS,
                               OS_MACOS)
 

@@ -21,11 +21,11 @@ import sys
 import traceback
 from requests.structures import CaseInsensitiveDict
 
-from Nagstamon.Config import conf
-from Nagstamon.Objects import (GenericHost, GenericService, Result)
+from Nagstamon.config import conf
+from Nagstamon.objects import (GenericHost, GenericService, Result)
 from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.thirdparty.sensu_api import SensuAPI, SensuAPIException
-from Nagstamon.Helpers import HumanReadableDurationFromTimestamp, webbrowser_open
+from Nagstamon.helpers import HumanReadableDurationFromTimestamp, webbrowser_open
 
 
 class SensuServer(GenericServer):

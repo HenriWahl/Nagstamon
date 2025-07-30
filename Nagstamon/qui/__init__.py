@@ -30,7 +30,8 @@ import time
 import traceback
 from urllib.parse import quote
 
-
+from Nagstamon.qui.globals import (DEFAULT_FONT,
+                                   FONT)
 from Nagstamon.qui.widgets.app import app
 from Nagstamon.qui.constants import (COLORS,
                                      COLOR_STATE_NAMES,
@@ -62,7 +63,7 @@ from Nagstamon.qui.widgets.menu import MenuAtCursor
 # for details of imports look into qt.py
 from Nagstamon.qui.qt import *
 
-from Nagstamon.Config import (Action,
+from Nagstamon.config import (Action,
                               AppInfo,
                               BOOLPOOL,
                               conf,
@@ -85,7 +86,7 @@ from Nagstamon.Servers import (SERVER_TYPES,
                                get_status_count,
                                get_errors)
 
-from Nagstamon.Helpers import (is_found_by_re,
+from Nagstamon.helpers import (is_found_by_re,
                                webbrowser_open,
                                FilesDict,
                                STATES,
@@ -158,16 +159,6 @@ else:
         KERBEROS_AVAILABLE = True
     except ImportError as error:
         print(error)
-
-# save default font to be able to reset to it
-DEFAULT_FONT = app.font()
-
-# take global FONT from conf if it exists
-if conf.font != '':
-    FONT = QFont()
-    FONT.fromString(conf.font)
-else:
-    FONT = DEFAULT_FONT
 
 # add nagstamon.ttf with icons to fonts
 QFontDatabase.addApplicationFont('{0}{1}nagstamon.ttf'.format(RESOURCES, os.sep))
@@ -6675,7 +6666,7 @@ class CheckVersion(QObject):
                 if latest_version == AppInfo.VERSION:
                     message = 'You are using the latest version <b>Nagstamon {0}</b>.'.format(AppInfo.VERSION)
                 # avoid GitHub HTML being evaluated as version number -> checking for length
-                elif latest_version > AppInfo.VERSION and  not len(latest_version) > 20:
+                elif latest_version > AppInfo.VERSION and not len(latest_version) > 20:
                     message = f'The new version <b>Nagstamon {latest_version}</b> is available.<p>' \
                               f'Get it at <a href={AppInfo.WEBSITE}/download>{AppInfo.WEBSITE}/download</a>.'
                 elif latest_version < AppInfo.VERSION:
@@ -6880,7 +6871,6 @@ clipboard = app.clipboard()
 
 # DBus initialization
 dbus_connection = DBus()
-
 
 # system tray icon
 systrayicon = SystemTrayIcon()

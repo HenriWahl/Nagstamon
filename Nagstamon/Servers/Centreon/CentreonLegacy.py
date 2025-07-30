@@ -27,10 +27,10 @@ import copy
 
 from datetime import datetime, timedelta
 
-from Nagstamon.Objects import *
+from Nagstamon.objects import *
 from Nagstamon.Servers.Generic import GenericServer
-from Nagstamon.Config import conf
-from Nagstamon.Helpers import webbrowser_open
+from Nagstamon.config import conf
+from Nagstamon.helpers import webbrowser_open
 
 
 class CentreonServer(GenericServer):
