@@ -165,7 +165,7 @@ class GenericServer:
         self.proxy_username = ''
         self.proxy_password = ''
         self.auth_type = ''
-        self.encoding = None
+        self.encoding = 'utf-8'
         self.hosts = dict()
         self.new_hosts = dict()
         self.isChecking = False
@@ -321,7 +321,10 @@ class GenericServer:
         # support for different authentication types
         if self.authentication == 'basic':
             # basic authentication
-            session.auth = requests.auth.HTTPBasicAuth(self.username, self.password)
+            # not encoding as 'utf-8' causes trouble with special characters
+            # https://github.com/HenriWahl/Nagstamon/issues/1126
+            # https://github.com/psf/requests/issues/4564#issuecomment-670771785
+            session.auth = (self.username.encode('utf-8'), self.password.encode('utf-8'))
         elif self.authentication == 'digest':
             session.auth = requests.auth.HTTPDigestAuth(self.username, self.password)
         elif self.authentication == 'ecp' and ECP_AVAILABLE:
@@ -1527,10 +1530,10 @@ class GenericServer:
                     if multipart is False:
                         if cgi_data is None:
                             #response = temporary_session.get(url, timeout=self.timeout, verify=not self.ignore_cert)
-                            response = temporary_session.get(url, timeout=self.timeout, verify=False)
+                            response = temporary_session.get(url, timeout=self.timeout, verify=False, headers=headers)
                         else:
                             #response = temporary_session.post(url, data=cgi_data, timeout=self.timeout, verify=not self.ignore_cert)
-                            response = temporary_session.post(url, data=cgi_data, timeout=self.timeout, verify=False)
+                            response = temporary_session.post(url, data=cgi_data, timeout=self.timeout, verify=False, headers=headers)
                     else:
                         # Checkmk and Opsview need multipart/form-data encoding
                         # http://stackoverflow.com/questions/23120974/python-requests-post-multipart-form-data-without-filename-in-http-request#23131823
@@ -1553,8 +1556,8 @@ class GenericServer:
                     self.tls_error = False
                 return Result(result=result, error=error, status_code=-1)
 
-            # store encoding in case it is not set yet and is not False
-            if self.encoding is None:
+            # store encoding in case it is not the server side encoding
+            if self.encoding != response.encoding:
                 self.encoding = response.encoding
 
             # give back pure HTML or XML in case giveback is 'raw'
