@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 class SensuGoAPIException(Exception):
     pass
 
-class SensuGoAPI(object):
+class SensuGoAPI:
     _base_api_url = ''
     _refresh_token = ''
     _session = None

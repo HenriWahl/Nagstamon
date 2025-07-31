@@ -127,7 +127,7 @@ CONFIG_STRINGS = ['custom_browser',
                   ]
 
 
-class AppInfo(object):
+class AppInfo:
     """
         contains app information previously located in GUI.py
     """
@@ -150,7 +150,7 @@ class AppInfo(object):
         VERSION_PATH = '/version/stable'
 
 
-class Config(object):
+class Config:
     """
         The place for central configuration.
     """
@@ -1037,7 +1037,7 @@ class Config(object):
                 traceback.print_exc(file=sys.stdout)
 
 
-class Server(object):
+class Server:
     """
         one Server realized as object for config info
     """
@@ -1128,7 +1128,7 @@ class Server(object):
         # Thruk
         self.disabled_backends = ""
 
-class Action(object):
+class Action:
     """
     class for custom actions, which whill be thrown into one config dictionary like the servers
     """

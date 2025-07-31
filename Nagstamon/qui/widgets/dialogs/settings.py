@@ -15,14 +15,25 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+from copy import copy
+
 from Nagstamon.config import (AppInfo,
+                              conf,
+                              KEYRING,
                               OS,
                               OS_NON_LINUX,
                               OS_MACOS)
-from Nagstamon.qui.globals import FONT
+from Nagstamon.qui.constants import (COLORS,
+                                     HEADERS_HEADERS)
+from Nagstamon.qui.globals import (FONT,
+                                   dbus_connection)
 from Nagstamon.qui.qt import (Signal,
                               Slot,
+                              QPalette,
+                              QSignalMapper,
+                              QStyle,
                               QWidget)
+from Nagstamon.qui.widgets.app import app
 from Nagstamon.qui.widgets.dialogs.check_version import check_version
 from Nagstamon.qui.widgets.dialogs.dialog import Dialog
 
@@ -329,7 +340,7 @@ class DialogSettings(Dialog):
                 pass
         # fill default order fields combobox with s names
         # kick out empty headers for hosts and services flags
-        sort_fields = copy.copy(HEADERS_HEADERS)
+        sort_fields = copy(HEADERS_HEADERS)
         while '' in sort_fields:
             sort_fields.remove('')
 

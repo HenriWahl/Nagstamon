@@ -195,7 +195,7 @@ class ZenossServer(GenericServer):
         pass
 
 
-class Server(object):
+class Server:
     #server object for api configuration connections
 
     def __init__(self):

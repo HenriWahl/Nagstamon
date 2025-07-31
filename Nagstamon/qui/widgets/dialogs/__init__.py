@@ -16,9 +16,14 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 from Nagstamon.qui.qt import QFileDialog
-from Nagstamon.qui.widgets.dialogs.settings import DialogSettings
 from Nagstamon.qui.widgets.dialogs.about import DialogAbout
+from Nagstamon.qui.widgets.dialogs.acknowledge import DialogAcknowledge
+from Nagstamon.qui.widgets.dialogs.authentication import DialogAuthentication
+from Nagstamon.qui.widgets.dialogs.downtime import DialogDowntime
+from Nagstamon.qui.widgets.dialogs.settings import DialogSettings
+from Nagstamon.qui.widgets.dialogs.submit import DialogSubmit
 from Nagstamon.qui.widgets.dialogs.check_version import check_version
+
 
 class Dialogs():
     """
@@ -178,3 +183,7 @@ class Dialogs():
 dialogs = Dialogs()
 dialogs.initialize_dialog_settings(DialogSettings())
 dialogs.initialize_dialog_about(DialogAbout())
+dialogs.initialize_dialog_acknowledge(DialogAcknowledge())
+dialogs.initialize_dialog_downtime(DialogDowntime())
+dialogs.initialize_dialog_submit(DialogSubmit())
+dialogs.initialize_dialog_authentication(DialogAuthentication())

@@ -103,7 +103,7 @@ class APITimeout(ZabbixAPIException):
     pass
 
 
-class ZabbixAPI(object):
+class ZabbixAPI:
     __username__ = ''
     __password__ = ''
 

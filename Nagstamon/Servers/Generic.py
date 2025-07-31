@@ -108,7 +108,7 @@ class BearerAuth(requests.auth.AuthBase):
         r.headers["Authorization"] = "Bearer " + self.token
         return r
 
-class GenericServer(object):
+class GenericServer:
 
     '''
         Abstract server which serves as template for all other types

@@ -20,7 +20,9 @@
 from Nagstamon.qui.qt import QFont
 
 from Nagstamon.config import conf
+from Nagstamon.qui.dbus import DBus
 from Nagstamon.qui.widgets.app import app
+
 
 # save default font to be able to reset to it
 DEFAULT_FONT = app.font()
