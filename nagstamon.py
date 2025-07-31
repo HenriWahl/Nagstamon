@@ -45,14 +45,14 @@ try:
         from Nagstamon.qui import (app,
                                    statuswindow,
                                    check_version,
-                                   check_servers,
                                    QT_FLAVOR,
                                    QT_VERSION_STR)
+        from Nagstamon.qui.helpers import check_servers
 
         # ask for help if no servers are configured
-        check_servers()
+        check_servers.check()
 
-        # show and resize status window
+        # show and resize the status window
         statuswindow.show()
         if not conf.fullscreen:
             statuswindow.adjustSize()

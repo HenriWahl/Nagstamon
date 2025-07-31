@@ -88,6 +88,7 @@ class Dialog(QObject):
         """
         pass
 
+    @Slot()
     def show(self, tab=0):
         """
         simple how method, to be enriched
@@ -206,8 +207,8 @@ class Dialog(QObject):
 
     def hide_macos_dock_icon_if_necessary(self):
         """
-            hide macOS dock icon again if it is configured to be hidden
-            was only necessary to show up to let dialog get keyboard focus
+        hide macOS dock icon again if it is configured to be hidden
+        was only necessary to show up to let dialog get keyboard focus
         """
         if OS == OS_MACOS and \
                 conf.icon_in_systray and \

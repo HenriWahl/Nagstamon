@@ -26,13 +26,14 @@ from Nagstamon.config import (AppInfo,
                               OS,
                               OS_NON_LINUX,
                               OS_MACOS, OS_WINDOWS)
-from Nagstamon.qui import create_brushes, check_servers
 from Nagstamon.qui.constants import (COLORS,
                                      HEADERS_HEADERS,
                                      HEADERS_KEYS_HEADERS, HEADERS_HEADERS_KEYS)
 from Nagstamon.qui.globals import (dbus_connection,
                                    FONT,
                                    NUMBER_OF_DISPLAY_CHANGES)
+from Nagstamon.qui.helpers import (create_brushes,
+                                   check_servers)
 from Nagstamon.qui.qt import (Signal,
                               Slot,
                               QColor,
@@ -574,7 +575,7 @@ class DialogSettings(Dialog):
         """
         # call close and macOS dock icon treatment from ancestor
         super().cancel()
-        check_servers()
+        check_servers.check()
 
     @Slot()
     def new_server(self):

@@ -30,11 +30,10 @@ import time
 import traceback
 from urllib.parse import quote
 
-from Nagstamon.qui.globals import (dbus_connection,
-                                   DEFAULT_FONT,
-                                   FONT,
-                                   NUMBER_OF_DISPLAY_CHANGES)
+# it is important that this import is done before importing any other qui module, because
+# they may need a QApplication instance to be created
 from Nagstamon.qui.widgets.app import app
+
 from Nagstamon.qui.constants import (COLORS,
                                      COLOR_STATE_NAMES,
                                      COLOR_STATUS_LABEL,
@@ -49,14 +48,18 @@ from Nagstamon.qui.constants import (COLORS,
                                      SORT_COLUMNS_INDEX,
                                      SPACE,
                                      WINDOW_FLAGS)
-
+from Nagstamon.qui.globals import (dbus_connection,
+                                   DEFAULT_FONT,
+                                   FONT,
+                                   NUMBER_OF_DISPLAY_CHANGES)
+from Nagstamon.qui.helpers import (hide_macos_dock_icon,
+                                   create_brushes)
 from Nagstamon.qui.widgets.button import (Button,
                                           CSS_CLOSE_BUTTON,
                                           PushButtonHamburger)
 from Nagstamon.qui.widgets.dialogs import dialogs
 from Nagstamon.qui.widgets.dialogs import Dialog
 from Nagstamon.qui.widgets.dialogs.check_version import CheckVersion
-from Nagstamon.qui.helpers import hide_macos_dock_icon
 from Nagstamon.qui.widgets.icon import QIconWithFilename
 from Nagstamon.qui.widgets.layout import HBoxLayout
 from Nagstamon.qui.widgets.menu import MenuAtCursor
@@ -131,11 +134,11 @@ RESOURCE_FILES = FilesDict(RESOURCES)
 
 class SystemTrayIcon(QSystemTrayIcon):
     """
-        Icon in system tray, works at least in Windows and OSX
-        Several Linux desktop environments have different problems
+    Icon in system tray, works at least in Windows and OSX
+    Several Linux desktop environments have different problems
 
-        For some dark, very dark reason systray menu does NOT work in
-        Windows if run on commandline as nagstamon.py - the binary .exe works
+    For some dark, very dark reason systray menu does NOT work in
+    Windows if run on commandline as nagstamon.py - the binary .exe works
     """
     show_popwin = Signal()
     hide_popwin = Signal()
@@ -4213,39 +4216,6 @@ class TreeView(QTreeView):
                 self.server.events_history[event] = False
 
 
-def create_brushes():
-    """
-        fill static brushes with current colors for treeview
-    """
-    # if not customized use default intensity
-    if conf.grid_use_custom_intensity:
-        intensity = 100 + conf.grid_alternation_intensity
-    else:
-        intensity = 115
-
-    # every state has 2 labels in both alteration levels 0 and 1
-    for state in STATES[1:]:
-        for role in ('text', 'background'):
-            QBRUSHES[0][COLORS[state] + role] = QColor(conf.__dict__[COLORS[state] + role])
-            # if background is too dark to be litten split it into RGB values
-            # and increase them sepeartely
-            # light/darkness spans from 0 to 255 - 30 is just a guess
-            if role == 'background' and conf.show_grid:
-                if QBRUSHES[0][COLORS[state] + role].lightness() < 30:
-                    r, g, b, a = (QBRUSHES[0][COLORS[state] + role].getRgb())
-                    r += 30
-                    g += 30
-                    b += 30
-                    QBRUSHES[1][COLORS[state] + role] = QColor(r, g, b).lighter(intensity)
-                else:
-                    # otherwise just make it a little bit darker
-                    QBRUSHES[1][COLORS[state] + role] = QColor(conf.__dict__[COLORS[state] +
-                                                                             role]).darker(intensity)
-            else:
-                # only make background darker; text should stay as it is
-                QBRUSHES[1][COLORS[state] + role] = QBRUSHES[0][COLORS[state] + role]
-
-
 def get_screen_name(x, y):
     """
         find out which screen the given coordinates belong to
@@ -4302,20 +4272,6 @@ def exit():
         server_vbox.table.worker.finish.emit()
 
     app.exit()
-
-
-def check_servers():
-    """
-        check if there are any servers configured and enabled
-    """
-    # no server is configured
-    if len(servers) == 0:
-        dialogs.server_missing.show()
-        dialogs.server_missing.initialize('no_server')
-    # no server is enabled
-    elif len([x for x in conf.servers.values() if x.enabled is True]) == 0:
-        dialogs.server_missing.show()
-        dialogs.server_missing.initialize('no_server_enabled')
 
 
 # check for updates

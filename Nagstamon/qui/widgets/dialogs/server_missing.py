@@ -15,6 +15,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+from Nagstamon.qui.helpers import check_servers
+from Nagstamon.qui.qt import Slot
 from Nagstamon.qui.widgets.dialogs.dialog import Dialog
 
 
@@ -36,7 +38,11 @@ class DialogServerMissing(Dialog):
         # bye bye if exit button was pressed
         self.window.button_exit.clicked.connect(self.window.hide)
         self.window.button_exit.clicked.connect(exit)
+        # check if servers are configured or enabled and show dialog if not
+        check_servers.checked.connect(self.show)
+        check_servers.checked.connect(self.initialize)
 
+    @Slot(str)
     def initialize(self, mode='no_server'):
         """
         use dialog for missing and not enabled servers, depending on mode
