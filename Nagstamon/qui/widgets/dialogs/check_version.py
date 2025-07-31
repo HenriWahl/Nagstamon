@@ -38,7 +38,7 @@ class CheckVersion(QObject):
     @Slot(bool, QWidget)
     def check(self, start_mode=False, parent=None):
 
-        if self.is_checking is False:
+        if not self.is_checking:
 
             # lock checking thread
             self.is_checking = True
@@ -50,7 +50,7 @@ class CheckVersion(QObject):
             self.start_mode = start_mode
 
             # store caller of dialog window - not if at start because this will disturb EWMH
-            if start_mode is True:
+            if start_mode:
                 self.parent = None
             else:
                 self.parent = parent
@@ -75,7 +75,7 @@ class CheckVersion(QObject):
     @Slot()
     def reset_checking(self):
         """
-            reset checking flag to avoid QThread crashes
+            reset checking the flag to avoid QThread crashes
         """
         self.is_checking = False
 
@@ -109,7 +109,7 @@ class CheckVersion(QObject):
     class Worker(QObject):
 
         """
-            check for new version in background
+        check for a new version in the background
         """
         # send signal if some version information is available
         ready = Signal(str)
@@ -123,14 +123,14 @@ class CheckVersion(QObject):
             """
                 check for update using server connection
             """
-            # get servers to be used for checking version
+            # get servers to be used for checking the version
             enabled_servers = get_enabled_servers()
 
             # default latest version is 'unavailable' and message empty
             latest_version = 'unavailable'
             message = ''
 
-            # find at least one server which allows to get version information
+            # find at least one server which allows getting version information
             for server in enabled_servers:
                 for download_server, download_url in AppInfo.DOWNLOAD_SERVERS.items():
                     # dummy message just in case version check does not work
@@ -148,7 +148,7 @@ class CheckVersion(QObject):
                             response.result[0].isdigit():
                         latest_version = response.result.strip()
                         break
-                # ignore TLS error in case it was caused by requesting latest version - not important for monitoring
+                # ignore TLS error in case it was caused by requesting the latest version - not important for monitoring
                 server.tls_error = False
 
                 # stop searching via enabled servers
@@ -156,7 +156,7 @@ class CheckVersion(QObject):
                     latest_version = response.result.strip()
                     break
 
-            # compose message according to version information
+            # compose a message according to version information
             if latest_version != 'unavailable':
                 if latest_version == AppInfo.VERSION:
                     message = 'You are using the latest version <b>Nagstamon {0}</b>.'.format(AppInfo.VERSION)
@@ -165,7 +165,7 @@ class CheckVersion(QObject):
                     message = f'The new version <b>Nagstamon {latest_version}</b> is available.<p>' \
                               f'Get it at <a href={AppInfo.WEBSITE}/download>{AppInfo.WEBSITE}/download</a>.'
                 elif latest_version < AppInfo.VERSION:
-                    # for some reason the local version is newer than that remote one - just ignore
+                    # for some reason, the local version is newer than that remote one - just ignore
                     message = ''
 
             # check if there is anything to tell
