@@ -19,6 +19,7 @@ from Nagstamon.qui.qt import QFileDialog
 
 from Nagstamon.qui.widgets.dialogs.about import DialogAbout
 from Nagstamon.qui.widgets.dialogs.acknowledge import DialogAcknowledge
+from Nagstamon.qui.widgets.dialogs.action import DialogAction
 from Nagstamon.qui.widgets.dialogs.authentication import DialogAuthentication
 from Nagstamon.qui.widgets.dialogs.dialog import Dialog
 from Nagstamon.qui.widgets.dialogs.downtime import DialogDowntime
@@ -127,6 +128,7 @@ dialogs = Dialogs()
 dialogs.initialize_dialog_settings(DialogSettings())
 dialogs.initialize_dialog_about(DialogAbout())
 dialogs.initialize_dialog_acknowledge(DialogAcknowledge())
+dialogs.initialize_dialog_action(DialogAction())
 dialogs.initialize_dialog_downtime(DialogDowntime())
 dialogs.initialize_dialog_submit(DialogSubmit())
 dialogs.initialize_dialog_authentication(DialogAuthentication())

@@ -37,7 +37,7 @@ from Nagstamon.qui.qt import (Signal,
 from Nagstamon.qui.widgets.app import app
 from Nagstamon.qui.widgets.dialogs.check_version import check_version
 from Nagstamon.qui.widgets.dialogs.dialog import Dialog
-
+from Nagstamon.Servers import servers
 
 class DialogSettings(Dialog):
     """
