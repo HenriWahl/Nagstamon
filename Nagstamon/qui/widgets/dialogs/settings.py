@@ -16,13 +16,14 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 from copy import copy
+from os import environ
 
 from Nagstamon.config import (AppInfo,
                               conf,
                               KEYRING,
                               OS,
                               OS_NON_LINUX,
-                              OS_MACOS)
+                              OS_MACOS, OS_WINDOWS)
 from Nagstamon.qui.constants import (COLORS,
                                      HEADERS_HEADERS)
 from Nagstamon.qui.globals import (FONT,
@@ -976,18 +977,18 @@ class DialogSettings(Dialog):
         """
         # present dialog with OS-specific sensible defaults
         if OS == OS_WINDOWS:
-            filter = 'Executables (*.exe *.EXE);; All files (*)'
-            directory = os.environ['ProgramFiles']
+            file_filter = 'Executables (*.exe *.EXE);; All files (*)'
+            directory = environ['ProgramFiles']
         elif OS == OS_MACOS:
-            filter = ''
+            file_filter = ''
             directory = '/Applications'
         else:
-            filter = ''
+            file_filter = ''
             directory = '/usr/bin'
 
         file = dialogs.file_chooser.getOpenFileName(self.window,
                                                     directory=directory,
-                                                    filter=filter)[0]
+                                                    filter=file_filter)[0]
 
         # only take filename if QFileDialog gave something useful back
         if file != '':

@@ -19,7 +19,9 @@
 
 from Nagstamon.qui.qt import QFont
 
-from Nagstamon.config import conf
+from Nagstamon.config import (conf,
+                              OS,
+                              OS_MACOS)
 from Nagstamon.qui.dbus import DBus
 from Nagstamon.qui.widgets.app import app
 
@@ -37,4 +39,31 @@ else:
 # DBus initialization
 dbus_connection = DBus()
 
-pass
+# check ECP authentication support availability
+try:
+    from requests_ecp import HTTPECPAuth
+    ECP_AVAILABLE = True
+except ImportError:
+    ECP_AVAILABLE = False
+
+# flag to keep track of Kerberos availability
+KERBEROS_AVAILABLE = False
+if OS == OS_MACOS:
+    # requests_gssapi is newer but not available everywhere
+    try:
+        # extra imports needed to get it compiled on macOS
+        import numbers
+        import gssapi.raw.cython_converters
+        from requests_gssapi import HTTPSPNEGOAuth as HTTPSKerberos
+        KERBEROS_AVAILABLE = True
+    except ImportError as error:
+        print(error)
+else:
+    # requests_gssapi is newer but not available everywhere
+    try:
+        # requests_gssapi needs installation of KfW - Kerberos for Windows
+        # requests_kerberoes doesn't
+        from requests_kerberos import HTTPKerberosAuth as HTTPSKerberos
+        KERBEROS_AVAILABLE = True
+    except ImportError as error:
+        print(error)

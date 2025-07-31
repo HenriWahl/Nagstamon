@@ -20,6 +20,8 @@ from Nagstamon.qui.widgets.dialogs.about import DialogAbout
 from Nagstamon.qui.widgets.dialogs.acknowledge import DialogAcknowledge
 from Nagstamon.qui.widgets.dialogs.authentication import DialogAuthentication
 from Nagstamon.qui.widgets.dialogs.downtime import DialogDowntime
+from Nagstamon.qui.widgets.dialogs.server import DialogServer
+from Nagstamon.qui.widgets.dialogs.server_missing import DialogServerMissing
 from Nagstamon.qui.widgets.dialogs.settings import DialogSettings
 from Nagstamon.qui.widgets.dialogs.submit import DialogSubmit
 from Nagstamon.qui.widgets.dialogs.check_version import check_version
@@ -41,67 +43,8 @@ class Dialogs():
     about = None
 
     def __init__(self):
-        # # settings main dialog
-        # self.settings = Dialog_Settings('settings_main')
-        # self.settings.initialize()
-        # self.windows.append(self.settings.window)
-
-        # # server settings dialog
-        # self.server = Dialog_Server('settings_server')
-        # self.server.initialize()
-        # self.windows.append(self.server.window)
-
-        # # action settings dialog
-        # self.action = Dialog_Action('settings_action')
-        # self.action.initialize()
-        # self.windows.append(self.action.window)
-
-        # # acknowledge dialog for miserable item context menu
-        # self.acknowledge = Dialog_Acknowledge('dialog_acknowledge')
-        # self.acknowledge.initialize()
-        # self.windows.append(self.acknowledge.window)
-
-        # downtime dialog for miserable item context menu
-        # self.downtime = Dialog_Downtime('dialog_downtime')
-        # self.downtime.initialize()
-        # self.windows.append(self.downtime.window)
-
-        # open defaults settings on button click
-        # self.downtime.window.button_change_defaults_downtime.clicked.connect(self.settings.show_defaults)
-        # self.downtime.window.button_change_defaults_downtime.clicked.connect(self.downtime.window.close)
-        # self.acknowledge.window.button_change_defaults_acknowledge.clicked.connect(self.settings.show_defaults)
-        # self.acknowledge.window.button_change_defaults_acknowledge.clicked.connect(self.acknowledge.window.close)
-
-        # downtime dialog for miserable item context menu
-        # self.submit = Dialog_Submit('dialog_submit')
-        # self.submit.initialize()
-        # self.windows.append(self.submit.window)
-
-        # authentication dialog for username/password
-        # self.authentication = Dialog_Authentication('dialog_authentication')
-        # self.authentication.initialize()
-        # self.windows.append(self.authentication.window)
-
-        # dialog for asking about disabled or not configured servers
-        # self.server_missing = Dialog_Server_missing('dialog_server_missing')
-        # self.server_missing.initialize()
-        # self.windows.append(self.server_missing.window)
-
-        # # open server creation dialog
-        # self.server_missing.window.button_create_server.clicked.connect(self.settings.show_new_server)
-        # self.server_missing.window.button_enable_server.clicked.connect(self.settings.show)
-
-        # about dialog
-        # self.about = Dialog_About('dialog_about')
-        # self.windows.append(self.about.window)
-
         # file chooser Dialog
         self.file_chooser = QFileDialog()
-
-        # # check if special widgets have to be shown
-        # self.server.edited.connect(self.settings.toggle_zabbix_widgets)
-        # self.server.edited.connect(self.settings.toggle_op5monitor_widgets)
-        # self.server.edited.connect(self.settings.toggle_expire_time_widgets)
 
     def initialize_dialog_settings(self, dialog):
         """
@@ -175,7 +118,7 @@ class Dialogs():
 
     def get_shown_dialogs(self):
         """
-        get list of currently show dialog windows - needed for macOS hide dock icon stuff
+        get a list of currently show dialog windows - needed for macOS hide dock icon stuff
         """
         return [x for x in self.windows if x.isVisible()]
 
@@ -187,3 +130,5 @@ dialogs.initialize_dialog_acknowledge(DialogAcknowledge())
 dialogs.initialize_dialog_downtime(DialogDowntime())
 dialogs.initialize_dialog_submit(DialogSubmit())
 dialogs.initialize_dialog_authentication(DialogAuthentication())
+dialogs.initialize_dialog_server_missing(DialogServerMissing())
+dialogs.initialize_dialog_server(DialogServer())
