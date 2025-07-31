@@ -465,7 +465,7 @@ class PushButton_BrowserURL(Button):
             open URL from BROWSER_URLS in webbrowser
         """
         # BROWSER_URLS come with $MONITOR$ instead of real monitor url - heritage from actions
-        url = self.server.BROWSER_URLS[self.uQSystemTrayIconrl_type]
+        url = self.server.BROWSER_URLS[self.url_type]
         url = url.replace('$MONITOR$', self.server.monitor_url)
         url = url.replace('$MONITOR-CGI$', self.server.monitor_cgi_url)
 
