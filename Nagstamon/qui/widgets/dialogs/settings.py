@@ -19,17 +19,25 @@ from copy import copy
 from os import environ
 
 from Nagstamon.config import (AppInfo,
+                              BOOLPOOL,
                               conf,
+                              CONFIG_STRINGS,
                               KEYRING,
                               OS,
                               OS_NON_LINUX,
                               OS_MACOS, OS_WINDOWS)
+from Nagstamon.qui import create_brushes, check_servers
 from Nagstamon.qui.constants import (COLORS,
-                                     HEADERS_HEADERS)
-from Nagstamon.qui.globals import (FONT,
-                                   dbus_connection)
+                                     HEADERS_HEADERS,
+                                     HEADERS_KEYS_HEADERS, HEADERS_HEADERS_KEYS)
+from Nagstamon.qui.globals import (dbus_connection,
+                                   FONT,
+                                   NUMBER_OF_DISPLAY_CHANGES)
 from Nagstamon.qui.qt import (Signal,
                               Slot,
+                              QColor,
+                              QColorDialog,
+                              QFont,
                               QPalette,
                               QSignalMapper,
                               QStyle,
@@ -39,15 +47,16 @@ from Nagstamon.qui.widgets.dialogs.check_version import check_version
 from Nagstamon.qui.widgets.dialogs.dialog import Dialog
 from Nagstamon.Servers import servers
 
+
 class DialogSettings(Dialog):
     """
-        class for settings dialog
+    class for settings dialog
     """
 
-    # signal to be fired if OK button was clicked and new setting are applied
+    # signal to be fired if OK button was clicked, and new settings are applied
     changed = Signal()
 
-    # send signal if check for new version is wanted
+    # send signal if check for a new version is wanted
     check_for_new_version = Signal(bool, QWidget)
 
     # used to tell debug loop it should start
@@ -57,7 +66,7 @@ class DialogSettings(Dialog):
         Dialog.__init__(self, 'settings_main')
         # define checkbox-to-widgets dependencies which apply at initialization
         # which widgets have to be hidden because of irrelevance
-        # dictionary holds checkbox/radiobutton as key and relevant widgets in list
+        # dictionary holds checkbox/radiobutton as key and relevant widgets in a list
         self.TOGGLE_DEPS = {
             # debug mode
             self.window.input_checkbox_debug_mode: [self.window.input_checkbox_debug_to_file,
@@ -188,7 +197,7 @@ class DialogSettings(Dialog):
         self.window.button_copy_action.clicked.connect(self.copy_action)
         self.window.button_delete_action.clicked.connect(self.delete_action)
 
-        # double click on action to edit
+        # double-click on action to edit
         self.window.list_actions.doubleClicked.connect(self.edit_action)
 
         # connect custom sound file buttons
@@ -259,7 +268,7 @@ class DialogSettings(Dialog):
         self.window.input_checkbox_grid_use_custom_intensity.clicked.connect(self.change_color_alternation_by_value)
         self.window.input_checkbox_grid_use_custom_intensity.clicked.connect(self.toggle_zabbix_widgets)
 
-        # finally map signals with .sender() - [<type>] is important!
+        # finally, map signals with .sender() - [<type>] is important!
         self.signalmapper_colors.mappedString[str].connect(self.color_chooser)
 
         # connect slider to alternating colors
@@ -268,7 +277,7 @@ class DialogSettings(Dialog):
         # apply toggle-dependencies between checkboxes and certain widgets
         self.toggle_toggles()
 
-        # workaround to avoid gigantic settings dialog
+        # workaround to avoid a gigantic settings dialog
         # list of Zabbix-related widgets, only to be shown if there is a Zabbix monitor server configured
         self.ZABBIX_WIDGETS = [self.window.input_checkbox_filter_all_average_services,
                                self.window.input_checkbox_filter_all_disaster_services,
@@ -316,7 +325,7 @@ class DialogSettings(Dialog):
 
     def initialize(self):
         # apply configuration values
-        # start with servers tab
+        # start with server tab
         self.window.tabs.setCurrentIndex(0)
         for widget in dir(self.window):
             if widget.startswith('input_'):
@@ -402,11 +411,11 @@ class DialogSettings(Dialog):
         self.toggle_op5monitor_widgets()
         self.toggle_expire_time_widgets()
 
-        # small workaround for timestamp trick to avoid flickering
-        # if the 'Settings' button was clicked too fast the timestamp difference
-        # is too short and the statuswindow will keep open
-        # modifying the timestamp could help
-        statuswindow.is_shown_timestamp -= 1
+        # # small workaround for timestamp trick to avoid flickering
+        # # if the 'Settings' button was clicked too fast the timestamp difference
+        # # is too short and the statuswindow will keep open
+        # # modifying the timestamp could help
+        # statuswindow.is_shown_timestamp -= 1
 
         # tell the world that dialog pops up
         self.show_dialog.emit()
@@ -430,7 +439,7 @@ class DialogSettings(Dialog):
     @Slot()
     def show_filters(self):
         """
-            opens filters settings after clicking button_filters in toparea
+            opens filters settings after clicking button_filters in top area
         """
         self.show(tab=2)
 
@@ -445,7 +454,8 @@ class DialogSettings(Dialog):
         """
             what to do if OK was pressed
         """
-        global FONT, ICONS_FONT, statuswindow, menu, NUMBER_OF_DISPLAY_CHANGES
+        # global FONT, ICONS_FONT, statuswindow, menu, NUMBER_OF_DISPLAY_CHANGES
+        global ICONS_FONT, statuswindow, menu
 
         # store position of statuswindow/statusbar only if statusbar is floating
         if conf.statusbar_floating:
@@ -458,8 +468,8 @@ class DialogSettings(Dialog):
                        str(conf.fullscreen_display) + \
                        str(conf.windowed)
 
-        # do all stuff necessary after OK button was clicked
-        # put widget values into conf
+        # do all stuff necessary after the OK button was clicked
+        # and put widget values into conf
         for widget in self.window.__dict__.values():
             if widget.objectName().startswith('input_checkbox_'):
                 conf.__dict__[widget.objectName().split('input_checkbox_')[1]] = widget.isChecked()
@@ -482,7 +492,7 @@ class DialogSettings(Dialog):
         # convert some strings to integers and bools
         for item in conf.__dict__:
             if type(conf.__dict__[item]) == str:
-                # when item is not one of those which always have to be strings then it might be OK to convert it
+                # when an item is not one of those which always have to be strings, then it might be OK to convert it
                 if not item in CONFIG_STRINGS:
                     if conf.__dict__[item] in BOOLPOOL:
                         conf.__dict__[item] = BOOLPOOL[conf.__dict__[item]]
@@ -495,7 +505,7 @@ class DialogSettings(Dialog):
             if statuswindow.worker.debug_loop_looping is False:
                 self.start_debug_loop.emit()
         else:
-            # set flag to tell debug loop it should stop please
+            # set the flag to tell debug loop it should stop, please
             statuswindow.worker.debug_loop_looping = False
 
         # convert sorting fields to simple keys - maybe one day translated
@@ -513,7 +523,7 @@ class DialogSettings(Dialog):
         # save configuration
         conf.save_config()
 
-        # when display mode was changed its the easiest to destroy the old status window and create a new one
+        # when display mode was changed, it's the easiest to destroy the old status window and create a new one
         # store display_mode to decide if statuswindow has to be recreated
         if display_mode != str(conf.statusbar_floating) + \
                 str(conf.icon_in_systray) + \
@@ -721,7 +731,7 @@ class DialogSettings(Dialog):
 
     def choose_sound_file_decoration(method):
         """
-            try to decorate sound file dialog
+        try to decorate sound file dialog
         """
 
         def decoration_function(self):
@@ -759,7 +769,7 @@ class DialogSettings(Dialog):
 
     def play_sound_file_decoration(method):
         """
-            try to decorate sound file dialog
+        try to decorate sound file dialog
         """
 
         def decoration_function(self):
@@ -841,7 +851,7 @@ class DialogSettings(Dialog):
     @Slot(str)
     def color_chooser(self, item):
         """
-            open QColorDialog to choose a color and change it in settings dialog
+        open QColorDialog to choose a color and change it in settings dialog
         """
         color = conf.__dict__['color_%s' % (item)]
 
@@ -918,7 +928,7 @@ class DialogSettings(Dialog):
                 background = label_0.palette().color(QPalette.ColorRole.Window)
                 r, g, b, a = background.getRgb()
 
-                # if label background is too dark lighten the color instead of darken it mor
+                # if a label background is too dark, lighten the color instead of darken it more
                 if background.lightness() < 30:
                     if value > 5:
                         r += 30

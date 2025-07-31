@@ -57,7 +57,7 @@ class CheckVersion(QObject):
 
             # thread for worker to avoid
             self.worker_thread = QThread(parent=self)
-            self.worker = self.Worker()
+            self.worker = self.Worker(start_mode)
 
             # if update check is ready it sends the message to GUI thread
             self.worker.ready.connect(self.show_message)
@@ -116,8 +116,9 @@ class CheckVersion(QObject):
 
         finished = Signal()
 
-        def __init__(self):
+        def __init__(self, start_mode=False):
             QObject.__init__(self)
+            self.start_mode = start_mode
 
         def check(self):
             """

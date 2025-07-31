@@ -67,3 +67,6 @@ else:
         KERBEROS_AVAILABLE = True
     except ImportError as error:
         print(error)
+
+# completely silly but no other rescue for Windows-hides-statusbar-after-display-mode-change problem
+NUMBER_OF_DISPLAY_CHANGES = 0

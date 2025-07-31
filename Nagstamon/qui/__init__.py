@@ -32,7 +32,8 @@ from urllib.parse import quote
 
 from Nagstamon.qui.globals import (dbus_connection,
                                    DEFAULT_FONT,
-                                   FONT)
+                                   FONT,
+                                   NUMBER_OF_DISPLAY_CHANGES)
 from Nagstamon.qui.widgets.app import app
 from Nagstamon.qui.constants import (COLORS,
                                      COLOR_STATE_NAMES,
@@ -47,7 +48,6 @@ from Nagstamon.qui.constants import (COLORS,
                                      SORT_ORDER,
                                      SORT_COLUMNS_INDEX,
                                      SPACE,
-                                     NUMBER_OF_DISPLAY_CHANGES,
                                      WINDOW_FLAGS)
 
 from Nagstamon.qui.widgets.button import (Button,
