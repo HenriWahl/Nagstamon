@@ -171,7 +171,7 @@ class CheckVersion(QObject):
 
             # check if there is anything to tell
             if message != '':
-                # if run from startup do not cry if any error occured or nothing new is available
+                # if run from startup do not cry if any error occurred or nothing new is available
                 if self.start_mode is False or \
                         (self.start_mode is True and latest_version not in ('unavailable', AppInfo.VERSION)):
                     self.ready.emit(message)
@@ -179,5 +179,5 @@ class CheckVersion(QObject):
             # tell thread to finish
             self.finished.emit()
 
-
+# initialized an object to be used in other modules
 check_version = CheckVersion()
