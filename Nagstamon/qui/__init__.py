@@ -51,8 +51,7 @@ from Nagstamon.qui.constants import (COLORS,
 from Nagstamon.qui.globals import (dbus_connection,
                                    font,
                                    font_default,
-                                   font_icons,
-                                   number_of_display_changes)
+                                   font_icons)
 from Nagstamon.qui.helpers import (hide_macos_dock_icon,
                                    create_brushes)
 from Nagstamon.qui.widgets.button import (Button,

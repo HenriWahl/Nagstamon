@@ -32,8 +32,7 @@ from Nagstamon.qui.constants import (COLORS,
 from Nagstamon.qui.globals import (dbus_connection,
                                    font,
                                    font_default,
-                                   font_icons,
-                                   number_of_display_changes)
+                                   font_icons)
 from Nagstamon.qui.helpers import (create_brushes,
                                    check_servers)
 from Nagstamon.qui.qt import (Signal,
@@ -41,6 +40,8 @@ from Nagstamon.qui.qt import (Signal,
                               QColor,
                               QColorDialog,
                               QFont,
+                              QFontDialog,
+                              QMessageBox,
                               QPalette,
                               QSignalMapper,
                               QStyle,
@@ -64,6 +65,15 @@ class DialogSettings(Dialog):
 
     # used to tell debug loop it should start
     start_debug_loop = Signal()
+
+    # signal to be fired if a server is newly created
+    server_created = Signal()
+
+    # signal to be fired if a server is edited
+    server_edited = Signal(str)
+
+    # signal to be fired if a server is copied
+    server_copied = Signal(str)
 
     def __init__(self):
         Dialog.__init__(self, 'settings_main')
@@ -442,22 +452,22 @@ class DialogSettings(Dialog):
     @Slot()
     def show_filters(self):
         """
-            opens filters settings after clicking button_filters in top area
+        opens filters settings after clicking button_filters in top area
         """
         self.show(tab=2)
 
     @Slot()
     def show_defaults(self):
         """
-            opens default settings after clicking button in acknowledge/downtime dialog
+        opens default settings after clicking button in acknowledge/downtime dialog
         """
         self.show(tab=6)
 
     def ok(self):
         """
-            what to do if OK was pressed
+        what to do if OK was pressed
         """
-        # global FONT, ICONS_FONT, statuswindow, menu, NUMBER_OF_DISPLAY_CHANGES
+        # global FONT, ICONS_FONT, statuswindow, menu
         global statuswindow, menu
 
         # store position of statuswindow/statusbar only if statusbar is floating
@@ -535,9 +545,6 @@ class DialogSettings(Dialog):
                 str(conf.fullscreen_display) + \
                 str(conf.windowed):
 
-            # increase number of display changes for silly Windows-hides-statusbar-after-display-mode-change problem
-            number_of_display_changes += 1
-
             # stop statuswindow workers
             statuswindow.worker.running = False
             statuswindow.worker_notification.running = False
@@ -574,7 +581,7 @@ class DialogSettings(Dialog):
     @Slot()
     def cancel(self):
         """
-            check if there are any usable servers configured
+        check if there are any usable servers configured
         """
         # call close and macOS dock icon treatment from ancestor
         super().cancel()
@@ -583,32 +590,32 @@ class DialogSettings(Dialog):
     @Slot()
     def new_server(self):
         """
-            create new server
+        create new server
         """
-        dialogs.server.new()
+        self.server_created.emit()
 
     @Slot()
     def edit_server(self):
         """
-            edit existing server
+        edit existing server
         """
         # issue #1114 - do not allow editing of servers when no server is selected nor doesn't exist
-        if dialogs.settings.window.list_servers.currentItem():
-            dialogs.server.edit()
+        if self.window.list_servers.currentItem():
+            self.server_edited.emit(self.window.list_servers.currentItem().text())
 
     @Slot()
     def copy_server(self):
         """
-            copy existing server
+        copy existing server
         """
-        # issue #1114 - do not allow editing of servers when no server is selected nor doesn't exist
-        if dialogs.settings.window.list_servers.currentItem():
-            dialogs.server.copy()
+        # issue #1114 - do not allow copying of servers when no server is selected nor doesn't exist
+        if self.window.list_servers.currentItem():
+            self.server_copied.emit(self.window.list_servers.currentItem().text())
 
     @Slot()
     def delete_server(self):
         """
-            delete server, stop its thread, remove from config and list
+        delete server, stop its thread, remove from config and list
         """
         # issue #1114 - do not allow editing of servers when no server is selected nor doesn't exist
         if dialogs.settings.window.list_servers.currentItem():
@@ -661,7 +668,7 @@ class DialogSettings(Dialog):
 
     def refresh_list(self, list_widget, list_conf, current=''):
         """
-            refresh given 'list_widget' from given 'list_conf' and mark 'current' as current
+        refresh given 'list_widget' from given 'list_conf' and mark 'current' as current
         """
         # clear list of servers
         list_widget.clear()
@@ -674,28 +681,28 @@ class DialogSettings(Dialog):
     @Slot()
     def new_action(self):
         """
-            create new action
+        create new action
         """
         dialogs.action.new()
 
     @Slot()
     def edit_action(self):
         """
-            edit existing action
+        edit existing action
         """
         dialogs.action.edit()
 
     @Slot()
     def copy_action(self):
         """
-            copy existing action and edit it
+        copy existing action and edit it
         """
         dialogs.action.copy()
 
     @Slot()
     def delete_action(self):
         """
-            delete action remove from config and list
+        delete action remove from config and list
         """
         # action to delete from current row in actions list
         action = conf.actions[self.window.list_actions.currentItem().text()]
@@ -754,7 +761,7 @@ class DialogSettings(Dialog):
             if file != '':
                 widget.setText(file)
 
-        return (decoration_function)
+        return decoration_function
 
     @choose_sound_file_decoration
     @Slot()
@@ -808,7 +815,7 @@ class DialogSettings(Dialog):
 
     def paint_colors(self):
         """
-            fill color selection buttons with appropriate colors
+        fill color selection buttons with appropriate colors
         """
         # color buttons
         for color in [x for x in conf.__dict__ if x.startswith('color_')]:
@@ -827,7 +834,7 @@ class DialogSettings(Dialog):
     @Slot()
     def colors_defaults(self):
         """
-            apply default colors to buttons
+        apply default colors to buttons
         """
         # color buttons
         for default_color in [x for x in conf.__dict__ if x.startswith('default_color_')]:
@@ -855,37 +862,36 @@ class DialogSettings(Dialog):
     @Slot(str)
     def color_chooser(self, item):
         """
-        open QColorDialog to choose a color and change it in settings dialog
+        open QColorDialog to choose a color and change it in the settings dialog
         """
         color = conf.__dict__['color_%s' % (item)]
 
         new_color = QColorDialog.getColor(QColor(color), parent=self.window)
         # if canceled the color is invalid
         if new_color.isValid():
-            self.window.__dict__['input_button_color_%s' % (item)].setStyleSheet('''background-color: %s;
-                                                                                border-width: 1px;
-                                                                                border-color: black;
-                                                                                border-style: solid;'''
-                                                                                 % new_color.name())
+            self.window.__dict__[f'input_button_color_{item}'].setStyleSheet(f'''background-color: {new_color.name()};
+                                                                                 border-width: 1px;
+                                                                                 border-color: black;
+                                                                                 border-style: solid;
+                                                                              ''')
             status = item.split('_')[0]
             # get color value from stylesheet to paint example
-            text = self.window.__dict__['input_button_color_%s_text' % (status)].styleSheet()
+            text = self.window.__dict__[f'input_button_color_{status}_text'].styleSheet()
             text = text.split(':')[1].strip().split(';')[0]
-            background = self.window.__dict__['input_button_color_%s_background' % (status)].styleSheet()
+            background = self.window.__dict__[f'input_button_color_{status}_background'].styleSheet()
             background = background.split(':')[1].strip().split(';')[0]
             # set example color
-            self.window.__dict__['label_color_%s' % (status)].setStyleSheet('''color: {0};
-                                                                           background: {1}
-                                                                        '''.format(text, background))
+            self.window.__dict__[f'label_color_ {status}'].setStyleSheet(f'''color: {text};
+                                                                             background: {background};
+                                                                          ''')
             # update alternation colors
             self.paint_color_alternation()
             self.change_color_alternation(self.window.input_slider_grid_alternation_intensity.value())
 
     def paint_color_alternation(self):
         """
-            paint the intensity example color labels taking actual colors from color
-            chooser buttons
-            this labels have the color of alteration level 0 aka default
+        paint the intensity example color labels taking actual colors from color chooser buttons
+        these labels have the color of alteration level 0 aka default
         """
         for state in COLORS:
             # get text color from button CSS
@@ -909,8 +915,8 @@ class DialogSettings(Dialog):
     @Slot(int)
     def change_color_alternation(self, value):
         """
-            fill alternation level 1 labels with altered color
-            derived from level 0 labels aka default
+        fill alternation level 1 labels with altered color
+        derived from level 0 labels aka default
         """
         for state in COLORS:
             # only evaluate colors if there is any stylesheet
@@ -957,14 +963,14 @@ class DialogSettings(Dialog):
     @Slot()
     def change_color_alternation_by_value(self):
         """
-            to be fired up when colors are reset
+        to be fired up when colors are reset
         """
         self.change_color_alternation(self.window.input_slider_grid_alternation_intensity.value())
 
     @Slot()
     def font_chooser(self):
         """
-            use font dialog to choose a font
+        use the font dialog to choose a font
         """
         self.font = QFontDialog.getFont(self.font, parent=self.window)[0]
         self.window.label_font.setFont(self.font)
@@ -972,7 +978,7 @@ class DialogSettings(Dialog):
     @Slot()
     def font_default(self):
         """
-            reset font to default font which was valid when Nagstamon was launched
+        reset font to default font which was valid when Nagstamon was launched
         """
         self.window.label_font.setFont(font_default)
         self.font = font_default
@@ -980,7 +986,7 @@ class DialogSettings(Dialog):
     @Slot()
     def button_check_for_new_version_clicked(self):
         """
-            at this point start_mode for version check is definitively False
+        at this point, start_mode for version check is definitively False
         """
         self.check_for_new_version.emit(False, self.window)
 

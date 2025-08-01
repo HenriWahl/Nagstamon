@@ -136,3 +136,8 @@ dialogs.initialize_dialog_submit(DialogSubmit())
 dialogs.initialize_dialog_authentication(DialogAuthentication())
 dialogs.initialize_dialog_server_missing(DialogServerMissing())
 dialogs.initialize_dialog_server(DialogServer())
+
+# signals and slots between dialogs
+dialogs.settings.server_created.connect(dialogs.server.new)
+dialogs.settings.server_edited.connect(dialogs.server.edit)
+dialogs.settings.server_copied.connect(dialogs.server.copy)

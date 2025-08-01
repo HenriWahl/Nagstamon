@@ -40,6 +40,8 @@ class DialogServer(Dialog):
 
     def __init__(self):
         Dialog.__init__(self, 'settings_server')
+        # configuration for server
+        self.server_conf = None
         # define checkbox-to-widgets dependencies which apply at initialization
         # which widgets have to be hidden because of irrelevance
         # dictionary holds checkbox/radiobutton as key and relevant widgets in list
@@ -200,14 +202,13 @@ class DialogServer(Dialog):
         # after hiding authentication widgets dialog might shrink
         self.window.adjustSize()
 
-    def dialog_decoration(method):
+    def dialog_decoration(method, **kwargs):
         """
         try with a decorator instead of repeated calls
         """
 
         # function which decorates method
-
-        def decoration_function(self, **kwargs):
+        def decoration_function(self, *args, **kwargs):
             """
                 self.server_conf has to be set by decorated method
             """
@@ -215,7 +216,7 @@ class DialogServer(Dialog):
             self.previous_server_conf = None
 
             # call decorated method
-            method(self, **kwargs)
+            method(self, *args, **kwargs)
 
             # run through all input widgets and apply defaults from config
             for widget in self.window.__dict__:
@@ -269,6 +270,7 @@ class DialogServer(Dialog):
         # give back decorated function
         return decoration_function
 
+    @Slot()
     @dialog_decoration
     def new(self):
         """
@@ -281,19 +283,21 @@ class DialogServer(Dialog):
         # window title might be pretty simple
         self.window.setWindowTitle('New server')
 
+    @Slot(str)
     @dialog_decoration
-    def edit(self, server_name=None, show_options=False):
+    def edit(self, name=None, show_options=False):
         """
         edit existing server
-        when called by Edit button in ServerVBox use given server_name to get server config
+        when called by Edit button in ServerVBox use given server name to get server config
         """
 
         self.mode = 'edit'
         # shorter server conf
-        if server_name is None:
-            self.server_conf = conf.servers[dialogs.settings.window.list_servers.currentItem().text()]
-        else:
-            self.server_conf = conf.servers[server_name]
+        # if name is None:
+        #     self.server_conf = conf.servers[dialogs.settings.window.list_servers.currentItem().text()]
+        # else:
+        #     self.server_conf = conf.servers[name]
+        self.server_conf = conf.servers[name]
         # store monitor name in case it will be changed
         self.previous_server_conf = deepcopy(self.server_conf)
         # set window title
@@ -301,14 +305,15 @@ class DialogServer(Dialog):
         # set self.show_options to give value to decorator
         self.show_options = show_options
 
+    @Slot(str)
     @dialog_decoration
-    def copy(self):
+    def copy(self, name=None):
         """
-            copy existing server
+        copy existing server
         """
         self.mode = 'copy'
         # shorter server conf
-        self.server_conf = deepcopy(conf.servers[dialogs.settings.window.list_servers.currentItem().text()])
+        self.server_conf = deepcopy(conf.servers[name])
         # set window title before name change to reflect copy
         self.window.setWindowTitle(f'Copy {self.server_conf.name}')
         # indicate copy of another server
