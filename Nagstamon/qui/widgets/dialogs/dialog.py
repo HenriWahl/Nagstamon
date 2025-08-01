@@ -41,14 +41,14 @@ class Dialog(QObject):
     """
     one single dialog
     """
-    # send signal e.g. to statuswindow if dialog pops up
+    # send a signal, e.g., to the status window if a dialog pops up
     show_dialog = Signal()
 
     # dummy toggle dependencies
     TOGGLE_DEPS = {}
     # auxiliary list of checkboxes which HIDE some other widgets if triggered - for example proxy OS settings
     TOGGLE_DEPS_INVERTED = []
-    # widgets that might be enabled/disebled depending on monitor server type
+    # widgets that might be enabled/disabled depending on a monitor server type
     VOLATILE_WIDGETS = {}
     # names of widgets and their defaults
     WIDGET_NAMES = {}
@@ -107,10 +107,10 @@ class Dialog(QObject):
         # tell the world that dialog pops up
         self.show_dialog.emit()
 
-        # reset window if only needs smaller screen estate
+        # reset the window if it only needs smaller screen estate
         self.window.adjustSize()
         self.window.show()
-        # make sure dialog window will be the topmost
+        # make sure the dialog window will be the topmost
         self.window.raise_()
         # hidden dock icon on macOS needs extra activation
         if OS == OS_MACOS and \
@@ -118,11 +118,13 @@ class Dialog(QObject):
                 conf.hide_macos_dock_icon:
             NSApp.activateIgnoringOtherApps_(True)
 
-    def toggle_visibility(self, checkbox, widgets=[]):
+    def toggle_visibility(self, checkbox, widgets=None):
         """
         state of checkbox toggles visibility of widgets
         some checkboxes might trigger an inverted behaviour - thus the 'inverted' value
         """
+        if widgets is None:
+            widgets = []
         if checkbox in self.TOGGLE_DEPS_INVERTED:
             if checkbox.isChecked():
                 for widget in widgets:
@@ -142,9 +144,9 @@ class Dialog(QObject):
     @Slot(str)
     def toggle(self, checkbox):
         """
-        change state of depending widgets, slot for signals from checkboxes in UI
+        change state of the dependant widgets, slot for signals from checkboxes in UI
         """
-        # Due to older Qt5 in Ubuntu 14.04 signalmapper has to use strings
+        # Due to older Qt5 in Ubuntu 14.04 signal mapper has to use strings
         self.toggle_visibility(self.window.__dict__[checkbox],
                                self.TOGGLE_DEPS[self.window.__dict__[checkbox]])
 
@@ -157,7 +159,7 @@ class Dialog(QObject):
             # toggle visibility
             self.toggle_visibility(checkbox, widgets)
             # multiplex slot .toggle() by signal-mapping
-            # Due to older Qt5 in Ubuntu 14.04 signalmapper has to use strings
+            # Due to older Qt5 in Ubuntu 14.04 signal mapper has to use strings
             self.signalmapper_toggles.setMapping(checkbox, checkbox.objectName())
             checkbox.toggled.connect(self.signalmapper_toggles.map)
             checkbox.toggled.connect(self.window.adjustSize)
@@ -165,20 +167,20 @@ class Dialog(QObject):
         # finally map signals with .sender() - [QWidget] is important!
         self.signalmapper_toggles.mappedString[str].connect(self.toggle)
 
-    def fill_list(self, listwidget, config):
+    def fill_list(self, list_widget, config):
         """
-        fill listwidget with items from config
+        fill list widget with items from config
         """
-        for configitem in sorted(config, key=str.lower):
-            listitem = QListWidgetItem(configitem)
-            if config[configitem].enabled is False:
-                listitem.setForeground(self.GRAY)
-            listwidget.addItem(listitem)
+        for config_item in sorted(config, key=str.lower):
+            list_item = QListWidgetItem(config_item)
+            if config[config_item].enabled is False:
+                list_item.setForeground(self.GRAY)
+            list_widget.addItem(list_item)
 
     @Slot()
     def ok(self):
         """
-        as default closes dialog - might be refined, for example by settings dialog
+        as default closes dialog - might be refined, for example, by settings dialog
         """
         self.window.close()
         # en reverse the dock icon might be hidden again after a potential keyboard input
@@ -193,7 +195,8 @@ class Dialog(QObject):
         # en reverse the dock icon might be hidden again after a potential keyboard input
         self.hide_macos_dock_icon_if_necessary()
 
-    def show_macos_dock_icon_if_necessary(self):
+    @staticmethod
+    def show_macos_dock_icon_if_necessary():
         """
         show macOS dock icon again if it is configured to be hidden
         was only necessary to show up to let dialog get keyboard focus
@@ -205,10 +208,11 @@ class Dialog(QObject):
             if not len(dialogs.get_shown_dialogs()):
                 hide_macos_dock_icon(False)
 
-    def hide_macos_dock_icon_if_necessary(self):
+    @staticmethod
+    def hide_macos_dock_icon_if_necessary():
         """
         hide macOS dock icon again if it is configured to be hidden
-        was only necessary to show up to let dialog get keyboard focus
+        was only necessary to show up to let the dialog get keyboard focus
         """
         if OS == OS_MACOS and \
                 conf.icon_in_systray and \

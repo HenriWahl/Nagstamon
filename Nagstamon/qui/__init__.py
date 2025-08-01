@@ -49,9 +49,10 @@ from Nagstamon.qui.constants import (COLORS,
                                      SPACE,
                                      WINDOW_FLAGS)
 from Nagstamon.qui.globals import (dbus_connection,
-                                   DEFAULT_FONT,
-                                   FONT,
-                                   NUMBER_OF_DISPLAY_CHANGES)
+                                   font,
+                                   font_default,
+                                   font_icons,
+                                   number_of_display_changes)
 from Nagstamon.qui.helpers import (hide_macos_dock_icon,
                                    create_brushes)
 from Nagstamon.qui.widgets.button import (Button,
@@ -120,7 +121,7 @@ if OS == OS_MACOS:
 QFontDatabase.addApplicationFont('{0}{1}nagstamon.ttf'.format(RESOURCES, os.sep))
 
 # always stay in normal weight without any italic
-ICONS_FONT = QFont('Nagstamon', FONT.pointSize() + 2, QFont.Weight.Normal, False)
+#ICONS_FONT = QFont('Nagstamon', FONT.pointSize() + 2, QFont.Weight.Normal, False)
 
 # set style for tooltips globally - to sad not all properties can be set here
 app.setStyleSheet('''QToolTip { margin: 3px;
@@ -2315,11 +2316,11 @@ class StatusBar(QWidget):
 
         # run through labels to set font and get height for logo
         for label in self.color_labels.values():
-            label.setFont(FONT)
+            label.setFont(font)
         #    if label.fontMetrics().height() > height:
         #        height = label.fontMetrics().height()
 
-        self.label_message.setFont(FONT)
+        self.label_message.setFont(font)
         height = self.label_message.sizeHint().height()
 
         # adjust logo size to fit to label size - due to being a square height and width are the same
@@ -2893,9 +2894,9 @@ class Model(QAbstractTableModel):
 
         elif role == Qt.ItemDataRole.FontRole:
             if index.column() == 1:
-                return ICONS_FONT
+                return font_icons
             elif index.column() == 3:
-                return ICONS_FONT
+                return font_icons
             else:
                 return QVariant
         # provide icons via Qt.UserRole
@@ -3074,7 +3075,7 @@ class TreeView(QTreeView):
         """
             change font if it has been changed by settings
         """
-        self.setFont(FONT)
+        self.setFont(font)
 
     @Slot(bool)
     def show_hosts_flags_column(self, value):

@@ -27,14 +27,17 @@ from Nagstamon.qui.widgets.app import app
 
 
 # save default font to be able to reset to it
-DEFAULT_FONT = app.font()
+font_default = app.font()
 
-# take global FONT from conf if it exists
+# take global font from conf if it exists
 if conf.font != '':
-    FONT = QFont()
-    FONT.fromString(conf.font)
+    font = QFont()
+    font.fromString(conf.font)
 else:
-    FONT = DEFAULT_FONT
+    font = font_default
+
+# always stay in normal weight without any italic
+font_icons = QFont('Nagstamon', font.pointSize() + 2, QFont.Weight.Normal, False)
 
 # DBus initialization
 dbus_connection = DBus()
@@ -42,12 +45,12 @@ dbus_connection = DBus()
 # check ECP authentication support availability
 try:
     from requests_ecp import HTTPECPAuth
-    ECP_AVAILABLE = True
+    ecp_available = True
 except ImportError:
-    ECP_AVAILABLE = False
+    ecp_available = False
 
 # flag to keep track of Kerberos availability
-KERBEROS_AVAILABLE = False
+kerberos_available = False
 if OS == OS_MACOS:
     # requests_gssapi is newer but not available everywhere
     try:
@@ -55,7 +58,7 @@ if OS == OS_MACOS:
         import numbers
         import gssapi.raw.cython_converters
         from requests_gssapi import HTTPSPNEGOAuth as HTTPSKerberos
-        KERBEROS_AVAILABLE = True
+        kerberos_available = True
     except ImportError as error:
         print(error)
 else:
@@ -64,9 +67,9 @@ else:
         # requests_gssapi needs installation of KfW - Kerberos for Windows
         # requests_kerberoes doesn't
         from requests_kerberos import HTTPKerberosAuth as HTTPSKerberos
-        KERBEROS_AVAILABLE = True
+        kerberos_available = True
     except ImportError as error:
         print(error)
 
 # completely silly but no other rescue for Windows-hides-statusbar-after-display-mode-change problem
-NUMBER_OF_DISPLAY_CHANGES = 0
+number_of_display_changes = 0

@@ -20,8 +20,8 @@ import os
 from urllib.parse import quote
 
 from Nagstamon.config import conf, CONFIG_STRINGS, BOOLPOOL, Server
-from Nagstamon.qui.globals import (ECP_AVAILABLE,
-                                   KERBEROS_AVAILABLE)
+from Nagstamon.qui.globals import (ecp_available,
+                                   kerberos_available)
 from Nagstamon.qui.qt import (QMessageBox,
                               QStyle,
                               Signal,
@@ -140,9 +140,9 @@ class DialogServer(Dialog):
 
         # fill authentication combobox
         self.window.input_combobox_authentication.addItems(['Basic', 'Digest', 'Bearer'])
-        if ECP_AVAILABLE:
+        if ecp_available:
             self.window.input_combobox_authentication.addItems(['ECP'])
-        if KERBEROS_AVAILABLE:
+        if kerberos_available:
             self.window.input_combobox_authentication.addItems(['Kerberos'])
 
         # detect change of a server type which leads to certain options shown or hidden

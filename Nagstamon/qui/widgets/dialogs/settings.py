@@ -30,8 +30,10 @@ from Nagstamon.qui.constants import (COLORS,
                                      HEADERS_HEADERS,
                                      HEADERS_KEYS_HEADERS, HEADERS_HEADERS_KEYS)
 from Nagstamon.qui.globals import (dbus_connection,
-                                   FONT,
-                                   NUMBER_OF_DISPLAY_CHANGES)
+                                   font,
+                                   font_default,
+                                   font_icons,
+                                   number_of_display_changes)
 from Nagstamon.qui.helpers import (create_brushes,
                                    check_servers)
 from Nagstamon.qui.qt import (Signal,
@@ -188,9 +190,9 @@ class DialogSettings(Dialog):
         # connect revert-to-default-font button
         self.window.button_default_font.clicked.connect(self.font_default)
         # store font as default
-        self.font = FONT
+        self.font = font
         # show current font in label_font
-        self.window.label_font.setFont(FONT)
+        self.window.label_font.setFont(font)
 
         # connect action buttons to action dialog
         self.window.button_new_action.clicked.connect(self.new_action)
@@ -456,7 +458,7 @@ class DialogSettings(Dialog):
             what to do if OK was pressed
         """
         # global FONT, ICONS_FONT, statuswindow, menu, NUMBER_OF_DISPLAY_CHANGES
-        global ICONS_FONT, statuswindow, menu
+        global statuswindow, menu
 
         # store position of statuswindow/statusbar only if statusbar is floating
         if conf.statusbar_floating:
@@ -515,8 +517,9 @@ class DialogSettings(Dialog):
         # apply font
         conf.font = self.font.toString()
         # update global font and icons font
-        FONT = self.font
-        ICONS_FONT = QFont('Nagstamon', FONT.pointSize() + 2, QFont.Weight.Normal, False)
+        font = self.font
+        # shall be changed by a signal/slot connection
+        font_icons = QFont('Nagstamon', font.pointSize() + 2, QFont.Weight.Normal, False)
 
         # update brushes for treeview
         create_brushes()
@@ -533,7 +536,7 @@ class DialogSettings(Dialog):
                 str(conf.windowed):
 
             # increase number of display changes for silly Windows-hides-statusbar-after-display-mode-change problem
-            NUMBER_OF_DISPLAY_CHANGES += 1
+            number_of_display_changes += 1
 
             # stop statuswindow workers
             statuswindow.worker.running = False
@@ -971,8 +974,8 @@ class DialogSettings(Dialog):
         """
             reset font to default font which was valid when Nagstamon was launched
         """
-        self.window.label_font.setFont(DEFAULT_FONT)
-        self.font = DEFAULT_FONT
+        self.window.label_font.setFont(font_default)
+        self.font = font_default
 
     @Slot()
     def button_check_for_new_version_clicked(self):
