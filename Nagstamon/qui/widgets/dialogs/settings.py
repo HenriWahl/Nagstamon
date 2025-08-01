@@ -46,6 +46,7 @@ from Nagstamon.qui.qt import (Signal,
                               QPalette,
                               QSignalMapper,
                               QStyle,
+                              Qt,
                               QWidget)
 from Nagstamon.qui.widgets.app import app
 from Nagstamon.qui.widgets.dialogs.check_version import check_version
