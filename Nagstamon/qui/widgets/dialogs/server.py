@@ -27,7 +27,9 @@ from Nagstamon.qui.qt import (QMessageBox,
                               Signal,
                               Slot)
 from Nagstamon.qui.widgets.dialogs.dialog import Dialog
-from Nagstamon.Servers import SERVER_TYPES, create_server
+from Nagstamon.Servers import (create_server,
+                               servers,
+                               SERVER_TYPES)
 
 
 class DialogServer(Dialog):
@@ -202,7 +204,7 @@ class DialogServer(Dialog):
         # after hiding authentication widgets dialog might shrink
         self.window.adjustSize()
 
-    def dialog_decoration(method, **kwargs):
+    def dialog_decoration(method, *args, **kwargs):
         """
         try with a decorator instead of repeated calls
         """
@@ -317,14 +319,14 @@ class DialogServer(Dialog):
         # set window title before name change to reflect copy
         self.window.setWindowTitle(f'Copy {self.server_conf.name}')
         # indicate copy of another server
-        self.server_conf.name = 'Copy of ' + self.server_conf.name
+        self.server_conf.name = f'Copy of {self.server_conf.name}'
 
     def ok(self):
         """
         evaluate the state of widgets to get new configuration
         """
         # global statement necessary because of reordering of servers OrderedDict
-        global servers
+        #global servers
 
         # strip name to avoid whitespace
         server_name = self.window.input_lineedit_name.text().strip()

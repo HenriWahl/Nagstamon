@@ -17,6 +17,7 @@
 
 from copy import copy
 from os import environ
+from urllib.parse import quote
 
 from Nagstamon.config import (AppInfo,
                               BOOLPOOL,
@@ -74,6 +75,15 @@ class DialogSettings(Dialog):
 
     # signal to be fired if a server is copied
     server_copied = Signal(str)
+
+    # signal to be fired if an action is newly created
+    action_created = Signal()
+
+    # signal to be fired if an action is edited
+    action_edited = Signal(str)
+
+    # signal to be fired if an action is copied
+    action_copied = Signal(str)
 
     def __init__(self):
         Dialog.__init__(self, 'settings_main')
@@ -618,7 +628,7 @@ class DialogSettings(Dialog):
         delete server, stop its thread, remove from config and list
         """
         # issue #1114 - do not allow editing of servers when no server is selected nor doesn't exist
-        if dialogs.settings.window.list_servers.currentItem():
+        if self.window.list_servers.currentItem():
             # server to delete from current row in servers list
             server = conf.servers[self.window.list_servers.currentItem().text()]
 
@@ -628,7 +638,7 @@ class DialogSettings(Dialog):
                                          QMessageBox.StandardButton.No)
 
             if reply == QMessageBox.StandardButton.Yes:
-                # in case server is enabled delete its vbox
+                # in case server is enabled to delete its vbox
                 if server.enabled:
                     for vbox in statuswindow.servers_vbox.children():
                         if vbox.server.name == server.name:
@@ -683,21 +693,23 @@ class DialogSettings(Dialog):
         """
         create new action
         """
-        dialogs.action.new()
+        self.action_created.emit()
 
     @Slot()
     def edit_action(self):
         """
         edit existing action
         """
-        dialogs.action.edit()
+        if self.window.list_actions.currentItem():
+            self.action_edited.emit(self.window.list_actions.currentItem().text())
 
     @Slot()
     def copy_action(self):
         """
         copy existing action and edit it
         """
-        dialogs.action.copy()
+        if self.window.list_actions.currentItem():
+            self.action_copied.emit(self.window.list_actions.currentItem().text())
 
     @Slot()
     def delete_action(self):

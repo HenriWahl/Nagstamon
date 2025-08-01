@@ -138,6 +138,11 @@ dialogs.initialize_dialog_server_missing(DialogServerMissing())
 dialogs.initialize_dialog_server(DialogServer())
 
 # signals and slots between dialogs
+# settings -> server
 dialogs.settings.server_created.connect(dialogs.server.new)
 dialogs.settings.server_edited.connect(dialogs.server.edit)
 dialogs.settings.server_copied.connect(dialogs.server.copy)
+# settings -> action
+dialogs.settings.action_created.connect(dialogs.action.new)
+dialogs.settings.action_edited.connect(dialogs.action.edit)
+dialogs.settings.action_copied.connect(dialogs.action.copy)

@@ -15,20 +15,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-from os import sep
-from platform import python_version
-
+from copy import deepcopy
 from Nagstamon.Servers import SERVER_TYPES
-from Nagstamon.config import (AppInfo,
-                              RESOURCES)
+from Nagstamon.config import (Action,
+                              conf)
 from Nagstamon.qui.widgets.dialogs.dialog import Dialog
-from Nagstamon.qui.qt import (QSvgWidget,
-                              Qt,
-                              QT_VERSION_STR)
+from Nagstamon.qui.qt import Slot
+
 
 class DialogAction(Dialog):
     """
-        Dialog used to set up one single action
+    Dialog used to set up one single action
     """
 
     # mapping between action types and combobox content
@@ -66,14 +63,14 @@ class DialogAction(Dialog):
         # default to Nagios as it is the mostly used monitor server
         self.window.input_combobox_monitor_type.setCurrentIndex(0)
 
-    def dialog_decoration(method):
+    def dialog_decoration(method, *args, **kwargs):
         """
-            try with a decorator instead of repeated calls
+        try with a decorator instead of repeated calls
         """
 
         # function which decorates method
 
-        def decoration_function(self):
+        def decoration_function(self, *args, **kwargs):
             """
                 self.server_conf has to be set by decorated method
             """
@@ -82,7 +79,7 @@ class DialogAction(Dialog):
             self.previous_action_conf = None
 
             # call decorated method
-            method(self)
+            method(self, *args, **kwargs)
 
             # run through all input widgets and and apply defaults from config
             for widget in self.window.__dict__:
@@ -122,10 +119,11 @@ class DialogAction(Dialog):
         # give back decorated function
         return (decoration_function)
 
+    @Slot()
     @dialog_decoration
     def new(self):
         """
-            create new server
+        create new server
         """
         self.mode = 'new'
 
@@ -134,35 +132,37 @@ class DialogAction(Dialog):
         # window title might be pretty simple
         self.window.setWindowTitle('New action')
 
+    @Slot(str)
     @dialog_decoration
-    def edit(self):
+    def edit(self, name=None):
         """
-            edit existing action
+        edit existing action
         """
         self.mode = 'edit'
         # shorter action conf
-        self.action_conf = conf.actions[dialogs.settings.window.list_actions.currentItem().text()]
+        self.action_conf = conf.actions[name]
         # store action name in case it will be changed
         self.previous_action_conf = deepcopy(self.action_conf)
         # set window title
         self.window.setWindowTitle('Edit %s' % (self.action_conf.name))
 
+    @Slot(str)
     @dialog_decoration
-    def copy(self):
+    def copy(self, name):
         """
-            copy existing action
+        copy existing action
         """
         self.mode = 'copy'
         # shorter action conf
-        self.action_conf = deepcopy(conf.actions[dialogs.settings.window.list_actions.currentItem().text()])
+        self.action_conf = deepcopy(conf.actions[name])
         # set window title before name change to reflect copy
-        self.window.setWindowTitle('Copy %s' % (self.action_conf.name))
+        self.window.setWindowTitle(f'Copy {self.action_conf.name}')
         # indicate copy of other action
-        self.action_conf.name = 'Copy of ' + self.action_conf.name
+        self.action_conf.name = f'Copy of {self.action_conf.name}'
 
     def ok(self):
         """
-            evaluate state of widgets to get new configuration
+        evaluate state of widgets to get new configuration
         """
         # check that no duplicate name exists
         if self.window.input_lineedit_name.text() in conf.actions and \
