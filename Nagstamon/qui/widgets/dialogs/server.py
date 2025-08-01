@@ -16,6 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 from copy import deepcopy
+from functools import wraps
 import os
 from urllib.parse import quote
 
@@ -210,6 +211,8 @@ class DialogServer(Dialog):
         """
 
         # function which decorates method
+         # wraps is used to keep the original method's name and docstring
+        @wraps(method)
         def decoration_function(self, *args, **kwargs):
             """
                 self.server_conf has to be set by decorated method

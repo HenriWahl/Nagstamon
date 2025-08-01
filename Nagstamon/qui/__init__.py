@@ -2779,7 +2779,7 @@ class ServerVBox(QVBoxLayout):
 
     def edit_server(self):
         """
-            call dialogs.server.edit() with server name
+        call dialogs.server.edit() with server name
         """
         if not conf.fullscreen and not conf.windowed:
             statuswindow.hide_window()
@@ -2787,7 +2787,7 @@ class ServerVBox(QVBoxLayout):
 
     def authenticate_server(self):
         """
-            send signal to open authentication dialog with self.server.name
+        send signal to open authentication dialog with self.server.name
         """
         self.authenticate.emit(self.server.name)
 
@@ -2802,7 +2802,7 @@ class ServerVBox(QVBoxLayout):
     @Slot()
     def fix_tls_error(self):
         """
-            call dialogs.server.edit() with server name and showing extra options
+        call dialogs.server.edit() with server name and showing extra options
         """
         if not conf.fullscreen and not conf.windowed:
             statuswindow.hide_window()

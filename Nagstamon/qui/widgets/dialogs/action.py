@@ -16,11 +16,15 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 from copy import deepcopy
+from functools import wraps
+from urllib.parse import quote
+
 from Nagstamon.Servers import SERVER_TYPES
 from Nagstamon.config import (Action,
                               conf)
 from Nagstamon.qui.widgets.dialogs.dialog import Dialog
-from Nagstamon.qui.qt import Slot
+from Nagstamon.qui.qt import (QMessageBox,
+                              Slot)
 
 
 class DialogAction(Dialog):
@@ -35,7 +39,7 @@ class DialogAction(Dialog):
 
     def __init__(self):
         Dialog.__init__(self, 'settings_action')
-
+        self.mode = None
         # define checkbox-to-widgets dependencies which apply at initialization
         # which widgets have to be hidden because of irrelevance
         # dictionary holds checkbox/radiobutton as key and relevant widgets in a list
@@ -63,23 +67,24 @@ class DialogAction(Dialog):
         # default to Nagios as it is the mostly used monitor server
         self.window.input_combobox_monitor_type.setCurrentIndex(0)
 
-    def dialog_decoration(method, *args, **kwargs):
+    def dialog_decoration(method, *args):
         """
         try with a decorator instead of repeated calls
         """
 
         # function which decorates method
-
-        def decoration_function(self, *args, **kwargs):
+         # wraps is used to keep the original method's name and docstring
+        @wraps(method)
+        def decoration_function(self, *decorated_args):
             """
-                self.server_conf has to be set by decorated method
+            self.server_conf has to be set by decorated method
             """
 
             # previous action conf only useful when editing - defaults to None
             self.previous_action_conf = None
 
             # call decorated method
-            method(self, *args, **kwargs)
+            method(self, *decorated_args)
 
             # run through all input widgets and and apply defaults from config
             for widget in self.window.__dict__:
@@ -107,7 +112,7 @@ class DialogAction(Dialog):
             # important final size adjustment
             self.window.adjustSize()
 
-            # if running on macOS with disabled dock icon the dock icon might have to be made visible
+            # if running on macOS with disabled dock icon, the dock icon might have to be made visible
             # to make Nagstamon accept keyboard input
             self.show_macos_dock_icon_if_necessary()
 
@@ -117,7 +122,7 @@ class DialogAction(Dialog):
             self.hide_macos_dock_icon_if_necessary()
 
         # give back decorated function
-        return (decoration_function)
+        return decoration_function
 
     @Slot()
     @dialog_decoration
@@ -134,7 +139,7 @@ class DialogAction(Dialog):
 
     @Slot(str)
     @dialog_decoration
-    def edit(self, name=None):
+    def edit(self, name):
         """
         edit existing action
         """
