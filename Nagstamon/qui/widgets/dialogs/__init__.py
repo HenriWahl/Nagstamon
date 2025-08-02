@@ -45,9 +45,6 @@ class Dialogs():
     server_missing = None
     about = None
 
-    def __init__(self):
-        # file chooser Dialog
-        self.file_chooser = QFileDialog()
 
     def initialize_dialog_settings(self, dialog):
         """
@@ -146,3 +143,7 @@ dialogs.settings.server_copied.connect(dialogs.server.copy)
 dialogs.settings.action_created.connect(dialogs.action.new)
 dialogs.settings.action_edited.connect(dialogs.action.edit)
 dialogs.settings.action_copied.connect(dialogs.action.copy)
+# action -> settings refresh_list
+dialogs.action.edited_update_list.connect(dialogs.settings.refresh_list)
+# server -> settings refresh_list
+dialogs.server.edited_update_list.connect(dialogs.settings.refresh_list)

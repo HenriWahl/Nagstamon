@@ -164,7 +164,7 @@ class Dialog(QObject):
             checkbox.toggled.connect(self.signalmapper_toggles.map)
             checkbox.toggled.connect(self.window.adjustSize)
 
-        # finally map signals with .sender() - [QWidget] is important!
+        # finally, map signals with .sender() - [QWidget] is important!
         self.signalmapper_toggles.mappedString[str].connect(self.toggle)
 
     def fill_list(self, list_widget, config):

@@ -23,7 +23,8 @@ from urllib.parse import quote
 from Nagstamon.config import conf, CONFIG_STRINGS, BOOLPOOL, Server
 from Nagstamon.qui.globals import (ecp_available,
                                    kerberos_available)
-from Nagstamon.qui.qt import (QMessageBox,
+from Nagstamon.qui.qt import (QFileDialog,
+                              QMessageBox,
                               QStyle,
                               Signal,
                               Slot)
@@ -41,13 +42,23 @@ class DialogServer(Dialog):
     # tell server has been edited
     edited = Signal()
 
+    # signal to emit when ok button is pressed - used to remove previous server
+    edited_remove_previous = Signal(str)
+
+    # signal to emit when ok button is pressed - used to update the list of servers
+    edited_update_list = Signal(str, str, str)
+
+    create_server_vbox = Signal(str)
+
     def __init__(self):
         Dialog.__init__(self, 'settings_server')
+        # file chooser Dialog
+        self.file_chooser = QFileDialog()
         # configuration for server
         self.server_conf = None
         # define checkbox-to-widgets dependencies which apply at initialization
         # which widgets have to be hidden because of irrelevance
-        # dictionary holds checkbox/radiobutton as key and relevant widgets in list
+        # dictionary holds checkbox/radiobutton as key and relevant widgets in a list
         self.TOGGLE_DEPS = {
             self.window.input_checkbox_use_autologin: [self.window.label_autologin_key,
                                                        self.window.input_lineedit_autologin_key],
@@ -176,7 +187,7 @@ class DialogServer(Dialog):
     @Slot()
     def toggle_authentication(self):
         """
-        when authentication is changed to Kerberos then disable username/password as the are now useless
+        when authentication is changed to Kerberos then disable username/password as they are now useless
         """
         if self.window.input_combobox_authentication.currentText() == 'Kerberos':
             for widget in self.AUTHENTICATION_WIDGETS:
@@ -210,7 +221,7 @@ class DialogServer(Dialog):
         try with a decorator instead of repeated calls
         """
 
-        # function which decorates method
+        # the function which decorates method
          # wraps is used to keep the original method's name and docstring
         @wraps(method)
         def decoration_function(self, *args, **kwargs):
@@ -328,9 +339,6 @@ class DialogServer(Dialog):
         """
         evaluate the state of widgets to get new configuration
         """
-        # global statement necessary because of reordering of servers OrderedDict
-        #global servers
-
         # strip name to avoid whitespace
         server_name = self.window.input_lineedit_name.text().strip()
 
@@ -383,15 +391,7 @@ class DialogServer(Dialog):
             # edited servers will be deleted and recreated with new configuration
             if self.mode == 'edit':
                 # remove old server vbox from the status window if still running
-                for vbox in statuswindow.servers_vbox.children():
-                    if vbox.server.name == self.previous_server_conf.name:
-                        # disable server
-                        vbox.server.enabled = False
-                        # stop thread by falsificate running flag
-                        vbox.table.worker.running = False
-                        vbox.table.worker.finish.emit()
-                        # nothing more to do
-                        break
+                self.edited_remove_previous.emit(self.previous_server_conf.name)
 
                 # delete previous name
                 conf.servers.pop(self.previous_server_conf.name)
@@ -413,9 +413,10 @@ class DialogServer(Dialog):
             if self.server_conf.enabled:
                 servers[server_name].enabled = True
                 # create vbox
-                statuswindow.servers_vbox.addLayout(statuswindow.create_ServerVBox(servers[server_name]))
-                # renew a list of server vboxes in the status window
-                statuswindow.sort_ServerVBoxes()
+                self.create_server_vbox.emit(server_name)
+                # statuswindow.servers_vbox.addLayout(statuswindow.create_server_vbox(servers[server_name]))
+                # # renew a list of server vboxes in the status window
+                # statuswindow.sort_server_vboxes()
 
             # reorder servers in dict to reflect changes
             servers_freshly_sorted = sorted(servers.items())
@@ -424,11 +425,10 @@ class DialogServer(Dialog):
             del servers_freshly_sorted
 
             # refresh the list of servers, give call the current server name to highlight it
-            dialogs.settings.refresh_list(list_widget=dialogs.settings.window.list_servers,
-                                          list_conf=conf.servers,
-                                          current=self.server_conf.name)
+            # refresh list of actions, give call the current action name to highlight it
+            self.edited_update_list.emit('list_servers', 'servers', self.server_conf.name)
 
-            # tell the main window about changes (Zabbix, Opsview for example)
+            # tell the main window about changes (Zabbix, Opsview, for example)
             self.edited.emit()
 
             # delete the old server .conf file to reflect name changes
@@ -448,7 +448,7 @@ class DialogServer(Dialog):
             show dialog for selection of non-default browser
         """
         file_filter = 'All files (*)'
-        file = dialogs.file_chooser.getOpenFileName(self.window,
+        file = self.file_chooser.getOpenFileName(self.window,
                                                     directory=os.path.expanduser('~'),
                                                     filter=file_filter)[0]
 

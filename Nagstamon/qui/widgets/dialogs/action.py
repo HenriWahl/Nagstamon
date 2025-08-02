@@ -24,6 +24,7 @@ from Nagstamon.config import (Action,
                               conf)
 from Nagstamon.qui.widgets.dialogs.dialog import Dialog
 from Nagstamon.qui.qt import (QMessageBox,
+                              Signal,
                               Slot)
 
 
@@ -32,6 +33,9 @@ class DialogAction(Dialog):
     Dialog used to set up one single action
     """
 
+    # signal to emit when ok button is pressed - used to update the list of actions
+    edited_update_list = Signal(str, str, str)
+
     # mapping between action types and combobox content
     ACTION_TYPES = {'browser': 'Browser',
                     'command': 'Command',
@@ -39,7 +43,10 @@ class DialogAction(Dialog):
 
     def __init__(self):
         Dialog.__init__(self, 'settings_action')
+        # initial values
+        self.action_conf = None
         self.mode = None
+        self.previous_action_conf = None
         # define checkbox-to-widgets dependencies which apply at initialization
         # which widgets have to be hidden because of irrelevance
         # dictionary holds checkbox/radiobutton as key and relevant widgets in a list
@@ -72,8 +79,8 @@ class DialogAction(Dialog):
         try with a decorator instead of repeated calls
         """
 
-        # function which decorates method
-         # wraps is used to keep the original method's name and docstring
+        # the function which decorates method
+        # wraps is used to keep the original method's name and docstring
         @wraps(method)
         def decoration_function(self, *decorated_args):
             """
@@ -86,7 +93,7 @@ class DialogAction(Dialog):
             # call decorated method
             method(self, *decorated_args)
 
-            # run through all input widgets and and apply defaults from config
+            # run through all input widgets and apply defaults from config
             for widget in self.window.__dict__:
                 if widget.startswith('input_'):
                     if widget.startswith('input_checkbox_'):
@@ -132,7 +139,7 @@ class DialogAction(Dialog):
         """
         self.mode = 'new'
 
-        # create new server config object
+        # create a new server config object
         self.action_conf = Action()
         # window title might be pretty simple
         self.window.setWindowTitle('New action')
@@ -149,7 +156,7 @@ class DialogAction(Dialog):
         # store action name in case it will be changed
         self.previous_action_conf = deepcopy(self.action_conf)
         # set window title
-        self.window.setWindowTitle('Edit %s' % (self.action_conf.name))
+        self.window.setWindowTitle(f'Edit {self.action_conf.name}')
 
     @Slot(str)
     @dialog_decoration
@@ -167,7 +174,7 @@ class DialogAction(Dialog):
 
     def ok(self):
         """
-        evaluate state of widgets to get new configuration
+        evaluate the state of widgets to get new configuration
         """
         # check that no duplicate name exists
         if self.window.input_lineedit_name.text() in conf.actions and \
@@ -202,22 +209,20 @@ class DialogAction(Dialog):
                 # delete previous name
                 conf.actions.pop(self.previous_action_conf.name)
 
-            # Avoid wrong monitor type which blocks display of action
+            # Avoid the wrong monitor type which blocks display of action
             if self.action_conf.monitor_type not in SERVER_TYPES:
                 self.action_conf.monitor_type = ''
 
             # lower type to recognize action type on monitor
             self.action_conf.type = self.action_conf.type.lower()
 
-            # add edited  or new/copied action
+            # add edited or new/copied action
             conf.actions[self.action_conf.name] = self.action_conf
 
             # refresh list of actions, give call the current action name to highlight it
-            dialogs.settings.refresh_list(list_widget=dialogs.settings.window.list_actions,
-                                          list_conf=conf.actions,
-                                          current=self.action_conf.name)
+            self.edited_update_list.emit('list_actions', 'actions', self.action_conf.name)
 
-            # delete old action .conf file to reflect name changes
+            # delete the old action .conf file to reflect name changes
             # new one will be written soon
             if self.previous_action_conf is not None:
                 conf.delete_file('actions', 'action_{0}.conf'.format(quote(self.previous_action_conf.name, safe='')))
@@ -227,4 +232,3 @@ class DialogAction(Dialog):
 
         # call close and macOS dock icon treatment from ancestor
         super().ok()
-

@@ -40,6 +40,7 @@ from Nagstamon.qui.qt import (Signal,
                               Slot,
                               QColor,
                               QColorDialog,
+                              QFileDialog,
                               QFont,
                               QFontDialog,
                               QMessageBox,
@@ -88,6 +89,8 @@ class DialogSettings(Dialog):
 
     def __init__(self):
         Dialog.__init__(self, 'settings_main')
+        # file chooser Dialog
+        self.file_chooser = QFileDialog()
         # define checkbox-to-widgets dependencies which apply at initialization
         # which widgets have to be hidden because of irrelevance
         # dictionary holds checkbox/radiobutton as key and relevant widgets in a list
@@ -435,7 +438,7 @@ class DialogSettings(Dialog):
         self.toggle_op5monitor_widgets()
         self.toggle_expire_time_widgets()
 
-        # # small workaround for timestamp trick to avoid flickering
+        # # small workaround for the timestamp trick to avoid flickering
         # # if the 'Settings' button was clicked too fast the timestamp difference
         # # is too short and the statuswindow will keep open
         # # modifying the timestamp could help
@@ -447,7 +450,7 @@ class DialogSettings(Dialog):
         # jump to requested tab in settings dialog
         self.window.tabs.setCurrentIndex(tab)
 
-        # reset window if only needs smaller screen estate
+        # reset the window if it only needs smaller screen estate
         # self.window.adjustSize()
         # self.window.exec()
         super().show()
@@ -463,7 +466,7 @@ class DialogSettings(Dialog):
     @Slot()
     def show_filters(self):
         """
-        opens filters settings after clicking button_filters in top area
+        opens filters settings after clicking button_filters in the top area
         """
         self.show(tab=2)
 
@@ -537,7 +540,7 @@ class DialogSettings(Dialog):
 
         # apply font
         conf.font = self.font.toString()
-        # update global font and icons font
+        # update global font and icon font
         font = self.font
         # shall be changed by a signal/slot connection
         font_icons = QFont('Nagstamon', font.pointSize() + 2, QFont.Weight.Normal, False)
@@ -574,7 +577,7 @@ class DialogSettings(Dialog):
             # kick out ol' statuswindow
             statuswindow.kill()
 
-            # create new global one
+            # create a new global one
             statuswindow = StatusWindow()
 
             # context menu for systray and statuswindow
@@ -659,7 +662,7 @@ class DialogSettings(Dialog):
                 # count real number, 1 to x
                 count = self.window.list_servers.count()
 
-                # if deleted row was the last line the new current row has to be the new last line, accidently the same as count
+                # if deleted row was the last line, the new current row has to be the new last line, accidentally the same as count
                 if row == count - 1:
                     # use the penultimate item as the new current one
                     row = count - 2
@@ -677,10 +680,16 @@ class DialogSettings(Dialog):
             conf.delete_file('servers', 'server_{0}.conf'.format(quote(server.name, safe='')))
             del server
 
-    def refresh_list(self, list_widget, list_conf, current=''):
+    @Slot(str, str, str)
+    def refresh_list(self, list_widget_str, list_conf_str, current=''):
         """
         refresh given 'list_widget' from given 'list_conf' and mark 'current' as current
         """
+
+        # convert strings from signal to widgets and config items
+        list_widget = self.window.__dict__[list_widget_str]
+        list_conf = conf.__dict__[list_conf_str]
+
         # clear list of servers
         list_widget.clear()
         # fill servers listwidget with servers
@@ -735,7 +744,7 @@ class DialogSettings(Dialog):
             # count real number, 1 to x
             count = self.window.list_actions.count()
 
-            # if deleted row was the last line the new current row has to be the new last line, accidently the same as count
+            # if deleted row was the last line, the new current row has to be the new last line, accidentally the same as count
             if row == count - 1:
                 # use the penultimate item as the new current one
                 row = count - 2
@@ -744,12 +753,13 @@ class DialogSettings(Dialog):
                 row = row + 1
 
             # refresh list and mark new current row
-            self.refresh_list(list_widget=self.window.list_actions, list_conf=conf.actions,
+            self.refresh_list(list_widget=self.window.list_actions,
+                              list_conf=conf.actions,
                               current=self.window.list_actions.item(row).text())
 
             del (row, count)
 
-        # delete action config file from disk
+        # delete the action config file from disk
         conf.delete_file('actions', 'action_{0}.conf'.format(quote(action.name, safe='')))
         del action
 
@@ -765,7 +775,7 @@ class DialogSettings(Dialog):
             widget = self.window.__dict__['input_lineedit_notification_custom_sound_%s' % self.sound_file_type]
 
             # use 2 filters, sound files and all files
-            file = dialogs.file_chooser.getOpenFileName(self.window,
+            file = self.file_chooser.getOpenFileName(self.window,
                                                         filter='Sound files (*.mp3 *.MP3 *.mp4 *.MP4 '
                                                                '*.wav *.WAV *.ogg *.OGG);;'
                                                                'All files (*)')[0]
@@ -802,10 +812,10 @@ class DialogSettings(Dialog):
             # shortcut for widget to fill and revaluate
             widget = self.window.__dict__['input_lineedit_notification_custom_sound_%s' % self.sound_file_type]
 
-            # get file path from widget
+            # get the file path from widget
             file = widget.text()
 
-            # tell mediaplayer to play file only if it exists
+            # tell mediaplayer to play a file only if it exists
             if mediaplayer.set_media(file) is True:
                 mediaplayer.play()
 
@@ -880,7 +890,7 @@ class DialogSettings(Dialog):
         color = conf.__dict__['color_%s' % (item)]
 
         new_color = QColorDialog.getColor(QColor(color), parent=self.window)
-        # if canceled the color is invalid
+        # if canceled, the color is invalid
         if new_color.isValid():
             self.window.__dict__[f'input_button_color_{item}'].setStyleSheet(f'''background-color: {new_color.name()};
                                                                                  border-width: 1px;
@@ -1019,7 +1029,7 @@ class DialogSettings(Dialog):
             file_filter = ''
             directory = '/usr/bin'
 
-        file = dialogs.file_chooser.getOpenFileName(self.window,
+        file = self.file_chooser.getOpenFileName(self.window,
                                                     directory=directory,
                                                     filter=file_filter)[0]
 
@@ -1030,7 +1040,7 @@ class DialogSettings(Dialog):
     @Slot()
     def toggle_zabbix_widgets(self):
         """
-            Depending on the existence of an enabled Zabbix monitor the Zabbix widgets are shown or hidden
+            Depending on the existence of an enabled Zabbix monitor, the Zabbix widgets are shown or hidden
         """
         use_zabbix = False
         for server in servers.values():
@@ -1056,7 +1066,7 @@ class DialogSettings(Dialog):
     @Slot()
     def toggle_op5monitor_widgets(self):
         """
-            Depending on the existence of an enabled Op5Monitor monitor the Op5Monitor widgets are shown or hidden
+            Depending on the existence of an enabled Op5Monitor monitor, the Op5Monitor widgets are shown or hidden
         """
         use_op5monitor = False
         for server in servers.values():
@@ -1074,7 +1084,7 @@ class DialogSettings(Dialog):
     @Slot()
     def toggle_expire_time_widgets(self):
         """
-            Depending on the existence of an enabled IcingaWeb2 or Alertmanager monitor the expire_time widgets are shown or hidden
+            Depending on the existence of an enabled IcingaWeb2 or Alertmanager monitor, the expire_time widgets are shown or hidden
         """
         use_expire_time = False
         for server in servers.values():

@@ -870,7 +870,7 @@ class StatusWindow(QWidget):
         # start with low priority
         self.worker_notification_thread.start(QThread.Priority.LowestPriority)
 
-        self.create_ServerVBoxes()
+        self.create_server_vboxes()
 
         # connect status window server vboxes to systray
         for server_vbox in self.servers_vbox.children():
@@ -1109,69 +1109,7 @@ class StatusWindow(QWidget):
         self.stored_y = self.y()
         self.stored_width = self.width()
 
-    def create_ServerVBox(self, server):
-        """
-            internally used to create enabled servers to be displayed
-        """
-        # create server vboxed from current running servers
-        if server.enabled:
-            # display authentication dialog if password is not known
-            if not conf.servers[server.name].save_password and \
-                    not conf.servers[server.name].use_autologin and \
-                    conf.servers[server.name].password == '' and \
-                    not conf.servers[server.name].authentication == 'kerberos':
-                dialogs.authentication.show_auth_dialog(server.name)
-
-            # without parent there is some flickering when starting
-            server_vbox = ServerVBox(server, parent=self)
-
-            # important to set correct server to worker, especially after server changes
-            server_vbox.table.worker.server = server
-
-            # connect to global resize signal
-            server_vbox.table.ready_to_resize.connect(self.adjust_size)
-
-            # tell statusbar to summarize after table was refreshed
-            server_vbox.table.worker.new_status.connect(self.statusbar.summarize_states)
-            server_vbox.table.worker.new_status.connect(self.raise_window_on_all_desktops)
-
-            # if problems go themselves there is no need to notify user anymore
-            server_vbox.table.worker.problems_vanished.connect(self.worker_notification.stop)
-
-            # show error message in statusbar
-            server_vbox.table.worker.show_error.connect(self.statusbar.set_error)
-            server_vbox.table.worker.hide_error.connect(self.statusbar.reset_error)
-
-            # tell notification worker to do something AFTER the table was updated
-            server_vbox.table.status_changed.connect(self.worker_notification.start)
-
-            # and to update status window
-            server_vbox.table.refreshed.connect(self.update_window)
-
-            # hide statuswindow if authentication dialog is to be shown
-            server_vbox.button_authenticate.clicked.connect(self.hide_window)
-
-            # tell table it should remove freshness of formerly new items when window closes
-            # because apparently the new events have been seen now
-            self.hiding.connect(server_vbox.table.worker.unfresh_event_history)
-
-            # stop notifcation if statuswindow pops up
-            self.showing.connect(self.worker_notification.stop)
-
-            # tell server worker to recheck all hosts and services
-            self.recheck.connect(server_vbox.table.worker.recheck_all)
-
-            # refresh table after changed settings
-            dialogs.settings.changed.connect(server_vbox.table.refresh)
-
-            # listen if statuswindow cries for event history clearance
-            self.clear_event_history.connect(server_vbox.table.worker.unfresh_event_history)
-
-            return server_vbox
-        else:
-            return None
-
-    def sort_ServerVBoxes(self):
+    def sort_server_vboxes(self):
         """
             sort ServerVBoxes alphabetically
         """
@@ -1208,13 +1146,80 @@ class StatusWindow(QWidget):
 
         del vboxes_dict
 
-    def create_ServerVBoxes(self):
+    @Slot(str)
+    def create_server_vbox(self, name):
+        """
+        internally used to create enabled servers to be displayed
+        """
+        server = servers[name]
+
+        # create server vboxed from current running servers
+        if server.enabled:
+            # display authentication dialog if password is not known
+            if not conf.servers[server.name].save_password and \
+                    not conf.servers[server.name].use_autologin and \
+                    conf.servers[server.name].password == '' and \
+                    not conf.servers[server.name].authentication == 'kerberos':
+                dialogs.authentication.show_auth_dialog(server.name)
+
+            # without parent, there is some flickering when starting
+            server_vbox = ServerVBox(server, parent=self)
+
+            # important to set correct server to worker, especially after server changes
+            server_vbox.table.worker.server = server
+
+            # connect to global resize signal
+            server_vbox.table.ready_to_resize.connect(self.adjust_size)
+
+            # tell statusbar to summarize after table was refreshed
+            server_vbox.table.worker.new_status.connect(self.statusbar.summarize_states)
+            server_vbox.table.worker.new_status.connect(self.raise_window_on_all_desktops)
+
+            # if problems go themselves there is no need to notify user anymore
+            server_vbox.table.worker.problems_vanished.connect(self.worker_notification.stop)
+
+            # show the error message in statusbar
+            server_vbox.table.worker.show_error.connect(self.statusbar.set_error)
+            server_vbox.table.worker.hide_error.connect(self.statusbar.reset_error)
+
+            # tell notification worker to do something AFTER the table was updated
+            server_vbox.table.status_changed.connect(self.worker_notification.start)
+
+            # and to update status window
+            server_vbox.table.refreshed.connect(self.update_window)
+
+            # hide statuswindow if authentication dialog is to be shown
+            server_vbox.button_authenticate.clicked.connect(self.hide_window)
+
+            # tell table it should remove freshness of formerly new items when window closes
+            # because apparently the new events have been seen now
+            self.hiding.connect(server_vbox.table.worker.unfresh_event_history)
+
+            # stop notification if statuswindow pops up
+            self.showing.connect(self.worker_notification.stop)
+
+            # tell server worker to recheck all hosts and services
+            self.recheck.connect(server_vbox.table.worker.recheck_all)
+
+            # refresh table after changed settings
+            dialogs.settings.changed.connect(server_vbox.table.refresh)
+
+            # listen if statuswindow cries for event history clearance
+            self.clear_event_history.connect(server_vbox.table.worker.unfresh_event_history)
+
+            self.sort_server_vboxes()
+
+            return server_vbox
+        else:
+            return None
+
+    def create_server_vboxes(self):
         # create vbox for each enabled server
         for server in servers.values():
             if server.enabled:
-                self.servers_vbox.addLayout(self.create_ServerVBox(server))
+                self.servers_vbox.addLayout(self.create_server_vbox(server.name))
 
-        self.sort_ServerVBoxes()
+        self.sort_server_vboxes()
 
     @Slot()
     def show_window_after_checking_for_clicking(self):
@@ -1906,6 +1911,20 @@ class StatusWindow(QWidget):
         self.worker_notification_thread.quit()
         # wait until thread is really stopped
         self.worker_notification_thread.wait()
+
+    @Slot(str)
+    def remove_previous_server_vbox(self, previous_server_name):
+        # remove old server vbox from the status window if still running
+        for vbox in self.servers_vbox.children():
+            if vbox.server.name == previous_server_name:
+                # disable server
+                vbox.server.enabled = False
+                # stop thread by falsificate running flag
+                vbox.table.worker.running = False
+                vbox.table.worker.finish.emit()
+                # nothing more to do
+                break
+
 
     class Worker(QObject):
         """
@@ -4303,3 +4322,8 @@ elif conf.icon_in_systray:
 
 # versatile mediaplayer
 mediaplayer = MediaPlayer(statuswindow, RESOURCE_FILES)
+
+# to be connected someday elsewhere
+# server -> statuswindow remove_previous server
+dialogs.server.edited_remove_previous.connect(statuswindow.remove_previous_server_vbox)
+dialogs.server.create_server_vbox.connect(statuswindow.create_server_vbox)

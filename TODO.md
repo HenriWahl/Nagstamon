@@ -5,3 +5,4 @@
 - [ ] show_macos_dock_icon_if_necessary should be called elswhere
 - [ ] hide_macos_dock_icon_if_necessary should be called elswhere
 - [ ] 'new' -> 'create'
+- [ ] statuswindow.is_shown_timestamp -= 1
