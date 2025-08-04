@@ -6,4 +6,4 @@
 - [ ] hide_macos_dock_icon_if_necessary should be called elswhere
 - [ ] 'new' -> 'create'
 - [ ] statuswindow.is_shown_timestamp -= 1
-- [ ] more than 1 servers activated
+- [ ] normal-light activated server in settings dialog when opening settings
