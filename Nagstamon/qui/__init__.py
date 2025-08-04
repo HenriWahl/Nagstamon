@@ -1217,8 +1217,8 @@ class StatusWindow(QWidget):
         # create vbox for each enabled server
         for server in servers.values():
             if server.enabled:
-                self.servers_vbox.addLayout(self.create_server_vbox(server.name))
-
+                server_vbox = self.create_server_vbox(server.name)
+                self.servers_vbox.addLayout(server_vbox)
         self.sort_server_vboxes()
 
     @Slot()
@@ -1269,6 +1269,9 @@ class StatusWindow(QWidget):
         """
             used to show status window when its appearance is triggered, also adjusts geometry
         """
+
+        children =  self.servers_vbox.children()
+
         # do not show up when being dragged around
         if not self.moving:
             # check if really all is OK
