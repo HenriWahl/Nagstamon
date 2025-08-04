@@ -4327,3 +4327,5 @@ mediaplayer = MediaPlayer(statuswindow, RESOURCE_FILES)
 # server -> statuswindow remove_previous server
 dialogs.server.edited_remove_previous.connect(statuswindow.remove_previous_server_vbox)
 dialogs.server.create_server_vbox.connect(statuswindow.create_server_vbox)
+
+dialogs.authentication.show_up.connect(statuswindow.hide_window)

@@ -31,6 +31,9 @@ class DialogAuthentication(Dialog):
     # signal for telling server_vbox label to update
     update = Signal(str)
 
+    # signal to tell the world that the authentication dialog will show up
+    show_up = Signal()
+
     def __init__(self):
         Dialog.__init__(self, 'dialog_authentication')
 
@@ -69,9 +72,10 @@ class DialogAuthentication(Dialog):
         """
         self.server = servers[server]
         self.initialize()
-        # workaround instead of sent signal
-        if not statuswindow is None:
-            statuswindow.hide_window()
+        # # workaround instead of sent signal
+        # if not statuswindow is None:
+        #     statuswindow.hide_window()
+        self.show_up.emit()
         self.window.adjustSize()
 
         # the dock icon might be needed to be shown for a potential keyboard input

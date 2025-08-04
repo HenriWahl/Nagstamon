@@ -69,9 +69,9 @@ class DialogAcknowledge(Dialog):
 
         for i in range(len(self.host_list)):
             if self.service_list[i] == "":
-                text = text + 'Host <b>%s</b><br>' % (self.host_list[i])
+                text += f'Host <b>{self.host_list[i]}</b><br>'
             else:
-                text = text + 'Service <b>%s</b> on host <b>%s</b><br>' % (self.service_list[i], self.host_list[i])
+                text += f'Service <b>{self.service_list[i]}</b> on host <b>{self.host_list[i]}</b><br>'
 
         self.window.input_label_description.setText(text)
 

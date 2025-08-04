@@ -50,9 +50,9 @@ class DialogDowntime(Dialog):
 
         for i in range(len(self.host_list)):
             if self.service_list[i] == "":
-                text = text + 'Host <b>%s</b><br>' % (self.host_list[i])
+                text += f'Host <b>{self.host_list[i]}</b><br>'
             else:
-                text = text + 'Service <b>%s</b> on host <b>%s</b><br>' % (self.service_list[i], self.host_list[i])
+                text += f'Service <b>{self.service_list[i]}</b> on host <b>{self.host_list[i]}</b><br>'
 
         self.window.input_label_description.setText(text)
 
@@ -62,7 +62,7 @@ class DialogDowntime(Dialog):
         self.window.input_radiobutton_type_fixed.setChecked(conf.defaults_downtime_type_fixed)
         self.window.input_radiobutton_type_flexible.setChecked(conf.defaults_downtime_type_flexible)
 
-        # hide/show downtime settings according to typw
+        # hide/show downtime settings according to type
         self.window.input_radiobutton_type_fixed.clicked.connect(self.set_type_fixed)
         self.window.input_radiobutton_type_flexible.clicked.connect(self.set_type_flexible)
 
