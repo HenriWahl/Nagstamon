@@ -7,3 +7,4 @@
 - [ ] 'new' -> 'create'
 - [ ] statuswindow.is_shown_timestamp -= 1
 - [ ] normal-light activated server in settings dialog when opening settings
+- [ ] spaceless comments

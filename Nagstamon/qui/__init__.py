@@ -547,6 +547,11 @@ class DraggableWidget(QWidget):
     # Maybe due to the later mixin usage, but somehow the pyqtSlot decorator is ignored here when used by NagstamonLogo
     # and DraggableLabel
     # @Slot(QMenu)
+
+    def __init__(self, parent=None):
+        QWidget.__init__(self, text, parent=parent)
+        self.parent = parent
+
     def set_menu(self, menu):
         self.menu = menu
 
@@ -568,7 +573,8 @@ class DraggableWidget(QWidget):
                 not statuswindow_properties.relative_y:
             # Qt5 & Qt6 have different methods for getting the global position so take it from qt.py
             global_position = get_global_position(event)
-            statuswindow_properties.relative_x = global_position.x() - statuswindow.x()
+            #statuswindow_properties.relative_x = global_position.x() - statuswindow.x()
+            statuswindow_properties.relative_x = global_position.x() - self.parent.x()
             statuswindow_properties.relative_y = global_position.y() - statuswindow.y()
 
     def mouseReleaseEvent(self, event):
