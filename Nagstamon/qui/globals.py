@@ -15,6 +15,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+from dataclasses import dataclass
+
 # Global variables used in different modules
 
 from Nagstamon.qui.qt import QFont
@@ -73,3 +75,21 @@ else:
         kerberos_available = True
     except ImportError as error:
         print(error)
+
+@dataclass
+class StatusWindowProperties:
+    """
+    storing statuswindow related variables globally available for serveral classes
+    """
+    icon_x: int = 0
+    icon_y: int = 0
+    is_shown: bool = False
+    is_shown_timestamp: float = 0.0
+    is_hiding_timestamp: float = 0.0
+    moving: bool = False
+    relative_x: int = 0
+    relative_y: int = 0
+    status_ok: bool = True
+    top: bool = False
+
+statuswindow_properties = StatusWindowProperties()
