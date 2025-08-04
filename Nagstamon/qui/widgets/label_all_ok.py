@@ -15,12 +15,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+from Nagstamon.config import (conf,
+                              OS,
+                              OS_MACOS)
+
 from Nagstamon.qui.qt import (QLabel,
                               QSizePolicy,
-                              Qt)
-
-from Nagstamon.config import (OS,
-                              OS_MACOS)
+                              Qt,
+                              Slot)
 
 
 class LabelAllOK(QLabel):
