@@ -62,6 +62,7 @@ from Nagstamon.qui.widgets.dialogs import dialogs
 from Nagstamon.qui.widgets.dialogs import Dialog
 from Nagstamon.qui.widgets.dialogs.check_version import CheckVersion
 from Nagstamon.qui.widgets.icon import QIconWithFilename
+from Nagstamon.qui.widgets.label_all_ok import LabelAllOK
 from Nagstamon.qui.widgets.layout import HBoxLayout
 from Nagstamon.qui.widgets.menu import MenuAtCursor
 
@@ -667,30 +668,6 @@ class ClosingLabel(QLabel):
                     not conf.windowed:
                 statuswindow.is_hiding_timestamp = time.time()
                 statuswindow.hide_window()
-
-
-class LabelAllOK(QLabel):
-    """
-        Label which is shown in fullscreen and windowed mode when all is OK - pretty seldomly
-    """
-
-    def __init__(self, text='', parent=None):
-        QLabel.__init__(self, text='OK', parent=parent)
-        self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
-        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.set_color()
-        dialogs.settings.changed.connect(self.set_color)
-
-    @Slot()
-    def set_color(self):
-        self.setStyleSheet('''padding-left: 1px;
-                              padding-right: 1px;
-                              color: %s;
-                              background-color: %s;
-                              font-size: 92px;
-                              font-weight: bold;'''
-                           % (conf.__dict__['color_ok_text'],
-                              conf.__dict__['color_ok_background']))
 
 
 class StatusWindow(QWidget):
@@ -4357,4 +4334,5 @@ dialogs.settings.settings_ok.connect(statuswindow.store_position_to_conf)
 dialogs.settings.settings_ok.connect(statuswindow.worker.debug_loop)
 dialogs.settings.server_deleted.connect(statuswindow.worker.debug_loop)
 dialogs.settings.changed.connect(check_servers.check)
+dialogs.settings.changed.connect(statuswindow.label_all_ok.set_color)
 dialogs.settings.cancelled.connect(check_servers.check)
