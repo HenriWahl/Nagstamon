@@ -52,8 +52,9 @@ from Nagstamon.qui.globals import (dbus_connection,
                                    font,
                                    font_default,
                                    font_icons)
-from Nagstamon.qui.helpers import (hide_macos_dock_icon,
-                                   create_brushes)
+from Nagstamon.qui.helpers import (create_brushes,
+                                   check_servers,
+                                   hide_macos_dock_icon)
 from Nagstamon.qui.widgets.button import (Button,
                                           CSS_CLOSE_BUTTON,
                                           PushButtonHamburger)
@@ -1214,17 +1215,31 @@ class StatusWindow(QWidget):
             return None
 
     def create_server_vboxes(self):
-        # create vbox for each enabled server
+        """
+        create VBox for each enabled server
+        """
         for server in servers.values():
             if server.enabled:
                 server_vbox = self.create_server_vbox(server.name)
                 self.servers_vbox.addLayout(server_vbox)
         self.sort_server_vboxes()
 
+    @Slot(str)
+    def delete_server_vbox(self, name):
+        """
+        delete VBox for server with given name - called by signal from settings dialog
+        """
+        for vbox in self.servers_vbox.children():
+            if vbox.server.name == name:
+                # stop thread by falsificate running flag
+                vbox.table.worker.running = False
+                vbox.table.worker.finish.emit()
+                break
+
     @Slot()
     def show_window_after_checking_for_clicking(self):
         """
-            being called after clicking statusbar - check if window should be showed
+        being called after clicking statusbar - check if window should be showed
         """
         if conf.popup_details_clicking:
             self.show_window()
@@ -1232,7 +1247,7 @@ class StatusWindow(QWidget):
     @Slot()
     def show_window_after_checking_for_hover(self):
         """
-            being called after hovering over statusbar - check if window should be showed
+        being called after hovering over statusbar - check if window should be showed
         """
         if conf.popup_details_hover:
             self.show_window()
@@ -1899,7 +1914,7 @@ class StatusWindow(QWidget):
             attempt to shutdown thread cleanly
         """
         # stop debugging
-        self.worker.debug_loop_looping = False
+        statuswindow_worker_debug_loop_looping = False
         # tell thread to quit
         self.worker_thread.quit()
         # wait until thread is really stopped
@@ -1931,14 +1946,14 @@ class StatusWindow(QWidget):
 
     class Worker(QObject):
         """
-           run a thread for example for debugging
+        run a thread, for example, for debugging
         """
         # send signal if ready to stop
         finish = Signal()
 
         def __init__(self):
             QObject.__init__(self)
-            # flag to decide if thread has to run or to be stopped
+            # flag to decide if the thread has to run or to be stopped
             self.running = True
             # flag if debug_loop is looping
             self.debug_loop_looping = False
@@ -1957,13 +1972,13 @@ class StatusWindow(QWidget):
         @Slot()
         def debug_loop(self):
             """
-                if debugging is enabled, poll debug_queue list and print/write its contents
+            if debugging is enabled, poll debug_queue list and print/write its contents
             """
             if conf.debug_mode:
-                self.debug_loop_looping = True
+                statuswindow_worker_debug_loop_looping = True
 
                 # as long thread is supposed to run
-                while self.running and self.debug_loop_looping:
+                while self.running and statuswindow_worker_debug_loop_looping:
                     # only log something if there is something to tell
                     while len(debug_queue) > 0:
                         # always get oldest item of queue list - FIFO
@@ -1976,14 +1991,18 @@ class StatusWindow(QWidget):
                                 self.open_debug_file()
                             # log line per line
                             self.debug_file.write(debug_line + "\n")
-                    # wait second until next poll
+                    # wait second until the next poll
                     time.sleep(1)
 
                 # unset looping
-                self.debug_loop_looping = False
+                statuswindow_worker_debug_loop_looping = False
                 # close file if any
                 if self.debug_file is not None:
                     self.close_debug_file()
+            else:
+                # set the flag to tell debug loop it should stop, please
+                self.debug_loop_looping = False
+
 
     class Worker_Notification(QObject):
 
@@ -4332,3 +4351,10 @@ dialogs.server.edited_remove_previous.connect(statuswindow.remove_previous_serve
 dialogs.server.create_server_vbox.connect(statuswindow.create_server_vbox)
 
 dialogs.authentication.show_up.connect(statuswindow.hide_window)
+
+dialogs.settings.settings_ok.connect(statuswindow.store_position_to_conf)
+# trigger the statuswindow.worker to check if debug loop is neede and if so, start it
+dialogs.settings.settings_ok.connect(statuswindow.worker.debug_loop)
+dialogs.settings.server_deleted.connect(statuswindow.worker.debug_loop)
+dialogs.settings.changed.connect(check_servers.check)
+dialogs.settings.cancelled.connect(check_servers.check)

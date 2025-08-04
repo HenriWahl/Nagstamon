@@ -23,7 +23,8 @@ from Nagstamon.qui.constants import (COLORS,
                                      QBRUSHES)
 from Nagstamon.qui.qt import (QColor,
                               QObject,
-                              Signal)
+                              Signal,
+                              Slot)
 from Nagstamon.Servers import servers
 
 # make icon status in macOS dock accessible via NSApp, used by set_macos_dock_icon_visible()
@@ -40,6 +41,7 @@ class CheckServers(QObject):
     # signal to emit if no server is configured or enabled
     checked = Signal(str)
 
+    @Slot()
     def check(self):
         """
         check if there are any servers configured and enabled

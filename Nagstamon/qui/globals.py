@@ -42,6 +42,9 @@ font_icons = QFont('Nagstamon', font.pointSize() + 2, QFont.Weight.Normal, False
 # DBus initialization
 dbus_connection = DBus()
 
+# replacement for statuswindow.worker.debug_loop_looping
+statuswindow_worker_debug_loop_looping = False
+
 # check ECP authentication support availability
 try:
     from requests_ecp import HTTPECPAuth

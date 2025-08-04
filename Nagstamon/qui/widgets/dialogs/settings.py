@@ -66,7 +66,6 @@ class DialogSettings(Dialog):
     # send signal if check for a new version is wanted
     check_for_new_version = Signal(bool, QWidget)
 
-    # used to tell debug loop it should start
     start_debug_loop = Signal()
 
     # signal to be fired if a server is newly created
@@ -78,6 +77,9 @@ class DialogSettings(Dialog):
     # signal to be fired if a server is copied
     server_copied = Signal(str)
 
+    # signal to be fired if a server is deleted
+    server_deleted = Signal(str)
+
     # signal to be fired if an action is newly created
     action_created = Signal()
 
@@ -86,6 +88,12 @@ class DialogSettings(Dialog):
 
     # signal to be fired if an action is copied
     action_copied = Signal(str)
+
+    # signal to be fired when the settings dialog OK button is pressed
+    settings_ok = Signal()
+
+    # signal to be fired when the settings dialog is cancelled
+    cancelled = Signal()
 
     def __init__(self):
         Dialog.__init__(self, 'settings_main')
@@ -126,7 +134,7 @@ class DialogSettings(Dialog):
                                                        self.window.input_combobox_fullscreen_display],
             # notifications in general
             self.window.input_checkbox_notification: [self.window.notification_groupbox],
-            # sound at all
+            # sound notifications
             self.window.input_checkbox_notification_sound: [self.window.notification_sounds_groupbox],
             # custom sounds
             self.window.input_radiobutton_notification_custom_sound: [self.window.notification_custom_sounds_groupbox],
@@ -442,6 +450,7 @@ class DialogSettings(Dialog):
         # # if the 'Settings' button was clicked too fast the timestamp difference
         # # is too short and the statuswindow will keep open
         # # modifying the timestamp could help
+        # TODO: still relevant?
         # statuswindow.is_shown_timestamp -= 1
 
         # tell the world that dialog pops up
@@ -482,11 +491,12 @@ class DialogSettings(Dialog):
         what to do if OK was pressed
         """
         # global FONT, ICONS_FONT, statuswindow, menu
-        global statuswindow, menu
+        #global statuswindow, menu
+        global menu
 
         # store position of statuswindow/statusbar only if statusbar is floating
         if conf.statusbar_floating:
-            statuswindow.store_position_to_conf()
+            self.settings_ok.emit()
 
         # store hash of all display settings as display_mode to decide if statuswindow has to be recreated
         display_mode = str(conf.statusbar_floating) + \
@@ -526,15 +536,6 @@ class DialogSettings(Dialog):
                     elif conf.__dict__[item].isdecimal():
                         conf.__dict__[item] = int(conf.__dict__[item])
 
-        # start debug loop if debugging is enabled
-        if conf.debug_mode:
-            # only start debugging loop if it not already loops
-            if statuswindow.worker.debug_loop_looping is False:
-                self.start_debug_loop.emit()
-        else:
-            # set the flag to tell debug loop it should stop, please
-            statuswindow.worker.debug_loop_looping = False
-
         # convert sorting fields to simple keys - maybe one day translated
         conf.default_sort_field = HEADERS_HEADERS_KEYS[conf.default_sort_field]
 
@@ -553,41 +554,38 @@ class DialogSettings(Dialog):
 
         # when display mode was changed, it's the easiest to destroy the old status window and create a new one
         # store display_mode to decide if statuswindow has to be recreated
-        if display_mode != str(conf.statusbar_floating) + \
-                str(conf.icon_in_systray) + \
-                str(conf.fullscreen) + \
-                str(conf.fullscreen_display) + \
-                str(conf.windowed):
-
-            # stop statuswindow workers
-            statuswindow.worker.running = False
-            statuswindow.worker_notification.running = False
-
-            # hide window to avoid laggy GUI - better none than laggy
-            statuswindow.hide()
-
-            # tell all treeview threads to stop
-            for server_vbox in statuswindow.servers_vbox.children():
-                server_vbox.table.worker.finish.emit()
-
-            # stop statuswindow workers
-            statuswindow.worker.finish.emit()
-            statuswindow.worker_notification.finish.emit()
-
-            # kick out ol' statuswindow
-            statuswindow.kill()
-
-            # create a new global one
-            statuswindow = StatusWindow()
-
-            # context menu for systray and statuswindow
-            menu = MenuContext()
+        # if display_mode != str(conf.statusbar_floating) + \
+        #         str(conf.icon_in_systray) + \
+        #         str(conf.fullscreen) + \
+        #         str(conf.fullscreen_display) + \
+        #         str(conf.windowed):
+        #
+        #     # stop statuswindow workers
+        #     statuswindow.worker.running = False
+        #     statuswindow.worker_notification.running = False
+        #
+        #     # hide window to avoid laggy GUI - better none than laggy
+        #     statuswindow.hide()
+        #
+        #     # tell all treeview threads to stop
+        #     for server_vbox in statuswindow.servers_vbox.children():
+        #         server_vbox.table.worker.finish.emit()
+        #
+        #     # stop statuswindow workers
+        #     statuswindow.worker.finish.emit()
+        #     statuswindow.worker_notification.finish.emit()
+        #
+        #     # kick out ol' statuswindow
+        #     statuswindow.kill()
+        #
+        #     # create a new global one
+        #     statuswindow = StatusWindow()
+        #
+        #     # context menu for systray and statuswindow
+        #     menu = MenuContext()
 
         # tell statuswindow to refresh due to new settings
         self.changed.emit()
-
-        # see if there are any servers created and enabled
-        check_servers()
 
         # call close and macOS dock icon treatment from ancestor
         super().ok()
@@ -598,8 +596,8 @@ class DialogSettings(Dialog):
         check if there are any usable servers configured
         """
         # call close and macOS dock icon treatment from ancestor
+        self.cancelled.emit()
         super().cancel()
-        check_servers.check()
 
     @Slot()
     def new_server(self):
@@ -644,12 +642,13 @@ class DialogSettings(Dialog):
             if reply == QMessageBox.StandardButton.Yes:
                 # in case server is enabled to delete its vbox
                 if server.enabled:
-                    for vbox in statuswindow.servers_vbox.children():
-                        if vbox.server.name == server.name:
-                            # stop thread by falsificate running flag
-                            vbox.table.worker.running = False
-                            vbox.table.worker.finish.emit()
-                            break
+                    # for vbox in statuswindow.servers_vbox.children():
+                    #     if vbox.server.name == server.name:
+                    #         # stop thread by falsificate running flag
+                    #         vbox.table.worker.running = False
+                    #         vbox.table.worker.finish.emit()
+                    #         break
+                    self.server_deleted.emit(server.name)
 
                 # kick server out of server instances
                 servers.pop(server.name)
