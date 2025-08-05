@@ -30,6 +30,8 @@ import time
 import traceback
 from urllib.parse import quote
 
+from ansible_collections.amazon.aws.plugins.modules.ec2_security_group import current_account_id
+
 # it is important that this import is done before importing any other qui module, because
 # they may need a QApplication instance to be created
 from Nagstamon.qui.widgets.app import app
@@ -77,22 +79,17 @@ from Nagstamon.qui.qt import *
 
 from Nagstamon.config import (Action,
                               AppInfo,
-                              BOOLPOOL,
                               conf,
-                              CONFIG_STRINGS,
                               debug_queue,
-                              KEYRING,
                               OS_NON_LINUX,
                               OS,
                               OS_MACOS,
                               OS_WINDOWS,
                               RESOURCES,
-                              Server,
                               DESKTOP_WAYLAND)
 
 from Nagstamon.Servers import (SERVER_TYPES,
                                servers,
-                               create_server,
                                get_enabled_servers,
                                get_worst_status,
                                get_status_count,
@@ -100,7 +97,7 @@ from Nagstamon.Servers import (SERVER_TYPES,
 
 from Nagstamon.helpers import (is_found_by_re,
                                webbrowser_open,
-                               FilesDict,
+                               resource_files,
                                STATES,
                                STATES_SOUND,
                                SORT_COLUMNS_FUNCTIONS)
@@ -133,11 +130,6 @@ QFontDatabase.addApplicationFont('{0}{1}nagstamon.ttf'.format(RESOURCES, os.sep)
 # set style for tooltips globally - to sad not all properties can be set here
 app.setStyleSheet('''QToolTip { margin: 3px;
                                 }''')
-
-# store default sounds as buffers to avoid https://github.com/HenriWahl/Nagstamon/issues/578
-# meanwhile used as backup copy in case they had been deleted by macOS
-# https://github.com/HenriWahl/Nagstamon/issues/578
-RESOURCE_FILES = FilesDict(RESOURCES)
 
 
 class SystemTrayIcon(QSystemTrayIcon):
@@ -189,20 +181,20 @@ class SystemTrayIcon(QSystemTrayIcon):
         # treat clicks
         self.activated.connect(self.icon_clicked)
 
-    def currentIconName(self):
+    def current_icon_name(self):
         """
-            internal function useful for debugging, returns the name of the
-            current icon
+        internal function useful for debugging, returns the name of the
+        current icon
         """
-        curIcon = self.icon()
-        if curIcon is None:
+        current_account_icon = self.icon()
+        if current_account_icon is None:
             return '<none>'
-        return str(curIcon)
+        return str(current_account_icon)
 
     @Slot(QMenu)
     def set_menu(self, menu):
         """
-            create current menu for right clicks
+        create current menu for right clicks
         """
         # store menu for future use, especially for MacOSX
         self.menu = menu
@@ -220,7 +212,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         svg_template = '{0}{1}nagstamon_systrayicon_template.svg'.format(RESOURCES, os.sep)
         # get template from file
         # by using RESOURCE_FILES the file path will be checked on macOS and the file restored if necessary
-        with open(RESOURCE_FILES[svg_template]) as svg_template_file:
+        with open(resource_files[svg_template]) as svg_template_file:
             svg_template_xml = svg_template_file.readlines()
 
             # create icons for all states
@@ -283,9 +275,9 @@ class SystemTrayIcon(QSystemTrayIcon):
     @Slot()
     def show_state(self):
         """
-            get worst status and display it in systray
+        get the worst status and display it in systray
         """
-        if self.error_shown is False:
+        if not self.error_shown:
             worst_status = get_worst_status()
             self.setIcon(self.icons[worst_status])
             # set current icon for flashing
@@ -297,18 +289,18 @@ class SystemTrayIcon(QSystemTrayIcon):
     @Slot()
     def flash(self):
         """
-            send color inversion signal to labels
+        send color inversion signal to labels
         """
         # only if currently a notification is necessary
-        if statuswindow.worker_notification.is_notifying:
+        if status_window_properties.is_notifying:
             # store current icon to get it reset back
             if self.current_icon is None:
-                if self.error_shown is False:
+                if not self.error_shown:
                     self.current_icon = self.icons[statuswindow.worker_notification.get_worst_notification_status()]
                 else:
                     self.current_icon = self.icons['ERROR']
             # use empty SVG icon to display emptiness
-            if RESOURCE_FILES[self.icons['EMPTY'].filename]:
+            if resource_files[self.icons['EMPTY'].filename]:
                 self.setIcon(self.icons['EMPTY'])
             # fire up  a singleshot to reset color soon
             self.timer.singleShot(500, self.reset)
@@ -319,7 +311,7 @@ class SystemTrayIcon(QSystemTrayIcon):
             tell labels to set original colors
         """
         # only if currently a notification is necessary
-        if statuswindow.worker_notification.is_notifying:
+        if status_window_properties.is_notifying:
             try:
                 # set curent status icon
                 self.setIcon(self.current_icon)
@@ -875,7 +867,7 @@ class StatusWindow(QWidget):
 
     def sort_server_vboxes(self):
         """
-            sort ServerVBoxes alphabetically
+        sort ServerVBoxes alphabetically
         """
         # shortly after applying changes a QObject might hang around in the children list which should
         # be filtered out this way
@@ -1740,7 +1732,7 @@ class StatusWindow(QWidget):
                 while self.running and statuswindow_worker_debug_loop_looping:
                     # only log something if there is something to tell
                     while len(debug_queue) > 0:
-                        # always get oldest item of queue list - FIFO
+                        # always get the oldest item of queue list - FIFO
                         debug_line = (debug_queue.pop(0))
                         # output to console
                         print(debug_line)
@@ -1781,6 +1773,7 @@ class StatusWindow(QWidget):
 
         # flag about current notification state
         is_notifying = False
+        status_window_properties.is_notifying = False
 
         # only one enabled server should have the right to send play_sound signal
         notifying_server = ''
@@ -1806,12 +1799,12 @@ class StatusWindow(QWidget):
                 # only if not notifying yet or the current state is worse than the prior AND
                 # only when the current state is configured to be honking about
                 if (STATES.index(worst_status_diff) > STATES.index(self.worst_notification_status) or
-                    self.is_notifying is False) and \
+                    status_window_properties.is_notifying is False) and \
                         conf.__dict__['notify_if_{0}'.format(worst_status_diff.lower())] is True:
                     # keep last worst state worth a notification for comparison 3 lines above
                     self.worst_notification_status = worst_status_diff
                     # set flag to avoid innecessary notification
-                    self.is_notifying = True
+                    status_window_properties.is_notifying = True
                     if self.notifying_server == '':
                         self.notifying_server = server_name
 
@@ -1900,7 +1893,7 @@ class StatusWindow(QWidget):
 
                 # repeated sound
                 # only let one enabled server play sound to avoid a larger cacophony
-                if self.is_notifying and \
+                if status_window_properties.is_notifying and \
                         conf.notification_sound_repeat and \
                         self.notifying_server == server_name:
                     self.play_sound.emit()
@@ -1920,9 +1913,9 @@ class StatusWindow(QWidget):
             """
                 stop notification if there is no need anymore
             """
-            if self.is_notifying:
+            if status_window_properties.is_notifying:
                 self.worst_notification_status = 'UP'
-                self.is_notifying = False
+                status_window_properties.is_notifying = False
 
                 # no more flashing statusbar and systray
                 self.stop_flash.emit()
@@ -2056,7 +2049,7 @@ class StatusBar(QWidget):
             send color inversion signal to labels
         """
         # only if currently a notification is necessary
-        if statuswindow.worker_notification.is_notifying:
+        if status_window_properties.is_notifying:
             self.labels_invert.emit()
             # fire up  a singleshot to reset color soon
             self.timer.singleShot(500, self.reset)
@@ -2068,7 +2061,7 @@ class StatusBar(QWidget):
         """
         self.labels_reset.emit()
         # only if currently a notification is necessary
-        if statuswindow.worker_notification.is_notifying:
+        if status_window_properties.is_notifying:
             # even later call itself to invert colors as flash
             self.timer.singleShot(500, self.flash)
 
@@ -2339,7 +2332,7 @@ class ServerStatusLabel(ClosingLabel):
 
 class ServerVBox(QVBoxLayout):
     """
-        one VBox per server containing buttons and hosts/services listview
+    one VBox per server containing buttons and hosts/services listview
     """
     # used to update status label text like 'Connected-'
     change_label_status = Signal(str, str)
@@ -3639,7 +3632,7 @@ class TreeView(QTreeView):
                     # if failures have gone and nobody took notice switch notification off again
                     if len([k for k, v in self.server.events_history.items() if v is True]) == 0 and \
                             statuswindow and \
-                            statuswindow.worker_notification.is_notifying is True and \
+                            status_window_properties.is_notifying is True and \
                             statuswindow.worker_notification.notifying_server == self.server.name:
                         # tell notification that unnoticed problems are gone
                         self.problems_vanished.emit()
@@ -4069,7 +4062,7 @@ elif conf.icon_in_systray:
     systrayicon.set_menu(menu)
 
 # versatile mediaplayer
-mediaplayer = MediaPlayer(statuswindow, RESOURCE_FILES)
+mediaplayer = MediaPlayer(statuswindow, resource_files)
 
 # to be connected someday elsewhere
 # server -> statuswindow remove_previous server

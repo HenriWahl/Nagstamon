@@ -60,7 +60,7 @@ class DraggableWidget(QWidget):
         1 - left button, move window
         2 - right button, popup menu
         """
-        # update access to statuswindow
+        # update access to status window
         self.status_window = self.parentWidget().parentWidget()
         if event.button() == Qt.MouseButton.LeftButton:
             self.mouse_pressed.emit()
@@ -132,8 +132,8 @@ class DraggableWidget(QWidget):
 
     def enterEvent(self, event):
         """
-        tell the world that mouse entered the widget - interesting for hover popup and only if toparea hasn't been
-        clickend a moment ago
+        tell the world that mouse entered the widget - interesting for hover popup and only if top area hasn't been
+        clicked a moment ago
         """
         if status_window_properties.is_shown is False and \
                 status_window_properties.is_hiding_timestamp + 0.2 < time():
@@ -142,7 +142,7 @@ class DraggableWidget(QWidget):
 
 class DraggableLabel(QLabel, DraggableWidget):
     """
-    label with dragging capabilities used by toparea
+    label with dragging capabilities used by top area
     """
     # yell if statusbar is moved
     window_moved = Signal()

@@ -34,7 +34,8 @@ from hashlib import md5
 
 from Nagstamon.config import (conf,
                               OS,
-                              OS_MACOS)
+                              OS_MACOS,
+                              RESOURCES)
 
 # states needed for gravity comparison for notification and Generic.py
 STATES = ['UP',
@@ -352,13 +353,13 @@ def MD5ify(string):
 
 def lock_config_folder(folder):
     '''
-        Locks the config folder by writing a PID file into it.
-        The lock is relative to user name and system's boot time.
-        Returns True on success, False when lock failed
+    Locks the config folder by writing a PID file into it.
+    The lock is relative to user name and system's boot time.
+    Returns True on success, False when lock failed
 
-        Return True too if there is any locking error - if no locking ins possible it might run as well
-        This is also the case if some setup uses the nagstamon.config directory which most probably
-        will be read-only
+    Return True too if there is any locking error - if no locking ins possible it might run as well
+    This is also the case if some setup uses the nagstamon.config directory which most probably
+    will be read-only
     '''
     pidFilePath = os.path.join(folder, 'nagstamon.pid')
 
@@ -485,3 +486,8 @@ SORT_COLUMNS_FUNCTIONS = {0: compare_host,
         7: compare_attempt,
         8: compare_status_information,
         9: compare_status_information}
+
+# store default sounds as buffers to avoid https://github.com/HenriWahl/Nagstamon/issues/578
+# meanwhile used as backup copy in case they had been deleted by macOS
+# https://github.com/HenriWahl/Nagstamon/issues/578
+resource_files = FilesDict(RESOURCES)

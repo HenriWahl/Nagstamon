@@ -76,6 +76,7 @@ else:
     except ImportError as error:
         print(error)
 
+
 @dataclass
 class StatusWindowProperties:
     """
@@ -91,5 +92,6 @@ class StatusWindowProperties:
     relative_y: int = 0
     status_ok: bool = True
     top: bool = False
+    is_notifying: bool = False
 
 status_window_properties = StatusWindowProperties()
