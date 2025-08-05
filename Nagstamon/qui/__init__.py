@@ -69,10 +69,10 @@ from Nagstamon.qui.widgets.label_all_ok import LabelAllOK
 from Nagstamon.qui.widgets.layout import HBoxLayout
 from Nagstamon.qui.widgets.menu import MenuAtCursor
 from Nagstamon.qui.widgets.system_tray_icon import SystemTrayIcon
-from Nagstamon.qui.widgets.toparea_widgets import (ClosingLabel,
-                                                   ComboBoxServers,
-                                                   NagstamonLogo,
-                                                   PushButtonBrowserURL)
+from Nagstamon.qui.widgets.top_area_widgets import (ClosingLabel,
+                                                    ComboBoxServers,
+                                                    NagstamonLogo,
+                                                    PushButtonBrowserURL)
 # for details of imports look into qt.py
 from Nagstamon.qui.qt import *
 

@@ -116,7 +116,7 @@ class SystemTrayIcon(QSystemTrayIcon):
     @Slot()
     def create_icons(self):
         """
-            create icons from template, applying colors
+        create icons from template, applying colors
         """
         svg_template = f'{RESOURCES}{sep}nagstamon_systrayicon_template.svg'
         # get template from file
