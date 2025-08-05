@@ -549,8 +549,8 @@ class DraggableWidget(QWidget):
     # @Slot(QMenu)
 
     def __init__(self, parent=None):
-        QWidget.__init__(self, text, parent=parent)
-        self.parent = parent
+        QWidget.__init__(self, parent=parent)
+        self.parent_widget = self.parent()
 
     def set_menu(self, menu):
         self.menu = menu
@@ -573,9 +573,9 @@ class DraggableWidget(QWidget):
                 not statuswindow_properties.relative_y:
             # Qt5 & Qt6 have different methods for getting the global position so take it from qt.py
             global_position = get_global_position(event)
-            #statuswindow_properties.relative_x = global_position.x() - statuswindow.x()
-            statuswindow_properties.relative_x = global_position.x() - self.parent.x()
-            statuswindow_properties.relative_y = global_position.y() - statuswindow.y()
+            #statuswindow_properties.relative_x = global_position.x() - self.parent.x()
+            statuswindow_properties.relative_x = global_position.x() - self.parent_widget.x()
+            statuswindow_properties.relative_y = global_position.y() - self.parent_widget.y()
 
     def mouseReleaseEvent(self, event):
         """
@@ -588,7 +588,8 @@ class DraggableWidget(QWidget):
                      conf.close_details_clicking_somewhere) and \
                     not conf.fullscreen and not conf.windowed:
                 statuswindow_properties.is_hiding_timestamp = time.time()
-                statuswindow.hide_window()
+                # TODO: shall become a signal
+                self.parent_widget.hide_window()
             elif not statuswindow_properties.is_shown:
                 self.mouse_released.emit()
 
@@ -616,15 +617,16 @@ class DraggableWidget(QWidget):
                 # lock window as moving
                 # if not set calculate relative position
                 if not statuswindow_properties.relative_x and not statuswindow_properties.relative_y:
-                    statuswindow.relative_x = global_position.x() - statuswindow.x()
-                    statuswindow.relative_y = global_position.y() - statuswindow.y()
+                    statuswindow_properties.relative_x = global_position.x() - self.parent_widget.x()
+                    statuswindow_properties.relative_y = global_position.y() - self.parent_widget.y()
                 statuswindow_properties.moving = True
-                statuswindow.move(int(global_position.x() - statuswindow_properties.relative_x),
+                # TODO: shall become a signal
+                self.parent_widget.move(int(global_position.x() - statuswindow_properties.relative_x),
                                   int(global_position.y() - statuswindow_properties.relative_y))
 
             # needed for OSX - otherwise statusbar stays blank while moving
             # TODO: make a signal call of it
-            statuswindow.update()
+            self.parent_widget.update()
 
             self.window_moved.emit()
 
@@ -654,6 +656,7 @@ class DraggableLabel(QLabel, DraggableWidget):
 
     def __init__(self, text='', parent=None):
         QLabel.__init__(self, text, parent=parent)
+        DraggableWidget.__init__(self, parent=parent)
 
 
 class ClosingLabel(QLabel):
