@@ -92,6 +92,9 @@ class StatusWindowProperties:
     relative_y: int = 0
     status_ok: bool = True
     top: bool = False
+    # flag about current notification state
     is_notifying: bool = False
+    # current worst state worth a notification
+    worst_notification_status: str = 'UP'
 
 status_window_properties = StatusWindowProperties()

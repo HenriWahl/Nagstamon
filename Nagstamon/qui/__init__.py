@@ -30,8 +30,6 @@ import time
 import traceback
 from urllib.parse import quote
 
-from ansible_collections.amazon.aws.plugins.modules.ec2_security_group import current_account_id
-
 # it is important that this import is done before importing any other qui module, because
 # they may need a QApplication instance to be created
 from Nagstamon.qui.widgets.app import app
@@ -70,6 +68,7 @@ from Nagstamon.qui.widgets.icon import QIconWithFilename
 from Nagstamon.qui.widgets.label_all_ok import LabelAllOK
 from Nagstamon.qui.widgets.layout import HBoxLayout
 from Nagstamon.qui.widgets.menu import MenuAtCursor
+from Nagstamon.qui.widgets.system_tray_icon import SystemTrayIcon
 from Nagstamon.qui.widgets.toparea_widgets import (ClosingLabel,
                                                    ComboBoxServers,
                                                    NagstamonLogo,
@@ -132,207 +131,6 @@ app.setStyleSheet('''QToolTip { margin: 3px;
                                 }''')
 
 
-class SystemTrayIcon(QSystemTrayIcon):
-    """
-    Icon in system tray, works at least in Windows and OSX
-    Several Linux desktop environments have different problems
-
-    For some dark, very dark reason systray menu does NOT work in
-    Windows if run on commandline as nagstamon.py - the binary .exe works
-    """
-    show_popwin = Signal()
-    hide_popwin = Signal()
-
-    # flag for displaying error icon in case of error
-    error_shown = False
-
-    def __init__(self):
-        # debug environment variables
-        if conf.debug_mode:
-            for environment_key, environment_value in os.environ.items():
-                debug_queue.append(f'DEBUG: Environment variable: {environment_key}={environment_value}')
-
-        # initialize systray icon
-        QSystemTrayIcon.__init__(self)
-
-        # icons are in dictionary
-        self.icons = {}
-        self.create_icons()
-        # empty icon for flashing notification
-        self.icons['EMPTY'] = QIconWithFilename('{0}{1}nagstamon_systrayicon_empty.svg'.format(RESOURCES, os.sep))
-        # little workaround to match statuswindow.worker_notification.worst_notification_status
-        self.icons['UP'] = self.icons['OK']
-        # default icon is OK
-        if conf.icon_in_systray:
-            self.setIcon(self.icons['OK'])
-
-        # store icon for flashing
-        self.current_icon = None
-
-        # no menu at first
-        self.menu = None
-
-        # timer for singleshots for flashing
-        self.timer = QTimer()
-
-        # when there are new settings/colors recreate icons
-        dialogs.settings.changed.connect(self.create_icons)
-
-        # treat clicks
-        self.activated.connect(self.icon_clicked)
-
-    def current_icon_name(self):
-        """
-        internal function useful for debugging, returns the name of the
-        current icon
-        """
-        current_account_icon = self.icon()
-        if current_account_icon is None:
-            return '<none>'
-        return str(current_account_icon)
-
-    @Slot(QMenu)
-    def set_menu(self, menu):
-        """
-        create current menu for right clicks
-        """
-        # store menu for future use, especially for MacOSX
-        self.menu = menu
-
-        # MacOSX does not distinguish between left and right click so menu will go to upper menu bar
-        # update: apparently not, but own context menu will be shown when icon is clicked an all is OK = green
-        if OS != OS_MACOS:
-            self.setContextMenu(self.menu)
-
-    @Slot()
-    def create_icons(self):
-        """
-            create icons from template, applying colors
-        """
-        svg_template = '{0}{1}nagstamon_systrayicon_template.svg'.format(RESOURCES, os.sep)
-        # get template from file
-        # by using RESOURCE_FILES the file path will be checked on macOS and the file restored if necessary
-        with open(resource_files[svg_template]) as svg_template_file:
-            svg_template_xml = svg_template_file.readlines()
-
-            # create icons for all states
-            for state in ['OK', 'INFORMATION', 'UNKNOWN', 'WARNING', 'AVERAGE', 'HIGH', 'CRITICAL', 'DISASTER',
-                          'UNREACHABLE', 'DOWN', 'ERROR']:
-                # current SVG XML for state icon, derived from svg_template_cml
-                svg_state_xml = list()
-
-                # replace dummy text and background colors with configured ones
-                for line in svg_template_xml:
-                    line = line.replace('fill:#ff00ff', 'fill:' + conf.__dict__['color_' + state.lower() + '_text'])
-                    line = line.replace('fill:#00ff00',
-                                        'fill:' + conf.__dict__['color_' + state.lower() + '_background'])
-                    svg_state_xml.append(line)
-
-                # create XML stream of SVG
-                svg_xml_stream = QXmlStreamReader(''.join(svg_state_xml))
-                # create renderer for SVG and put SVG XML into renderer
-                svg_renderer = QSvgRenderer(svg_xml_stream)
-                # pixmap to be painted on - arbitrarily choosen 128x128 px
-                svg_pixmap = QPixmap(128, 128)
-                # fill transparent backgound
-                svg_pixmap.fill(Qt.GlobalColor.transparent)
-                # initiate painter which paints onto paintdevice pixmap
-                svg_painter = QPainter(svg_pixmap)
-                # render svg to pixmap
-                svg_renderer.render(svg_painter)
-                # close painting
-                svg_painter.end()
-                # put pixmap into icon
-                self.icons[state] = QIconWithFilename(svg_pixmap)
-
-                debug_queue.append(
-                    'DEBUG: SystemTrayIcon created icon {} for state "{}"'.format(self.icons[state], state))
-
-    @Slot(QSystemTrayIcon.ActivationReason)
-    def icon_clicked(self, reason):
-        """
-            evaluate mouse click
-        """
-        if reason in (QSystemTrayIcon.ActivationReason.Trigger,
-                      QSystemTrayIcon.ActivationReason.DoubleClick,
-                      QSystemTrayIcon.ActivationReason.MiddleClick):
-            # when green icon is displayed and no popwin is about to pop up...
-            if get_worst_status() == 'UP':
-                # ...nothing to do except on macOS where menu should be shown
-                if OS == OS_MACOS:
-                    # in case there is some error show popwin rather than context menu
-                    if not self.error_shown:
-                        self.menu.show_at_cursor()
-                    else:
-                        self.show_popwin.emit()
-            else:
-                # show status window if there is something to tell
-                if status_window_properties.is_shown:
-                    self.hide_popwin.emit()
-                else:
-                    self.show_popwin.emit()
-
-    @Slot()
-    def show_state(self):
-        """
-        get the worst status and display it in systray
-        """
-        if not self.error_shown:
-            worst_status = get_worst_status()
-            self.setIcon(self.icons[worst_status])
-            # set current icon for flashing
-            self.current_icon = self.icons[worst_status]
-            del worst_status
-        else:
-            self.setIcon(self.icons['ERROR'])
-
-    @Slot()
-    def flash(self):
-        """
-        send color inversion signal to labels
-        """
-        # only if currently a notification is necessary
-        if status_window_properties.is_notifying:
-            # store current icon to get it reset back
-            if self.current_icon is None:
-                if not self.error_shown:
-                    self.current_icon = self.icons[statuswindow.worker_notification.get_worst_notification_status()]
-                else:
-                    self.current_icon = self.icons['ERROR']
-            # use empty SVG icon to display emptiness
-            if resource_files[self.icons['EMPTY'].filename]:
-                self.setIcon(self.icons['EMPTY'])
-            # fire up  a singleshot to reset color soon
-            self.timer.singleShot(500, self.reset)
-
-    @Slot()
-    def reset(self):
-        """
-            tell labels to set original colors
-        """
-        # only if currently a notification is necessary
-        if status_window_properties.is_notifying:
-            try:
-                # set curent status icon
-                self.setIcon(self.current_icon)
-                # even later call itself to invert colors as flash
-                self.timer.singleShot(500, self.flash)
-            except:
-                traceback.print_exc(file=sys.stdout)
-        else:
-            if self.current_icon is not None:
-                self.setIcon(self.current_icon)
-            self.current_icon = None
-
-    @Slot()
-    def set_error(self):
-        self.error_shown = True
-
-    @Slot()
-    def reset_error(self):
-        self.error_shown = False
-
-
 class MenuContext(MenuAtCursor):
     """
         class for universal context menu, used at systray icon and hamburger menu
@@ -362,7 +160,7 @@ class MenuContext(MenuAtCursor):
     @Slot()
     def initialize(self):
         """
-            add actions and servers to menu
+        add actions and servers to menu
         """
 
         # first clear to get rid of old servers
@@ -415,14 +213,14 @@ class MenuContext(MenuAtCursor):
 
 class MenuContextSystrayicon(MenuContext):
     """
-        Necessary for Ubuntu 16.04 new Qt5-Systray-AppIndicator meltdown
-        Maybe in general a good idea to offer status window popup here
+    Necessary for Ubuntu 16.04 new Qt5-Systray-AppIndicator meltdown
+    Maybe in general a good idea to offer status window popup here
     """
 
     def __init__(self, parent=None):
         """
-            clone of normal MenuContext which serves well in all other places
-            but no need of signal/slots initialization
+        clone of normal MenuContext which serves well in all other places
+        but no need of signal/slots initialization
         """
         QMenu.__init__(self, parent=parent)
 
@@ -437,7 +235,7 @@ class MenuContextSystrayicon(MenuContext):
 
     def initialize(self):
         """
-            initialize as inherited + a popup menu entry mostly useful in Ubuntu Unity
+        initialize as inherited + a popup menu entry mostly useful in Ubuntu Unity
         """
         MenuContext.initialize(self)
         # makes even less sense on OSX
@@ -471,7 +269,7 @@ class StatusWindow(QWidget):
 
     def __init__(self):
         """
-            Status window combined from status bar and popup window
+        Status window combined from status bar and popup window
         """
         QWidget.__init__(self)
 
@@ -695,9 +493,9 @@ class StatusWindow(QWidget):
 
     def get_screen(self):
         """
-            very hackish fix for https://github.com/HenriWahl/Nagstamon/issues/865
-            should actually fit into qt.py but due to the reference to `app` it could only
-            be solved here
+        very hackish fix for https://github.com/HenriWahl/Nagstamon/issues/865
+        should actually fit into qt.py but due to the reference to `app` it could only
+        be solved here
         """
         # Qt6 has .screen() as replacement for QDesktopWidget...
         if QT_VERSION_MAJOR > 5:
@@ -1010,7 +808,7 @@ class StatusWindow(QWidget):
     @Slot()
     def show_window_from_notification_bubble(self):
         """
-            show status window after button being clicked in notification bubble
+        show status window after button being clicked in notification bubble
         """
         if conf.statusbar_floating:
             self.show_window()
@@ -1771,15 +1569,8 @@ class StatusWindow(QWidget):
         # tell statuswindow to use desktop notification
         desktop_notification = Signal(dict)
 
-        # flag about current notification state
-        is_notifying = False
-        status_window_properties.is_notifying = False
-
         # only one enabled server should have the right to send play_sound signal
         notifying_server = ''
-
-        # current worst state worth a notification
-        worst_notification_status = 'UP'
 
         # desktop notification needs to store count of states
         status_count = dict()
@@ -1793,16 +1584,16 @@ class StatusWindow(QWidget):
         @Slot(str, str, str)
         def start(self, server_name, worst_status_diff, worst_status_current):
             """
-                start notification
+            start notification
             """
             if conf.notification:
                 # only if not notifying yet or the current state is worse than the prior AND
                 # only when the current state is configured to be honking about
-                if (STATES.index(worst_status_diff) > STATES.index(self.worst_notification_status) or
+                if (STATES.index(worst_status_diff) > STATES.index(status_window_properties.worst_notification_status) or
                     status_window_properties.is_notifying is False) and \
-                        conf.__dict__['notify_if_{0}'.format(worst_status_diff.lower())] is True:
+                        conf.__dict__[f'notify_if_{worst_status_diff.lower()}'] is True:
                     # keep last worst state worth a notification for comparison 3 lines above
-                    self.worst_notification_status = worst_status_diff
+                    status_window_properties.worst_notification_status = worst_status_diff
                     # set flag to avoid innecessary notification
                     status_window_properties.is_notifying = True
                     if self.notifying_server == '':
@@ -1911,10 +1702,10 @@ class StatusWindow(QWidget):
         @Slot()
         def stop(self):
             """
-                stop notification if there is no need anymore
+            stop notification if there is no need anymore
             """
             if status_window_properties.is_notifying:
-                self.worst_notification_status = 'UP'
+                status_window_properties.worst_notification_status = 'UP'
                 status_window_properties.is_notifying = False
 
                 # no more flashing statusbar and systray
@@ -1925,22 +1716,22 @@ class StatusWindow(QWidget):
 
         def execute_action(self, server_name, custom_action_string):
             """
-                execute custom action
+            execute custom action
             """
             if conf.debug_mode:
                 servers[server_name].debug(debug='NOTIFICATION: ' + custom_action_string)
             subprocess.Popen(custom_action_string, shell=True)
 
-        def get_worst_notification_status(self):
-            """
-                hand over the current worst status notification
-            """
-            return self.worst_notification_status
+        # def get_worst_notification_status(self):
+        #     """
+        #     hand over the current worst status notification
+        #     """
+        #     return self.worst_notification_status
 
 
 class StatusBar(QWidget):
     """
-        status bar for short display of problems
+    status bar for short display of problems
     """
 
     # send signal to statuswindow
@@ -4078,3 +3869,5 @@ dialogs.settings.server_deleted.connect(statuswindow.worker.debug_loop)
 dialogs.settings.changed.connect(check_servers.check)
 dialogs.settings.changed.connect(statuswindow.label_all_ok.set_color)
 dialogs.settings.cancelled.connect(check_servers.check)
+# when there are new settings/colors recreate icons
+dialogs.settings.changed.connect(systrayicon.create_icons)

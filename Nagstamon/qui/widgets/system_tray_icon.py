@@ -15,12 +15,30 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-from os import environ
+from os import (environ,
+                sep)
+from sys import stdout
+from traceback import print_exc
 
 from Nagstamon.config import (conf,
-                              debug_queue)
-from Nagstamon.qui.qt import (QSystemTrayIcon,
-                              Signal)
+                              debug_queue,
+                              OS,
+                              OS_MACOS,
+                              RESOURCES)
+from Nagstamon.helpers import resource_files
+from Nagstamon.qui.globals import status_window_properties
+from Nagstamon.qui.qt import (QMenu,
+                              QPainter,
+                              QPixmap,
+                              QSvgRenderer,
+                              QSystemTrayIcon,
+                              Qt,
+                              QTimer,
+                              QXmlStreamReader,
+                              Signal,
+                              Slot)
+from Nagstamon.qui.widgets.icon import QIconWithFilename
+from Nagstamon.Servers import get_worst_status
 
 
 class SystemTrayIcon(QSystemTrayIcon):
@@ -50,7 +68,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.icons = {}
         self.create_icons()
         # empty icon for flashing notification
-        self.icons['EMPTY'] = QIconWithFilename('{0}{1}nagstamon_systrayicon_empty.svg'.format(RESOURCES, os.sep))
+        self.icons['EMPTY'] = QIconWithFilename(f'{RESOURCES}{sep}nagstamon_systrayicon_empty.svg')
         # little workaround to match statuswindow.worker_notification.worst_notification_status
         self.icons['UP'] = self.icons['OK']
         # default icon is OK
@@ -67,7 +85,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.timer = QTimer()
 
         # when there are new settings/colors recreate icons
-        dialogs.settings.changed.connect(self.create_icons)
+        #dialogs.settings.changed.connect(self.create_icons)
 
         # treat clicks
         self.activated.connect(self.icon_clicked)
@@ -100,7 +118,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         """
             create icons from template, applying colors
         """
-        svg_template = '{0}{1}nagstamon_systrayicon_template.svg'.format(RESOURCES, os.sep)
+        svg_template = f'{RESOURCES}{sep}nagstamon_systrayicon_template.svg'
         # get template from file
         # by using RESOURCE_FILES the file path will be checked on macOS and the file restored if necessary
         with open(resource_files[svg_template]) as svg_template_file:
@@ -187,7 +205,7 @@ class SystemTrayIcon(QSystemTrayIcon):
             # store current icon to get it reset back
             if self.current_icon is None:
                 if not self.error_shown:
-                    self.current_icon = self.icons[statuswindow.worker_notification.get_worst_notification_status()]
+                    self.current_icon = self.icons[status_window_properties.worst_notification_status]
                 else:
                     self.current_icon = self.icons['ERROR']
             # use empty SVG icon to display emptiness
@@ -209,7 +227,7 @@ class SystemTrayIcon(QSystemTrayIcon):
                 # even later call itself to invert colors as flash
                 self.timer.singleShot(500, self.flash)
             except:
-                traceback.print_exc(file=sys.stdout)
+                print_exc(file=stdout)
         else:
             if self.current_icon is not None:
                 self.setIcon(self.current_icon)
