@@ -9,3 +9,4 @@
 - [ ] normal-light activated server in settings dialog when opening settings
 - [ ] spaceless comments
 - [ ] shrink statuswindow when less alerts being active
+- [ ] debug_queue not in config.py?

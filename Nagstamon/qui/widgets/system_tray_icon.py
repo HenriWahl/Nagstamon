@@ -85,6 +85,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.timer = QTimer()
 
         # when there are new settings/colors recreate icons
+        # TODO: already kicked to qui/__init__.py, check if it works
         #dialogs.settings.changed.connect(self.create_icons)
 
         # treat clicks

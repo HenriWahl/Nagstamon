@@ -3760,5 +3760,6 @@ dialogs.settings.server_deleted.connect(statuswindow.worker.debug_loop)
 dialogs.settings.changed.connect(check_servers.check)
 dialogs.settings.changed.connect(statuswindow.label_all_ok.set_color)
 dialogs.settings.cancelled.connect(check_servers.check)
+
 # when there are new settings/colors recreate icons
 dialogs.settings.changed.connect(systrayicon.create_icons)
