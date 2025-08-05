@@ -39,6 +39,7 @@ from Nagstamon.qui.widgets.button import (Button,
                                           PushButtonHamburger)
 from Nagstamon.qui.widgets.draggables import DraggableLabel
 from Nagstamon.qui.widgets.layout import HBoxLayout
+from Nagstamon.qui.widgets.menu import MenuAtCursor
 from Nagstamon.qui.widgets.top_area_widgets import (ComboBoxServers,
                                                     NagstamonLogo)
 
@@ -110,7 +111,6 @@ class TopArea(QWidget):
         """
         create icons from template, applying colors
         """
-
         # get rgb values of current foreground color to be used for SVG icons (menu)
         r, g, b, a = app.palette().color(QPalette.ColorRole.Text).getRgb()
 
