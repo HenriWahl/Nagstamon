@@ -52,7 +52,7 @@ from Nagstamon.qui.globals import (dbus_connection,
                                    font,
                                    font_default,
                                    font_icons,
-                                   statuswindow_properties)
+                                   status_window_properties)
 from Nagstamon.qui.helpers import (create_brushes,
                                    check_servers,
                                    hide_macos_dock_icon)
@@ -62,11 +62,16 @@ from Nagstamon.qui.widgets.button import (Button,
 from Nagstamon.qui.widgets.dialogs import dialogs
 from Nagstamon.qui.widgets.dialogs import Dialog
 from Nagstamon.qui.widgets.dialogs.check_version import CheckVersion
+from Nagstamon.qui.widgets.draggables import (DraggableLabel,
+                                              DraggableWidget)
 from Nagstamon.qui.widgets.icon import QIconWithFilename
 from Nagstamon.qui.widgets.label_all_ok import LabelAllOK
 from Nagstamon.qui.widgets.layout import HBoxLayout
 from Nagstamon.qui.widgets.menu import MenuAtCursor
-
+from Nagstamon.qui.widgets.toparea_widgets import (ClosingLabel,
+                                                   ComboBoxServers,
+                                                   NagstamonLogo,
+                                                   PushButtonBrowserURL)
 # for details of imports look into qt.py
 from Nagstamon.qui.qt import *
 
@@ -123,7 +128,7 @@ if OS == OS_MACOS:
 QFontDatabase.addApplicationFont('{0}{1}nagstamon.ttf'.format(RESOURCES, os.sep))
 
 # always stay in normal weight without any italic
-#ICONS_FONT = QFont('Nagstamon', FONT.pointSize() + 2, QFont.Weight.Normal, False)
+# ICONS_FONT = QFont('Nagstamon', FONT.pointSize() + 2, QFont.Weight.Normal, False)
 
 # set style for tooltips globally - to sad not all properties can be set here
 app.setStyleSheet('''QToolTip { margin: 3px;
@@ -270,7 +275,7 @@ class SystemTrayIcon(QSystemTrayIcon):
                         self.show_popwin.emit()
             else:
                 # show status window if there is something to tell
-                if statuswindow_properties.is_shown:
+                if status_window_properties.is_shown:
                     self.hide_popwin.emit()
                 else:
                     self.show_popwin.emit()
@@ -449,235 +454,6 @@ class MenuContextSystrayicon(MenuContext):
             self.action_status.triggered.connect(statuswindow.show_window_systrayicon)
             self.insertAction(self.action_refresh, self.action_status)
             self.insertSeparator(self.action_refresh)
-
-
-# ##class PushButton_BrowserURL(QPushButton):
-class PushButton_BrowserURL(Button):
-    """
-    QPushButton for ServerVBox which opens certain URL if clicked
-    """
-
-    def __init__(self, text='', parent=None, server=None, url_type=''):
-        Button.__init__(self, text, parent=parent)
-        self.server = server
-        self.url_type = url_type
-
-    @Slot()
-    def open_url(self):
-        """
-            open URL from BROWSER_URLS in webbrowser
-        """
-        # BROWSER_URLS come with $MONITOR$ instead of real monitor url - heritage from actions
-        url = self.server.BROWSER_URLS[self.url_type]
-        url = url.replace('$MONITOR$', self.server.monitor_url)
-        url = url.replace('$MONITOR-CGI$', self.server.monitor_cgi_url)
-
-        if conf.debug_mode:
-            self.server.debug(server=self.server.get_name(), debug='Open {0} web page {1}'.format(self.url_type, url))
-
-        # use Python method to open browser
-        webbrowser_open(url)
-
-        # hide statuswindow to get screen space for browser
-        if not conf.fullscreen and not conf.windowed:
-            statuswindow.hide_window()
-
-
-class ComboBox_Servers(QComboBox):
-    """
-    combobox which does lock statuswindow so it does not close when opening combobox
-    """
-    monitor_opened = Signal()
-
-    # flag to avoid silly focusOutEvent
-    freshly_opened = False
-
-    def __init__(self, parent=None):
-        QComboBox.__init__(self, parent=parent)
-        # react to clicked monitor
-        self.activated.connect(self.response)
-
-    def mousePressEvent(self, event):
-        # first click opens combobox popup
-        self.freshly_opened = True
-        # tell status window that there is no combobox anymore
-        self.showPopup()
-
-    def fill(self):
-        """
-        fill default order fields combobox with server names
-        """
-        self.clear()
-        self.addItem('Go to monitor...')
-        self.addItems(sorted([x.name for x in conf.servers.values() if x.enabled], key=str.lower))
-
-    @Slot()
-    def response(self):
-        """
-        respnose to activated item in servers combobox
-        """
-        if self.currentText() in servers:
-            # open webbrowser with server URL
-            webbrowser_open(servers[self.currentText()].monitor_url)
-
-            # hide window to make room for webbrowser
-            self.monitor_opened.emit()
-
-        self.setCurrentIndex(0)
-
-
-class DraggableWidget(QWidget):
-    """
-    used to give various toparea and statusbar widgets draggability
-    """
-    # yell if statusbar is moved
-    window_moved = Signal()
-
-    # needed for popup after hover
-    mouse_entered = Signal()
-
-    # needed for popup after click
-    mouse_pressed = Signal()
-    mouse_released = Signal()
-
-    # keep state of right button pressed to avoid dragging and
-    # unwanted repositioning of statuswindow
-    right_mouse_button_pressed = False
-
-    # Maybe due to the later mixin usage, but somehow the pyqtSlot decorator is ignored here when used by NagstamonLogo
-    # and DraggableLabel
-    # @Slot(QMenu)
-
-    def __init__(self, parent=None):
-        QWidget.__init__(self, parent=parent)
-        self.parent_widget = self.parent()
-
-    def set_menu(self, menu):
-        self.menu = menu
-
-    def mousePressEvent(self, event):
-        """
-        react differently to mouse button presses:
-        1 - left button, move window
-        2 - right button, popup menu
-        """
-
-        if event.button() == Qt.MouseButton.LeftButton:
-            self.mouse_pressed.emit()
-        if event.button() == Qt.MouseButton.RightButton:
-            self.right_mouse_button_pressed = True
-
-        # keep x and y relative to statusbar
-        # if not set calculate relative position
-        if not statuswindow_properties.relative_x and \
-                not statuswindow_properties.relative_y:
-            # Qt5 & Qt6 have different methods for getting the global position so take it from qt.py
-            global_position = get_global_position(event)
-            #statuswindow_properties.relative_x = global_position.x() - self.parent.x()
-            statuswindow_properties.relative_x = global_position.x() - self.parent_widget.x()
-            statuswindow_properties.relative_y = global_position.y() - self.parent_widget.y()
-
-    def mouseReleaseEvent(self, event):
-        """
-        decide if moving or menu should be treated after mouse button was released
-        """
-        if event.button() == Qt.MouseButton.LeftButton:
-            # if popup window should be closed by clicking do it now
-            if statuswindow_properties.is_shown and \
-                    (conf.close_details_clicking or
-                     conf.close_details_clicking_somewhere) and \
-                    not conf.fullscreen and not conf.windowed:
-                statuswindow_properties.is_hiding_timestamp = time.time()
-                # TODO: shall become a signal
-                self.parent_widget.hide_window()
-            elif not statuswindow_properties.is_shown:
-                self.mouse_released.emit()
-
-            # reset all helper values
-            statuswindow_properties.relative_x = False
-            statuswindow_properties.relative_y = False
-            statuswindow_properties.moving = False
-
-        if event.button() == Qt.MouseButton.RightButton:
-            self.right_mouse_button_pressed = False
-            self.menu.show_at_cursor()
-
-    def mouseMoveEvent(self, event):
-        """
-        do the moving action
-        """
-        # if window should close when being clicked it might be problematic if it
-        # will be moved unintendedly so try to filter this events out by waiting 0.5 seconds
-        if not (conf.close_details_clicking and
-                statuswindow_properties.is_shown and
-                statuswindow_properties.is_shown_timestamp + 0.5 < time.time()):
-            if not conf.fullscreen and not conf.windowed and not self.right_mouse_button_pressed:
-                # Qt5 & Qt6 have different methods for getting the global position so take it from qt.py
-                global_position = get_global_position(event)
-                # lock window as moving
-                # if not set calculate relative position
-                if not statuswindow_properties.relative_x and not statuswindow_properties.relative_y:
-                    statuswindow_properties.relative_x = global_position.x() - self.parent_widget.x()
-                    statuswindow_properties.relative_y = global_position.y() - self.parent_widget.y()
-                statuswindow_properties.moving = True
-                # TODO: shall become a signal
-                self.parent_widget.move(int(global_position.x() - statuswindow_properties.relative_x),
-                                  int(global_position.y() - statuswindow_properties.relative_y))
-
-            # needed for OSX - otherwise statusbar stays blank while moving
-            # TODO: make a signal call of it
-            self.parent_widget.update()
-
-            self.window_moved.emit()
-
-    def enterEvent(self, event):
-        """
-        tell the world that mouse entered the widget - interesting for hover popup and only if toparea hasn't been
-        clickend a moment ago
-        """
-        if statuswindow_properties.is_shown is False and \
-                statuswindow_properties.is_hiding_timestamp + 0.2 < time.time():
-            self.mouse_entered.emit()
-
-
-class DraggableLabel(QLabel, DraggableWidget):
-    """
-    label with dragging capabilities used by toparea
-    """
-    # yell if statusbar is moved
-    window_moved = Signal()
-
-    # needed for popup after hover
-    mouse_entered = Signal()
-
-    # needed for popup after click
-    mouse_pressed = Signal()
-    mouse_released = Signal()
-
-    def __init__(self, text='', parent=None):
-        QLabel.__init__(self, text, parent=parent)
-        DraggableWidget.__init__(self, parent=parent)
-
-
-class ClosingLabel(QLabel):
-    """
-    modified QLabel which might close the statuswindow if leftclicked
-    """
-
-    def __init__(self, text='', parent=None):
-        QLabel.__init__(self, text, parent=parent)
-
-    def mouseReleaseEvent(self, event):
-        """
-        left click and configured close-if-clicking-somewhere makes statuswindow close
-        """
-        if event.button() == Qt.MouseButton.LeftButton and conf.close_details_clicking_somewhere:
-            # if popup window should be closed by clicking do it now
-            if statuswindow_properties.is_shown and \
-                    not conf.fullscreen and \
-                    not conf.windowed:
-                statuswindow_properties.is_hiding_timestamp = time.time()
-                statuswindow.hide_window()
 
 
 class StatusWindow(QWidget):
@@ -877,31 +653,31 @@ class StatusWindow(QWidget):
         create_brushes()
 
         # needed for moving the statuswindow
-        statuswindow_properties.moving = False
-        statuswindow_properties.relative_x = False
-        statuswindow_properties.relative_y = False
+        status_window_properties.moving = False
+        status_window_properties.relative_x = False
+        status_window_properties.relative_y = False
 
         # helper values for QTimer.singleShot move attempt
         self.move_to_x = self.move_to_y = 0
 
         # stored x y values for systemtray icon
-        statuswindow_properties.icon_x = 0
-        statuswindow_properties.icon_y = 0
+        status_window_properties.icon_x = 0
+        status_window_properties.icon_y = 0
 
         # flag to mark if window is shown or not
         if conf.windowed:
-            statuswindow_properties.is_shown = True
+            status_window_properties.is_shown = True
         else:
-            statuswindow_properties.is_shown = False
+            status_window_properties.is_shown = False
 
         # store show_window timestamp to avoid flickering window in KDE5 with systray
-        statuswindow_properties.is_shown_timestamp = time.time()
+        status_window_properties.is_shown_timestamp = time.time()
 
         # store timestamp to avoid reappearing window shortly after clicking onto toparea
-        statuswindow_properties.is_hiding_timestamp = time.time()
+        status_window_properties.is_hiding_timestamp = time.time()
 
         # if status_ok is true no server_vboxes are needed
-        statuswindow_properties.status_ok = True
+        status_window_properties.status_ok = True
 
         # timer for waiting to set is_shown flag
         self.timer = QTimer(self)
@@ -1254,10 +1030,10 @@ class StatusWindow(QWidget):
         """
         handle clicks onto systray icon
         """
-        if not statuswindow_properties.is_shown:
+        if not status_window_properties.is_shown:
             # under unfortunate circumstances statusbar might have the the moving flag true
             # fix it here because it makes no sense but might cause non-appearing statuswindow‚
-            statuswindow_properties.moving = False
+            status_window_properties.moving = False
 
             # already show here because was closed before in hide_window()
             # best results achieved when doing .show() before .show_window()
@@ -1272,22 +1048,22 @@ class StatusWindow(QWidget):
             used to show status window when its appearance is triggered, also adjusts geometry
         """
         # do not show up when being dragged around
-        if not statuswindow_properties.moving:
+        if not status_window_properties.moving:
             # check if really all is OK
             for vbox in self.servers_vbox.children():
                 if vbox.server.all_ok and \
                         vbox.server.status == '' and \
                         not vbox.server.refresh_authentication and \
                         not vbox.server.tls_error:
-                    statuswindow_properties.status_ok = True
+                    status_window_properties.status_ok = True
                 else:
-                    statuswindow_properties.status_ok = False
+                    status_window_properties.status_ok = False
                     break
 
             # here we should check if scroll_area should be shown at all
-            if not statuswindow_properties.status_ok:
+            if not status_window_properties.status_ok:
                 # store timestamp to avoid flickering as in https://github.com/HenriWahl/Nagstamon/issues/184
-                statuswindow_properties.is_shown_timestamp = time.time()
+                status_window_properties.is_shown_timestamp = time.time()
 
                 if not conf.fullscreen and not conf.windowed:
                     # attempt to avoid flickering on MacOSX - already hide statusbar here
@@ -1369,7 +1145,7 @@ class StatusWindow(QWidget):
             # causes trouble in Wayland so is disabled for it
             if conf.close_details_hover and \
                     conf.statusbar_floating and \
-                    statuswindow_properties.is_shown and \
+                    status_window_properties.is_shown and \
                     not DESKTOP_WAYLAND:
                 self.periodically_check_window_under_mouse_and_hide()
 
@@ -1388,7 +1164,7 @@ class StatusWindow(QWidget):
         # Check mouse cursor over window and an opened context menu or dropdown list
         if self.geometry().contains(mouse_pos.x(), mouse_pos.y()) or \
                 not app.activePopupWidget() is None or \
-                statuswindow_properties.is_shown:
+                status_window_properties.is_shown:
             return False
 
         self.hide_window()
@@ -1399,9 +1175,9 @@ class StatusWindow(QWidget):
         """
             redraw window content, to be effective only when window is shown
         """
-        if statuswindow_properties.is_shown or \
+        if status_window_properties.is_shown or \
                 conf.fullscreen or \
-                (conf.windowed and statuswindow_properties.is_shown):
+                (conf.windowed and status_window_properties.is_shown):
             self.show_window()
 
     @Slot()
@@ -1411,13 +1187,13 @@ class StatusWindow(QWidget):
         """
         if not conf.fullscreen and not conf.windowed:
             # only hide if shown and not locked or if not yet hidden if moving
-            if statuswindow_properties.is_shown is True or \
-                    statuswindow_properties.is_shown is True and \
-                    statuswindow_properties.moving is True:
+            if status_window_properties.is_shown is True or \
+                    status_window_properties.is_shown is True and \
+                    status_window_properties.moving is True:
                 # only hide if shown at least a fraction of a second
                 # or has not been hidden a too short time ago
-                if statuswindow_properties.is_shown_timestamp + 0.5 < time.time() or \
-                        statuswindow_properties.is_hiding_timestamp + 0.2 < time.time():
+                if status_window_properties.is_shown_timestamp + 0.5 < time.time() or \
+                        status_window_properties.is_hiding_timestamp + 0.2 < time.time():
                     if conf.statusbar_floating:
                         self.statusbar.show()
                     self.toparea.hide()
@@ -1435,14 +1211,14 @@ class StatusWindow(QWidget):
                         self.close()
 
                     # switch off
-                    statuswindow_properties.is_shown = False
+                    status_window_properties.is_shown = False
 
                     # flag to reflect top-ness of window/statusbar
-                    statuswindow_properties.top = False
+                    status_window_properties.top = False
 
                     # reset icon x y
-                    statuswindow_properties.icon_x = 0
-                    statuswindow_properties.icon_y = 0
+                    status_window_properties.icon_x = 0
+                    status_window_properties.icon_y = 0
 
                     # tell the world that window goes down
                     self.hiding.emit()
@@ -1450,7 +1226,7 @@ class StatusWindow(QWidget):
                         self.hide()
 
                     # store time of hiding
-                    statuswindow_properties.is_hiding_timestamp = time.time()
+                    status_window_properties.is_hiding_timestamp = time.time()
 
                     self.move(self.stored_x, self.stored_y)
 
@@ -1459,7 +1235,7 @@ class StatusWindow(QWidget):
         """
         correct position if moving and cursor started outside statusbar
         """
-        if statuswindow_properties.moving:
+        if status_window_properties.moving:
             mouse_x = QCursor.pos().x()
             mouse_y = QCursor.pos().y()
             # when cursor is outside moved window correct the coordinates of statusbar/statuswindow
@@ -1468,8 +1244,8 @@ class StatusWindow(QWidget):
                 corrected_x = int(mouse_x - rect.width() // 2)
                 corrected_y = int(mouse_y - rect.height() // 2)
                 # calculate new relative values
-                statuswindow_properties.relative_x = mouse_x - corrected_x
-                statuswindow_properties.relative_y = mouse_y - corrected_y
+                status_window_properties.relative_x = mouse_x - corrected_x
+                status_window_properties.relative_y = mouse_y - corrected_y
                 statuswindow.move(corrected_x, corrected_y)
                 del (mouse_x, mouse_y, corrected_x, corrected_y)
 
@@ -1482,26 +1258,26 @@ class StatusWindow(QWidget):
             icon_x = systrayicon.geometry().x()
             icon_y = systrayicon.geometry().y()
             if OS in OS_NON_LINUX:
-                if statuswindow_properties.icon_x == 0:
-                    statuswindow_properties.icon_x = QCursor.pos().x()
+                if status_window_properties.icon_x == 0:
+                    status_window_properties.icon_x = QCursor.pos().x()
                 elif icon_x != 0:
-                    statuswindow_properties.icon_x = icon_x
+                    status_window_properties.icon_x = icon_x
             else:
                 # strangely enough on KDE the systray icon geometry gives back 0, 0 as coordinates
                 # also at Ubuntu Unity 16.04
-                if icon_x == 0 and statuswindow_properties.icon_x == 0:
-                    statuswindow_properties.icon_x = QCursor.pos().x()
+                if icon_x == 0 and status_window_properties.icon_x == 0:
+                    status_window_properties.icon_x = QCursor.pos().x()
                 elif icon_x != 0:
-                    statuswindow_properties.icon_x = icon_x
+                    status_window_properties.icon_x = icon_x
 
-            if icon_y == 0 and statuswindow_properties.icon_y == 0:
-                statuswindow_properties.icon_y = QCursor.pos().y()
+            if icon_y == 0 and status_window_properties.icon_y == 0:
+                status_window_properties.icon_y = QCursor.pos().y()
 
             if OS in OS_NON_LINUX:
-                if statuswindow_properties.icon_y == 0:
-                    statuswindow_properties.icon_y = QCursor.pos().y()
+                if status_window_properties.icon_y == 0:
+                    status_window_properties.icon_y = QCursor.pos().y()
                 elif icon_y != 0:
-                    statuswindow_properties.icon_y = icon_y
+                    status_window_properties.icon_y = icon_y
 
         # only consider offset if it is configured
         if conf.systray_offset_use and conf.icon_in_systray:
@@ -1525,19 +1301,19 @@ class StatusWindow(QWidget):
         # calculate top-ness only if window is closed
         if conf.statusbar_floating:
             if self.y() < self.get_screen().geometry().height() // 2 + available_y:
-                statuswindow_properties.top = True
+                status_window_properties.top = True
             else:
-                statuswindow_properties.top = False
+                status_window_properties.top = False
 
             # always take the stored position of the statusbar
             x = self.stored_x
 
         elif conf.icon_in_systray or conf.windowed:
-            if statuswindow_properties.icon_y < self.get_screen().geometry().height() // 2 + available_y:
-                statuswindow_properties.top = True
+            if status_window_properties.icon_y < self.get_screen().geometry().height() // 2 + available_y:
+                status_window_properties.top = True
             else:
-                statuswindow_properties.top = False
-            x = statuswindow_properties.icon_x
+                status_window_properties.top = False
+            x = status_window_properties.icon_x
 
         # get height from tablewidgets
         real_height = self.get_real_height()
@@ -1563,7 +1339,7 @@ class StatusWindow(QWidget):
 
         if conf.statusbar_floating:
             # when statusbar resides in uppermost part of current screen extend from top to bottom
-            if statuswindow_properties.top is True:
+            if status_window_properties.top is True:
                 y = self.y()
                 if self.y() + real_height < available_height + available_y:
                     height = real_height
@@ -1583,7 +1359,7 @@ class StatusWindow(QWidget):
 
         elif conf.icon_in_systray or conf.windowed:
             # when systrayicon resides in uppermost part of current screen extend from top to bottom
-            if statuswindow_properties.top is True:
+            if status_window_properties.top is True:
                 # when being top y is of course the available one
                 y = available_y
                 if self.y() + real_height < available_height + available_y:
@@ -1607,7 +1383,7 @@ class StatusWindow(QWidget):
         resize status window according to its new size
         """
         # store position for restoring it when hiding - only if not shown of course
-        if statuswindow_properties.is_shown is False:
+        if status_window_properties.is_shown is False:
             self.stored_x = self.x()
             self.stored_y = self.y()
             self.stored_width = self.width()
@@ -1649,7 +1425,7 @@ class StatusWindow(QWidget):
             if not conf.fullscreen and not conf.windowed:
                 self.adjusting_size_lock = True
                 # fully displayed statuswindow
-                if statuswindow_properties.is_shown is True:
+                if status_window_properties.is_shown is True:
                     width, height, x, y = self.calculate_size()
                     self.adjust_dummy_columns()
                 else:
@@ -1700,7 +1476,7 @@ class StatusWindow(QWidget):
         """
             store position for restoring it when hiding
         """
-        if not statuswindow_properties.is_shown:
+        if not status_window_properties.is_shown:
             self.stored_x = self.x()
             self.stored_y = self.y()
             self.stored_width = self.width()
@@ -1724,7 +1500,7 @@ class StatusWindow(QWidget):
         if conf.close_details_hover and \
                 not conf.fullscreen and \
                 not conf.windowed and \
-                statuswindow_properties.is_shown_timestamp + leave_time_offset < time.time():
+                status_window_properties.is_shown_timestamp + leave_time_offset < time.time():
             # only hide window if cursor is outside of it
             mouse_x = QCursor.pos().x()
             mouse_y = QCursor.pos().y()
@@ -1773,7 +1549,7 @@ class StatusWindow(QWidget):
         """
             might help to avoid flickering on MacOSX, in cooperation with QTimer
         """
-        statuswindow_properties.is_shown = True
+        status_window_properties.is_shown = True
 
     @Slot()
     def store_position_to_conf(self):
@@ -1927,7 +1703,6 @@ class StatusWindow(QWidget):
                 # nothing more to do
                 break
 
-
     class Worker(QObject):
         """
         run a thread, for example, for debugging
@@ -1986,7 +1761,6 @@ class StatusWindow(QWidget):
             else:
                 # set the flag to tell debug loop it should stop, please
                 self.debug_loop_looping = False
-
 
     class Worker_Notification(QObject):
 
@@ -2169,36 +1943,6 @@ class StatusWindow(QWidget):
                 hand over the current worst status notification
             """
             return self.worst_notification_status
-
-
-class NagstamonLogo(QSvgWidget, DraggableWidget):
-    """
-        SVG based logo, used for statusbar and toparea logos
-    """
-    # yell if statusbar is moved
-    window_moved = Signal()
-
-    # needed for popup after hover
-    mouse_entered = Signal()
-
-    # needed for popup after click
-    mouse_pressed = Signal()
-    mouse_released = Signal()
-
-    def __init__(self, file, width=None, height=None, parent=None):
-        QSvgWidget.__init__(self, parent=parent)
-        # either filepath or QByteArray for toparea logo
-        self.load(file)
-        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        # size needed for small Nagstamon logo in statusbar
-        if width is not None and height is not None:
-            self.setMinimumSize(width, height)
-            self.setMaximumSize(width, height)
-
-    def adjust_size(self, height=None, width=None):
-        if width is not None and height is not None:
-            self.setMinimumSize(width, height)
-            self.setMaximumSize(width, height)
 
 
 class StatusBar(QWidget):
@@ -2445,7 +2189,7 @@ class TopArea(QWidget):
         self.label_version = DraggableLabel(text=AppInfo.VERSION, parent=self)
         self.label_empty_space = DraggableLabel(text='', parent=self)
         self.label_empty_space.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Ignored)
-        self.combobox_servers = ComboBox_Servers(parent=self)
+        self.combobox_servers = ComboBoxServers(parent=self)
         self.button_filters = Button("Filters", parent=self)
         self.button_recheck_all = Button("Recheck all", parent=self)
         self.button_refresh = Button("Refresh", parent=self)
@@ -2537,8 +2281,8 @@ class TopArea(QWidget):
 
 class ServerStatusLabel(ClosingLabel):
     """
-        label for ServerVBox to show server connection state
-        extra class to apply simple slots for changing text or color
+    label for ServerVBox to show server connection state
+    extra class to apply simple slots for changing text or color
     """
 
     # storage for label text if it needs to be restored
@@ -2625,16 +2369,14 @@ class ServerVBox(QVBoxLayout):
         # self.label = QLabel(parent=parent)
         self.label = ClosingLabel(parent=parent)
         self.update_label()
-        self.button_monitor = PushButton_BrowserURL(text='Monitor', parent=parent, server=self.server,
-                                                    url_type='monitor')
-        self.button_hosts = PushButton_BrowserURL(text='Hosts', parent=parent, server=self.server, url_type='hosts')
-        self.button_services = PushButton_BrowserURL(text='Services', parent=parent, server=self.server,
-                                                     url_type='services')
-        self.button_history = PushButton_BrowserURL(text='History', parent=parent, server=self.server,
-                                                    url_type='history')
+        self.button_monitor = PushButtonBrowserURL(text='Monitor', parent=parent, server=self.server,
+                                                   url_type='monitor')
+        self.button_hosts = PushButtonBrowserURL(text='Hosts', parent=parent, server=self.server, url_type='hosts')
+        self.button_services = PushButtonBrowserURL(text='Services', parent=parent, server=self.server,
+                                                    url_type='services')
+        self.button_history = PushButtonBrowserURL(text='History', parent=parent, server=self.server,
+                                                   url_type='history')
         self.button_edit = Button('Edit', parent=parent)
-
-        # .setAttribute(Qt.WidgetAttribute.WA_LayoutUsesWidgetRect)
 
         # use label instead of spacer to be clickable
         self.label_stretcher = ClosingLabel('', parent=parent)
@@ -2808,7 +2550,7 @@ class ServerVBox(QVBoxLayout):
         """
         if not conf.fullscreen and not conf.windowed:
             statuswindow.hide_window()
-        dialogs.server.edit(server_name=self.server.name)
+        dialogs.server.edit(name=self.server.name)
 
     def authenticate_server(self):
         """
@@ -3727,7 +3469,7 @@ class TreeView(QTreeView):
         # avoid race condition when waiting for password dialog
         if statuswindow is not None:
             # do nothing if window is moving to avoid lagging movement
-            if not statuswindow_properties.moving:
+            if not status_window_properties.moving:
                 ## get_status table cells with new data by thread
                 # if len(self.model().data_array) > 0:
                 #    self.is_shown = True

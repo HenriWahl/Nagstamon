@@ -92,4 +92,4 @@ class StatusWindowProperties:
     status_ok: bool = True
     top: bool = False
 
-statuswindow_properties = StatusWindowProperties()
+status_window_properties = StatusWindowProperties()
