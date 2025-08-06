@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
-
+from copy import deepcopy
 from datetime import datetime
 from subprocess import Popen
 from sys import stdout
@@ -128,7 +128,9 @@ class TreeView(QTreeView):
         # set application font
         self.set_font()
         # change font if it has been changed by settings
-        dialogs.settings.changed.connect(self.set_font)
+        # TODO: find a way to connect the signals to the appropriate slots
+        #       maybe these connection requests could be sent as signals too?
+        #dialogs.settings.changed.connect(self.set_font)
 
         # action context menu
         self.action_menu = MenuAtCursor(parent=self)
@@ -189,17 +191,25 @@ class TreeView(QTreeView):
         self.worker_thread.start()
 
         # connect signal for acknowledge
-        dialogs.acknowledge.acknowledge.connect(self.worker.acknowledge)
+        # TODO: find a way to connect the signals to the appropriate slots
+        #       maybe these connection requests could be sent as signals too?
+        #dialogs.acknowledge.acknowledge.connect(self.worker.acknowledge)
 
         # connect signal to get start end time for downtime from worker
-        dialogs.downtime.get_start_end.connect(self.worker.get_start_end)
-        self.worker.set_start_end.connect(dialogs.downtime.set_start_end)
+        # TODO: find a way to connect the signals to the appropriate slots
+        #       maybe these connection requests could be sent as signals too?
+        #dialogs.downtime.get_start_end.connect(self.worker.get_start_end)
+        #self.worker.set_start_end.connect(dialogs.downtime.set_start_end)
 
         # connect signal for downtime
-        dialogs.downtime.downtime.connect(self.worker.downtime)
+        # TODO: find a way to connect the signals to the appropriate slots
+        #       maybe these connection requests could be sent as signals too?
+        #dialogs.downtime.downtime.connect(self.worker.downtime)
 
         # connect signal for submit check result
-        dialogs.submit.submit.connect(self.worker.submit)
+        # TODO: find a way to connect the signals to the appropriate slots
+        #       maybe these connection requests could be sent as signals too?
+        #dialogs.submit.submit.connect(self.worker.submit)
 
         # connect signal for recheck action
         self.recheck.connect(self.worker.recheck)
@@ -943,6 +953,10 @@ class TreeView(QTreeView):
 
             self.sort_column = sort_column
             self.sort_order = sort_order
+
+            #self.status_window = self.parentWidget()
+
+            pass
 
         @Slot()
         def get_status(self):

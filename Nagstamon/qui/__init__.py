@@ -71,6 +71,7 @@ from Nagstamon.qui.widgets.system_tray_icon import SystemTrayIcon
 from Nagstamon.qui.widgets.top_area import TopArea
 from Nagstamon.qui.widgets.top_area_widgets import (ComboBoxServers,
                                                     PushButtonBrowserURL)
+from Nagstamon.qui.widgets.treeview import TreeView
 from Nagstamon.qui.widgets.nagstamon_logo import NagstamonLogo
 from Nagstamon.qui.widgets.labels import ClosingLabel
 # for details of imports look into qt.py
@@ -1440,6 +1441,8 @@ class StatusWindow(QWidget):
         """
            run a thread for doing all notification stuff
         """
+
+        from Nagstamon.qui.globals import status_window_properties
 
         # tell statusbar labels to flash
         start_flash = Signal()
