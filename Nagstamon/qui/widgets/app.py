@@ -40,3 +40,4 @@ app = QApplication(argv)
 # might be mitigated with sometimes, so commented out now
 if OS == OS_WINDOWS and release() >= '11':
     app.setStyle('fusion')
+

@@ -17,7 +17,7 @@
 
 
 from Nagstamon.config import conf
-from Nagstamon.qui.widgets.dialogs.dialog import Dialog
+from Nagstamon.qui.dialogs.dialog import Dialog
 from Nagstamon.qui.qt import (QDateTime,
                               Signal)
 from Nagstamon.Servers import SERVER_TYPES

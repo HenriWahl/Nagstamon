@@ -96,5 +96,10 @@ class StatusWindowProperties:
     is_notifying: bool = False
     # current worst state worth a notification
     worst_notification_status: str = 'UP'
+    notfifying_server: str = ''
 
+# shared status window properties
 status_window_properties = StatusWindowProperties()
+
+# access to clipboard
+clipboard = app.clipboard()

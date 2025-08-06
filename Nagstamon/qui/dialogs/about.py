@@ -20,7 +20,7 @@ from platform import python_version
 
 from Nagstamon.config import (AppInfo,
                               RESOURCES)
-from Nagstamon.qui.widgets.dialogs.dialog import Dialog
+from Nagstamon.qui.dialogs.dialog import Dialog
 from Nagstamon.qui.qt import (QSvgWidget,
                               Qt,
                               QT_VERSION_STR)

@@ -22,7 +22,7 @@ from urllib.parse import quote
 from Nagstamon.Servers import SERVER_TYPES
 from Nagstamon.config import (Action,
                               conf)
-from Nagstamon.qui.widgets.dialogs.dialog import Dialog
+from Nagstamon.qui.dialogs.dialog import Dialog
 from Nagstamon.qui.qt import (QMessageBox,
                               Signal,
                               Slot)

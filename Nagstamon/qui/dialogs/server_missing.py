@@ -17,7 +17,7 @@
 
 from Nagstamon.qui.helpers import check_servers
 from Nagstamon.qui.qt import Slot
-from Nagstamon.qui.widgets.dialogs.dialog import Dialog
+from Nagstamon.qui.dialogs.dialog import Dialog
 
 
 class DialogServerMissing(Dialog):

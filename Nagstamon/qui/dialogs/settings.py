@@ -32,10 +32,8 @@ from Nagstamon.qui.constants import (COLORS,
                                      HEADERS_KEYS_HEADERS, HEADERS_HEADERS_KEYS)
 from Nagstamon.qui.globals import (dbus_connection,
                                    font,
-                                   font_default,
-                                   font_icons)
-from Nagstamon.qui.helpers import (create_brushes,
-                                   check_servers)
+                                   font_default)
+from Nagstamon.qui.helpers import (create_brushes)
 from Nagstamon.qui.qt import (Signal,
                               Slot,
                               QColor,
@@ -50,8 +48,8 @@ from Nagstamon.qui.qt import (Signal,
                               Qt,
                               QWidget)
 from Nagstamon.qui.widgets.app import app
-from Nagstamon.qui.widgets.dialogs.check_version import check_version
-from Nagstamon.qui.widgets.dialogs.dialog import Dialog
+from Nagstamon.qui.dialogs.check_version import check_version
+from Nagstamon.qui.dialogs.dialog import Dialog
 from Nagstamon.Servers import servers
 
 
@@ -818,7 +816,7 @@ class DialogSettings(Dialog):
             if mediaplayer.set_media(file) is True:
                 mediaplayer.play()
 
-        return (decoration_function)
+        return decoration_function
 
     @play_sound_file_decoration
     @Slot()
