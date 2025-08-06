@@ -21,6 +21,7 @@ import copy
 from copy import deepcopy
 import datetime
 import os
+from os import sep
 import os.path
 import platform
 import random
@@ -68,6 +69,7 @@ from Nagstamon.qui.widgets.icon import QIconWithFilename
 from Nagstamon.qui.widgets.label_all_ok import LabelAllOK
 from Nagstamon.qui.widgets.layout import HBoxLayout
 from Nagstamon.qui.widgets.menu import MenuAtCursor
+from Nagstamon.qui.widgets.statusbar import StatusBar
 from Nagstamon.qui.widgets.system_tray_icon import SystemTrayIcon
 from Nagstamon.qui.widgets.top_area import TopArea
 from Nagstamon.qui.widgets.top_area_widgets import (ClosingLabel,
@@ -106,12 +108,12 @@ from Nagstamon.helpers import (is_found_by_re,
 # needed to tell window manager via EWMH to keep Nagstamon window on all virtual desktops
 if OS not in OS_NON_LINUX and not DESKTOP_WAYLAND:
     # extract thirdparty path from resources path - make submodules accessible by thirdparty modules
-    THIRDPARTY = os.sep.join(RESOURCES.split(os.sep)[0:-1] + ['thirdparty'])
+    THIRDPARTY = sep.join(RESOURCES.split(sep)[0:-1] + ['thirdparty'])
     sys.path.insert(0, THIRDPARTY)
 
     # Xlib for EWMH needs the file ~/.Xauthority and crashes if it does not exist
-    if not os.path.exists(os.path.expanduser('~') + os.sep + '.Xauthority'):
-        open(os.path.expanduser('~') + os.sep + '.Xauthority', 'a').close()
+    if not os.path.exists(os.path.expanduser('~') + sep + '.Xauthority'):
+        open(os.path.expanduser('~') + sep + '.Xauthority', 'a').close()
 
     from Nagstamon.thirdparty.ewmh import EWMH
 
@@ -122,7 +124,7 @@ if OS == OS_MACOS:
                         NSApplicationPresentationHideDock)
 
 # add nagstamon.ttf with icons to fonts
-QFontDatabase.addApplicationFont('{0}{1}nagstamon.ttf'.format(RESOURCES, os.sep))
+QFontDatabase.addApplicationFont('{0}{1}nagstamon.ttf'.format(RESOURCES, sep))
 
 # always stay in normal weight without any italic
 # ICONS_FONT = QFont('Nagstamon', FONT.pointSize() + 2, QFont.Weight.Normal, False)
@@ -292,7 +294,7 @@ class StatusWindow(QWidget):
             self.setAttribute(Qt.WidgetAttribute.WA_MacAlwaysShowToolWindow)
 
         self.setWindowTitle(AppInfo.NAME)
-        self.setWindowIcon(QIcon('{0}{1}nagstamon.svg'.format(RESOURCES, os.sep)))
+        self.setWindowIcon(QIcon(f'{RESOURCES}{sep}nagstamon.svg'))
 
         self.vbox = QVBoxLayout(self)  # global VBox
         self.vbox.setSpacing(0)  # no spacing
@@ -1612,7 +1614,7 @@ class StatusWindow(QWidget):
                         if worst_status_diff in STATES_SOUND:
                             if conf.notification_default_sound:
                                 # default .wav sound files are in resources folder
-                                sound_file = '{0}{1}{2}.wav'.format(RESOURCES, os.sep, worst_status_diff.lower())
+                                sound_file = '{0}{1}{2}.wav'.format(RESOURCES, sep, worst_status_diff.lower())
                             elif conf.notification_custom_sound:
                                 sound_file = conf.__dict__[
                                     'notification_custom_sound_{0}'.format(worst_status_diff.lower())]
@@ -1728,230 +1730,6 @@ class StatusWindow(QWidget):
         #     hand over the current worst status notification
         #     """
         #     return self.worst_notification_status
-
-
-class StatusBar(QWidget):
-    """
-    status bar for short display of problems
-    """
-
-    # send signal to statuswindow
-    resize = Signal()
-
-    # needed to maintain flashing labels
-    labels_invert = Signal()
-    labels_reset = Signal()
-
-    def __init__(self, parent=None):
-        QWidget.__init__(self, parent=parent)
-
-        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-
-        self.hbox = HBoxLayout(spacing=0, parent=parent)
-        self.setLayout(self.hbox)
-
-        # define labels first to get their size for svg logo dimensions
-        self.color_labels = OrderedDict()
-        self.color_labels['OK'] = StatusBarLabel('OK', parent=parent)
-
-        for state in COLORS:
-            self.color_labels[state] = StatusBarLabel(state, parent=parent)
-            self.labels_invert.connect(self.color_labels[state].invert)
-            self.labels_reset.connect(self.color_labels[state].reset)
-
-        # label for error message(s)
-        self.label_message = StatusBarLabel('error', parent=parent)
-        self.labels_invert.connect(self.label_message.invert)
-        self.labels_reset.connect(self.label_message.reset)
-
-        # derive logo dimensions from status label
-        self.logo = NagstamonLogo('{0}{1}nagstamon_logo_bar.svg'.format(RESOURCES, os.sep),
-                                  self.color_labels['OK'].fontMetrics().height(),
-                                  self.color_labels['OK'].fontMetrics().height(),
-                                  parent=parent)
-
-        # add logo
-        self.hbox.addWidget(self.logo)
-
-        # label for error messages
-        self.hbox.addWidget(self.label_message)
-        self.label_message.hide()
-
-        # add state labels
-        self.hbox.addWidget(self.color_labels['OK'])
-        for state in COLORS:
-            self.hbox.addWidget(self.color_labels[state])
-
-        # when there are new settings/colors refresh labels
-        dialogs.settings.changed.connect(self.reset)
-
-        # when new setings are applied adjust font size
-        dialogs.settings.changed.connect(self.adjust_size)
-
-        # timer for singleshots for flashing
-        self.timer = QTimer()
-
-        self.adjust_size()
-
-    @Slot()
-    def summarize_states(self):
-        """
-            display summaries of states in statusbar
-        """
-        # initial zeros
-        for label in self.color_labels.values():
-            label.number = 0
-
-        # only count numbers of enabled monitor servers
-        for server in (filter(lambda s: s.enabled, servers.values())):
-            for state in COLORS:
-                self.color_labels[state].number += server.__dict__[state.lower()]
-
-        # summarize all numbers - if all_numbers keeps 0 everything seems to be OK
-        all_numbers = 0
-
-        # repaint colored labels or hide them if necessary
-        for label in self.color_labels.values():
-            if label.number == 0:
-                label.hide()
-            else:
-                label.setText(' '.join((str(label.number),
-                                        COLOR_STATE_NAMES[label.state][conf.long_display])))
-                label.show()
-                label.adjustSize()
-                all_numbers += label.number
-
-        if all_numbers == 0 and not get_errors() and not self.label_message.isVisible():
-            self.color_labels['OK'].show()
-            self.color_labels['OK'].adjustSize()
-        else:
-            self.color_labels['OK'].hide()
-
-        # fix size after refresh - better done here to avoid ugly artefacts
-        hint = self.sizeHint()
-        self.setMaximumSize(hint)
-        self.setMinimumSize(hint)
-        del hint
-        # tell statuswindow its size might be adjusted
-        self.resize.emit()
-
-    @Slot()
-    def flash(self):
-        """
-            send color inversion signal to labels
-        """
-        # only if currently a notification is necessary
-        if status_window_properties.is_notifying:
-            self.labels_invert.emit()
-            # fire up  a singleshot to reset color soon
-            self.timer.singleShot(500, self.reset)
-
-    @Slot()
-    def reset(self):
-        """
-            tell labels to set original colors
-        """
-        self.labels_reset.emit()
-        # only if currently a notification is necessary
-        if status_window_properties.is_notifying:
-            # even later call itself to invert colors as flash
-            self.timer.singleShot(500, self.flash)
-
-    @Slot()
-    def adjust_size(self):
-        """
-            apply new size of widgets, especially Nagstamon logo
-            run through all labels to the the max height in case not all labels
-            are shown at the same time - which is very likely the case
-        """
-        # take height for logo
-        # height = 0
-
-        # run through labels to set font and get height for logo
-        for label in self.color_labels.values():
-            label.setFont(font)
-        #    if label.fontMetrics().height() > height:
-        #        height = label.fontMetrics().height()
-
-        self.label_message.setFont(font)
-        height = self.label_message.sizeHint().height()
-
-        # adjust logo size to fit to label size - due to being a square height and width are the same
-        self.logo.adjust_size(height, height)
-
-        # avoid flickering/artefact by updating immediately
-        self.summarize_states()
-
-    @Slot(str)
-    def set_error(self, message):
-        """
-            display error message if any error exists
-        """
-        self.label_message.setText(message)
-        self.label_message.show()
-
-    @Slot()
-    def reset_error(self):
-        """
-            delete error message if there is no error
-        """
-        if not get_errors():
-            self.label_message.setText('')
-            self.label_message.hide()
-
-
-class StatusBarLabel(DraggableLabel):
-    """
-        one piece of the status bar labels for one state
-    """
-
-    # yell if statusbar is moved
-    window_moved = Signal()
-
-    # needed for popup after hover
-    mouse_entered = Signal()
-
-    # needed for popup after click
-    mouse_pressed = Signal()
-    mouse_released = Signal()
-
-    def __init__(self, state, parent=None):
-        DraggableLabel.__init__(self, parent=parent)
-        self.setStyleSheet('''padding-left: 1px;
-                              padding-right: 1px;
-                              color: %s; background-color: %s;'''
-                           % (conf.__dict__['color_%s_text' % (state.lower())],
-                              conf.__dict__['color_%s_background' % (state.lower())]))
-        # just let labels grow as much as they need
-        self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
-
-        # hidden per default
-        self.hide()
-
-        # default text - only useful in case of OK Label
-        self.setText(state)
-
-        # number of hosts/services of this state
-        self.number = 0
-
-        # store state of label to access long state names in .summarize_states()
-        self.state = state
-
-    @Slot()
-    def invert(self):
-        self.setStyleSheet('''padding-left: 1px;
-                              padding-right: 1px;
-                              color: %s; background-color: %s;'''
-                           % (conf.__dict__['color_%s_background' % (self.state.lower())],
-                              conf.__dict__['color_%s_text' % (self.state.lower())]))
-
-    @Slot()
-    def reset(self):
-        self.setStyleSheet('''padding-left: 1px;
-                              padding-right: 1px;
-                              color: %s; background-color: %s;'''
-                           % (conf.__dict__['color_%s_text' % (self.state.lower())],
-                              conf.__dict__['color_%s_background' % (self.state.lower())]))
 
 
 class ServerStatusLabel(ClosingLabel):
@@ -3763,3 +3541,9 @@ dialogs.settings.cancelled.connect(check_servers.check)
 
 # when there are new settings/colors recreate icons
 dialogs.settings.changed.connect(systrayicon.create_icons)
+
+# when there are new settings/colors refresh labels
+dialogs.settings.changed.connect(statuswindow.statusbar.reset)
+
+# when new setings are applied adjust font size
+dialogs.settings.changed.connect(statuswindow.statusbar.adjust_size)
