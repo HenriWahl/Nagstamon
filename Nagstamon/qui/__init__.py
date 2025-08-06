@@ -72,6 +72,7 @@ from Nagstamon.qui.widgets.layout import HBoxLayout
 from Nagstamon.qui.widgets.menu import (MenuAtCursor,
                                         MenuContext,
                                         MenuContextSystrayicon)
+from Nagstamon.qui.widgets.model import Model
 from Nagstamon.qui.widgets.statusbar import StatusBar
 from Nagstamon.qui.widgets.system_tray_icon import SystemTrayIcon
 from Nagstamon.qui.widgets.top_area import TopArea
@@ -105,7 +106,8 @@ from Nagstamon.helpers import (is_found_by_re,
                                resource_files,
                                STATES,
                                STATES_SOUND,
-                               SORT_COLUMNS_FUNCTIONS)
+                               SORT_COLUMNS_FUNCTIONS,
+                               urlify)
 
 # only on X11/Linux thirdparty path should be added because it contains the Xlib module
 # needed to tell window manager via EWMH to keep Nagstamon window on all virtual desktops
@@ -1853,111 +1855,6 @@ class ServerVBox(QVBoxLayout):
         dialogs.server.edit(server_name=self.server.name, show_options=True)
 
 
-class Model(QAbstractTableModel):
-    """
-    model for storing status data to be presented in Treeview-table
-    """
-
-    model_data_array_filled = Signal()
-
-    # list of lists for storage of status data
-    data_array = list()
-
-    # cache row and column count
-    row_count = 0
-    column_count = len(HEADERS_HEADERS)
-
-    # tell treeview if flags columns should be hidden or not
-    hosts_flags_column_needed = Signal(bool)
-    services_flags_column_needed = Signal(bool)
-
-    def __init__(self, server, parent=None):
-        QAbstractTableModel.__init__(self, parent=parent)
-        self.server = server
-
-    def rowCount(self, parent):
-        """
-        overridden method to get number of rows
-        """
-        return self.row_count
-
-    def columnCount(self, parent):
-        """
-        overridden method to get number of columns
-        """
-        return self.column_count
-
-    def headerData(self, column, orientation, role):
-        """
-        overridden method to get headers of columns
-        """
-        if role == Qt.ItemDataRole.DisplayRole:
-            return HEADERS_HEADERS[column]
-
-    @Slot(list, dict)
-    # @Slot(list)
-    def fill_data_array(self, data_array, info):
-        """
-        fill data_array for model
-        """
-        # tell treeview that model is about to change - necessary because
-        # otherwise new number of rows would not be applied
-        self.beginResetModel()
-
-        # first empty the data storage
-        del self.data_array[:]
-
-        # use delivered data array
-        self.data_array = data_array
-
-        # cache row_count
-        self.row_count = len(self.data_array)
-
-        # tell treeview if flags columns are needed
-        self.hosts_flags_column_needed.emit(info['hosts_flags_column_needed'])
-        self.services_flags_column_needed.emit(info['services_flags_column_needed'])
-
-        # new model applied
-        self.endResetModel()
-
-        self.model_data_array_filled.emit()
-
-    def data(self, index, role):
-        """
-        overridden method for data delivery for treeview
-        """
-        if role == Qt.ItemDataRole.DisplayRole:
-            return self.data_array[index.row()][index.column()]
-
-        elif role == Qt.ItemDataRole.ForegroundRole:
-            return self.data_array[index.row()][10]
-
-        elif role == Qt.ItemDataRole.BackgroundRole:
-            return self.data_array[index.row()][11]
-
-        elif role == Qt.ItemDataRole.FontRole:
-            if index.column() == 1:
-                return font_icons
-            elif index.column() == 3:
-                return font_icons
-            else:
-                return QVariant
-        # provide icons via Qt.UserRole
-        elif role == Qt.ItemDataRole.UserRole:
-            # depending on host or service column return host or service icon list
-            return self.data_array[index.row()][7 + index.column()]
-
-        elif role == Qt.ItemDataRole.ToolTipRole:
-            # only if tooltips are wanted show them, combining host + service + status_info
-            if conf.show_tooltips:
-                return '''<div style=white-space:pre;margin:3px;><b>{0}: {1}</b></div>
-                             {2}'''.format(self.data_array[index.row()][0],
-                                           self.data_array[index.row()][2],
-                                           self.data_array[index.row()][8])
-            else:
-                return QVariant
-
-
 class TreeView(QTreeView):
     """
     attempt to get a less resource-hungry table/tree
@@ -1993,7 +1890,7 @@ class TreeView(QTreeView):
         self.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
-        # disable space at the left side
+        # disable space on the left side
         self.setRootIsDecorated(False)
         self.setIndentation(0)
 
@@ -2142,10 +2039,6 @@ class TreeView(QTreeView):
         """
         height = 0
 
-        mddl = self.model()
-
-        rwcnt = mddl.rowCount(self)
-
         # only count if there is anything to display - there is no use of the headers only
         if self.model().rowCount(self) > 0:
             # height summary starts with headers' height
@@ -2162,7 +2055,7 @@ class TreeView(QTreeView):
         # avoid the last dummy column to be counted
         for column in range(len(HEADERS) - 1):
             width += self.columnWidth(column)
-        return (width)
+        return width
 
     @Slot()
     def adjust_table(self):
@@ -2274,7 +2167,7 @@ class TreeView(QTreeView):
                     miserable_attempt = self.model().data_array[lrow][7]
                     miserable_status_information = self.model().data_array[lrow][8]
                     # check if clicked line is a service or host
-                    # if it is check if the action is targeted on hosts or services
+                    # it is checked if the action is targeted on hosts or services
                     if miserable_service:
                         if action.filter_target_service is True:
                             # only check if there is some to check
@@ -2331,10 +2224,10 @@ class TreeView(QTreeView):
                                                   action.re_host_reverse):
                                     item_visible_temporary = True
                             else:
-                                # a non specific action will be displayed per default
+                                # a non-specific action will be displayed per default
                                 item_visible_temporary = True
 
-                    # when item_visible never has been set it shall be false
+                    # when item_visible has never been set it shall be false
                     # also if at least one row leads to not-showing the item it will be false
                     if item_visible_temporary and item_visible is None:
                         item_visible = True
@@ -2345,7 +2238,7 @@ class TreeView(QTreeView):
                 item_visible = False
 
             # populate context menu with service actions
-            if item_visible is True:
+            if item_visible:
                 # create action
                 action_menuentry = QAction(a, self)
                 # add action
@@ -2445,6 +2338,7 @@ class TreeView(QTreeView):
 
             # if action wants a closed status window it should be closed now
             if conf.actions[action].close_popwin and not conf.fullscreen and not conf.windowed:
+                # TODO: shall become a signal to statuswindow
                 statuswindow.hide_window()
 
         # clean up
@@ -2777,7 +2671,7 @@ class TreeView(QTreeView):
     @Slot()
     def finish_worker_thread(self):
         """
-        attempt to shutdown thread cleanly
+        attempt to shut down thread cleanly
         """
         # tell thread to quit
         self.worker_thread.quit()
@@ -2878,7 +2772,7 @@ class TreeView(QTreeView):
                         # tell statusbar there is no error
                         self.hide_error.emit()
                     else:
-                        # try to display some more user friendly error description
+                        # try to display some more user-friendly error description
                         if self.server.status_code == 404:
                             self.change_label_status.emit('Monitor URL not valid', 'critical')
                         elif status.error.startswith('requests.exceptions.ConnectTimeout'):
@@ -3224,7 +3118,7 @@ class TreeView(QTreeView):
                         string = string.replace('$TRANSID$', transid).replace(' ', '+')
                     else:
                         # make string ready for URL
-                        string = self._URLify(string)
+                        string = urlify(string)
                     # debug
                     if conf.debug_mode is True:
                         self.server.debug(server=self.server.name, host=info['host'], service=info['service'],
@@ -3233,7 +3127,7 @@ class TreeView(QTreeView):
                 # used for example by Op5Monitor.py
                 elif action['type'] == 'url-post':
                     # make string ready for URL
-                    string = self._URLify(string)
+                    string = urlify(string)
                     # debug
                     if conf.debug_mode is True:
                         self.server.debug(server=self.server.name, host=info['host'], service=info['service'],
@@ -3245,13 +3139,6 @@ class TreeView(QTreeView):
 
             except Exception:
                 traceback.print_exc(file=sys.stdout)
-
-        def _URLify(self, string):
-            """
-                return a string that fulfills requirements for URLs
-                exclude several chars
-            """
-            return quote(string, ":/=?&@+")
 
         @Slot()
         def unfresh_event_history(self):

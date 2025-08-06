@@ -21,6 +21,8 @@ import datetime
 import getpass
 from glob import glob
 import os
+from urllib.parse import quote
+
 import psutil
 from pathlib import Path
 import platform
@@ -473,6 +475,15 @@ def get_distro():
         # fix for non-working build on Debian<10
         dist_name, dist_version, dist_id = platform.dist()
         return dist_name.lower(), dist_version, dist_id
+
+
+def urlify(self, string):
+    """
+    return a string that fulfills requirements for URLs
+    exclude several chars
+    """
+    return quote(string, ":/=?&@+")
+
 
 # depending on column different functions have to be used
 # 0 + 1 are column "Hosts", 1 + 2 are column "Service" due to extra font flag pictograms
