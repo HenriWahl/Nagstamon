@@ -166,7 +166,7 @@ class TreeView(QTreeView):
         # a thread + worker is necessary to get new monitor server data in the background and
         # to refresh the table cell by cell after new data is available
         self.worker_thread = QThread(parent=self)
-        self.worker = self.Worker(server=server, sort_column=self.sort_column, sort_order=self.sort_order)
+        self.worker = self.Worker(server=server, sort_column=self.sort_column, sort_order=self.sort_order, status_window=self.status_window)
         self.worker.moveToThread(self.worker_thread)
 
         # if worker got new status data from monitor server get_status
@@ -944,7 +944,7 @@ class TreeView(QTreeView):
         # keep track of action menu being shown or not to avoid refresh while selecting multiple items
         # action_menu_shown = False
 
-        def __init__(self, parent=None, server=None, sort_column=0, sort_order=0):
+        def __init__(self, parent=None, server=None, sort_column=0, sort_order=0, status_window=None):
             QObject.__init__(self)
             self.server = server
             # needed for update interval
@@ -954,9 +954,7 @@ class TreeView(QTreeView):
             self.sort_column = sort_column
             self.sort_order = sort_order
 
-            #self.status_window = self.parentWidget()
-
-            pass
+            self.status_window = status_window
 
         @Slot()
         def get_status(self):

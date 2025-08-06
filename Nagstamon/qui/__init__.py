@@ -273,7 +273,7 @@ class StatusWindow(QWidget):
 
         # worker and thread duo needed for notifications
         self.worker_notification_thread = QThread(parent=self)
-        self.worker_notification = self.Worker_Notification()
+        self.worker_notification = self.Worker_Notification(status_window_properties)
 
         # clean shutdown of thread
         self.worker_notification.finish.connect(self.finish_worker_notification_thread)
@@ -1442,9 +1442,7 @@ class StatusWindow(QWidget):
            run a thread for doing all notification stuff
         """
 
-        from Nagstamon.qui.globals import status_window_properties
-
-        # tell statusbar labels to flash
+       # tell statusbar labels to flash
         start_flash = Signal()
         stop_flash = Signal()
 
@@ -1464,8 +1462,9 @@ class StatusWindow(QWidget):
         # send signal if ready to stop
         finish = Signal()
 
-        def __init__(self):
+        def __init__(self, status_window_properties = None):
             QObject.__init__(self)
+            self.status_window_properties = status_window_properties
 
         @Slot(str, str, str)
         def start(self, server_name, worst_status_diff, worst_status_current):
@@ -1475,15 +1474,15 @@ class StatusWindow(QWidget):
             if conf.notification:
                 # only if not notifying yet or the current state is worse than the prior AND
                 # only when the current state is configured to be honking about
-                if (STATES.index(worst_status_diff) > STATES.index(status_window_properties.worst_notification_status) or
-                    status_window_properties.is_notifying is False) and \
+                if (STATES.index(worst_status_diff) > STATES.index(self.status_window_properties.worst_notification_status) or
+                    self.status_window_properties.is_notifying is False) and \
                         conf.__dict__[f'notify_if_{worst_status_diff.lower()}'] is True:
                     # keep last worst state worth a notification for comparison 3 lines above
-                    status_window_properties.worst_notification_status = worst_status_diff
+                    self.status_window_properties.worst_notification_status = worst_status_diff
                     # set flag to avoid innecessary notification
-                    status_window_properties.is_notifying = True
-                    if status_window_properties == '':
-                        status_window_properties = server_name
+                    self.status_window_properties.is_notifying = True
+                    if self.status_window_properties == '':
+                        status_window_properties.notfifying_server = server_name
 
                     # flashing statusbar
                     if conf.notification_flashing:
