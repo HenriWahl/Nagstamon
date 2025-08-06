@@ -15,11 +15,16 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-from Nagstamon.qui.qt import (QMenu, \
+from Nagstamon.config import (conf,
+                              OS,
+                              OS_MACOS)
+from Nagstamon.qui.qt import (QAction,
+                              QMenu, \
                               QCursor,
                               QPoint,
                               Signal,
                               Slot)
+from Nagstamon.Servers import servers
 
 
 class MenuAtCursor(QMenu):
@@ -58,3 +63,114 @@ class MenuAtCursor(QMenu):
         # tell world that menu will be closed
         self.is_shown.emit(False)
         del (x, y)
+
+class MenuContext(MenuAtCursor):
+    """
+    class for universal context menu, used at systray icon and hamburger menu
+    """
+
+    menu_ready = Signal(QMenu)
+
+    def __init__(self, parent=None):
+        MenuAtCursor.__init__(self, parent=parent)
+
+        self.status_window = self.parentWidget()
+
+        # connect all relevant widgets which should show the context menu
+        for widget in [self.status_window.toparea.button_hamburger_menu,
+                       self.status_window.toparea.label_version,
+                       self.status_window.toparea.label_empty_space,
+                       self.status_window.toparea.logo,
+                       self.status_window.statusbar.logo,
+                       self.status_window.statusbar.label_message]:
+            self.menu_ready.connect(widget.set_menu)
+
+        for color_label in self.status_window.statusbar.color_labels.values():
+            self.menu_ready.connect(color_label.set_menu)
+
+        self.initialize()
+
+    @Slot()
+    def initialize(self):
+        """
+        add actions and servers to menu
+        """
+
+        # first clear to get rid of old servers
+        self.clear()
+
+        self.action_refresh = QAction('Refresh', self)
+        self.action_refresh.triggered.connect(self.status_window.refresh)
+        self.addAction(self.action_refresh)
+
+        self.action_recheck = QAction('Recheck all', self)
+        self.action_recheck.triggered.connect(self.status_window.recheck_all)
+        self.addAction(self.action_recheck)
+
+        self.addSeparator()
+
+        # dict to hold all servers - more flexible this way
+        self.action_servers = dict()
+
+        # connect every server to its monitoring webpage
+        for server in sorted([x.name for x in conf.servers.values() if x.enabled], key=str.lower):
+            self.action_servers[server] = QAction(server, self)
+            self.action_servers[server].triggered.connect(servers[server].open_monitor_webpage)
+            self.addAction(self.action_servers[server])
+
+        self.addSeparator()
+
+        self.action_settings = QAction('Settings...', self)
+        self.addAction(self.action_settings)
+
+        self.action_save_position = QAction('Save position', self)
+        if conf.statusbar_floating:
+            self.addAction(self.action_save_position)
+
+        self.addSeparator()
+
+        self.action_about = QAction('About...', self)
+        self.addAction(self.action_about)
+        self.action_exit = QAction('Exit', self)
+        self.action_exit.triggered.connect(exit)
+        self.addAction(self.action_exit)
+
+        # tell all widgets to use the new menu
+        self.menu_ready.emit(self)
+
+
+class MenuContextSystrayicon(MenuContext):
+    """
+    Necessary for Ubuntu 16.04 new Qt5-Systray-AppIndicator meltdown
+    Maybe in general a good idea to offer status window popup here
+    """
+
+    def __init__(self, parent=None):
+        """
+        clone of normal MenuContext which serves well in all other places
+        but no need of signal/slots initialization
+        """
+        QMenu.__init__(self, parent=parent)
+
+        self.status_window = self.parentWidget()
+
+        # initialize as default + extra
+        self.initialize()
+
+        # done in qui/__init__.py
+        # self.menu_ready.connect(systrayicon.set_menu)
+        # TODO: check if this is a good place her for emitting - may lead to a race condition?
+        self.menu_ready.emit(self)
+
+
+    def initialize(self):
+        """
+        initialize as inherited + a popup menu entry mostly useful in Ubuntu Unity
+        """
+        MenuContext.initialize(self)
+        # makes even less sense on OSX
+        if OS != OS_MACOS:
+            self.action_status = QAction('Show status window', self)
+            self.action_status.triggered.connect(self.status_window.show_window_systrayicon)
+            self.insertAction(self.action_refresh, self.action_status)
+            self.insertSeparator(self.action_refresh)

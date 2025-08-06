@@ -15,51 +15,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-from time import time
-
 from Nagstamon.config import conf
 from Nagstamon.helpers import webbrowser_open
-from Nagstamon.qui.globals import status_window_properties
 from Nagstamon.qui.qt import (QComboBox,
-                              QLabel,
-                              QSizePolicy,
-                              QSvgWidget,
-                              Qt,
                               Signal,
                               Slot)
 from Nagstamon.qui.widgets.button import Button
-from Nagstamon.qui.widgets.draggables import DraggableWidget
 from Nagstamon.Servers import servers
-
-
-class NagstamonLogo(QSvgWidget, DraggableWidget):
-    """
-    SVG based logo, used for statusbar and top area logos
-    """
-    # yell if statusbar is moved
-    window_moved = Signal()
-
-    # needed for popup after hover
-    mouse_entered = Signal()
-
-    # needed for popup after click
-    mouse_pressed = Signal()
-    mouse_released = Signal()
-
-    def __init__(self, file, width=None, height=None, parent=None):
-        QSvgWidget.__init__(self, parent=parent)
-        # either filepath or QByteArray for top area logo
-        self.load(file)
-        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        # size needed for small Nagstamon logo in statusbar
-        if width is not None and height is not None:
-            self.setMinimumSize(width, height)
-            self.setMaximumSize(width, height)
-
-    def adjust_size(self, height=None, width=None):
-        if width is not None and height is not None:
-            self.setMinimumSize(width, height)
-            self.setMaximumSize(width, height)
 
 
 class PushButtonBrowserURL(Button):
@@ -138,27 +100,3 @@ class ComboBoxServers(QComboBox):
         self.setCurrentIndex(0)
 
 
-class ClosingLabel(QLabel):
-    """
-    modified QLabel which might close the status window if left-clicked
-    """
-
-    status_window = None
-
-    def __init__(self, text='', parent=None):
-        QLabel.__init__(self, text, parent=parent)
-
-    def mouseReleaseEvent(self, event):
-        """
-        left click and configured close-if-clicking-somewhere makes status window close
-        """
-        # update access to status window
-        self.status_window = self.parentWidget().parentWidget()
-        if event.button() == Qt.MouseButton.LeftButton and conf.close_details_clicking_somewhere:
-            # if popup window should be closed by clicking do it now
-            if status_window_properties.is_shown and \
-                    not conf.fullscreen and \
-                    not conf.windowed:
-                status_window_properties.is_hiding_timestamp = time()
-                # TODO: shall become a signal
-                self.status_window.hide_window()

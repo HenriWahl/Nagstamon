@@ -31,7 +31,7 @@ from Nagstamon.qui.qt import (QSizePolicy,
                               Slot)
 from Nagstamon.qui.widgets.draggables import DraggableLabel
 from Nagstamon.qui.widgets.layout import HBoxLayout
-from Nagstamon.qui.widgets.top_area_widgets import NagstamonLogo
+from Nagstamon.qui.widgets.nagstamon_logo import NagstamonLogo
 from Nagstamon.Servers import servers, get_errors
 
 

@@ -66,16 +66,19 @@ from Nagstamon.qui.widgets.dialogs.check_version import CheckVersion
 from Nagstamon.qui.widgets.draggables import (DraggableLabel,
                                               DraggableWidget)
 from Nagstamon.qui.widgets.icon import QIconWithFilename
-from Nagstamon.qui.widgets.label_all_ok import LabelAllOK
+from Nagstamon.qui.widgets.labels import (LabelAllOK,
+                                          ServerStatusLabel)
 from Nagstamon.qui.widgets.layout import HBoxLayout
-from Nagstamon.qui.widgets.menu import MenuAtCursor
+from Nagstamon.qui.widgets.menu import (MenuAtCursor,
+                                        MenuContext,
+                                        MenuContextSystrayicon)
 from Nagstamon.qui.widgets.statusbar import StatusBar
 from Nagstamon.qui.widgets.system_tray_icon import SystemTrayIcon
 from Nagstamon.qui.widgets.top_area import TopArea
-from Nagstamon.qui.widgets.top_area_widgets import (ClosingLabel,
-                                                    ComboBoxServers,
-                                                    NagstamonLogo,
+from Nagstamon.qui.widgets.top_area_widgets import (ComboBoxServers,
                                                     PushButtonBrowserURL)
+from Nagstamon.qui.widgets.nagstamon_logo import NagstamonLogo
+from Nagstamon.qui.widgets.labels import ClosingLabel
 # for details of imports look into qt.py
 from Nagstamon.qui.qt import *
 
@@ -124,7 +127,7 @@ if OS == OS_MACOS:
                         NSApplicationPresentationHideDock)
 
 # add nagstamon.ttf with icons to fonts
-QFontDatabase.addApplicationFont('{0}{1}nagstamon.ttf'.format(RESOURCES, sep))
+QFontDatabase.addApplicationFont(f'{RESOURCES}{sep}nagstamon.ttf')
 
 # always stay in normal weight without any italic
 # ICONS_FONT = QFont('Nagstamon', FONT.pointSize() + 2, QFont.Weight.Normal, False)
@@ -132,121 +135,6 @@ QFontDatabase.addApplicationFont('{0}{1}nagstamon.ttf'.format(RESOURCES, sep))
 # set style for tooltips globally - to sad not all properties can be set here
 app.setStyleSheet('''QToolTip { margin: 3px;
                                 }''')
-
-
-class MenuContext(MenuAtCursor):
-    """
-        class for universal context menu, used at systray icon and hamburger menu
-    """
-
-    menu_ready = Signal(QMenu)
-
-    def __init__(self, parent=None):
-        MenuAtCursor.__init__(self, parent=parent)
-
-        # connect all relevant widgets which should show the context menu
-        for widget in [statuswindow.toparea.button_hamburger_menu,
-                       statuswindow.toparea.label_version,
-                       statuswindow.toparea.label_empty_space,
-                       statuswindow.toparea.logo,
-                       statuswindow.statusbar.logo,
-                       statuswindow.statusbar.label_message]:
-            self.menu_ready.connect(widget.set_menu)
-
-        for color_label in statuswindow.statusbar.color_labels.values():
-            self.menu_ready.connect(color_label.set_menu)
-
-        dialogs.settings.changed.connect(self.initialize)
-
-        self.initialize()
-
-    @Slot()
-    def initialize(self):
-        """
-        add actions and servers to menu
-        """
-
-        # first clear to get rid of old servers
-        self.clear()
-
-        self.action_refresh = QAction('Refresh', self)
-        self.action_refresh.triggered.connect(statuswindow.refresh)
-        self.addAction(self.action_refresh)
-
-        self.action_recheck = QAction('Recheck all', self)
-        self.action_recheck.triggered.connect(statuswindow.recheck_all)
-        self.addAction(self.action_recheck)
-
-        self.addSeparator()
-
-        # dict to hold all servers - more flexible this way
-        self.action_servers = dict()
-
-        # connect every server to its monitoring webpage
-        for server in sorted([x.name for x in conf.servers.values() if x.enabled], key=str.lower):
-            self.action_servers[server] = QAction(server, self)
-            self.action_servers[server].triggered.connect(servers[server].open_monitor_webpage)
-            self.addAction(self.action_servers[server])
-
-        self.addSeparator()
-
-        self.action_settings = QAction('Settings...', self)
-        self.action_settings.triggered.connect(statuswindow.hide_window)
-        self.action_settings.triggered.connect(dialogs.settings.show)
-        self.addAction(self.action_settings)
-
-        if conf.statusbar_floating:
-            self.action_save_position = QAction('Save position', self)
-            self.action_save_position.triggered.connect(statuswindow.store_position_to_conf)
-            self.addAction(self.action_save_position)
-
-        self.addSeparator()
-
-        self.action_about = QAction('About...', self)
-        self.action_about.triggered.connect(statuswindow.hide_window)
-        self.action_about.triggered.connect(dialogs.about.show)
-        self.addAction(self.action_about)
-        self.action_exit = QAction('Exit', self)
-        self.action_exit.triggered.connect(exit)
-        self.addAction(self.action_exit)
-
-        # tell all widgets to use the new menu
-        self.menu_ready.emit(self)
-
-
-class MenuContextSystrayicon(MenuContext):
-    """
-    Necessary for Ubuntu 16.04 new Qt5-Systray-AppIndicator meltdown
-    Maybe in general a good idea to offer status window popup here
-    """
-
-    def __init__(self, parent=None):
-        """
-        clone of normal MenuContext which serves well in all other places
-        but no need of signal/slots initialization
-        """
-        QMenu.__init__(self, parent=parent)
-
-        # initialize as default + extra
-        self.initialize()
-
-        self.menu_ready.connect(systrayicon.set_menu)
-        self.menu_ready.emit(self)
-
-        # change menu if there are changes in settings/servers
-        dialogs.settings.changed.connect(self.initialize)
-
-    def initialize(self):
-        """
-        initialize as inherited + a popup menu entry mostly useful in Ubuntu Unity
-        """
-        MenuContext.initialize(self)
-        # makes even less sense on OSX
-        if OS != OS_MACOS:
-            self.action_status = QAction('Show status window', self)
-            self.action_status.triggered.connect(statuswindow.show_window_systrayicon)
-            self.insertAction(self.action_refresh, self.action_status)
-            self.insertSeparator(self.action_refresh)
 
 
 class StatusWindow(QWidget):
@@ -1724,70 +1612,6 @@ class StatusWindow(QWidget):
             if conf.debug_mode:
                 servers[server_name].debug(debug='NOTIFICATION: ' + custom_action_string)
             subprocess.Popen(custom_action_string, shell=True)
-
-        # def get_worst_notification_status(self):
-        #     """
-        #     hand over the current worst status notification
-        #     """
-        #     return self.worst_notification_status
-
-
-class ServerStatusLabel(ClosingLabel):
-    """
-    label for ServerVBox to show server connection state
-    extra class to apply simple slots for changing text or color
-    """
-
-    # storage for label text if it needs to be restored
-    text_old = ''
-
-    def __init__(self, parent=None):
-        QLabel.__init__(self, parent=parent)
-
-    @Slot(str, str)
-    def change(self, text, style=''):
-        # store old text and stylesheet in case it needs to be reused
-        self.text_old = self.text()
-        self.stylesheet_old = self.styleSheet()
-
-        # set stylesheet depending on submitted style
-        if style in COLOR_STATUS_LABEL:
-            if OS == OS_MACOS:
-                self.setStyleSheet('''background: {0};
-                                      border-radius: 3px;
-                                      '''.format(COLOR_STATUS_LABEL[style]))
-            else:
-                self.setStyleSheet('''background: {0};
-                                      margin-top: 8px;
-                                      padding-top: 3px;
-                                      margin-bottom: 8px;
-                                      padding-bottom: 3px;
-                                      border-radius: 4px;
-                                      '''.format(COLOR_STATUS_LABEL[style]))
-        elif style == '':
-            self.setStyleSheet('')
-
-        # in case of unknown errors try to avoid freaking out status window with too
-        # big status label
-        if style != 'unknown':
-            # set new text with some space
-            self.setText(' {0} '.format(text))
-            self.setToolTip('')
-        else:
-            # set new text to first word of text, delegate full text to tooltip
-            self.setText(text.split(' ')[0])
-            self.setToolTip(text)
-
-    @Slot()
-    def reset(self):
-        self.setStyleSheet(self.stylesheet_old)
-        self.setText('')
-
-    @Slot()
-    def restore(self):
-        # restore text, used by recheck_all of tablewidget worker
-        self.setStyleSheet(self.stylesheet_old)
-        self.setText(self.text_old)
 
 
 class ServerVBox(QVBoxLayout):
@@ -3511,11 +3335,11 @@ menu = None
 statuswindow = StatusWindow()
 
 # context menu for statuswindow etc.
-menu = MenuContext()
+menu = MenuContext(parent=statuswindow)
 
 # necessary extra menu due to Qt5-Unity-integration
 if not OS in OS_NON_LINUX:
-    menu_systray = MenuContextSystrayicon()
+    menu_systray = MenuContextSystrayicon(parent=statuswindow)
 # menu has to be set here to solve Qt-5.10-Windows-systray-mess
 # and non-existence of macOS-systray-context-menu
 elif conf.icon_in_systray:
@@ -3547,3 +3371,18 @@ dialogs.settings.changed.connect(statuswindow.statusbar.reset)
 
 # when new setings are applied adjust font size
 dialogs.settings.changed.connect(statuswindow.statusbar.adjust_size)
+
+# menu
+dialogs.settings.changed.connect(menu.initialize)
+
+menu.action_settings.triggered.connect(statuswindow.hide_window)
+menu.action_settings.triggered.connect(dialogs.settings.show)
+menu.action_save_position.triggered.connect(statuswindow.store_position_to_conf)
+menu.action_about.triggered.connect(statuswindow.hide_window)
+menu.action_about.triggered.connect(dialogs.about.show)
+
+# necessary extra menu due to Qt5-Unity-integration
+if not OS in OS_NON_LINUX:
+    # change menu if there are changes in settings/servers
+    dialogs.settings.changed.connect(menu_systray.initialize)
+    menu_systray.menu_ready.connect(systrayicon.set_menu)
