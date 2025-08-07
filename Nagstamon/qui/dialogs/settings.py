@@ -671,7 +671,7 @@ class DialogSettings(Dialog):
                 self.refresh_list(list_widget=self.window.list_servers,
                                   list_conf=conf.servers,
                                   current=self.window.list_servers.item(row).text())
-                del (row, count)
+                del row, count
 
             # delete server config file from disk
             conf.delete_file('servers', 'server_{0}.conf'.format(quote(server.name, safe='')))
@@ -754,7 +754,7 @@ class DialogSettings(Dialog):
                               list_conf=conf.actions,
                               current=self.window.list_actions.item(row).text())
 
-            del (row, count)
+            del row, count
 
         # delete the action config file from disk
         conf.delete_file('actions', 'action_{0}.conf'.format(quote(action.name, safe='')))

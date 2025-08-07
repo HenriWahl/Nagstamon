@@ -40,12 +40,12 @@ except ImportError:
     ECP_AVAILABLE = False
 
 from Nagstamon.helpers import (host_is_filtered_out_by_re,
-                               ServiceIsFilteredOutByRE,
-                               StatusInformationIsFilteredOutByRE,
-                               DurationIsFilteredOutByRE,
-                               AttemptIsFilteredOutByRE,
-                               GroupsIsFilteredOutByRE,
-                               CriticalityIsFilteredOutByRE,
+                               service_is_filtered_out_by_re,
+                               status_information_is_filtered_out_by_re,
+                               duration_is_filtered_out_by_re,
+                               attempt_is_filtered_out_by_re,
+                               groups_is_filtered_out_by_re,
+                               criticality_is_filtered_out_by_re,
                                not_empty,
                                webbrowser_open,
                                STATES)
@@ -1045,14 +1045,14 @@ class GenericServer:
                         self.debug(server=self.get_name(), debug='Filter: REGEXP ' + str(host.name))
                     host.visible = False
 
-                if StatusInformationIsFilteredOutByRE(host.status_information, conf) is True:
+                if status_information_is_filtered_out_by_re(host.status_information, conf) is True:
                     if conf.debug_mode:
                         self.debug(server=self.get_name(), debug='Filter: REGEXP ' + str(host.name))
                     host.visible = False
 
                 # The Criticality filter can be used only with centreon objects. Other objects don't have the criticality attribute.
                 if self.type == 'Centreon':
-                    if CriticalityIsFilteredOutByRE(host.criticality, conf):
+                    if criticality_is_filtered_out_by_re(host.criticality, conf):
                         if conf.debug_mode:
                             self.debug(server=self.get_name(), debug='Filter: REGEXP Criticality ' + str(host.name))
                         host.visible = False
@@ -1187,31 +1187,31 @@ class GenericServer:
                                    debug='Filter: REGEXP ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
-                if ServiceIsFilteredOutByRE(service.get_name(), conf) is True:
+                if service_is_filtered_out_by_re(service.get_name(), conf) is True:
                     if conf.debug_mode:
                         self.debug(server=self.get_name(),
                                    debug='Filter: REGEXP ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
-                if StatusInformationIsFilteredOutByRE(service.status_information, conf) is True:
+                if status_information_is_filtered_out_by_re(service.status_information, conf) is True:
                     if conf.debug_mode:
                         self.debug(server=self.get_name(),
                                    debug='Filter: REGEXP ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
-                if DurationIsFilteredOutByRE(service.duration, conf) is True:
+                if duration_is_filtered_out_by_re(service.duration, conf) is True:
                     if conf.debug_mode:
                         self.debug(server=self.get_name(),
                                    debug='Filter: REGEXP ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
-                if AttemptIsFilteredOutByRE(service.attempt, conf) is True:
+                if attempt_is_filtered_out_by_re(service.attempt, conf) is True:
                     if conf.debug_mode:
                         self.debug(server=self.get_name(),
                                    debug='Filter: REGEXP ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
-                if GroupsIsFilteredOutByRE(service.groups, conf) is True:
+                if groups_is_filtered_out_by_re(service.groups, conf) is True:
                     if conf.debug_mode:
                         self.debug(server=self.get_name(),
                                    debug='Filter: REGEXP ' + str(host.name) + ';' + str(service.name))
@@ -1219,7 +1219,7 @@ class GenericServer:
 
                 # The Criticality filter can be used only with centreon objects. Other objects don't have the criticality attribute.
                 if self.type == 'Centreon':
-                    if CriticalityIsFilteredOutByRE(service.criticality, conf):
+                    if criticality_is_filtered_out_by_re(service.criticality, conf):
                         if conf.debug_mode:
                             self.debug(server=self.get_name(), debug='Filter: REGEXP Criticality %s;%s %s' % (
                                 (str(host.name), str(service.name), str(service.criticality))))

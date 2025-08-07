@@ -62,7 +62,7 @@ class MenuAtCursor(QMenu):
         self.exec(QPoint(x, y))
         # tell world that menu will be closed
         self.is_shown.emit(False)
-        del (x, y)
+        del x, y
 
 class MenuContext(MenuAtCursor):
     """

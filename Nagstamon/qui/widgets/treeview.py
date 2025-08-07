@@ -1240,7 +1240,7 @@ class TreeView(QTreeView):
                                                       service.host))
                             # call server recheck method
                             self.server.set_recheck({'host': service.host, 'service': service.name})
-                    del (nagitems_filtered, status)
+                    del nagitems_filtered, status
                 else:
                     # Checkmk Multisite does it its own way
                     self.server.recheck_all()

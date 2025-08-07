@@ -27,7 +27,7 @@ import datetime
 import copy
 import urllib.parse
 
-from Nagstamon.helpers import HumanReadableDurationFromTimestamp
+from Nagstamon.helpers import human_readable_duration_from_timestamp
 from Nagstamon.helpers import webbrowser_open
 from Nagstamon.objects import (GenericHost, GenericService, Result)
 
@@ -303,7 +303,7 @@ class ThrukServer(GenericServer):
                         self.new_hosts[h["name"]].server = self.name
                         self.new_hosts[h["name"]].status = self.STATES_MAPPING["hosts"][h["state"]]
                         self.new_hosts[h["name"]].last_check = datetime.datetime.fromtimestamp(int(h["last_check"])).isoformat(" ")
-                        self.new_hosts[h["name"]].duration = HumanReadableDurationFromTimestamp(h["last_state_change"])
+                        self.new_hosts[h["name"]].duration = human_readable_duration_from_timestamp(h["last_state_change"])
                         self.new_hosts[h["name"]].attempt = "%s/%s" % (h["current_attempt"], h["max_check_attempts"])
                         self.new_hosts[h["name"]].status_information = h["plugin_output"].replace("\n", " ").strip()
                         self.new_hosts[h["name"]].passiveonly = not(bool(int(h["active_checks_enabled"])))
@@ -368,7 +368,7 @@ class ThrukServer(GenericServer):
                         self.new_hosts[s["host_name"]].services[ entry ].server = self.name
                         self.new_hosts[s["host_name"]].services[ entry ].status = self.STATES_MAPPING["services"][s["state"]]
                         self.new_hosts[s["host_name"]].services[ entry ].last_check = datetime.datetime.fromtimestamp(int(s["last_check"])).isoformat(" ")
-                        self.new_hosts[s["host_name"]].services[ entry ].duration = HumanReadableDurationFromTimestamp(s["last_state_change"])
+                        self.new_hosts[s["host_name"]].services[ entry ].duration = human_readable_duration_from_timestamp(s["last_state_change"])
                         self.new_hosts[s["host_name"]].services[ entry ].attempt = "%s/%s" % (s["current_attempt"], s["max_check_attempts"])
                         self.new_hosts[s["host_name"]].services[ entry ].status_information = s["plugin_output"].replace("\n", " ").strip()
                         self.new_hosts[s["host_name"]].services[ entry ].passiveonly = not(bool(int(s["active_checks_enabled"])))

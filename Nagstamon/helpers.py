@@ -120,7 +120,7 @@ class FilesDict(dict):
 
 def not_empty(x):
     '''
-        tiny helper function for BeautifulSoup in server Generic.py to filter text elements
+    tiny helper function for BeautifulSoup in server Generic.py to filter text elements
     '''
     return bool(x.replace('&nbsp;', '').strip())
 
@@ -145,7 +145,7 @@ def is_found_by_re(string, pattern, reverse):
 
 def host_is_filtered_out_by_re(host, conf=None):
     """
-        helper for applying RE filters in Generic.GetStatus()
+    helper for applying RE filters in Generic.GetStatus()
     """
     try:
         if conf.re_host_enabled is True:
@@ -156,9 +156,9 @@ def host_is_filtered_out_by_re(host, conf=None):
         traceback.print_exc(file=sys.stdout)
 
 
-def ServiceIsFilteredOutByRE(service, conf=None):
+def service_is_filtered_out_by_re(service, conf=None):
     """
-        helper for applying RE filters in Generic.GetStatus()
+    helper for applying RE filters in Generic.GetStatus()
     """
     try:
         if conf.re_service_enabled is True:
@@ -169,9 +169,9 @@ def ServiceIsFilteredOutByRE(service, conf=None):
         traceback.print_exc(file=sys.stdout)
 
 
-def StatusInformationIsFilteredOutByRE(status_information, conf=None):
+def status_information_is_filtered_out_by_re(status_information, conf=None):
     """
-        helper for applying RE filters in Generic.GetStatus()
+    helper for applying RE filters in Generic.GetStatus()
     """
     try:
         if conf.re_status_information_enabled is True:
@@ -181,9 +181,9 @@ def StatusInformationIsFilteredOutByRE(status_information, conf=None):
     except Exception:
         traceback.print_exc(file=sys.stdout)
 
-def DurationIsFilteredOutByRE(duration, conf=None):
+def duration_is_filtered_out_by_re(duration, conf=None):
     """
-        helper for applying RE filters in Generic.GetStatus()
+    helper for applying RE filters in Generic.GetStatus()
     """
     try:
         if conf.re_duration_enabled is True:
@@ -193,9 +193,9 @@ def DurationIsFilteredOutByRE(duration, conf=None):
     except Exception:
         traceback.print_exc(file=sys.stdout)
 
-def AttemptIsFilteredOutByRE(attempt, conf=None):
+def attempt_is_filtered_out_by_re(attempt, conf=None):
     """
-        helper for applying RE filters in Generic.GetStatus()
+    helper for applying RE filters in Generic.GetStatus()
     """
     try:
         if conf.re_attempt_enabled is True:
@@ -205,9 +205,9 @@ def AttemptIsFilteredOutByRE(attempt, conf=None):
     except Exception:
         traceback.print_exc(file=sys.stdout)
 
-def GroupsIsFilteredOutByRE(groups, conf=None):
+def groups_is_filtered_out_by_re(groups, conf=None):
     """
-        helper for applying RE filters in Generic.GetStatus()
+    helper for applying RE filters in Generic.GetStatus()
     """
     try:
         if conf.re_groups_enabled is True:
@@ -217,9 +217,9 @@ def GroupsIsFilteredOutByRE(groups, conf=None):
     except Exception:
         traceback.print_exc(file=sys.stdout)
 
-def CriticalityIsFilteredOutByRE(criticality, conf=None):
+def criticality_is_filtered_out_by_re(criticality, conf=None):
     """
-        helper for applying RE filters in Generic.GetStatus()
+    helper for applying RE filters in Generic.GetStatus()
     """
     try:
         if conf.re_criticality_enabled is True:
@@ -230,7 +230,7 @@ def CriticalityIsFilteredOutByRE(criticality, conf=None):
         traceback.print_exc(file=sys.stdout)
 
 
-def HumanReadableDurationFromSeconds(seconds):
+def human_readable_duration_from_seconds(seconds):
     """
     convert seconds given by Opsview to the form Nagios gives them
     like 70d 3h 34m 34s
@@ -256,7 +256,7 @@ def HumanReadableDurationFromSeconds(seconds):
         return seconds
 
 
-def HumanReadableDurationFromTimestamp(timestamp):
+def human_readable_duration_from_timestamp(timestamp):
     """
     Thruk server supplies timestamp of latest state change which
     has to be subtracted from .now()
@@ -278,10 +278,10 @@ def HumanReadableDurationFromTimestamp(timestamp):
         traceback.print_exc(file=sys.stdout)
 
 
-# unified machine readable date might go back to module Actions
-def MachineSortableDate(raw):
+# unified machine-readable date might go back to module Actions
+def machine_sortable_date(raw):
     """
-    Try to compute machine readable date for all types of monitor servers
+    Try to compute machine-readable date for all types of monitor servers
     """
     # dictionary for duration date string components
     d = {'M': 0, 'w': 0, 'd': 0, 'h': 0, 'm': 0, 's': 0}
@@ -346,9 +346,9 @@ def MachineSortableDate(raw):
     return(16934400 * d['M'] + 604800 * d['w'] + 86400 * d['d'] + 3600 * d['h'] + 60 * d['m'] + d['s'])
 
 
-def MD5ify(string):
+def md5ify(string):
     """
-        makes something md5y of a given username or password for Centreon web interface access
+    makes something md5y of a given username or password for Centreon web interface access
     """
     return md5(string).hexdigest()
 
@@ -417,11 +417,11 @@ def compare_status(item):
 
 
 def compare_last_check(item):
-    return(MachineSortableDate(item))
+    return(machine_sortable_date(item))
 
 
 def compare_duration(item):
-    return(MachineSortableDate(item))
+    return(machine_sortable_date(item))
 
 
 def compare_attempt(item):

@@ -34,9 +34,9 @@ from Nagstamon.qui.qt import (QAction,
                               QWidget,
                               Signal,
                               Slot)
-from Nagstamon.qui.widgets.button import (Button,
-                                          CSS_CLOSE_BUTTON,
-                                          PushButtonHamburger)
+from Nagstamon.qui.widgets.buttons import (Button,
+                                           CSS_CLOSE_BUTTON,
+                                           PushButtonHamburger)
 from Nagstamon.qui.widgets.draggables import DraggableLabel
 from Nagstamon.qui.widgets.layout import HBoxLayout
 from Nagstamon.qui.widgets.menu import MenuAtCursor

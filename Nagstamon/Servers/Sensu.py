@@ -25,7 +25,7 @@ from Nagstamon.config import conf
 from Nagstamon.objects import (GenericHost, GenericService, Result)
 from Nagstamon.Servers.Generic import GenericServer
 from Nagstamon.thirdparty.sensu_api import SensuAPI, SensuAPIException
-from Nagstamon.helpers import HumanReadableDurationFromTimestamp, webbrowser_open
+from Nagstamon.helpers import human_readable_duration_from_timestamp, webbrowser_open
 
 
 class SensuServer(GenericServer):
@@ -138,7 +138,7 @@ class SensuServer(GenericServer):
                     new_service.status = 'UNKNOWN'
                 last_check_time = datetime.utcfromtimestamp(int(event['timestamp']))
                 new_service.last_check = self._aslocaltimestr(last_check_time)
-                new_service.duration = HumanReadableDurationFromTimestamp(int(event['last_state_change']))
+                new_service.duration = human_readable_duration_from_timestamp(int(event['last_state_change']))
                 new_service.status_information = event_check['output']
                 # needs a / with a number on either side to work
                 new_service.attempt = str(event['occurrences']) + '/1'

@@ -23,8 +23,10 @@ from Nagstamon.qui.constants import (COLORS,
                                      QBRUSHES)
 from Nagstamon.qui.qt import (QColor,
                               QObject,
+                              QPoint,
                               Signal,
                               Slot)
+from Nagstamon.qui.widgets.app import app
 from Nagstamon.Servers import servers
 
 # make icon status in macOS dock accessible via NSApp, used by set_macos_dock_icon_visible()
@@ -98,6 +100,40 @@ def create_brushes():
             else:
                 # only make the background darker; the text should stay as it is
                 QBRUSHES[1][COLORS[state] + role] = QBRUSHES[0][COLORS[state] + role]
+
+
+def get_screen_name(x, y):
+    """
+        find out which screen the given coordinates belong to
+        gives back 'None' if coordinates are out of any known screen
+    """
+    # integerify these values as they *might* be strings
+    x = int(x)
+    y = int(y)
+
+    # QApplication (using Qt5 and/or its Python binding on RHEL/CentOS 7) has no attribute 'screenAt'
+    try:
+        screen = app.screenAt(QPoint(x, y))
+        del x, y
+        if screen:
+            return screen.name
+        else:
+            return None
+    except:
+        return None
+
+
+def get_screen_geometry(screen_name):
+    """
+        set screen for fullscreen
+    """
+    for screen in app.screens():
+        if screen.name() == screen_name:
+            return screen.geometry()
+
+    # if screen_name didn't match available use primary screen
+    return app.primaryScreen().geometry()
+
 
 # to be used in nagstamon.py and qui/widgets/dialogs/settings.py
 check_servers = CheckServers()

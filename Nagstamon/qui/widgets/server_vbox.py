@@ -28,8 +28,8 @@ from Nagstamon.qui.qt import (QPushButton,
                               QVBoxLayout,
                               Signal,
                               Slot)
-from Nagstamon.qui.widgets.button import (Button,
-                                          PushButtonBrowserURL)
+from Nagstamon.qui.widgets.buttons import (Button,
+                                           PushButtonBrowserURL)
 from Nagstamon.qui.widgets.labels import (ClosingLabel,
                                           ServerStatusLabel)
 from Nagstamon.qui.widgets.layout import HBoxLayout

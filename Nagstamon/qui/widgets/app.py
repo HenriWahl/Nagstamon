@@ -16,12 +16,15 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 from platform import release
+from os import sep
 from sys import argv
 
 from Nagstamon.config import (OS,
-                              OS_WINDOWS)
+                              OS_WINDOWS,
+                              RESOURCES)
 from Nagstamon.qui.qt import (Qt,
                               QApplication,
+                              QFontDatabase,
                               QT_VERSION_MAJOR)
 
 # since Qt6 HighDPI-awareness is default behaviour
@@ -33,6 +36,8 @@ if QT_VERSION_MAJOR < 6:
         pass
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
 
+
+
 # global application instance
 app = QApplication(argv)
 
@@ -41,3 +46,5 @@ app = QApplication(argv)
 if OS == OS_WINDOWS and release() >= '11':
     app.setStyle('fusion')
 
+# add nagstamon.ttf with icons to fonts
+QFontDatabase.addApplicationFont(f'{RESOURCES}{sep}nagstamon.ttf')

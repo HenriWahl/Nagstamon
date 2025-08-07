@@ -44,9 +44,7 @@ try:
         # get GUI
         from Nagstamon.qui import (app,
                                    statuswindow,
-                                   check_version,
-                                   QT_FLAVOR,
-                                   QT_VERSION_STR)
+                                   check_version)
         from Nagstamon.qui.helpers import check_servers
 
         # ask for help if no servers are configured
