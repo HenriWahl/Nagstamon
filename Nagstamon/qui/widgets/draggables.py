@@ -41,6 +41,7 @@ class DraggableWidget(QWidget):
     # needed for popup after click
     mouse_pressed = Signal()
     mouse_released = Signal()
+    # needed to close window in some configurations
     mouse_released_in_window = Signal()
 
     # keep state of right button pressed to avoid dragging and
@@ -88,7 +89,6 @@ class DraggableWidget(QWidget):
                      conf.close_details_clicking_somewhere) and \
                     not conf.fullscreen and not conf.windowed:
                 status_window_properties.is_hiding_timestamp = time()
-                # TODO: make a signal call of it
                 self.mouse_released_in_window.emit()
             elif not status_window_properties.is_shown:
                 self.mouse_released.emit()
@@ -153,6 +153,8 @@ class DraggableLabel(QLabel, DraggableWidget):
     # needed for popup after click
     mouse_pressed = Signal()
     mouse_released = Signal()
+    # needed to close window in some configurations
+    mouse_released_in_window = Signal()
 
     def __init__(self, text='', parent=None):
         QLabel.__init__(self, text, parent=parent)

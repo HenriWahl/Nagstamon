@@ -67,8 +67,8 @@ class ServerVBox(QVBoxLayout):
         # top and bottom should be kept by padding
         self.header.setContentsMargins(0, 0, SPACE, 0)
 
-        # self.label = QLabel(parent=parent)
         self.label = ClosingLabel(parent=parent)
+        self.label.mouse_released.connect(self.status_window.hide_window)
         self.update_label()
         self.button_monitor = PushButtonBrowserURL(text='Monitor',
                                                    parent=parent,
@@ -96,6 +96,7 @@ class ServerVBox(QVBoxLayout):
         # use label instead of spacer to be clickable
         self.label_stretcher = ClosingLabel('', parent=parent)
         self.label_stretcher.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Expanding)
+        self.label_stretcher.mouse_released.connect(self.status_window.hide_window)
 
         self.label_status = ServerStatusLabel(parent=parent)
         self.label_status.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)

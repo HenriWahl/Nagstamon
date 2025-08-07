@@ -25,6 +25,7 @@ from Nagstamon.qui.globals import status_window_properties
 from Nagstamon.qui.qt import (QLabel,
                               QSizePolicy,
                               Qt,
+                              Signal,
                               Slot)
 
 
@@ -56,6 +57,8 @@ class ClosingLabel(QLabel):
     """
 
     status_window = None
+    # neede to close status window
+    mouse_released = Signal()
 
     def __init__(self, text='', parent=None):
         QLabel.__init__(self, text, parent=parent)
@@ -73,7 +76,8 @@ class ClosingLabel(QLabel):
                     not conf.windowed:
                 status_window_properties.is_hiding_timestamp = time()
                 # TODO: shall become a signal
-                self.status_window.hide_window()
+                #self.status_window.hide_window()
+                self.mouse_released.emit()
 
 
 class ServerStatusLabel(ClosingLabel):

@@ -49,6 +49,8 @@ class StatusBarLabel(DraggableLabel):
     # needed for popup after click
     mouse_pressed = Signal()
     mouse_released = Signal()
+    # needed to close window in some configurations
+    mouse_released_in_window = Signal()
 
     def __init__(self, state, parent=None):
         DraggableLabel.__init__(self, parent=parent)
