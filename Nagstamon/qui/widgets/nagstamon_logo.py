@@ -33,7 +33,7 @@ class NagstamonLogo(QSvgWidget, DraggableWidget):
 
     # needed for popup after click
     mouse_pressed = Signal()
-    mouse_released = Signal()
+    mouse_released_for_show = Signal()
 
     def __init__(self, file, width=None, height=None, parent=None):
         QSvgWidget.__init__(self, parent=parent)

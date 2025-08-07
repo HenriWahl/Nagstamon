@@ -15,14 +15,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+from Nagstamon.config import (conf,
+                              OS,
+                              OS_MACOS)
+from Nagstamon.helpers import webbrowser_open
 from Nagstamon.qui.qt import (QMenu,
                               QPushButton,
                               QToolButton,
                               Signal,
                               Slot)
-
-from Nagstamon.config import (OS,
-                              OS_MACOS)
 
 
 class FlatButton(QToolButton):
@@ -101,6 +102,10 @@ class PushButtonBrowserURL(Button):
     QPushButton for ServerVBox which opens certain URL if clicked
     """
 
+    # send when a web browser is opened
+    # this is used to hide the status window in fullscreen mode
+    webbrowser_opened = Signal()
+
     def __init__(self, text='', parent=None, server=None, url_type=''):
         Button.__init__(self, text, parent=parent)
         self.server = server
@@ -125,5 +130,4 @@ class PushButtonBrowserURL(Button):
 
         # hide status window to get screen space for browser
         if not conf.fullscreen and not conf.windowed:
-            # TODO: shall become a signal
-            self.status_window.hide_window()
+            self.webbrowser_opened.emit()

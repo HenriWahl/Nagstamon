@@ -15,15 +15,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-from copy import deepcopy
-import datetime
 from os import sep
 import os.path
 import sys
-import subprocess
-import time
-import traceback
-from urllib.parse import quote
 
 # it is important that this import is done before importing any other qui module, because
 # they may need a QApplication instance to be created
@@ -113,13 +107,6 @@ if OS == OS_MACOS:
     from AppKit import (NSApp,
                         NSApplicationPresentationDefault,
                         NSApplicationPresentationHideDock)
-
-# always stay in normal weight without any italic
-# ICONS_FONT = QFont('Nagstamon', FONT.pointSize() + 2, QFont.Weight.Normal, False)
-
-# set style for tooltips globally - to sad not all properties can be set here
-app.setStyleSheet('''QToolTip { margin: 3px;
-                                }''')
 
 
 @Slot()

@@ -171,10 +171,12 @@ class StatusWindow(QWidget):
         for label in self.statusbar.color_labels.values():
             label.mouse_entered.connect(self.show_window_after_checking_for_hover)
             label.mouse_released.connect(self.show_window_after_checking_for_clicking)
+            label.mouse_released_in_window.connect(self.hide_window)
 
         # connect message label to hover
         self.statusbar.label_message.mouse_entered.connect(self.show_window_after_checking_for_hover)
         self.statusbar.label_message.mouse_released.connect(self.show_window_after_checking_for_clicking)
+        self.statusbar.label_message.mouse_released_in_window.connect(self.hide_window)
 
         # when logo in toparea was pressed hurry up to save the position so the statusbar will not jump
         self.toparea.logo.window_moved.connect(self.store_position)
@@ -605,7 +607,7 @@ class StatusWindow(QWidget):
     @Slot()
     def show_window_after_checking_for_clicking(self):
         """
-        being called after clicking statusbar - check if window should be showed
+        being called after clicking statusbar - check if window should be shown
         """
         if conf.popup_details_clicking:
             self.show_window()
@@ -613,7 +615,7 @@ class StatusWindow(QWidget):
     @Slot()
     def show_window_after_checking_for_hover(self):
         """
-        being called after hovering over statusbar - check if window should be showed
+        being called after hovering over statusbar - check if window should be shown
         """
         if conf.popup_details_hover:
             self.show_window()

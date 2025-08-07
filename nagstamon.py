@@ -43,8 +43,8 @@ try:
 
         # get GUI
         from Nagstamon.qui import (app,
-                                   statuswindow,
-                                   check_version)
+                                   check_version,
+                                   statuswindow)
         from Nagstamon.qui.helpers import check_servers
 
         # ask for help if no servers are configured

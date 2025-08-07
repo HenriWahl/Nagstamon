@@ -30,7 +30,7 @@ from Nagstamon.qui.qt import (get_global_position,
 
 class DraggableWidget(QWidget):
     """
-    used to give various toparea and statusbar widgets draggability
+    used to give various top area and statusbar widgets draggability
     """
     # yell if statusbar is moved
     window_moved = Signal()
@@ -41,6 +41,7 @@ class DraggableWidget(QWidget):
     # needed for popup after click
     mouse_pressed = Signal()
     mouse_released = Signal()
+    mouse_released_in_window = Signal()
 
     # keep state of right button pressed to avoid dragging and
     # unwanted repositioning of statuswindow
@@ -87,9 +88,8 @@ class DraggableWidget(QWidget):
                      conf.close_details_clicking_somewhere) and \
                     not conf.fullscreen and not conf.windowed:
                 status_window_properties.is_hiding_timestamp = time()
-                # TODO: shall become a signal
-                self.status_window.hide_window()
-
+                # TODO: make a signal call of it
+                self.mouse_released_in_window.emit()
             elif not status_window_properties.is_shown:
                 self.mouse_released.emit()
 

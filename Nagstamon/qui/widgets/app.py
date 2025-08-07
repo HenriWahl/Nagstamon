@@ -41,6 +41,10 @@ if QT_VERSION_MAJOR < 6:
 # global application instance
 app = QApplication(argv)
 
+# set style for tooltips globally - to sad not all properties can be set here
+app.setStyleSheet('''QToolTip { margin: 3px;
+                                }''')
+
 # as long as Windows 11 + Qt6 looks that ugly it's better to choose another app style
 # might be mitigated with sometimes, so commented out now
 if OS == OS_WINDOWS and release() >= '11':

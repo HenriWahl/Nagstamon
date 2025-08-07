@@ -52,6 +52,8 @@ class ServerVBox(QVBoxLayout):
     def __init__(self, server, parent=None):
         QVBoxLayout.__init__(self, parent)
 
+        self.status_window = parent
+
         # no space around
         self.setSpacing(0)
         self.setContentsMargins(0, 0, 0, 0)
@@ -68,14 +70,28 @@ class ServerVBox(QVBoxLayout):
         # self.label = QLabel(parent=parent)
         self.label = ClosingLabel(parent=parent)
         self.update_label()
-        self.button_monitor = PushButtonBrowserURL(text='Monitor', parent=parent, server=self.server,
+        self.button_monitor = PushButtonBrowserURL(text='Monitor',
+                                                   parent=parent,
+                                                   server=self.server,
                                                    url_type='monitor')
-        self.button_hosts = PushButtonBrowserURL(text='Hosts', parent=parent, server=self.server, url_type='hosts')
-        self.button_services = PushButtonBrowserURL(text='Services', parent=parent, server=self.server,
+        self.button_monitor.webbrowser_opened.connect(self.status_window.hide_window)
+        self.button_hosts = PushButtonBrowserURL(text='Hosts',
+                                                 parent=parent,
+                                                 server=self.server,
+                                                 url_type='hosts')
+        self.button_hosts.webbrowser_opened.connect(self.status_window.hide_window)
+        self.button_services = PushButtonBrowserURL(text='Services',
+                                                    parent=parent,
+                                                    server=self.server,
                                                     url_type='services')
-        self.button_history = PushButtonBrowserURL(text='History', parent=parent, server=self.server,
+        self.button_services.webbrowser_opened.connect(self.status_window.hide_window)
+        self.button_history = PushButtonBrowserURL(text='History',
+                                                   parent=parent,
+                                                   server=self.server,
                                                    url_type='history')
-        self.button_edit = Button('Edit', parent=parent)
+        self.button_history.webbrowser_opened.connect(self.status_window.hide_window)
+        self.button_edit = Button('Edit',
+                                  parent=parent)
 
         # use label instead of spacer to be clickable
         self.label_stretcher = ClosingLabel('', parent=parent)
