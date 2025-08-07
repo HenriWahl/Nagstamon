@@ -94,3 +94,36 @@ class PushButtonHamburger(Button):
     @Slot(QMenu)
     def set_menu(self, menu):
         self.setMenu(menu)
+
+
+class PushButtonBrowserURL(Button):
+    """
+    QPushButton for ServerVBox which opens certain URL if clicked
+    """
+
+    def __init__(self, text='', parent=None, server=None, url_type=''):
+        Button.__init__(self, text, parent=parent)
+        self.server = server
+        self.url_type = url_type
+        self.status_window = self.parentWidget().parentWidget()
+
+    @Slot()
+    def open_url(self):
+        """
+        open URL from BROWSER_URLS in webbrowser
+        """
+        # BROWSER_URLS come with $MONITOR$ instead of real monitor url - heritage from actions
+        url = self.server.BROWSER_URLS[self.url_type]
+        url = url.replace('$MONITOR$', self.server.monitor_url)
+        url = url.replace('$MONITOR-CGI$', self.server.monitor_cgi_url)
+
+        if conf.debug_mode:
+            self.server.debug(server=self.server.get_name(), debug='Open {0} web page {1}'.format(self.url_type, url))
+
+        # use Python method to open browser
+        webbrowser_open(url)
+
+        # hide status window to get screen space for browser
+        if not conf.fullscreen and not conf.windowed:
+            # TODO: shall become a signal
+            self.status_window.hide_window()

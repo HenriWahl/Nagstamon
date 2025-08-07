@@ -303,7 +303,8 @@ class TreeView(QTreeView):
                     super(TreeView, self).mouseReleaseEvent(event)
                 else:
                     # TODO: shall become a signal to statuswindow
-                    self.status_window.hide_window()
+                    #self.status_window.hide_window()
+                    pass
                 return
             elif event.button() == Qt.MouseButton.RightButton:
                 self.cell_clicked()
