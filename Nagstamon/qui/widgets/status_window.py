@@ -416,6 +416,7 @@ class StatusWindow(QWidget):
             systrayicon.show()
 
             # need a close button
+            # TODO: need to be a signal/slot connection?
             self.toparea.button_close.show()
 
         elif conf.fullscreen:
