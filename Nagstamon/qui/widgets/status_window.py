@@ -15,8 +15,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+import os.path
 from os import sep
 from subprocess import Popen
+import sys
 from sys import stdout
 from time import (sleep,
                   time)
@@ -65,7 +67,18 @@ from Nagstamon.qui.widgets.top_area import TopArea
 from Nagstamon.Servers import (get_enabled_servers,
                                get_status_count,
                                servers)
-from Nagstamon.thirdparty.ewmh import EWMH
+
+# only on X11/Linux thirdparty path should be added because it contains the Xlib module
+# needed to tell window manager via EWMH to keep Nagstamon window on all virtual desktops
+if OS not in OS_NON_LINUX and not DESKTOP_WAYLAND:
+    # extract thirdparty path from resources path - make submodules accessible by thirdparty modules
+    sys.path.insert(0, sep.join(RESOURCES.split(sep)[0:-1] + ['thirdparty']))
+
+    # Xlib for EWMH needs the file ~/.Xauthority and crashes if it does not exist
+    if not os.path.exists(f'{os.path.expanduser('~')}{sep}.Xauthority'):
+        open(f'{os.path.expanduser('~')}{sep}.Xauthority', 'a').close()
+
+    from Nagstamon.thirdparty.ewmh import EWMH
 
 
 class StatusWindow(QWidget):
