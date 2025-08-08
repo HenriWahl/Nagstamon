@@ -75,8 +75,6 @@ class ClosingLabel(QLabel):
                     not conf.fullscreen and \
                     not conf.windowed:
                 status_window_properties.is_hiding_timestamp = time()
-                # TODO: shall become a signal
-                #self.status_window.hide_window()
                 self.mouse_released.emit()
 
 

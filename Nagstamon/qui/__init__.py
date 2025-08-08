@@ -141,10 +141,13 @@ menu = MenuContext(parent=statuswindow)
 # necessary extra menu due to Qt5-Unity-integration
 if not OS in OS_NON_LINUX:
     menu_systray = MenuContextSystrayicon(parent=statuswindow)
+    # TODO: in theory COULD NOT work because the signal is emitted before this connection is set ?
+    menu_systray.menu_ready.connect(systrayicon.set_menu)
 # menu has to be set here to solve Qt-5.10-Windows-systray-mess
 # and non-existence of macOS-systray-context-menu
 elif conf.icon_in_systray:
     systrayicon.set_menu(menu)
+
 
 # versatile mediaplayer
 # TODO: maybe to be changed too?

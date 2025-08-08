@@ -412,6 +412,7 @@ class StatusWindow(QWidget):
             self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
 
             # yeah! systray!
+            # TODO: shouln't this be a signal/slot connection?
             systrayicon.show()
 
             # need a close button
