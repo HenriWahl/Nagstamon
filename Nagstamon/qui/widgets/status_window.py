@@ -196,18 +196,21 @@ class StatusWindow(QWidget):
         self.toparea.logo.window_moved.connect(self.hide_window)
         self.toparea.logo.window_moved.connect(self.correct_moving_position)
         self.toparea.logo.mouse_pressed.connect(self.store_position)
+        self.toparea.logo.mouse_released_in_window.connect(self.hide_window)
 
         # when version label in toparea was pressed hurry up to save the position so the statusbar will not jump
         self.toparea.label_version.window_moved.connect(self.store_position)
         self.toparea.label_version.window_moved.connect(self.hide_window)
         self.toparea.label_version.window_moved.connect(self.correct_moving_position)
         self.toparea.label_version.mouse_pressed.connect(self.store_position)
+        self.toparea.label_version.mouse_released_in_window.connect(self.hide_window)
 
         # when empty space in toparea was pressed hurry up to save the position so the statusbar will not jump
         self.toparea.label_empty_space.window_moved.connect(self.store_position)
         self.toparea.label_empty_space.window_moved.connect(self.hide_window)
         self.toparea.label_empty_space.window_moved.connect(self.correct_moving_position)
         self.toparea.label_empty_space.mouse_pressed.connect(self.store_position)
+        self.toparea.label_empty_space.mouse_released_in_window.connect(self.hide_window)
 
         # buttons in toparea
         self.toparea.button_recheck_all.clicked.connect(self.recheck_all)
