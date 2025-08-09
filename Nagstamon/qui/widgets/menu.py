@@ -157,11 +157,6 @@ class MenuContextSystrayicon(MenuContext):
         # initialize as default + extra
         self.initialize()
 
-        # done in qui/__init__.py
-        # self.menu_ready.connect(systrayicon.set_menu)
-        # TODO: check if this is a good place here for emitting - may lead to a race condition?
-        self.menu_ready.emit(self)
-
 
     def initialize(self):
         """

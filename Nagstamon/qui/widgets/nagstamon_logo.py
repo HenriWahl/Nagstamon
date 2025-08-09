@@ -34,6 +34,7 @@ class NagstamonLogo(QSvgWidget, DraggableWidget):
     # needed for popup after click
     mouse_pressed = Signal()
     # needed to close window in some configurations
+    mouse_released = Signal()
     mouse_released_in_window = Signal()
 
     def __init__(self, file, width=None, height=None, parent=None):

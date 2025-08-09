@@ -102,6 +102,10 @@ class StatusWindow(QWidget):
     # after 'Refresh'-button has been pressed
     clear_event_history = Signal()
 
+    # signals for changing the state of the system tray icon
+    systrayicon_enabled = Signal()
+    systrayicon_disabled = Signal()
+
     def __init__(self):
         """
         Status window combined from status bar and popup window
@@ -175,6 +179,7 @@ class StatusWindow(QWidget):
         self.statusbar.logo.window_moved.connect(self.store_position)
         self.statusbar.logo.window_moved.connect(self.hide_window)
         self.statusbar.logo.window_moved.connect(self.correct_moving_position)
+        self.statusbar.logo.window_moved.connect(self._update)
         self.statusbar.logo.mouse_pressed.connect(self.store_position)
 
         # after status summarization check if window has to be resized
@@ -195,6 +200,7 @@ class StatusWindow(QWidget):
         self.toparea.logo.window_moved.connect(self.store_position)
         self.toparea.logo.window_moved.connect(self.hide_window)
         self.toparea.logo.window_moved.connect(self.correct_moving_position)
+        self.toparea.logo.window_moved.connect(self._update)
         self.toparea.logo.mouse_pressed.connect(self.store_position)
         self.toparea.logo.mouse_released_in_window.connect(self.hide_window)
 
@@ -202,6 +208,7 @@ class StatusWindow(QWidget):
         self.toparea.label_version.window_moved.connect(self.store_position)
         self.toparea.label_version.window_moved.connect(self.hide_window)
         self.toparea.label_version.window_moved.connect(self.correct_moving_position)
+        self.toparea.label_version.window_moved.connect(self._update)
         self.toparea.label_version.mouse_pressed.connect(self.store_position)
         self.toparea.label_version.mouse_released_in_window.connect(self.hide_window)
 
@@ -209,6 +216,7 @@ class StatusWindow(QWidget):
         self.toparea.label_empty_space.window_moved.connect(self.store_position)
         self.toparea.label_empty_space.window_moved.connect(self.hide_window)
         self.toparea.label_empty_space.window_moved.connect(self.correct_moving_position)
+        self.toparea.label_empty_space.window_moved.connect(self._update)
         self.toparea.label_empty_space.mouse_pressed.connect(self.store_position)
         self.toparea.label_empty_space.mouse_released_in_window.connect(self.hide_window)
 
@@ -413,15 +421,17 @@ class StatusWindow(QWidget):
 
             # yeah! systray!
             # TODO: shouln't this be a signal/slot connection?
-            systrayicon.show()
+            #systrayicon.show()
+            self.systrayicon_enabled.emit()
 
             # need a close button
-            # TODO: need to be a signal/slot connection?
+            # TODO: need to be a signal/slot connection? - not necessarily, because it is its own child
             self.toparea.button_close.show()
 
         elif conf.fullscreen:
             # no need for systray
-            systrayicon.hide()
+            #systrayicon.hide()
+            self.systrayicon_disabled.emit()
 
             # needed permanently
             self.toparea.show()
@@ -1326,6 +1336,15 @@ class StatusWindow(QWidget):
                 vbox.table.worker.finish.emit()
                 # nothing more to do
                 break
+
+    @Slot()
+    def _update(self):
+        """
+        update status window, wrapper to make .update() callable as slot from a signal
+        needed in DraggableWidget.mouseMoveEvent() for macOS - otherwise statusbar stays blank while moving
+        """
+        self.update()
+
 
     class Worker(QObject):
         """

@@ -206,9 +206,27 @@ systrayicon.hide_popwin.connect(statuswindow.hide_window)
 statuswindow.worker_notification.start_flash.connect(systrayicon.flash)
 statuswindow.worker_notification.stop_flash.connect(systrayicon.reset)
 
+# trigger showing and hiding of systray icon depending on display mode
+statuswindow.systrayicon_enabled.connect(systrayicon._show)
+statuswindow.systrayicon_disabled.connect(systrayicon._hide)
+
 # necessary extra menu due to Qt5-Unity-integration
 if not OS in OS_NON_LINUX:
     # change menu if there are changes in settings/servers
     dialogs.settings.changed.connect(menu_systray.initialize)
+    menu_systray.action_settings.triggered.connect(statuswindow.hide_window)
+    menu_systray.action_settings.triggered.connect(dialogs.settings.show)
+    menu_systray.action_save_position.triggered.connect(statuswindow.store_position_to_conf)
+    menu_systray.action_about.triggered.connect(statuswindow.hide_window)
+    menu_systray.action_about.triggered.connect(dialogs.about.show)
     menu_systray.menu_ready.connect(systrayicon.set_menu)
+    menu_systray.menu_ready.emit(menu_systray)
 
+# needs to be emitted adter signal/slots are connected,
+# might be necessary for others too
+if conf.icon_in_systray:
+    statuswindow.systrayicon_enabled.emit()
+else:
+    statuswindow.systrayicon_disabled.emit()
+# tell the widgets that the menu is ready
+menu.menu_ready.emit(menu)

@@ -124,10 +124,6 @@ class DraggableWidget(QWidget):
                 self.status_window.move(int(global_position.x() - status_window_properties.relative_x),
                                         int(global_position.y() - status_window_properties.relative_y))
 
-            # needed for OSX - otherwise statusbar stays blank while moving
-            # TODO: make a signal call of it
-            self.status_window.update()
-
             self.window_moved.emit()
 
     def enterEvent(self, event):

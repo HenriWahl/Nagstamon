@@ -241,3 +241,19 @@ class SystemTrayIcon(QSystemTrayIcon):
     @Slot()
     def reset_error(self):
         self.error_shown = False
+
+    @Slot()
+    def _show(self):
+        """
+        show the system tray icon, used by the statuswindow to enable it
+        wrapper for self.show() because it is no slot
+        """
+        self.show()
+
+    @Slot()
+    def _hide(self):
+        """
+        hide the system tray icon, used by the statuswindow to disable it
+        wrapper for self.hide() because it is no slot
+        """
+        self.hide()

@@ -10,3 +10,4 @@
 - [ ] spaceless comments
 - [ ] shrink statuswindow when less alerts being active
 - [ ] debug_queue not in config.py?
+- [ ] check if statuswindow.update() works in macOS
