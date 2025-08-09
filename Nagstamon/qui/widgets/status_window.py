@@ -888,6 +888,7 @@ class StatusWindow(QWidget):
         """
         if conf.icon_in_systray:
             # where is the pointer which clicked onto systray icon
+            # TODO: how to get the systray icon position?
             icon_x = systrayicon.geometry().x()
             icon_y = systrayicon.geometry().y()
             if OS in OS_NON_LINUX:
