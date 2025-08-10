@@ -4,6 +4,7 @@ __pycache__/
 .idea/
 .metadata/
 .vscode/
+*.conf/
 *.deb
 *.dmg
 *.exe
@@ -16,5 +17,4 @@ __pycache__/
 build/bdist*
 dist/
 nagstamon
-nagstamon.conf/
 nagstamon.egg-info/

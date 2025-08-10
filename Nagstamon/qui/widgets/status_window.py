@@ -342,7 +342,7 @@ class StatusWindow(QWidget):
 
     def set_mode(self):
         """
-            apply presentation mode
+        apply presentation mode
         """
         # so sorry but how to solve this Qt-5.10-Windows-mess otherwise?
         global systrayicon
@@ -361,8 +361,8 @@ class StatusWindow(QWidget):
                 hide_macos_dock_icon(False)
 
             # no need for systray
-            # TODO: better send a signal to systrayicon to hide itself
-            #systrayicon.hide()
+            self.systrayicon_disabled.emit()
+
             self.statusbar.show()
 
             # show statusbar/statuswindow on last saved position
@@ -461,7 +461,7 @@ class StatusWindow(QWidget):
                 # in windowed mode always show dock icon
                 hide_macos_dock_icon(False)
 
-            systrayicon.hide()
+            self.systrayicon_disabled.emit()
 
             # no need for close button
             self.toparea.button_close.hide()
