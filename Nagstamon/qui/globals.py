@@ -15,15 +15,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-from dataclasses import dataclass
-
 # Global variables used in different modules
 
+from dataclasses import dataclass
+
+from Nagstamon.helpers import FilesDict
 from Nagstamon.qui.qt import QFont
 
 from Nagstamon.config import (conf,
                               OS,
-                              OS_MACOS)
+                              OS_MACOS,
+                              RESOURCES)
 from Nagstamon.qui.dbus import DBus
 from Nagstamon.qui.widgets.app import app
 
@@ -108,3 +110,8 @@ clipboard = app.clipboard()
 # 2 flavours for alternating backgrounds
 # filled by create_brushes()
 qbrushes = {0: {}, 1: {}}
+
+# store default sounds as buffers to avoid https://github.com/HenriWahl/Nagstamon/issues/578
+# meanwhile used as backup copy in case they had been deleted by macOS
+# https://github.com/HenriWahl/Nagstamon/issues/578
+resource_files = FilesDict(RESOURCES)

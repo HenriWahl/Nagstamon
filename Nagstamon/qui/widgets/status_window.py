@@ -1556,8 +1556,7 @@ class StatusWindow(QWidget):
                 self.stop_flash.emit()
 
                 # reset notifying server, waiting for next notification
-                # TODO: unused?
-                status_window_properties = ''
+                status_window_properties.notifying_server = ''
 
         def execute_action(self, server_name, custom_action_string):
             """

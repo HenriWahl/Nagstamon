@@ -121,7 +121,7 @@ if QT_FLAVOR == 'PyQt5':
         # needed to show error in a thread-safe way
         send_message = Signal(str, str)
 
-        def __init__(self, statuswindow, resource_files):
+        def __init__(self, resource_files):
             QObject.__init__(self)
             self.player = QMediaPlayer(parent=self)
 
@@ -129,11 +129,6 @@ if QT_FLAVOR == 'PyQt5':
             self.playlist = QMediaPlaylist()
             self.player.setPlaylist(self.playlist)
             self.resource_files = resource_files
-            # let statuswindow show message
-            self.send_message.connect(statuswindow.show_message)
-            # connect with statuswindow notification worker
-            statuswindow.worker_notification.load_sound.connect(self.set_media)
-            statuswindow.worker_notification.play_sound.connect(self.play)
 
         @Slot(str)
         def set_media(self, media_file):
@@ -247,17 +242,12 @@ elif QT_FLAVOR == 'PyQt6':
         # needed to show error in a thread-safe way
         send_message = Signal(str, str)
 
-        def __init__(self, statuswindow, resource_files):
+        def __init__(self, resource_files):
             QObject.__init__(self)
             self.audio_output = QAudioOutput()
             self.player = QMediaPlayer(parent=self)
             self.player.setAudioOutput(self.audio_output)
             self.resource_files = resource_files
-            # let statuswindow show message
-            self.send_message.connect(statuswindow.show_message)
-            # connect with statuswindow notification worker
-            statuswindow.worker_notification.load_sound.connect(self.set_media)
-            statuswindow.worker_notification.play_sound.connect(self.play)
 
         @Slot(str)
         def set_media(self, media_file):

@@ -25,8 +25,8 @@ from Nagstamon.config import (conf,
                               OS,
                               OS_MACOS,
                               RESOURCES)
-from Nagstamon.helpers import resource_files
-from Nagstamon.qui.globals import status_window_properties
+from Nagstamon.qui.globals import (resource_files,
+                                   status_window_properties)
 from Nagstamon.qui.qt import (QMenu,
                               QPainter,
                               QPixmap,

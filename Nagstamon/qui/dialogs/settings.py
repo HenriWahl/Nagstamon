@@ -47,6 +47,7 @@ from Nagstamon.qui.qt import (Signal,
                               Qt,
                               QWidget)
 from Nagstamon.qui.widgets.app import app
+from Nagstamon.qui.widgets.mediaplayer import mediaplayer
 from Nagstamon.qui.dialogs.check_version import check_version
 from Nagstamon.qui.dialogs.dialog import Dialog
 from Nagstamon.Servers import servers
@@ -540,11 +541,12 @@ class DialogSettings(Dialog):
         conf.font = self.font.toString()
         # update global font and icon font
         font = self.font
-        # shall be changed by a signal/slot connection
+        # TODO: shall be changed by a signal/slot connection
         font_icons = QFont('Nagstamon', font.pointSize() + 2, QFont.Weight.Normal, False)
 
         # update brushes for treeview
-        create_brushes()
+        # TODO: should be done in treeview itself
+        #create_brushes()
 
         # save configuration
         conf.save_config()

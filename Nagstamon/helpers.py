@@ -497,8 +497,3 @@ SORT_COLUMNS_FUNCTIONS = {0: compare_host,
         7: compare_attempt,
         8: compare_status_information,
         9: compare_status_information}
-
-# store default sounds as buffers to avoid https://github.com/HenriWahl/Nagstamon/issues/578
-# meanwhile used as backup copy in case they had been deleted by macOS
-# https://github.com/HenriWahl/Nagstamon/issues/578
-resource_files = FilesDict(RESOURCES)

@@ -57,6 +57,7 @@ from Nagstamon.qui.widgets.icon import QIconWithFilename
 from Nagstamon.qui.widgets.labels import (LabelAllOK,
                                           ServerStatusLabel)
 from Nagstamon.qui.widgets.layout import HBoxLayout
+from Nagstamon.qui.widgets.mediaplayer import mediaplayer
 from Nagstamon.qui.widgets.menu import (MenuAtCursor,
                                         MenuContext,
                                         MenuContextSystrayicon)
@@ -70,23 +71,10 @@ from Nagstamon.qui.widgets.treeview import TreeView
 from Nagstamon.qui.widgets.nagstamon_logo import NagstamonLogo
 from Nagstamon.qui.widgets.labels import ClosingLabel
 
-from Nagstamon.config import (AppInfo,
-                              conf,
-                              debug_queue,
+from Nagstamon.config import (conf,
                               OS_NON_LINUX,
                               OS,
-                              OS_MACOS,
-                              OS_WINDOWS,
-                              RESOURCES,
-                              DESKTOP_WAYLAND)
-
-from Nagstamon.helpers import (is_found_by_re,
-                               webbrowser_open,
-                               resource_files,
-                               STATES,
-                               STATES_SOUND,
-                               SORT_COLUMNS_FUNCTIONS,
-                               urlify)
+                              OS_MACOS)
 
 # make icon status in macOS dock accessible via NSApp, used by set_macos_dock_icon_visible()
 if OS == OS_MACOS:
@@ -98,7 +86,7 @@ if OS == OS_MACOS:
 @Slot()
 def exit():
     """
-        stop all child threads before quitting instance
+    stop all child threads before quitting instance
     """
     # store position of statuswindow/statusbar
     statuswindow.store_position_to_conf()
@@ -146,10 +134,6 @@ if not OS in OS_NON_LINUX:
 elif conf.icon_in_systray:
     systrayicon.set_menu(menu)
 
-
-# versatile mediaplayer
-# TODO: maybe to be changed too?
-mediaplayer = MediaPlayer(statuswindow, resource_files)
 
 # to be connected someday elsewhere
 # server -> statuswindow remove_previous server
@@ -207,6 +191,12 @@ statuswindow.worker_notification.stop_flash.connect(systrayicon.reset)
 # trigger showing and hiding of systray icon depending on display mode
 statuswindow.systrayicon_enabled.connect(systrayicon.show)
 statuswindow.systrayicon_disabled.connect(systrayicon.hide)
+
+# let statuswindow show message
+mediaplayer.send_message.connect(statuswindow.show_message)
+# connect with statuswindow notification worker
+statuswindow.worker_notification.load_sound.connect(mediaplayer.set_media)
+statuswindow.worker_notification.play_sound.connect(mediaplayer.play)
 
 # necessary extra menu due to Qt5-Unity-integration
 if not OS in OS_NON_LINUX:
