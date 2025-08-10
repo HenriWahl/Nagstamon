@@ -46,8 +46,12 @@ class ServerVBox(QVBoxLayout):
     # signal to submit server to authentication dialog
     authenticate = Signal(str)
 
+    # handle TLS error button
     button_fix_tls_error_show = Signal()
     button_fix_tls_error_hide = Signal()
+
+    # open dialog - may need closing the statuswindow
+    open_dialog = Signal()
 
     def __init__(self, server, parent=None):
         QVBoxLayout.__init__(self, parent)
@@ -133,6 +137,8 @@ class ServerVBox(QVBoxLayout):
         self.header.addWidget(self.label_status)
         self.header.addWidget(self.button_authenticate)
         self.header.addWidget(self.button_fix_tls_error)
+
+        self.open_dialog.connect(self.status_window.hide_window)
 
         # attempt to get header strings
         try:
@@ -268,6 +274,7 @@ class ServerVBox(QVBoxLayout):
         if not conf.fullscreen and not conf.windowed:
             # TODO: transform to signal
             #statuswindow.hide_window()
+            self.open_dialog.emit()
             pass
         # TODO: transform to signal
         #dialogs.server.edit(name=self.server.name)
@@ -294,6 +301,7 @@ class ServerVBox(QVBoxLayout):
         if not conf.fullscreen and not conf.windowed:
             # TODO: transform to signal
             #statuswindow.hide_window()
+            self.open_dialog.emit()
             pass
         # TODO: transform to signal
         #dialogs.server.edit(server_name=self.server.name, show_options=True)
