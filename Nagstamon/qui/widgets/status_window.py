@@ -1048,8 +1048,6 @@ class StatusWindow(QWidget):
         # avoid race condition when waiting for password dialog
         if 'is_shown' in self.__dict__:
             if not conf.fullscreen and not conf.windowed:
-                # TODO: used nowhere?
-                #self.adjusting_size_lock = True
                 # fully displayed statuswindow
                 if status_window_properties.is_shown is True:
                     width, height, x, y = self.calculate_size()
