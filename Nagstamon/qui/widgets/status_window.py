@@ -877,32 +877,32 @@ class StatusWindow(QWidget):
         """
         get size of popup window
         """
-        if conf.icon_in_systray:
-            # where is the pointer which clicked onto systray icon
-            # TODO: how to get the systray icon position?
-            icon_x = systrayicon.geometry().x()
-            icon_y = systrayicon.geometry().y()
-            if OS in OS_NON_LINUX:
-                if status_window_properties.icon_x == 0:
-                    status_window_properties.icon_x = QCursor.pos().x()
-                elif icon_x != 0:
-                    status_window_properties.icon_x = icon_x
-            else:
-                # strangely enough on KDE the systray icon geometry gives back 0, 0 as coordinates
-                # also at Ubuntu Unity 16.04
-                if icon_x == 0 and status_window_properties.icon_x == 0:
-                    status_window_properties.icon_x = QCursor.pos().x()
-                elif icon_x != 0:
-                    status_window_properties.icon_x = icon_x
-
-            if icon_y == 0 and status_window_properties.icon_y == 0:
-                status_window_properties.icon_y = QCursor.pos().y()
-
-            if OS in OS_NON_LINUX:
-                if status_window_properties.icon_y == 0:
-                    status_window_properties.icon_y = QCursor.pos().y()
-                elif icon_y != 0:
-                    status_window_properties.icon_y = icon_y
+        # if conf.icon_in_systray:
+        #     # where is the pointer which clicked onto systray icon
+        #     # TODO: how to get the systray icon position?
+        #     icon_x = systrayicon.geometry().x()
+        #     icon_y = systrayicon.geometry().y()
+        #     if OS in OS_NON_LINUX:
+        #         if status_window_properties.icon_x == 0:
+        #             status_window_properties.icon_x = QCursor.pos().x()
+        #         elif icon_x != 0:
+        #             status_window_properties.icon_x = icon_x
+        #     else:
+        #         # strangely enough on KDE the systray icon geometry gives back 0, 0 as coordinates
+        #         # also at Ubuntu Unity 16.04
+        #         if icon_x == 0 and status_window_properties.icon_x == 0:
+        #             status_window_properties.icon_x = QCursor.pos().x()
+        #         elif icon_x != 0:
+        #             status_window_properties.icon_x = icon_x
+        #
+        #     if icon_y == 0 and status_window_properties.icon_y == 0:
+        #         status_window_properties.icon_y = QCursor.pos().y()
+        #
+        #     if OS in OS_NON_LINUX:
+        #         if status_window_properties.icon_y == 0:
+        #             status_window_properties.icon_y = QCursor.pos().y()
+        #         elif icon_y != 0:
+        #             status_window_properties.icon_y = icon_y
 
         # only consider offset if it is configured
         if conf.systray_offset_use and conf.icon_in_systray:

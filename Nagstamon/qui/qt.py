@@ -20,6 +20,7 @@
 
 from pathlib import Path
 import sys
+from statistics import median_low
 
 # Enough to handle with differences between PyQt5 + PyQt6, so PySide6 will be
 # ignored right now
@@ -105,8 +106,8 @@ if QT_FLAVOR == 'PyQt5':
 
     class QSignalMapper(QSignalMapper):
         """
-            QSignalMapper has method mappedString since Qt 5.15 which is not available in Ubuntu 20.04
-            See https://github.com/HenriWahl/Nagstamon/issues/865 for details
+        QSignalMapper has method mappedString since Qt 5.15 which is not available in Ubuntu 20.04
+        See https://github.com/HenriWahl/Nagstamon/issues/865 for details
         """
         def __init__(self):
             super().__init__()
@@ -143,9 +144,9 @@ if QT_FLAVOR == 'PyQt5':
             # only existing file can be played
             if Path(media_file).exists:
                 url = QUrl.fromLocalFile(media_file)
-                mediacontent = QMediaContent(url)
-                self.player.setMedia(mediacontent)
-                del url, mediacontent
+                media_content = QMediaContent(url)
+                self.player.setMedia(media_content)
+                del url, media_content
                 return True
             else:
                 # cry and tell no file was found
@@ -160,15 +161,15 @@ if QT_FLAVOR == 'PyQt5':
 
 
     def get_global_position(event):
-        '''
+        """
         Qt5 uses other method than Qt6
-        '''
+        """
         return event.globalPos()
 
     def get_sort_order_value(sort_order):
-        '''
+        """
         Qt5 has int for Qt.SortOrder but Qt6 has Qt.SortOrder.[Ascending|Descending]Order
-        '''
+        """
         return sort_order
 
 
@@ -237,7 +238,7 @@ elif QT_FLAVOR == 'PyQt6':
 
     class MediaPlayer(QObject):
         """
-            play media files for notification
+        play media files for notification
         """
         # needed to show error in a thread-safe way
         send_message = Signal(str, str)
@@ -275,15 +276,15 @@ elif QT_FLAVOR == 'PyQt6':
 
 
     def get_global_position(event):
-        '''
+        """
         Qt5 uses other method than Qt6
-        '''
+        """
         return event.globalPosition()
 
     def get_sort_order_value(sort_order):
-        '''
+        """
         Qt5 has int for Qt.SortOrder but Qt6 has Qt.SortOrder.[Ascending|Descending]Order
-        '''
+        """
         return sort_order.value
 
 # elif 'PySide6' in sys.modules:
