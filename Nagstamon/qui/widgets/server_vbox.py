@@ -272,8 +272,6 @@ class ServerVBox(QVBoxLayout):
         call dialogs.server.edit() with server name
         """
         if not conf.fullscreen and not conf.windowed:
-            # TODO: transform to signal
-            #statuswindow.hide_window()
             self.open_dialog.emit()
             pass
         # TODO: transform to signal
@@ -299,8 +297,6 @@ class ServerVBox(QVBoxLayout):
         call dialogs.server.edit() with server name and showing extra options
         """
         if not conf.fullscreen and not conf.windowed:
-            # TODO: transform to signal
-            #statuswindow.hide_window()
             self.open_dialog.emit()
             pass
         # TODO: transform to signal

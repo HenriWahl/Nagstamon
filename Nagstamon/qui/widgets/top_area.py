@@ -78,8 +78,6 @@ class TopArea(QWidget):
         self.button_hamburger_menu.setIcon(self.icons['menu'])
         self.hamburger_menu = MenuAtCursor()
         action_exit = QAction("Exit", self)
-        # TODO: use somehow more sophisticated exit handling - shall be a signal to slot
-        #       on exit() currently in qui/__init__.py
         action_exit.triggered.connect(exit)
         self.hamburger_menu.addAction(action_exit)
         self.button_hamburger_menu.setMenu(self.hamburger_menu)

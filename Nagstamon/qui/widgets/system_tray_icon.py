@@ -164,9 +164,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         evaluate mouse click
         """
 
-        # TODO: does'nt work at least on GNOME with indicator-pseudo-systray-icon,
-        #       x-y might need to be calculated on show status window action 🤦
-
+        # retrieve icon position and store it in status_window_properties
         self.retrieve_icon_position()
 
         if reason in (QSystemTrayIcon.ActivationReason.Trigger,
