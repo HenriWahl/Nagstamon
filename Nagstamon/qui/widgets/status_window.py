@@ -37,8 +37,7 @@ from Nagstamon.helpers import (STATES,
 from Nagstamon.qui.constants import WINDOW_FLAGS
 from Nagstamon.qui.globals import (dbus_connection,
                                    status_window_properties)
-from Nagstamon.qui.helpers import (create_brushes,
-                                   get_screen_geometry,
+from Nagstamon.qui.helpers import (get_screen_geometry,
                                    get_screen_name,
                                    hide_macos_dock_icon)
 from Nagstamon.qui.qt import (QAction,
@@ -250,7 +249,7 @@ class StatusWindow(QWidget):
         self.hiding.connect(self.worker_notification.stop)
 
         # context menu, checking for existence necessary at startup
-        # TODO: shall be done in systrayicon ?
+        # TODO: shall be done in systrayicon? Or is it enough if done in qui/__init__.py?
         #if not menu == None:
         #    systrayicon.set_menu(menu)
 
@@ -274,10 +273,6 @@ class StatusWindow(QWidget):
         self.servers_scrollarea_widget.setLayout(self.servers_vbox)
         self.servers_scrollarea.setWidget(self.servers_scrollarea_widget)
         self.servers_scrollarea.setWidgetResizable(True)
-
-        # create brushes for treeview
-        # TODO: maybe move to treeview?
-        create_brushes()
 
         # needed for moving the statuswindow
         status_window_properties.moving = False
@@ -420,17 +415,13 @@ class StatusWindow(QWidget):
             self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
 
             # yeah! systray!
-            # TODO: shouln't this be a signal/slot connection?
-            #systrayicon.show()
             self.systrayicon_enabled.emit()
 
             # need a close button
-            # TODO: need to be a signal/slot connection? - not necessarily, because it is its own child
             self.toparea.button_close.show()
 
         elif conf.fullscreen:
             # no need for systray
-            #systrayicon.hide()
             self.systrayicon_disabled.emit()
 
             # needed permanently
@@ -1567,6 +1558,7 @@ class StatusWindow(QWidget):
                 self.stop_flash.emit()
 
                 # reset notifying server, waiting for next notification
+                # TODO: unused?
                 status_window_properties = ''
 
         def execute_action(self, server_name, custom_action_string):

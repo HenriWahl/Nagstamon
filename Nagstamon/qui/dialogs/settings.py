@@ -33,7 +33,6 @@ from Nagstamon.qui.constants import (COLORS,
 from Nagstamon.qui.globals import (dbus_connection,
                                    font,
                                    font_default)
-from Nagstamon.qui.helpers import (create_brushes)
 from Nagstamon.qui.qt import (Signal,
                               Slot,
                               QColor,

@@ -103,3 +103,8 @@ status_window_properties = StatusWindowProperties()
 
 # access to clipboard
 clipboard = app.clipboard()
+
+# QBrushes made of QColors for treeview model data() method
+# 2 flavours for alternating backgrounds
+# filled by create_brushes()
+qbrushes = {0: {}, 1: {}}

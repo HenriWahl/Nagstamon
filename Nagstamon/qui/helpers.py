@@ -18,11 +18,7 @@
 from Nagstamon.config import (conf,
                               OS,
                               OS_MACOS)
-from Nagstamon.helpers import STATES
-from Nagstamon.qui.constants import (COLORS,
-                                     QBRUSHES)
-from Nagstamon.qui.qt import (QColor,
-                              QObject,
+from Nagstamon.qui.qt import (QObject,
                               QPoint,
                               Signal,
                               Slot)
@@ -67,39 +63,6 @@ def hide_macos_dock_icon(hide=False):
         NSApp.setActivationPolicy_(NSApplicationPresentationHideDock)
     else:
         NSApp.setActivationPolicy_(NSApplicationPresentationDefault)
-
-
-def create_brushes():
-    """
-        fill static brushes with current colors for treeview
-    """
-    # if not customized, use default intensity
-    if conf.grid_use_custom_intensity:
-        intensity = 100 + conf.grid_alternation_intensity
-    else:
-        intensity = 115
-
-    # every state has 2 labels in both alteration levels 0 and 1
-    for state in STATES[1:]:
-        for role in ('text', 'background'):
-            QBRUSHES[0][COLORS[state] + role] = QColor(conf.__dict__[COLORS[state] + role])
-            # if the background is too dark to be litten split it into RGB values
-            # and increase them separately
-            # light/darkness spans from 0 to 255 - 30 is just a guess
-            if role == 'background' and conf.show_grid:
-                if QBRUSHES[0][COLORS[state] + role].lightness() < 30:
-                    r, g, b, a = (QBRUSHES[0][COLORS[state] + role].getRgb())
-                    r += 30
-                    g += 30
-                    b += 30
-                    QBRUSHES[1][COLORS[state] + role] = QColor(r, g, b).lighter(intensity)
-                else:
-                    # otherwise just make it a little bit darker
-                    QBRUSHES[1][COLORS[state] + role] = QColor(conf.__dict__[COLORS[state] +
-                                                                             role]).darker(intensity)
-            else:
-                # only make the background darker; the text should stay as it is
-                QBRUSHES[1][COLORS[state] + role] = QBRUSHES[0][COLORS[state] + role]
 
 
 def get_screen_name(x, y):

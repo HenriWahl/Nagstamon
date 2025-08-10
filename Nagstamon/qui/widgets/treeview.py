@@ -23,18 +23,22 @@ from urllib.parse import quote
 
 from Nagstamon.config import conf
 from Nagstamon.helpers import (is_found_by_re,
-                               SORT_COLUMNS_FUNCTIONS, webbrowser_open, urlify)
+                               STATES,
+                               SORT_COLUMNS_FUNCTIONS,
+                               urlify,
+                               webbrowser_open)
 from Nagstamon.qui.constants import (COLORS,
                                      HEADERS,
-                                     QBRUSHES,
                                      SORT_COLUMNS_INDEX,
                                      SORT_ORDER)
 from Nagstamon.qui.globals import (clipboard,
                                    font,
+                                   qbrushes,
                                    status_window_properties)
 from Nagstamon.qui.qt import (get_sort_order_value,
                               QAbstractItemView,
                               QAction,
+                              QColor,
                               QHeaderView,
                               QKeySequence,
                               QMenu,
@@ -127,10 +131,14 @@ class TreeView(QTreeView):
 
         # set application font
         self.set_font()
+
         # change font if it has been changed by settings
         # TODO: find a way to connect the signals to the appropriate slots
         #       maybe these connection requests could be sent as signals too?
         #dialogs.settings.changed.connect(self.set_font)
+
+        # create brushes for treeview
+        self.create_brushes()
 
         # action context menu
         self.action_menu = MenuAtCursor(parent=self)
@@ -226,6 +234,38 @@ class TreeView(QTreeView):
         change font if it has been changed by settings
         """
         self.setFont(font)
+
+    def create_brushes(self):
+        """
+        fill static brushes with current colors for treeview
+        """
+        # if not customized, use default intensity
+        if conf.grid_use_custom_intensity:
+            intensity = 100 + conf.grid_alternation_intensity
+        else:
+            intensity = 115
+
+        # every state has 2 labels in both alteration levels 0 and 1
+        for state in STATES[1:]:
+            for role in ('text', 'background'):
+                qbrushes[0][COLORS[state] + role] = QColor(conf.__dict__[COLORS[state] + role])
+                # if the background is too dark to be litten split it into RGB values
+                # and increase them separately
+                # light/darkness spans from 0 to 255 - 30 is just a guess
+                if role == 'background' and conf.show_grid:
+                    if qbrushes[0][COLORS[state] + role].lightness() < 30:
+                        r, g, b, a = (qbrushes[0][COLORS[state] + role].getRgb())
+                        r += 30
+                        g += 30
+                        b += 30
+                        qbrushes[1][COLORS[state] + role] = QColor(r, g, b).lighter(intensity)
+                    else:
+                        # otherwise just make it a little bit darker
+                        qbrushes[1][COLORS[state] + role] = QColor(conf.__dict__[COLORS[state] +
+                                                                                 role]).darker(intensity)
+                else:
+                    # only make the background darker; the text should stay as it is
+                    qbrushes[1][COLORS[state] + role] = qbrushes[0][COLORS[state] + role]
 
     @Slot(bool)
     def show_hosts_flags_column(self, value):
@@ -1063,7 +1103,7 @@ class TreeView(QTreeView):
             # only refresh table if there is no popup opened
             if not app.activePopupWidget():
                 # avoid race condition when waiting for password dialog
-                if len(QBRUSHES[0]) > 0:
+                if len(qbrushes[0]) > 0:
                     # cruising the whole nagitems structure
                     for category in ('hosts', 'services'):
                         for state in self.server.nagitems_filtered[category].values():
@@ -1085,10 +1125,10 @@ class TreeView(QTreeView):
                                         self.data_array[-1][3] += 'N'
                                 # add text color as QBrush from status
                                 self.data_array[-1].append(
-                                    QBRUSHES[len(self.data_array) % 2][COLORS[item.status] + 'text'])
+                                    qbrushes[len(self.data_array) % 2][COLORS[item.status] + 'text'])
                                 # add background color as QBrush from status
                                 self.data_array[-1].append(
-                                    QBRUSHES[len(self.data_array) % 2][COLORS[item.status] + 'background'])
+                                    qbrushes[len(self.data_array) % 2][COLORS[item.status] + 'background'])
                                 # add text color name for sorting data
                                 self.data_array[-1].append(COLORS[item.status] + 'text')
                                 # add background color name for sorting data
@@ -1133,9 +1173,9 @@ class TreeView(QTreeView):
             # fix alternating colors
             for count, row in enumerate(self.data_array):
                 # change text color of sorted rows
-                row[10] = QBRUSHES[count % 2][row[12]]
+                row[10] = qbrushes[count % 2][row[12]]
                 # change background color of sorted rows
-                row[11] = QBRUSHES[count % 2][row[13]]
+                row[11] = qbrushes[count % 2][row[13]]
 
             # if header was clicked tell model to use new data_array
             if header_clicked:

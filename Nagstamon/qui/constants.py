@@ -51,11 +51,6 @@ COLOR_STATUS_LABEL = {'critical': 'lightsalmon',
                       'error': 'orange',
                       'unknown': 'gray'}
 
-# QBrushes made of QColors for treeview model data() method
-# 2 flavours for alternating backgrounds
-# filled by create_brushes()
-QBRUSHES = {0: {}, 1: {}}
-
 # headers for tablewidgets
 HEADERS = OrderedDict([('host', {'header': 'Host',
                                  'column': 0}),

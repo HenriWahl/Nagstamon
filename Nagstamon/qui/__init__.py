@@ -26,7 +26,6 @@ from Nagstamon.qui.widgets.app import app
 from Nagstamon.qui.constants import (COLORS,
                                      COLOR_STATE_NAMES,
                                      COLOR_STATUS_LABEL,
-                                     QBRUSHES,
                                      HEADERS,
                                      HEADERS_HEADERS,
                                      HEADERS_HEADERS_COLUMNS,
@@ -42,8 +41,7 @@ from Nagstamon.qui.globals import (dbus_connection,
                                    font_default,
                                    font_icons,
                                    status_window_properties)
-from Nagstamon.qui.helpers import (create_brushes,
-                                   check_servers,
+from Nagstamon.qui.helpers import (check_servers,
                                    hide_macos_dock_icon)
 from Nagstamon.qui.widgets.buttons import (Button,
                                            CSS_CLOSE_BUTTON,
@@ -207,8 +205,8 @@ statuswindow.worker_notification.start_flash.connect(systrayicon.flash)
 statuswindow.worker_notification.stop_flash.connect(systrayicon.reset)
 
 # trigger showing and hiding of systray icon depending on display mode
-statuswindow.systrayicon_enabled.connect(systrayicon._show)
-statuswindow.systrayicon_disabled.connect(systrayicon._hide)
+statuswindow.systrayicon_enabled.connect(systrayicon.show)
+statuswindow.systrayicon_disabled.connect(systrayicon.hide)
 
 # necessary extra menu due to Qt5-Unity-integration
 if not OS in OS_NON_LINUX:
