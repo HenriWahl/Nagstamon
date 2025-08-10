@@ -105,6 +105,9 @@ class StatusWindow(QWidget):
     systrayicon_enabled = Signal()
     systrayicon_disabled = Signal()
 
+    # signal to request systray icon position for storing it in status_window_properties
+    request_systrayicon_position = Signal()
+
     def __init__(self):
         """
         Status window combined from status bar and popup window
@@ -659,6 +662,9 @@ class StatusWindow(QWidget):
             # fix it here because it makes no sense but might cause non-appearing statuswindow‚
             status_window_properties.moving = False
 
+            # hopefully no race condition here and the systray icon position will be retrieved just in time
+            self.request_systrayicon_position.emit()
+
             # already show here because was closed before in hide_window()
             # best results achieved when doing .show() before .show_window()
             self.show()
@@ -877,32 +883,6 @@ class StatusWindow(QWidget):
         """
         get size of popup window
         """
-        # if conf.icon_in_systray:
-        #     # where is the pointer which clicked onto systray icon
-        #     # TODO: how to get the systray icon position?
-        #     icon_x = systrayicon.geometry().x()
-        #     icon_y = systrayicon.geometry().y()
-        #     if OS in OS_NON_LINUX:
-        #         if status_window_properties.icon_x == 0:
-        #             status_window_properties.icon_x = QCursor.pos().x()
-        #         elif icon_x != 0:
-        #             status_window_properties.icon_x = icon_x
-        #     else:
-        #         # strangely enough on KDE the systray icon geometry gives back 0, 0 as coordinates
-        #         # also at Ubuntu Unity 16.04
-        #         if icon_x == 0 and status_window_properties.icon_x == 0:
-        #             status_window_properties.icon_x = QCursor.pos().x()
-        #         elif icon_x != 0:
-        #             status_window_properties.icon_x = icon_x
-        #
-        #     if icon_y == 0 and status_window_properties.icon_y == 0:
-        #         status_window_properties.icon_y = QCursor.pos().y()
-        #
-        #     if OS in OS_NON_LINUX:
-        #         if status_window_properties.icon_y == 0:
-        #             status_window_properties.icon_y = QCursor.pos().y()
-        #         elif icon_y != 0:
-        #             status_window_properties.icon_y = icon_y
 
         # only consider offset if it is configured
         if conf.systray_offset_use and conf.icon_in_systray:
@@ -938,6 +918,11 @@ class StatusWindow(QWidget):
                 status_window_properties.top = True
             else:
                 status_window_properties.top = False
+
+            # just a little buffer to let systrayicon.retrieve_icon_position() time to do its work, just in case
+            while status_window_properties.icon_x == 0:
+                sleep(0.01)
+
             x = status_window_properties.icon_x
 
         # get height from table widgets
@@ -954,7 +939,7 @@ class StatusWindow(QWidget):
                 width = self.toparea.sizeHint().width()
 
             # always take the stored width of the statusbar into account
-            x = x - int(width // 2) + int(self.stored_width // 2)
+            x -= int(width // 2) + int(self.stored_width // 2)
 
             # check left and right limits of x
             if x < available_x:

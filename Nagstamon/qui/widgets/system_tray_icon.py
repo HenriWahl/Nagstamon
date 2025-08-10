@@ -167,37 +167,11 @@ class SystemTrayIcon(QSystemTrayIcon):
         # TODO: does'nt work at least on GNOME with indicator-pseudo-systray-icon,
         #       x-y might need to be calculated on show status window action 🤦
 
+        self.retrieve_icon_position()
+
         if reason in (QSystemTrayIcon.ActivationReason.Trigger,
                       QSystemTrayIcon.ActivationReason.DoubleClick,
                       QSystemTrayIcon.ActivationReason.MiddleClick):
-
-            # where is the pointer which clicked onto systray icon
-            icon_x = self.geometry().x()
-            icon_y = self.geometry().y()
-            if OS in OS_NON_LINUX:
-                if status_window_properties.icon_x == 0:
-                    status_window_properties.icon_x = QCursor.pos().x()
-                elif icon_x != 0:
-                    status_window_properties.icon_x = icon_x
-            else:
-                # strangely enough on KDE the systray icon geometry gives back 0, 0 as coordinates
-                # also at Ubuntu Unity 16.04
-                if icon_x == 0 and status_window_properties.icon_x == 0:
-                    status_window_properties.icon_x = QCursor.pos().x()
-                elif icon_x != 0:
-                    status_window_properties.icon_x = icon_x
-
-            if icon_y == 0 and status_window_properties.icon_y == 0:
-                status_window_properties.icon_y = QCursor.pos().y()
-
-            if OS in OS_NON_LINUX:
-                if status_window_properties.icon_y == 0:
-                    status_window_properties.icon_y = QCursor.pos().y()
-                elif icon_y != 0:
-                    status_window_properties.icon_y = icon_y
-
-            pass
-
             # when green icon is displayed and no popwin is about to pop up...
             if get_worst_status() == 'UP':
                 # ...nothing to do except on macOS where menu should be shown
@@ -213,6 +187,38 @@ class SystemTrayIcon(QSystemTrayIcon):
                     self.hide_popwin.emit()
                 else:
                     self.show_popwin.emit()
+
+    @Slot()
+    def retrieve_icon_position(self):
+        """
+        get the coordinates of the systray icon and store it in status_window_properties
+        """
+        # where is the pointer which clicked onto systray icon
+        icon_x = self.geometry().x()
+        icon_y = self.geometry().y()
+        if OS in OS_NON_LINUX:
+            if status_window_properties.icon_x == 0:
+                status_window_properties.icon_x = QCursor.pos().x()
+            elif icon_x != 0:
+                status_window_properties.icon_x = icon_x
+        else:
+            # strangely enough on KDE the systray icon geometry gives back 0, 0 as coordinates
+            # also at Ubuntu Unity 16.04
+            if icon_x == 0 and status_window_properties.icon_x == 0:
+                status_window_properties.icon_x = QCursor.pos().x()
+            elif icon_x != 0:
+                status_window_properties.icon_x = icon_x
+
+        if icon_y == 0 and status_window_properties.icon_y == 0:
+            status_window_properties.icon_y = QCursor.pos().y()
+
+        if OS in OS_NON_LINUX:
+            if status_window_properties.icon_y == 0:
+                status_window_properties.icon_y = QCursor.pos().y()
+            elif icon_y != 0:
+                status_window_properties.icon_y = icon_y
+
+        pass
 
     @Slot()
     def show_state(self):

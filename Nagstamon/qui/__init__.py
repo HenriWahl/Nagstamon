@@ -129,6 +129,7 @@ if not OS in OS_NON_LINUX:
     menu_systray = MenuContextSystrayicon(parent=statuswindow)
     # TODO: in theory COULD NOT work because the signal is emitted before this connection is set ?
     menu_systray.menu_ready.connect(systrayicon.set_menu)
+
 # menu has to be set here to solve Qt-5.10-Windows-systray-mess
 # and non-existence of macOS-systray-context-menu
 elif conf.icon_in_systray:
@@ -191,6 +192,8 @@ statuswindow.worker_notification.stop_flash.connect(systrayicon.reset)
 # trigger showing and hiding of systray icon depending on display mode
 statuswindow.systrayicon_enabled.connect(systrayicon.show)
 statuswindow.systrayicon_disabled.connect(systrayicon.hide)
+
+statuswindow.request_systrayicon_position.connect(systrayicon.retrieve_icon_position)
 
 # let statuswindow show message
 mediaplayer.send_message.connect(statuswindow.show_message)
