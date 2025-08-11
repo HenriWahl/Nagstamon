@@ -20,7 +20,7 @@ from Nagstamon.config import (conf,
                               OS,
                               OS_MACOS)
 from Nagstamon.qui.constants import COLOR_STATUS_LABEL
-from Nagstamon.qui.globals import status_window_properties
+from Nagstamon.qui.globals import statuswindow_properties
 
 from Nagstamon.qui.qt import (QLabel,
                               QSizePolicy,
@@ -56,7 +56,7 @@ class ClosingLabel(QLabel):
     modified QLabel which might close the status window if left-clicked
     """
 
-    status_window = None
+    shortcut_statuswindow = None
     # neede to close status window
     mouse_released = Signal()
 
@@ -68,13 +68,13 @@ class ClosingLabel(QLabel):
         left click and configured close-if-clicking-somewhere makes status window close
         """
         # update access to status window
-        self.status_window = self.parentWidget().parentWidget()
+        self.shortcut_statuswindow = self.parentWidget().parentWidget()
         if event.button() == Qt.MouseButton.LeftButton and conf.close_details_clicking_somewhere:
             # if popup window should be closed by clicking do it now
-            if status_window_properties.is_shown and \
+            if statuswindow_properties.is_shown and \
                     not conf.fullscreen and \
                     not conf.windowed:
-                status_window_properties.is_hiding_timestamp = time()
+                statuswindow_properties.is_hiding_timestamp = time()
                 self.mouse_released.emit()
 
 

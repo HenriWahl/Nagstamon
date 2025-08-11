@@ -56,7 +56,7 @@ class ServerVBox(QVBoxLayout):
     def __init__(self, server, parent=None):
         QVBoxLayout.__init__(self, parent)
 
-        self.status_window = parent
+        self.shortcut_statuswindow = parent
 
         # no space around
         self.setSpacing(0)
@@ -72,35 +72,35 @@ class ServerVBox(QVBoxLayout):
         self.header.setContentsMargins(0, 0, SPACE, 0)
 
         self.label = ClosingLabel(parent=parent)
-        self.label.mouse_released.connect(self.status_window.hide_window)
+        self.label.mouse_released.connect(self.shortcut_statuswindow.hide_window)
         self.update_label()
         self.button_monitor = PushButtonBrowserURL(text='Monitor',
                                                    parent=parent,
                                                    server=self.server,
                                                    url_type='monitor')
-        self.button_monitor.webbrowser_opened.connect(self.status_window.hide_window)
+        self.button_monitor.webbrowser_opened.connect(self.shortcut_statuswindow.hide_window)
         self.button_hosts = PushButtonBrowserURL(text='Hosts',
                                                  parent=parent,
                                                  server=self.server,
                                                  url_type='hosts')
-        self.button_hosts.webbrowser_opened.connect(self.status_window.hide_window)
+        self.button_hosts.webbrowser_opened.connect(self.shortcut_statuswindow.hide_window)
         self.button_services = PushButtonBrowserURL(text='Services',
                                                     parent=parent,
                                                     server=self.server,
                                                     url_type='services')
-        self.button_services.webbrowser_opened.connect(self.status_window.hide_window)
+        self.button_services.webbrowser_opened.connect(self.shortcut_statuswindow.hide_window)
         self.button_history = PushButtonBrowserURL(text='History',
                                                    parent=parent,
                                                    server=self.server,
                                                    url_type='history')
-        self.button_history.webbrowser_opened.connect(self.status_window.hide_window)
+        self.button_history.webbrowser_opened.connect(self.shortcut_statuswindow.hide_window)
         self.button_edit = Button('Edit',
                                   parent=parent)
 
         # use label instead of spacer to be clickable
         self.label_stretcher = ClosingLabel('', parent=parent)
         self.label_stretcher.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Expanding)
-        self.label_stretcher.mouse_released.connect(self.status_window.hide_window)
+        self.label_stretcher.mouse_released.connect(self.shortcut_statuswindow.hide_window)
 
         self.label_status = ServerStatusLabel(parent=parent)
         self.label_status.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
@@ -138,7 +138,7 @@ class ServerVBox(QVBoxLayout):
         self.header.addWidget(self.button_authenticate)
         self.header.addWidget(self.button_fix_tls_error)
 
-        self.open_dialog.connect(self.status_window.hide_window)
+        self.open_dialog.connect(self.shortcut_statuswindow.hide_window)
 
         # attempt to get header strings
         try:

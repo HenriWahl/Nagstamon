@@ -18,7 +18,7 @@
 from time import time
 
 from Nagstamon.config import conf
-from Nagstamon.qui.globals import status_window_properties
+from Nagstamon.qui.globals import statuswindow_properties
 from Nagstamon.qui.qt import (get_global_position,
                               QLabel,
                               QSizePolicy,
@@ -48,7 +48,7 @@ class DraggableWidget(QWidget):
     # unwanted repositioning of statuswindow
     right_mouse_button_pressed = False
 
-    status_window = None
+    shortcut_statuswindow = None
 
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
@@ -63,7 +63,7 @@ class DraggableWidget(QWidget):
         2 - right button, popup menu
         """
         # update access to status window
-        self.status_window = self.parentWidget().parentWidget()
+        self.shortcut_statuswindow = self.parentWidget().parentWidget()
         if event.button() == Qt.MouseButton.LeftButton:
             self.mouse_pressed.emit()
         if event.button() == Qt.MouseButton.RightButton:
@@ -71,12 +71,12 @@ class DraggableWidget(QWidget):
 
         # keep x and y relative to statusbar
         # if not set calculate relative position
-        if not status_window_properties.relative_x and \
-                not status_window_properties.relative_y:
+        if not statuswindow_properties.relative_x and \
+                not statuswindow_properties.relative_y:
             # Qt5 & Qt6 have different methods for getting the global position so take it from qt.py
             global_position = get_global_position(event)
-            status_window_properties.relative_x = global_position.x() - self.status_window.x()
-            status_window_properties.relative_y = global_position.y() - self.status_window.y()
+            statuswindow_properties.relative_x = global_position.x() - self.shortcut_statuswindow.x()
+            statuswindow_properties.relative_y = global_position.y() - self.shortcut_statuswindow.y()
 
     def mouseReleaseEvent(self, event):
         """
@@ -84,19 +84,19 @@ class DraggableWidget(QWidget):
         """
         if event.button() == Qt.MouseButton.LeftButton:
             # if popup window should be closed by clicking do it now
-            if status_window_properties.is_shown and \
+            if statuswindow_properties.is_shown and \
                     (conf.close_details_clicking or
                      conf.close_details_clicking_somewhere) and \
                     not conf.fullscreen and not conf.windowed:
-                status_window_properties.is_hiding_timestamp = time()
+                statuswindow_properties.is_hiding_timestamp = time()
                 self.mouse_released_in_window.emit()
-            elif not status_window_properties.is_shown:
+            elif not statuswindow_properties.is_shown:
                 self.mouse_released.emit()
 
             # reset all helper values
-            status_window_properties.relative_x = False
-            status_window_properties.relative_y = False
-            status_window_properties.moving = False
+            statuswindow_properties.relative_x = False
+            statuswindow_properties.relative_y = False
+            statuswindow_properties.moving = False
 
         if event.button() == Qt.MouseButton.RightButton:
             self.right_mouse_button_pressed = False
@@ -109,20 +109,20 @@ class DraggableWidget(QWidget):
         # if window should close when being clicked it might be problematic if it
         # will be moved unintendedly so try to filter this events out by waiting 0.5 seconds
         if not (conf.close_details_clicking and
-                status_window_properties.is_shown and
-                status_window_properties.is_shown_timestamp + 0.5 < time()):
+                statuswindow_properties.is_shown and
+                statuswindow_properties.is_shown_timestamp + 0.5 < time()):
             if not conf.fullscreen and not conf.windowed and not self.right_mouse_button_pressed:
                 # Qt5 & Qt6 have different methods for getting the global position so take it from qt.py
                 global_position = get_global_position(event)
                 # lock window as moving
                 # if not set calculate relative position
-                if not status_window_properties.relative_x and not status_window_properties.relative_y:
-                    status_window_properties.relative_x = global_position.x() - self.status_window.x()
-                    status_window_properties.relative_y = global_position.y() - self.status_window.y()
-                status_window_properties.moving = True
+                if not statuswindow_properties.relative_x and not statuswindow_properties.relative_y:
+                    statuswindow_properties.relative_x = global_position.x() - self.shortcut_statuswindow.x()
+                    statuswindow_properties.relative_y = global_position.y() - self.shortcut_statuswindow.y()
+                statuswindow_properties.moving = True
                 # TODO: shall become a signal
-                self.status_window.move(int(global_position.x() - status_window_properties.relative_x),
-                                        int(global_position.y() - status_window_properties.relative_y))
+                self.shortcut_statuswindow.move(int(global_position.x() - statuswindow_properties.relative_x),
+                                                int(global_position.y() - statuswindow_properties.relative_y))
 
             self.window_moved.emit()
 
@@ -131,8 +131,8 @@ class DraggableWidget(QWidget):
         tell the world that mouse entered the widget - interesting for hover popup and only if top area hasn't been
         clicked a moment ago
         """
-        if status_window_properties.is_shown is False and \
-                status_window_properties.is_hiding_timestamp + 0.2 < time():
+        if statuswindow_properties.is_shown is False and \
+                statuswindow_properties.is_hiding_timestamp + 0.2 < time():
             self.mouse_entered.emit()
 
 

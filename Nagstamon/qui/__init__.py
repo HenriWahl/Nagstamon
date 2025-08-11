@@ -40,7 +40,7 @@ from Nagstamon.qui.globals import (dbus_connection,
                                    font,
                                    font_default,
                                    font_icons,
-                                   status_window_properties)
+                                   statuswindow_properties)
 from Nagstamon.qui.helpers import (check_servers,
                                    hide_macos_dock_icon)
 from Nagstamon.qui.widgets.buttons import (Button,

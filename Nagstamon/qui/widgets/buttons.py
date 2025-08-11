@@ -110,7 +110,7 @@ class PushButtonBrowserURL(Button):
         Button.__init__(self, text, parent=parent)
         self.server = server
         self.url_type = url_type
-        self.status_window = self.parentWidget().parentWidget()
+        self.shortcut_statuswindow = self.parentWidget().parentWidget()
 
     @Slot()
     def open_url(self):

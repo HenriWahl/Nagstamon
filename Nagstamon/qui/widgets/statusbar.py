@@ -23,7 +23,7 @@ from Nagstamon.config import (conf,
                               RESOURCES)
 from Nagstamon.qui.constants import (COLORS,
                                      COLOR_STATE_NAMES)
-from Nagstamon.qui.globals import status_window_properties, font
+from Nagstamon.qui.globals import statuswindow_properties, font
 from Nagstamon.qui.qt import (QSizePolicy,
                               QTimer,
                               QWidget,
@@ -196,7 +196,7 @@ class StatusBar(QWidget):
             send color inversion signal to labels
         """
         # only if currently a notification is necessary
-        if status_window_properties.is_notifying:
+        if statuswindow_properties.is_notifying:
             self.labels_invert.emit()
             # fire up  a singleshot to reset color soon
             self.timer.singleShot(500, self.reset)
@@ -208,7 +208,7 @@ class StatusBar(QWidget):
         """
         self.labels_reset.emit()
         # only if currently a notification is necessary
-        if status_window_properties.is_notifying:
+        if statuswindow_properties.is_notifying:
             # even later call itself to invert colors as flash
             self.timer.singleShot(500, self.flash)
 

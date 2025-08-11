@@ -79,7 +79,7 @@ else:
 @dataclass
 class StatusWindowProperties:
     """
-    storing statuswindow related variables globally available for serveral classes
+    storing statuswindow related variables globally available for several classes
     """
     icon_x: int = 0
     icon_y: int = 0
@@ -98,7 +98,7 @@ class StatusWindowProperties:
     notfifying_server: str = ''
 
 # shared status window properties
-status_window_properties = StatusWindowProperties()
+statuswindow_properties = StatusWindowProperties()
 
 # access to clipboard
 clipboard = app.clipboard()

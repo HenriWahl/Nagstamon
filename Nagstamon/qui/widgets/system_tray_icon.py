@@ -26,7 +26,7 @@ from Nagstamon.config import (conf,
                               OS_MACOS,
                               RESOURCES, OS_NON_LINUX)
 from Nagstamon.qui.globals import (resource_files,
-                                   status_window_properties)
+                                   statuswindow_properties)
 from Nagstamon.qui.qt import (QCursor,
                               QMenu,
                               QPainter,
@@ -164,7 +164,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         evaluate mouse click
         """
 
-        # retrieve icon position and store it in status_window_properties
+        # retrieve icon position and store it in statuswindow_properties
         self.retrieve_icon_position()
 
         if reason in (QSystemTrayIcon.ActivationReason.Trigger,
@@ -181,7 +181,7 @@ class SystemTrayIcon(QSystemTrayIcon):
                         self.show_popwin.emit()
             else:
                 # show status window if there is something to tell
-                if status_window_properties.is_shown:
+                if statuswindow_properties.is_shown:
                     self.hide_popwin.emit()
                 else:
                     self.show_popwin.emit()
@@ -189,32 +189,32 @@ class SystemTrayIcon(QSystemTrayIcon):
     @Slot()
     def retrieve_icon_position(self):
         """
-        get the coordinates of the systray icon and store it in status_window_properties
+        get the coordinates of the systray icon and store it in statuswindow_properties
         """
         # where is the pointer which clicked onto systray icon
         icon_x = self.geometry().x()
         icon_y = self.geometry().y()
         if OS in OS_NON_LINUX:
-            if status_window_properties.icon_x == 0:
-                status_window_properties.icon_x = QCursor.pos().x()
+            if statuswindow_properties.icon_x == 0:
+                statuswindow_properties.icon_x = QCursor.pos().x()
             elif icon_x != 0:
-                status_window_properties.icon_x = icon_x
+                statuswindow_properties.icon_x = icon_x
         else:
             # strangely enough on KDE the systray icon geometry gives back 0, 0 as coordinates
             # also at Ubuntu Unity 16.04
-            if icon_x == 0 and status_window_properties.icon_x == 0:
-                status_window_properties.icon_x = QCursor.pos().x()
+            if icon_x == 0 and statuswindow_properties.icon_x == 0:
+                statuswindow_properties.icon_x = QCursor.pos().x()
             elif icon_x != 0:
-                status_window_properties.icon_x = icon_x
+                statuswindow_properties.icon_x = icon_x
 
-        if icon_y == 0 and status_window_properties.icon_y == 0:
-            status_window_properties.icon_y = QCursor.pos().y()
+        if icon_y == 0 and statuswindow_properties.icon_y == 0:
+            statuswindow_properties.icon_y = QCursor.pos().y()
 
         if OS in OS_NON_LINUX:
-            if status_window_properties.icon_y == 0:
-                status_window_properties.icon_y = QCursor.pos().y()
+            if statuswindow_properties.icon_y == 0:
+                statuswindow_properties.icon_y = QCursor.pos().y()
             elif icon_y != 0:
-                status_window_properties.icon_y = icon_y
+                statuswindow_properties.icon_y = icon_y
 
         pass
 
@@ -238,11 +238,11 @@ class SystemTrayIcon(QSystemTrayIcon):
         send color inversion signal to labels
         """
         # only if currently a notification is necessary
-        if status_window_properties.is_notifying:
+        if statuswindow_properties.is_notifying:
             # store current icon to get it reset back
             if self.current_icon is None:
                 if not self.error_shown:
-                    self.current_icon = self.icons[status_window_properties.worst_notification_status]
+                    self.current_icon = self.icons[statuswindow_properties.worst_notification_status]
                 else:
                     self.current_icon = self.icons['ERROR']
             # use empty SVG icon to display emptiness
@@ -257,7 +257,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         tell labels to set original colors
         """
         # only if currently a notification is necessary
-        if status_window_properties.is_notifying:
+        if statuswindow_properties.is_notifying:
             try:
                 # set curent status icon
                 self.setIcon(self.current_icon)

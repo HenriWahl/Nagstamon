@@ -36,7 +36,7 @@ from Nagstamon.helpers import (STATES,
                                STATES_SOUND)
 from Nagstamon.qui.constants import WINDOW_FLAGS
 from Nagstamon.qui.globals import (dbus_connection,
-                                   status_window_properties)
+                                   statuswindow_properties)
 from Nagstamon.qui.helpers import (get_screen_geometry,
                                    get_screen_name,
                                    hide_macos_dock_icon)
@@ -105,7 +105,7 @@ class StatusWindow(QWidget):
     systrayicon_enabled = Signal()
     systrayicon_disabled = Signal()
 
-    # signal to request systray icon position for storing it in status_window_properties
+    # signal to request systray icon position for storing it in statuswindow_properties
     request_systrayicon_position = Signal()
 
     def __init__(self):
@@ -233,7 +233,7 @@ class StatusWindow(QWidget):
 
         # worker and thread duo needed for notifications
         self.worker_notification_thread = QThread(parent=self)
-        self.worker_notification = self.WorkerNotification(status_window_properties)
+        self.worker_notification = self.WorkerNotification(statuswindow_properties)
 
         # clean shutdown of thread
         self.worker_notification.finish.connect(self.finish_worker_notification_thread)
@@ -278,31 +278,31 @@ class StatusWindow(QWidget):
         self.servers_scrollarea.setWidgetResizable(True)
 
         # needed for moving the statuswindow
-        status_window_properties.moving = False
-        status_window_properties.relative_x = False
-        status_window_properties.relative_y = False
+        statuswindow_properties.moving = False
+        statuswindow_properties.relative_x = False
+        statuswindow_properties.relative_y = False
 
         # helper values for QTimer.singleShot move attempt
         self.move_to_x = self.move_to_y = 0
 
         # stored x y values for systemtray icon
-        status_window_properties.icon_x = 0
-        status_window_properties.icon_y = 0
+        statuswindow_properties.icon_x = 0
+        statuswindow_properties.icon_y = 0
 
         # flag to mark if window is shown or not
         if conf.windowed:
-            status_window_properties.is_shown = True
+            statuswindow_properties.is_shown = True
         else:
-            status_window_properties.is_shown = False
+            statuswindow_properties.is_shown = False
 
         # store show_window timestamp to avoid flickering window in KDE5 with systray
-        status_window_properties.is_shown_timestamp = time()
+        statuswindow_properties.is_shown_timestamp = time()
 
         # store timestamp to avoid reappearing window shortly after clicking onto toparea
-        status_window_properties.is_hiding_timestamp = time()
+        statuswindow_properties.is_hiding_timestamp = time()
 
         # if status_ok is true no server_vboxes are needed
-        status_window_properties.status_ok = True
+        statuswindow_properties.status_ok = True
 
         # timer for waiting to set is_shown flag
         self.timer = QTimer(self)
@@ -657,10 +657,10 @@ class StatusWindow(QWidget):
         """
         handle clicks onto systray icon
         """
-        if not status_window_properties.is_shown:
+        if not statuswindow_properties.is_shown:
             # under unfortunate circumstances statusbar might have the the moving flag true
             # fix it here because it makes no sense but might cause non-appearing statuswindow‚
-            status_window_properties.moving = False
+            statuswindow_properties.moving = False
 
             # hopefully no race condition here and the systray icon position will be retrieved just in time
             self.request_systrayicon_position.emit()
@@ -678,22 +678,22 @@ class StatusWindow(QWidget):
         used to show status window when its appearance is triggered, also adjusts geometry
         """
         # do not show up when being dragged around
-        if not status_window_properties.moving:
+        if not statuswindow_properties.moving:
             # check if really all is OK
             for vbox in self.servers_vbox.children():
                 if vbox.server.all_ok and \
                         vbox.server.status == '' and \
                         not vbox.server.refresh_authentication and \
                         not vbox.server.tls_error:
-                    status_window_properties.status_ok = True
+                    statuswindow_properties.status_ok = True
                 else:
-                    status_window_properties.status_ok = False
+                    statuswindow_properties.status_ok = False
                     break
 
             # here we should check if scroll_area should be shown at all
-            if not status_window_properties.status_ok:
+            if not statuswindow_properties.status_ok:
                 # store timestamp to avoid flickering as in https://github.com/HenriWahl/Nagstamon/issues/184
-                status_window_properties.is_shown_timestamp = time()
+                statuswindow_properties.is_shown_timestamp = time()
 
                 if not conf.fullscreen and not conf.windowed:
                     # attempt to avoid flickering on MacOSX - already hide statusbar here
@@ -775,7 +775,7 @@ class StatusWindow(QWidget):
             # causes trouble in Wayland so is disabled for it
             if conf.close_details_hover and \
                     conf.statusbar_floating and \
-                    status_window_properties.is_shown and \
+                    statuswindow_properties.is_shown and \
                     not DESKTOP_WAYLAND:
                 self.periodically_check_window_under_mouse_and_hide()
 
@@ -794,7 +794,7 @@ class StatusWindow(QWidget):
         # Check mouse cursor over window and an opened context menu or dropdown list
         if self.geometry().contains(mouse_pos.x(), mouse_pos.y()) or \
                 not app.activePopupWidget() is None or \
-                status_window_properties.is_shown:
+                statuswindow_properties.is_shown:
             return False
 
         self.hide_window()
@@ -805,9 +805,9 @@ class StatusWindow(QWidget):
         """
         redraw window content, to be effective only when window is shown
         """
-        if status_window_properties.is_shown or \
+        if statuswindow_properties.is_shown or \
                 conf.fullscreen or \
-                (conf.windowed and status_window_properties.is_shown):
+                (conf.windowed and statuswindow_properties.is_shown):
             self.show_window()
 
     @Slot()
@@ -817,13 +817,13 @@ class StatusWindow(QWidget):
         """
         if not conf.fullscreen and not conf.windowed:
             # only hide if shown and not locked or if not yet hidden if moving
-            if status_window_properties.is_shown is True or \
-                    status_window_properties.is_shown is True and \
-                    status_window_properties.moving is True:
+            if statuswindow_properties.is_shown is True or \
+                    statuswindow_properties.is_shown is True and \
+                    statuswindow_properties.moving is True:
                 # only hide if shown at least a fraction of a second
                 # or has not been hidden a too short time ago
-                if status_window_properties.is_shown_timestamp + 0.5 < time() or \
-                        status_window_properties.is_hiding_timestamp + 0.2 < time():
+                if statuswindow_properties.is_shown_timestamp + 0.5 < time() or \
+                        statuswindow_properties.is_hiding_timestamp + 0.2 < time():
                     if conf.statusbar_floating:
                         self.statusbar.show()
                     self.toparea.hide()
@@ -841,14 +841,14 @@ class StatusWindow(QWidget):
                         self.close()
 
                     # switch off
-                    status_window_properties.is_shown = False
+                    statuswindow_properties.is_shown = False
 
                     # flag to reflect top-ness of window/statusbar
-                    status_window_properties.top = False
+                    statuswindow_properties.top = False
 
                     # reset icon x y
-                    status_window_properties.icon_x = 0
-                    status_window_properties.icon_y = 0
+                    statuswindow_properties.icon_x = 0
+                    statuswindow_properties.icon_y = 0
 
                     # tell the world that window goes down
                     self.hiding.emit()
@@ -856,7 +856,7 @@ class StatusWindow(QWidget):
                         self.hide()
 
                     # store time of hiding
-                    status_window_properties.is_hiding_timestamp = time()
+                    statuswindow_properties.is_hiding_timestamp = time()
 
                     self.move(self.stored_x, self.stored_y)
 
@@ -865,7 +865,7 @@ class StatusWindow(QWidget):
         """
         correct position if moving and cursor started outside statusbar
         """
-        if status_window_properties.moving:
+        if statuswindow_properties.moving:
             mouse_x = QCursor.pos().x()
             mouse_y = QCursor.pos().y()
             # when cursor is outside moved window correct the coordinates of statusbar/statuswindow
@@ -874,8 +874,8 @@ class StatusWindow(QWidget):
                 corrected_x = int(mouse_x - rect.width() // 2)
                 corrected_y = int(mouse_y - rect.height() // 2)
                 # calculate new relative values
-                status_window_properties.relative_x = mouse_x - corrected_x
-                status_window_properties.relative_y = mouse_y - corrected_y
+                statuswindow_properties.relative_x = mouse_x - corrected_x
+                statuswindow_properties.relative_y = mouse_y - corrected_y
                 self.move(corrected_x, corrected_y)
                 del mouse_x, mouse_y, corrected_x, corrected_y
 
@@ -906,24 +906,24 @@ class StatusWindow(QWidget):
         # calculate top-ness only if window is closed
         if conf.statusbar_floating:
             if self.y() < self.get_screen().geometry().height() // 2 + available_y:
-                status_window_properties.top = True
+                statuswindow_properties.top = True
             else:
-                status_window_properties.top = False
+                statuswindow_properties.top = False
 
             # always take the stored position of the statusbar
             x = self.stored_x
 
         elif conf.icon_in_systray or conf.windowed:
-            if status_window_properties.icon_y < self.get_screen().geometry().height() // 2 + available_y:
-                status_window_properties.top = True
+            if statuswindow_properties.icon_y < self.get_screen().geometry().height() // 2 + available_y:
+                statuswindow_properties.top = True
             else:
-                status_window_properties.top = False
+                statuswindow_properties.top = False
 
             # just a little buffer to let systrayicon.retrieve_icon_position() time to do its work, just in case
-            while status_window_properties.icon_x == 0:
+            while statuswindow_properties.icon_x == 0:
                 sleep(0.01)
 
-            x = status_window_properties.icon_x
+            x = statuswindow_properties.icon_x
 
         # get height from table widgets
         real_height = self.get_real_height()
@@ -949,7 +949,7 @@ class StatusWindow(QWidget):
 
         if conf.statusbar_floating:
             # when statusbar resides in the uppermost part of current screen extend from top to bottom
-            if status_window_properties.top:
+            if statuswindow_properties.top:
                 y = self.y()
                 if self.y() + real_height < available_height + available_y:
                     height = real_height
@@ -969,7 +969,7 @@ class StatusWindow(QWidget):
 
         elif conf.icon_in_systray or conf.windowed:
             # when systrayicon resides in the uppermost part of current screen extend from top to bottom
-            if status_window_properties.top:
+            if statuswindow_properties.top:
                 # when being top y is of course the available one
                 y = available_y
                 if self.y() + real_height < available_height + available_y:
@@ -993,7 +993,7 @@ class StatusWindow(QWidget):
         resize status window according to its new size
         """
         # store position for restoring it when hiding - only if not shown of course
-        if status_window_properties.is_shown is False:
+        if statuswindow_properties.is_shown is False:
             self.stored_x = self.x()
             self.stored_y = self.y()
             self.stored_width = self.width()
@@ -1034,7 +1034,7 @@ class StatusWindow(QWidget):
         if 'is_shown' in self.__dict__:
             if not conf.fullscreen and not conf.windowed:
                 # fully displayed statuswindow
-                if status_window_properties.is_shown is True:
+                if statuswindow_properties.is_shown is True:
                     width, height, x, y = self.calculate_size()
                     self.adjust_dummy_columns()
                 else:
@@ -1085,7 +1085,7 @@ class StatusWindow(QWidget):
         """
         store position for restoring it when hiding
         """
-        if not status_window_properties.is_shown:
+        if not statuswindow_properties.is_shown:
             self.stored_x = self.x()
             self.stored_y = self.y()
             self.stored_width = self.width()
@@ -1109,7 +1109,7 @@ class StatusWindow(QWidget):
         if conf.close_details_hover and \
                 not conf.fullscreen and \
                 not conf.windowed and \
-                status_window_properties.is_shown_timestamp + leave_time_offset < time():
+                statuswindow_properties.is_shown_timestamp + leave_time_offset < time():
             # only hide window if cursor is outside of it
             mouse_x = QCursor.pos().x()
             mouse_y = QCursor.pos().y()
@@ -1157,7 +1157,7 @@ class StatusWindow(QWidget):
         """
         might help to avoid flickering on MacOSX, in cooperation with QTimer
         """
-        status_window_properties.is_shown = True
+        statuswindow_properties.is_shown = True
 
     @Slot()
     def store_position_to_conf(self):
@@ -1406,9 +1406,9 @@ class StatusWindow(QWidget):
         # send signal if ready to stop
         finish = Signal()
 
-        def __init__(self, status_window_properties = None):
+        def __init__(self, statuswindow_properties = None):
             QObject.__init__(self)
-            self.status_window_properties = status_window_properties
+            self.statuswindow_properties = statuswindow_properties
 
         @Slot(str, str, str)
         def start(self, server_name, worst_status_diff, worst_status_current):
@@ -1418,15 +1418,15 @@ class StatusWindow(QWidget):
             if conf.notification:
                 # only if not notifying yet or the current state is worse than the prior AND
                 # only when the current state is configured to be honking about
-                if (STATES.index(worst_status_diff) > STATES.index(self.status_window_properties.worst_notification_status) or
-                    self.status_window_properties.is_notifying is False) and \
+                if (STATES.index(worst_status_diff) > STATES.index(self.statuswindow_properties.worst_notification_status) or
+                    self.statuswindow_properties.is_notifying is False) and \
                         conf.__dict__[f'notify_if_{worst_status_diff.lower()}'] is True:
                     # keep last worst state worth a notification for comparison 3 lines above
-                    self.status_window_properties.worst_notification_status = worst_status_diff
+                    self.statuswindow_properties.worst_notification_status = worst_status_diff
                     # set flag to avoid innecessary notification
-                    self.status_window_properties.is_notifying = True
-                    if self.status_window_properties == '':
-                        status_window_properties.notfifying_server = server_name
+                    self.statuswindow_properties.is_notifying = True
+                    if self.statuswindow_properties.notifying_server == '':
+                        statuswindow_properties.notfifying_server = server_name
 
                     # flashing statusbar
                     if conf.notification_flashing:
@@ -1446,9 +1446,9 @@ class StatusWindow(QWidget):
                                     'notification_custom_sound_{0}'.format(worst_status_diff.lower())]
 
                             # only one enabled server should access the mediaplayer
-                            if status_window_properties.notifying_server == server_name:
+                            if statuswindow_properties.notifying_server == server_name:
                                 # once loaded file will be played by every server, even if it is
-                                # not the status_window_properties.notifying_server that loaded it
+                                # not the statuswindow_properties.notifying_server that loaded it
                                 self.load_sound.emit(sound_file)
                                 self.play_sound.emit()
 
@@ -1513,9 +1513,9 @@ class StatusWindow(QWidget):
 
                 # repeated sound
                 # only let one enabled server play sound to avoid a larger cacophony
-                if status_window_properties.is_notifying and \
+                if statuswindow_properties.is_notifying and \
                         conf.notification_sound_repeat and \
-                        status_window_properties == server_name:
+                        statuswindow_properties == server_name:
                     self.play_sound.emit()
 
                 # desktop notification
@@ -1533,15 +1533,15 @@ class StatusWindow(QWidget):
             """
             stop notification if there is no need anymore
             """
-            if self.status_window_properties.is_notifying:
-                self.status_window_properties.worst_notification_status = 'UP'
-                self.status_window_properties.is_notifying = False
+            if self.statuswindow_properties.is_notifying:
+                self.statuswindow_properties.worst_notification_status = 'UP'
+                self.statuswindow_properties.is_notifying = False
 
                 # no more flashing statusbar and systray
                 self.stop_flash.emit()
 
                 # reset notifying server, waiting for next notification
-                status_window_properties.notifying_server = ''
+                statuswindow_properties.notifying_server = ''
 
         def execute_action(self, server_name, custom_action_string):
             """

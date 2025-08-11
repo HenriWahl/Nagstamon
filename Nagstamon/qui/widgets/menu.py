@@ -74,18 +74,18 @@ class MenuContext(MenuAtCursor):
     def __init__(self, parent=None):
         MenuAtCursor.__init__(self, parent=parent)
 
-        self.status_window = self.parentWidget()
+        self.shortcut_statuswindow = self.parentWidget()
 
         # connect all relevant widgets which should show the context menu
-        for widget in [self.status_window.toparea.button_hamburger_menu,
-                       self.status_window.toparea.label_version,
-                       self.status_window.toparea.label_empty_space,
-                       self.status_window.toparea.logo,
-                       self.status_window.statusbar.logo,
-                       self.status_window.statusbar.label_message]:
+        for widget in [self.shortcut_statuswindow.toparea.button_hamburger_menu,
+                       self.shortcut_statuswindow.toparea.label_version,
+                       self.shortcut_statuswindow.toparea.label_empty_space,
+                       self.shortcut_statuswindow.toparea.logo,
+                       self.shortcut_statuswindow.statusbar.logo,
+                       self.shortcut_statuswindow.statusbar.label_message]:
             self.menu_ready.connect(widget.set_menu)
 
-        for color_label in self.status_window.statusbar.color_labels.values():
+        for color_label in self.shortcut_statuswindow.statusbar.color_labels.values():
             self.menu_ready.connect(color_label.set_menu)
 
         self.initialize()
@@ -100,11 +100,11 @@ class MenuContext(MenuAtCursor):
         self.clear()
 
         self.action_refresh = QAction('Refresh', self)
-        self.action_refresh.triggered.connect(self.status_window.refresh)
+        self.action_refresh.triggered.connect(self.shortcut_statuswindow.refresh)
         self.addAction(self.action_refresh)
 
         self.action_recheck = QAction('Recheck all', self)
-        self.action_recheck.triggered.connect(self.status_window.recheck_all)
+        self.action_recheck.triggered.connect(self.shortcut_statuswindow.recheck_all)
         self.addAction(self.action_recheck)
 
         self.addSeparator()
@@ -152,7 +152,7 @@ class MenuContextSystrayicon(MenuContext):
         """
         QMenu.__init__(self, parent=parent)
 
-        self.status_window = self.parentWidget()
+        self.shortcut_statuswindow = self.parentWidget()
 
         # initialize as default + extra
         self.initialize()
@@ -166,6 +166,6 @@ class MenuContextSystrayicon(MenuContext):
         # makes even less sense on OSX
         if OS != OS_MACOS:
             self.action_status = QAction('Show status window', self)
-            self.action_status.triggered.connect(self.status_window.show_window_systrayicon)
+            self.action_status.triggered.connect(self.shortcut_statuswindow.show_window_systrayicon)
             self.insertAction(self.action_refresh, self.action_status)
             self.insertSeparator(self.action_refresh)
