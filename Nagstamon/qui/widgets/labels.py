@@ -56,7 +56,7 @@ class ClosingLabel(QLabel):
     modified QLabel which might close the status window if left-clicked
     """
 
-    shortcut_statuswindow = None
+    parent_statuswindow = None
     # neede to close status window
     mouse_released = Signal()
 
@@ -68,7 +68,7 @@ class ClosingLabel(QLabel):
         left click and configured close-if-clicking-somewhere makes status window close
         """
         # update access to status window
-        self.shortcut_statuswindow = self.parentWidget().parentWidget()
+        self.parent_statuswindow = self.parentWidget().parentWidget()
         if event.button() == Qt.MouseButton.LeftButton and conf.close_details_clicking_somewhere:
             # if popup window should be closed by clicking do it now
             if statuswindow_properties.is_shown and \

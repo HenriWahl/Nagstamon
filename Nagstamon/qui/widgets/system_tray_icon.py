@@ -85,10 +85,6 @@ class SystemTrayIcon(QSystemTrayIcon):
         # timer for singleshots for flashing
         self.timer = QTimer()
 
-        # when there are new settings/colors recreate icons
-        # TODO: already kicked to qui/__init__.py, check if it works
-        #dialogs.settings.changed.connect(self.create_icons)
-
         # treat clicks
         self.activated.connect(self.icon_clicked)
 

@@ -97,6 +97,9 @@ class StatusWindow(QWidget):
     # signal to be sent to all server workers to recheck all
     recheck = Signal()
 
+    # signal to submit server to authentication dialog
+    authenticate = Signal(str)
+
     # signal to be sent to all treeview workers to clear server event history
     # after 'Refresh'-button has been pressed
     clear_event_history = Signal()
@@ -109,9 +112,9 @@ class StatusWindow(QWidget):
     request_systrayicon_position = Signal()
 
     # shortcut to systray icon needed for connecting signals/slots
-    shortcut_systrayicon = None
+    injected_systrayicon = None
 
-    def __init__(self, systrayicon=None):
+    def __init__(self, dialogs=None, systrayicon=None):
         """
         Status window combined from status bar and popup window
         """
@@ -143,8 +146,10 @@ class StatusWindow(QWidget):
         self.setWindowTitle(AppInfo.NAME)
         self.setWindowIcon(QIcon(f'{RESOURCES}{sep}nagstamon.svg'))
 
+        # set shortcut for dialogs icon to be used for connecting signals/slots
+        self.injected_dialogs = dialogs
         # set shortcut for systray icon to be used for connecting signals/slots
-        self.shortcut_systrayicon = systrayicon
+        self.injected_systrayicon = systrayicon
 
         self.vbox = QVBoxLayout(self)  # global VBox
         self.vbox.setSpacing(0)  # no spacing
@@ -272,10 +277,10 @@ class StatusWindow(QWidget):
         for server_vbox in self.servers_vbox.children():
             if 'server' in server_vbox.__dict__.keys():
                 # tell systray after table was refreshed
-                server_vbox.table.worker.new_status.connect(self.shortcut_systrayicon.show_state)
+                server_vbox.table.worker.new_status.connect(self.injected_systrayicon.show_state)
                 # show error icon in systray
-                server_vbox.table.worker.show_error.connect(self.shortcut_systrayicon.set_error)
-                server_vbox.table.worker.hide_error.connect(self.shortcut_systrayicon.reset_error)
+                server_vbox.table.worker.show_error.connect(self.injected_systrayicon.set_error)
+                server_vbox.table.worker.hide_error.connect(self.injected_systrayicon.reset_error)
 
         self.servers_scrollarea_widget.setLayout(self.servers_vbox)
         self.servers_scrollarea.setWidget(self.servers_scrollarea_widget)
@@ -552,9 +557,7 @@ class StatusWindow(QWidget):
                     not conf.servers[server.name].use_autologin and \
                     conf.servers[server.name].password == '' and \
                     not conf.servers[server.name].authentication == 'kerberos':
-                # TODO: convert to signal/slot
-                #dialogs.authentication.show_auth_dialog(server.name)
-                pass
+                self.authenticate.emit(server.name)
 
             # without parent, there is some flickering when starting
             server_vbox = ServerVBox(server, parent=self)
@@ -596,8 +599,7 @@ class StatusWindow(QWidget):
             self.recheck.connect(server_vbox.table.worker.recheck_all)
 
             # refresh table after changed settings
-            # TODO: somehow treat this dynamically set up connection
-            #dialogs.settings.changed.connect(server_vbox.table.refresh)
+            self.injected_dialogs.settings.changed.connect(server_vbox.table.refresh)
 
             # listen if statuswindow cries for event history clearance
             self.clear_event_history.connect(server_vbox.table.worker.unfresh_event_history)

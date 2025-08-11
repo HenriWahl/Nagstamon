@@ -48,7 +48,7 @@ class DraggableWidget(QWidget):
     # unwanted repositioning of statuswindow
     right_mouse_button_pressed = False
 
-    shortcut_statuswindow = None
+    parent_statuswindow = None
 
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
@@ -63,7 +63,7 @@ class DraggableWidget(QWidget):
         2 - right button, popup menu
         """
         # update access to status window
-        self.shortcut_statuswindow = self.parentWidget().parentWidget()
+        self.parent_statuswindow = self.parentWidget().parentWidget()
         if event.button() == Qt.MouseButton.LeftButton:
             self.mouse_pressed.emit()
         if event.button() == Qt.MouseButton.RightButton:
@@ -75,8 +75,8 @@ class DraggableWidget(QWidget):
                 not statuswindow_properties.relative_y:
             # Qt5 & Qt6 have different methods for getting the global position so take it from qt.py
             global_position = get_global_position(event)
-            statuswindow_properties.relative_x = global_position.x() - self.shortcut_statuswindow.x()
-            statuswindow_properties.relative_y = global_position.y() - self.shortcut_statuswindow.y()
+            statuswindow_properties.relative_x = global_position.x() - self.parent_statuswindow.x()
+            statuswindow_properties.relative_y = global_position.y() - self.parent_statuswindow.y()
 
     def mouseReleaseEvent(self, event):
         """
@@ -117,11 +117,11 @@ class DraggableWidget(QWidget):
                 # lock window as moving
                 # if not set calculate relative position
                 if not statuswindow_properties.relative_x and not statuswindow_properties.relative_y:
-                    statuswindow_properties.relative_x = global_position.x() - self.shortcut_statuswindow.x()
-                    statuswindow_properties.relative_y = global_position.y() - self.shortcut_statuswindow.y()
+                    statuswindow_properties.relative_x = global_position.x() - self.parent_statuswindow.x()
+                    statuswindow_properties.relative_y = global_position.y() - self.parent_statuswindow.y()
                 statuswindow_properties.moving = True
                 # TODO: shall become a signal
-                self.shortcut_statuswindow.move(int(global_position.x() - statuswindow_properties.relative_x),
+                self.parent_statuswindow.move(int(global_position.x() - statuswindow_properties.relative_x),
                                                 int(global_position.y() - statuswindow_properties.relative_y))
 
             self.window_moved.emit()

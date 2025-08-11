@@ -115,11 +115,12 @@ check_version = CheckVersion()
 systrayicon = SystemTrayIcon()
 
 # set to none here due to race condition
-statuswindow = None
-menu = None
+#statusw indow = None
+#menu = None
 
 # combined statusbar/status window
-statuswindow = StatusWindow(systrayicon)
+statuswindow = StatusWindow(dialogs=dialogs,
+                            systrayicon=systrayicon)
 
 # context menu for statuswindow etc.
 menu = MenuContext(parent=statuswindow)
@@ -192,7 +193,11 @@ statuswindow.worker_notification.stop_flash.connect(systrayicon.reset)
 statuswindow.systrayicon_enabled.connect(systrayicon.show)
 statuswindow.systrayicon_disabled.connect(systrayicon.hide)
 
+# retrieve systray icon position for statuswindow position calculation
 statuswindow.request_systrayicon_position.connect(systrayicon.retrieve_icon_position)
+
+# connect statuswindow to authentication dialog
+statuswindow.authenticate.connect(dialogs.authentication.show_auth_dialog)
 
 # let statuswindow show message
 mediaplayer.send_message.connect(statuswindow.show_message)

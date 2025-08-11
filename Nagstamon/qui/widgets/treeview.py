@@ -84,7 +84,7 @@ class TreeView(QTreeView):
     def __init__(self, columncount, rowcount, sort_column, sort_order, server, parent=None):
         QTreeView.__init__(self, parent=parent)
 
-        self.shortcut_statuswindow = self.parentWidget().parentWidget()
+        self.parent_statuswindow = self.parentWidget().parentWidget()
 
         self.sort_column = sort_column
         self.sort_order = sort_order
@@ -174,7 +174,7 @@ class TreeView(QTreeView):
         # a thread + worker is necessary to get new monitor server data in the background and
         # to refresh the table cell by cell after new data is available
         self.worker_thread = QThread(parent=self)
-        self.worker = self.Worker(server=server, sort_column=self.sort_column, sort_order=self.sort_order, status_window=self.shortcut_statuswindow)
+        self.worker = self.Worker(server=server, sort_column=self.sort_column, sort_order=self.sort_order, status_window=self.parent_statuswindow)
         self.worker.moveToThread(self.worker_thread)
 
         # if worker got new status data from monitor server get_status
@@ -343,7 +343,7 @@ class TreeView(QTreeView):
                     super(TreeView, self).mouseReleaseEvent(event)
                 else:
                     # TODO: shall become a signal to statuswindow
-                    #self.shortcut_statuswindow.hide_window()
+                    #self.parent_statuswindow.hide_window()
                     pass
                 return
             elif event.button() == Qt.MouseButton.RightButton:
@@ -591,7 +591,7 @@ class TreeView(QTreeView):
             # if action wants a closed status window it should be closed now
             if conf.actions[action].close_popwin and not conf.fullscreen and not conf.windowed:
                 # TODO: shall become a signal to statuswindow
-                self.shortcut_statuswindow.hide_window()
+                self.parent_statuswindow.hide_window()
 
         # clean up
         del list_rows
@@ -610,7 +610,7 @@ class TreeView(QTreeView):
                     not method.__name__ == 'action_recheck' and \
                     not method.__name__ == 'action_archive_event':
                 # TODO: shall become a signal to statuswindow
-                self.shortcut_statuswindow.hide_window()
+                self.parent_statuswindow.hide_window()
 
         return decoration_function
 
@@ -619,7 +619,7 @@ class TreeView(QTreeView):
         # buttons in toparee
         if not conf.fullscreen and not conf.windowed:
             # TODO: shall become a signal to statuswindow
-            self.shortcut_statuswindow.hide_window()
+            self.parent_statuswindow.hide_window()
         # open actions tab (#3) of settings dialog
         # TODO: shall become a signal to settings dialog
         #dialogs.settings.show(tab=3)
@@ -896,7 +896,7 @@ class TreeView(QTreeView):
         refresh status display
         """
         # avoid race condition when waiting for password dialog
-        if self.shortcut_statuswindow is not None:
+        if self.parent_statuswindow is not None:
             # do nothing if window is moving to avoid lagging movement
             if not statuswindow_properties.moving:
                 # tell statusbar it should update
@@ -995,7 +995,7 @@ class TreeView(QTreeView):
             self.sort_column = sort_column
             self.sort_order = sort_order
 
-            self.shortcut_statuswindow = status_window
+            self.parent_statuswindow = status_window
 
         @Slot()
         def get_status(self):
@@ -1062,9 +1062,9 @@ class TreeView(QTreeView):
                     self.server.thread_counter = 0
 
                     # if failures have gone and nobody took notice switch notification off again
-                    # TODO: is self.shortcut_statuswindow needed here?
+                    # TODO: is self.parent_statuswindow needed here?
                     if len([k for k, v in self.server.events_history.items() if v is True]) == 0 and \
-                            self.shortcut_statuswindow and \
+                            self.parent_statuswindow and \
                             statuswindow_properties.is_notifying is True and \
                             statuswindow_properties.notifying_server == self.server.name:
                         # tell notification that unnoticed problems are gone

@@ -50,13 +50,17 @@ class ServerVBox(QVBoxLayout):
     button_fix_tls_error_show = Signal()
     button_fix_tls_error_hide = Signal()
 
+    # buttons pressed, which need dialogs
+    button_edit_pressed = Signal(str)
+    button_fix_tls_error_pressed = Signal(str, bool)
+
     # open dialog - may need closing the statuswindow
     open_dialog = Signal()
 
     def __init__(self, server, parent=None):
         QVBoxLayout.__init__(self, parent)
 
-        self.shortcut_statuswindow = parent
+        self.parent_statuswindow = parent
 
         # no space around
         self.setSpacing(0)
@@ -72,35 +76,35 @@ class ServerVBox(QVBoxLayout):
         self.header.setContentsMargins(0, 0, SPACE, 0)
 
         self.label = ClosingLabel(parent=parent)
-        self.label.mouse_released.connect(self.shortcut_statuswindow.hide_window)
+        self.label.mouse_released.connect(self.parent_statuswindow.hide_window)
         self.update_label()
         self.button_monitor = PushButtonBrowserURL(text='Monitor',
                                                    parent=parent,
                                                    server=self.server,
                                                    url_type='monitor')
-        self.button_monitor.webbrowser_opened.connect(self.shortcut_statuswindow.hide_window)
+        self.button_monitor.webbrowser_opened.connect(self.parent_statuswindow.hide_window)
         self.button_hosts = PushButtonBrowserURL(text='Hosts',
                                                  parent=parent,
                                                  server=self.server,
                                                  url_type='hosts')
-        self.button_hosts.webbrowser_opened.connect(self.shortcut_statuswindow.hide_window)
+        self.button_hosts.webbrowser_opened.connect(self.parent_statuswindow.hide_window)
         self.button_services = PushButtonBrowserURL(text='Services',
                                                     parent=parent,
                                                     server=self.server,
                                                     url_type='services')
-        self.button_services.webbrowser_opened.connect(self.shortcut_statuswindow.hide_window)
+        self.button_services.webbrowser_opened.connect(self.parent_statuswindow.hide_window)
         self.button_history = PushButtonBrowserURL(text='History',
                                                    parent=parent,
                                                    server=self.server,
                                                    url_type='history')
-        self.button_history.webbrowser_opened.connect(self.shortcut_statuswindow.hide_window)
+        self.button_history.webbrowser_opened.connect(self.parent_statuswindow.hide_window)
         self.button_edit = Button('Edit',
                                   parent=parent)
 
         # use label instead of spacer to be clickable
         self.label_stretcher = ClosingLabel('', parent=parent)
         self.label_stretcher.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Expanding)
-        self.label_stretcher.mouse_released.connect(self.shortcut_statuswindow.hide_window)
+        self.label_stretcher.mouse_released.connect(self.parent_statuswindow.hide_window)
 
         self.label_status = ServerStatusLabel(parent=parent)
         self.label_status.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
@@ -138,7 +142,7 @@ class ServerVBox(QVBoxLayout):
         self.header.addWidget(self.button_authenticate)
         self.header.addWidget(self.button_fix_tls_error)
 
-        self.open_dialog.connect(self.shortcut_statuswindow.hide_window)
+        self.open_dialog.connect(self.parent_statuswindow.hide_window)
 
         # attempt to get header strings
         try:
@@ -162,12 +166,16 @@ class ServerVBox(QVBoxLayout):
 
         # care about authentications
         self.button_authenticate.clicked.connect(self.authenticate_server)
-        # TODO: need some clever way to connect this signals - harder because being dynamic
-        #self.authenticate.connect(dialogs.authentication.show_auth_dialog)
-        #dialogs.authentication.update.connect(self.update_label)
+        # somehow a long way to connect the signal with the slot but works
+        self.authenticate.connect(self.parent_statuswindow.injected_dialogs.authentication.show_auth_dialog)
+        self.parent_statuswindow.injected_dialogs.authentication.update.connect(self.update_label)
 
         # start ignoring TLS trouble when button clicked
         self.button_fix_tls_error.clicked.connect(self.fix_tls_error)
+
+        # connect button signals to dialogs
+        self.button_edit_pressed.connect(self.parent_statuswindow.injected_dialogs.server.edit)
+        self.button_fix_tls_error_pressed.connect(self.parent_statuswindow.injected_dialogs.server.edit)
 
         self.addWidget(self.table, 1)
 
@@ -273,9 +281,7 @@ class ServerVBox(QVBoxLayout):
         """
         if not conf.fullscreen and not conf.windowed:
             self.open_dialog.emit()
-            pass
-        # TODO: transform to signal
-        #dialogs.server.edit(name=self.server.name)
+        self.button_edit_pressed.emit(self.server.name)
 
     def authenticate_server(self):
         """
@@ -298,6 +304,4 @@ class ServerVBox(QVBoxLayout):
         """
         if not conf.fullscreen and not conf.windowed:
             self.open_dialog.emit()
-            pass
-        # TODO: transform to signal
-        #dialogs.server.edit(server_name=self.server.name, show_options=True)
+        self.button_fix_tls_error_pressed.emit(self.server.name, True)
