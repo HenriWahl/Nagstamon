@@ -108,7 +108,10 @@ class StatusWindow(QWidget):
     # signal to request systray icon position for storing it in statuswindow_properties
     request_systrayicon_position = Signal()
 
-    def __init__(self):
+    # shortcut to systray icon needed for connecting signals/slots
+    shortcut_systrayicon = None
+
+    def __init__(self, systrayicon=None):
         """
         Status window combined from status bar and popup window
         """
@@ -139,6 +142,9 @@ class StatusWindow(QWidget):
 
         self.setWindowTitle(AppInfo.NAME)
         self.setWindowIcon(QIcon(f'{RESOURCES}{sep}nagstamon.svg'))
+
+        # set shortcut for systray icon to be used for connecting signals/slots
+        self.shortcut_systrayicon = systrayicon
 
         self.vbox = QVBoxLayout(self)  # global VBox
         self.vbox.setSpacing(0)  # no spacing
@@ -265,13 +271,11 @@ class StatusWindow(QWidget):
         # connect status window server vboxes to systray
         for server_vbox in self.servers_vbox.children():
             if 'server' in server_vbox.__dict__.keys():
-                # TODO: this dynamic connections need to be done in a better way, maybe in ServerVBox?
-                # # tell systray after table was refreshed
-                # server_vbox.table.worker.new_status.connect(systrayicon.show_state)
-                # # show error icon in systray
-                # server_vbox.table.worker.show_error.connect(systrayicon.set_error)
-                # server_vbox.table.worker.hide_error.connect(systrayicon.reset_error)
-                pass
+                # tell systray after table was refreshed
+                server_vbox.table.worker.new_status.connect(self.shortcut_systrayicon.show_state)
+                # show error icon in systray
+                server_vbox.table.worker.show_error.connect(self.shortcut_systrayicon.set_error)
+                server_vbox.table.worker.hide_error.connect(self.shortcut_systrayicon.reset_error)
 
         self.servers_scrollarea_widget.setLayout(self.servers_vbox)
         self.servers_scrollarea.setWidget(self.servers_scrollarea_widget)

@@ -119,7 +119,7 @@ statuswindow = None
 menu = None
 
 # combined statusbar/status window
-statuswindow = StatusWindow()
+statuswindow = StatusWindow(systrayicon)
 
 # context menu for statuswindow etc.
 menu = MenuContext(parent=statuswindow)
@@ -134,7 +134,6 @@ if not OS in OS_NON_LINUX:
 # and non-existence of macOS-systray-context-menu
 elif conf.icon_in_systray:
     systrayicon.set_menu(menu)
-
 
 # to be connected someday elsewhere
 # server -> statuswindow remove_previous server
