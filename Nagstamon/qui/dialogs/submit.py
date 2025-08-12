@@ -15,11 +15,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-# TODO: Somehow this file is not used anymore, remove it?
-
 from Nagstamon.config import conf
 from Nagstamon.qui.dialogs.dialog import Dialog
-from Nagstamon.qui.qt import (Signal)
+from Nagstamon.qui.qt import (Signal,
+                              Slot)
 
 
 class DialogSubmit(Dialog):
@@ -35,6 +34,7 @@ class DialogSubmit(Dialog):
     def __init__(self):
         Dialog.__init__(self, 'dialog_submit')
 
+    @Slot(object, str, str)
     def initialize(self, server=None, host='', service=''):
         # store server, host and service to be used for OK button evaluation
         self.server = server

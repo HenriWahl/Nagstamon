@@ -98,6 +98,10 @@ class TreeView(QTreeView):
     action_downtime_triggered_initialize = Signal(object, list, list)
     action_downtime_triggered_show = Signal()
 
+    # action submit check result triggered, needs to be initialized and shown
+    action_submit_triggered_initialize = Signal(object, str, str)
+    action_submit_triggered_show = Signal()
+
     def __init__(self, columncount, rowcount, sort_column, sort_order, server, parent=None):
         QTreeView.__init__(self, parent=parent)
 
@@ -246,9 +250,12 @@ class TreeView(QTreeView):
         self.action_acknowledge_triggered_show.connect(self.parent_statuswindow.injected_dialogs.acknowledge.show)
 
         # intialize and open downtime dialog
-        self.action_downtime_triggered_initialize.connect(self.parent_statuswindow.injected_dialogs.acknowledge.initialize)
-        self.action_downtime_triggered_show.connect(self.parent_statuswindow.injected_dialogs.acknowledge.show)
+        self.action_downtime_triggered_initialize.connect(self.parent_statuswindow.injected_dialogs.downtime.initialize)
+        self.action_downtime_triggered_show.connect(self.parent_statuswindow.injected_dialogs.downtime.show)
 
+        # intialize and open submit check result dialog
+        self.action_submit_triggered_initialize.connect(self.parent_statuswindow.injected_dialogs.submit.initialize)
+        self.action_submit_triggered_show.connect(self.parent_statuswindow.injected_dialogs.submit.show)
 
     @Slot()
     def set_font(self):
@@ -767,11 +774,8 @@ class TreeView(QTreeView):
         miserable_service = self.model().data(self.model().createIndex(index.row(), 2), Qt.ItemDataRole.DisplayRole)
 
         # running worker method is left to OK button of dialog
-        # TODO: convert to signal/slot
-        # dialogs.submit.initialize(server=self.server,
-        #                           host=miserable_host,
-        #                           service=miserable_service)
-        # dialogs.submit.show()
+        self.action_submit_triggered_initialize.emit(self.server, miserable_host, miserable_service)
+        self.action_submit_triggered_show.emit()
 
     @Slot()
     def action_clipboard_action_host(self):
