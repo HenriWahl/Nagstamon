@@ -1432,7 +1432,7 @@ class StatusWindow(QWidget):
                     # set flag to avoid innecessary notification
                     self.statuswindow_properties.is_notifying = True
                     if self.statuswindow_properties.notifying_server == '':
-                        statuswindow_properties.notfifying_server = server_name
+                        statuswindow_properties.notifying_server = server_name
 
                     # flashing statusbar
                     if conf.notification_flashing:

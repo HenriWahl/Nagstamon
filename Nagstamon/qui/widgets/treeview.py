@@ -81,6 +81,23 @@ class TreeView(QTreeView):
     # tell worker it should sort columns after someone pressed the column header
     sort_data_array_for_columns = Signal(int, int, bool)
 
+    # mouse clicked on cell
+    mouse_released = Signal()
+
+    # action menu option was selected
+    action_menu_clicked = Signal()
+
+    # action to edit actions in settings dialog
+    action_edit_triggered = Signal(int)
+
+    # action acknowledge triggered, needs to be initialized and shown
+    action_acknowledge_triggered_initialize = Signal(object, list, list)
+    action_acknowledge_triggered_show = Signal()
+
+    # action downtime triggered, needs to be initialized and shown
+    action_downtime_triggered_initialize = Signal(object, list, list)
+    action_downtime_triggered_show = Signal()
+
     def __init__(self, columncount, rowcount, sort_column, sort_order, server, parent=None):
         QTreeView.__init__(self, parent=parent)
 
@@ -215,8 +232,23 @@ class TreeView(QTreeView):
         # execute action by worker
         self.request_action.connect(self.worker.execute_action)
 
-        ## display mode - all or only header to display error
-        # self.is_shown = False
+        # hide status window if mouse was clicked ant it is configured to do so
+        self.mouse_released.connect(self.parent_statuswindow.hide_window)
+
+        # option of action menu was selected
+        self.action_menu_clicked.connect(self.parent_statuswindow.hide_window)
+
+        # edit actions in settings dialog in tab #3
+        self.action_edit_triggered.connect(self.parent_statuswindow.injected_dialogs.settings.show)
+
+        # intialize and open acknowledge dialog
+        self.action_acknowledge_triggered_initialize.connect(self.parent_statuswindow.injected_dialogs.acknowledge.initialize)
+        self.action_acknowledge_triggered_show.connect(self.parent_statuswindow.injected_dialogs.acknowledge.show)
+
+        # intialize and open downtime dialog
+        self.action_downtime_triggered_initialize.connect(self.parent_statuswindow.injected_dialogs.acknowledge.initialize)
+        self.action_downtime_triggered_show.connect(self.parent_statuswindow.injected_dialogs.acknowledge.show)
+
 
     @Slot()
     def set_font(self):
@@ -332,9 +364,7 @@ class TreeView(QTreeView):
                 if modifiers or self.count_selected_rows() > 1:
                     super(TreeView, self).mouseReleaseEvent(event)
                 else:
-                    # TODO: shall become a signal to statuswindow
-                    #self.parent_statuswindow.hide_window()
-                    pass
+                    self.mouse_released.emit()
                 return
             elif event.button() == Qt.MouseButton.RightButton:
                 self.cell_clicked()
@@ -580,8 +610,7 @@ class TreeView(QTreeView):
 
             # if action wants a closed status window it should be closed now
             if conf.actions[action].close_popwin and not conf.fullscreen and not conf.windowed:
-                # TODO: shall become a signal to statuswindow
-                self.parent_statuswindow.hide_window()
+                self.action_menu_clicked.emit()
 
         # clean up
         del list_rows
@@ -599,8 +628,7 @@ class TreeView(QTreeView):
             if not conf.fullscreen and not conf.windowed and \
                     not method.__name__ == 'action_recheck' and \
                     not method.__name__ == 'action_archive_event':
-                # TODO: shall become a signal to statuswindow
-                self.parent_statuswindow.hide_window()
+                self.action_menu_clicked.emit()
 
         return decoration_function
 
@@ -608,11 +636,9 @@ class TreeView(QTreeView):
     def action_edit_actions(self):
         # buttons in toparee
         if not conf.fullscreen and not conf.windowed:
-            # TODO: shall become a signal to statuswindow
-            self.parent_statuswindow.hide_window()
+            self.action_menu_clicked.emit()
         # open actions tab (#3) of settings dialog
-        # TODO: shall become a signal to settings dialog
-        #dialogs.settings.show(tab=3)
+        self.action_edit_triggered.emit(3)
 
     @action_response_decorator
     def action_monitor(self):
@@ -658,11 +684,8 @@ class TreeView(QTreeView):
             list_service.append(self.model().data(self.model().createIndex(lrow, 2), Qt.ItemDataRole.DisplayRole))
 
         # running worker method is left to OK button of dialog
-        # TODO: convert to signal/slot
-        # dialogs.acknowledge.initialize(server=self.server,
-        #                                host=list_host,
-        #                                service=list_service)
-        # dialogs.acknowledge.show()
+        self.action_acknowledge_triggered_initialize.emit(self.server, list_host, list_service)
+        self.action_acknowledge_triggered_show.emit()
 
     @action_response_decorator
     def action_downtime(self):
@@ -680,11 +703,8 @@ class TreeView(QTreeView):
             list_service.append(self.model().data(self.model().createIndex(lrow, 2), Qt.ItemDataRole.DisplayRole))
 
         # running worker method is left to OK button of dialog
-        # TODO: convert to signal/slot
-        # dialogs.downtime.initialize(server=self.server,
-        #                             host=list_host,
-        #                             service=list_service)
-        # dialogs.downtime.show()
+        self.action_downtime_triggered_initialize.emit(self.server, list_host, list_service)
+        self.action_downtime_triggered_show.emit()
 
     @action_response_decorator
     def action_archive_event(self):

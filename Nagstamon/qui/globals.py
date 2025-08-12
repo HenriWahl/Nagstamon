@@ -95,7 +95,7 @@ class StatusWindowProperties:
     is_notifying: bool = False
     # current worst state worth a notification
     worst_notification_status: str = 'UP'
-    notfifying_server: str = ''
+    notifying_server: str = ''
 
 # shared status window properties
 statuswindow_properties = StatusWindowProperties()

@@ -19,7 +19,8 @@
 from Nagstamon.config import conf
 from Nagstamon.qui.dialogs.dialog import Dialog
 from Nagstamon.qui.qt import (QDateTime,
-                              Signal)
+                              Signal,
+                              Slot)
 from Nagstamon.Servers import SERVER_TYPES
 
 class DialogAcknowledge(Dialog):
@@ -58,6 +59,7 @@ class DialogAcknowledge(Dialog):
 
         self.FORCE_DATETIME_EXPIRE_TIME = ['Alertmanager']
 
+    @Slot(object, list, list)
     def initialize(self, server=None, host=[], service=[]):
         # store server, host and service to be used for OK button evaluation
         self.server = server

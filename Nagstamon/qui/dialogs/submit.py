@@ -15,6 +15,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+# TODO: Somehow this file is not used anymore, remove it?
+
 from Nagstamon.config import conf
 from Nagstamon.qui.dialogs.dialog import Dialog
 from Nagstamon.qui.qt import (Signal)
@@ -22,7 +24,7 @@ from Nagstamon.qui.qt import (Signal)
 
 class DialogSubmit(Dialog):
     """
-        Dialog for submitting arbitrarily chosen results
+    Dialog for submitting arbitrarily chosen results
     """
     # store host and service to be used for OK button evaluation
     server = None
@@ -77,7 +79,7 @@ class DialogSubmit(Dialog):
 
     def ok(self):
         """
-            submit an arbitrary check result
+        submit an arbitrary check result
         """
         # default state
         state = "ok"

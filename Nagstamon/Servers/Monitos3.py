@@ -1,5 +1,5 @@
 # encoding: utf-8
-
+from Nagstamon.helpers import webbrowser_open
 # Nagstamon - Nagios status monitor for your desktop
 # Copyright (C) 2008-2025 Henri Wahl <henri@nagstamon.de> et al.
 #

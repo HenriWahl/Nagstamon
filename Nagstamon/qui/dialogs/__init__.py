@@ -48,7 +48,6 @@ class Dialogs():
         """
         initialize settings dialog
         """
-        # self.settings = Dialog_Settings('settings_main')
         self.settings = dialog
         self.settings.initialize()
         self.windows.append(self.settings.window)
@@ -57,7 +56,6 @@ class Dialogs():
         """
         initialize settings dialog
         """
-        # self.server = Dialog_Server('settings_server')
         self.server = dialog
         self.server.initialize()
         self.windows.append(self.server.window)
@@ -67,13 +65,11 @@ class Dialogs():
         self.server.edited.connect(self.settings.toggle_expire_time_widgets)
 
     def initialize_dialog_action(self, dialog):
-        # self.action = Dialog_Action('settings_action')
         self.action = dialog
         self.action.initialize()
         self.windows.append(self.action.window)
 
     def initialize_dialog_acknowledge(self, dialog):
-        # self.acknowledge = Dialog_Acknowledge('dialog_acknowledge')
         self.acknowledge = dialog
         self.acknowledge.initialize()
         self.windows.append(self.acknowledge.window)
@@ -81,7 +77,6 @@ class Dialogs():
         self.acknowledge.window.button_change_defaults_acknowledge.clicked.connect(self.acknowledge.window.close)
 
     def initialize_dialog_downtime(self, dialog):
-        # self.downtime = Dialog_Downtime('dialog_downtime')
         self.downtime = dialog
         self.downtime.initialize()
         self.windows.append(self.downtime.window)
@@ -89,19 +84,16 @@ class Dialogs():
         self.downtime.window.button_change_defaults_downtime.clicked.connect(self.downtime.window.close)
 
     def initialize_dialog_submit(self, dialog):
-        # self.submit = Dialog_Submit('dialog_submit')
         self.submit = dialog
         self.submit.initialize()
         self.windows.append(self.submit.window)
 
     def initialize_dialog_authentication(self, dialog):
-        # self.authentication = Dialog_Authentication('dialog_authentication')
         self.authentication = dialog
         self.authentication.initialize()
         self.windows.append(self.authentication.window)
 
     def initialize_dialog_server_missing(self, dialog):
-        # self.server_missing = Dialog_Server_missing('dialog_server_missing')
         self.server_missing = dialog
         self.server_missing.initialize()
         self.windows.append(self.server_missing.window)
@@ -110,7 +102,6 @@ class Dialogs():
         self.server_missing.window.button_enable_server.clicked.connect(self.settings.show)
 
     def initialize_dialog_about(self, dialog):
-        # self.about = Dialog_About('dialog_about')
         self.about = dialog
         self.windows.append(self.about.window)
 
