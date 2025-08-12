@@ -1076,7 +1076,6 @@ class TreeView(QTreeView):
                     self.server.thread_counter = 0
 
                     # if failures have gone and nobody took notice switch notification off again
-                    # TODO: is self.parent_statuswindow needed here?
                     if len([k for k, v in self.server.events_history.items() if v is True]) == 0 and \
                             self.parent_statuswindow and \
                             statuswindow_properties.is_notifying is True and \
