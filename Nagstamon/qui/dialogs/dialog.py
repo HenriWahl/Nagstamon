@@ -205,7 +205,7 @@ class Dialog(QObject):
                 conf.icon_in_systray and \
                 conf.hide_macos_dock_icon:
             # if no window is shown already show dock icon
-            # TODO: check out later
+            # TODO: check out later when caring about macOS
             if not len(dialogs.get_shown_dialogs()):
                 hide_macos_dock_icon(False)
 

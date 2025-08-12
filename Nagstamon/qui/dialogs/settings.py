@@ -391,7 +391,7 @@ class DialogSettings(Dialog):
         # catch exception which will occur when older settings are used which have real header names as values
         try:
             self.window.input_combobox_default_sort_field.setCurrentText(HEADERS_KEYS_HEADERS[conf.default_sort_field])
-        except Exception:
+        except:
             self.window.input_combobox_default_sort_field.setCurrentText(conf.default_sort_field)
 
         # fill default sort order combobox
@@ -404,13 +404,13 @@ class DialogSettings(Dialog):
             self.window.input_combobox_fullscreen_display.addItem(str(screen.name()))
         self.window.input_combobox_fullscreen_display.setCurrentText(str(conf.fullscreen_display))
 
-        # fill servers listwidget with servers
+        # fill servers list widget with servers
         self.fill_list(self.window.list_servers, conf.servers)
 
         # select first item
         self.window.list_servers.setCurrentRow(0)
 
-        # fill actions listwidget with actions
+        # fill actions list widget with actions
         self.fill_list(self.window.list_actions, conf.actions)
 
         # select first item
