@@ -84,7 +84,7 @@ class TreeView(QTreeView):
     def __init__(self, columncount, rowcount, sort_column, sort_order, server, parent=None):
         QTreeView.__init__(self, parent=parent)
 
-        self.parent_statuswindow = self.parentWidget().parentWidget()
+        self.parent_statuswindow = self.parentWidget()
 
         self.sort_column = sort_column
         self.sort_order = sort_order
@@ -133,9 +133,6 @@ class TreeView(QTreeView):
         self.set_font()
 
         # change font if it has been changed by settings
-        # TODO: find a way to connect the signals to the appropriate slots
-        #       maybe these connection requests could be sent as signals too?
-        #dialogs.settings.changed.connect(self.set_font)
         self.parent_statuswindow.injected_dialogs.settings.changed.connect(self.set_font)
 
         # create brushes for treeview
@@ -200,29 +197,16 @@ class TreeView(QTreeView):
         self.worker_thread.start()
 
         # connect signal for acknowledge
-        # TODO: find a way to connect the signals to the appropriate slots
-        #       maybe these connection requests could be sent as signals too?
-        #dialogs.acknowledge.acknowledge.connect(self.worker.acknowledge)
         self.parent_statuswindow.injected_dialogs.acknowledge.acknowledge.connect(self.worker.acknowledge)
 
         # connect signal to get start end time for downtime from worker
-        # TODO: find a way to connect the signals to the appropriate slots
-        #       maybe these connection requests could be sent as signals too?
-        #dialogs.downtime.get_start_end.connect(self.worker.get_start_end)
         self.parent_statuswindow.injected_dialogs.downtime.get_start_end.connect(self.worker.get_start_end)
-        #self.worker.set_start_end.connect(dialogs.downtime.set_start_end)
         self.worker.set_start_end.connect(self.parent_statuswindow.injected_dialogs.downtime.set_start_end)
 
         # connect signal for downtime
-        # TODO: find a way to connect the signals to the appropriate slots
-        #       maybe these connection requests could be sent as signals too?
-        #dialogs.downtime.downtime.connect(self.worker.downtime)
         self.parent_statuswindow.injected_dialogs.downtime.downtime.connect(self.worker.downtime)
 
         # connect signal for submit check result
-        # TODO: find a way to connect the signals to the appropriate slots
-        #       maybe these connection requests could be sent as signals too?
-        #dialogs.submit.submit.connect(self.worker.submit)
         self.parent_statuswindow.injected_dialogs.submit.submit.connect(self.worker.submit)
 
         # connect signal for recheck action
