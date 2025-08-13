@@ -179,7 +179,7 @@ class Icinga2APIServer(GenericServer):
         errors_occured = self.check_for_error(jsonraw, error, status_code)
         # if there are errors return them
         if errors_occured is not None:
-            return(errors_occured)
+            return errors_occured
 
         jsondict = json.loads(jsonraw)
         return jsondict.get('results', [])

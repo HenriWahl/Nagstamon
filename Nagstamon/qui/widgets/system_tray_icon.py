@@ -159,7 +159,6 @@ class SystemTrayIcon(QSystemTrayIcon):
         """
         evaluate mouse click
         """
-
         # retrieve icon position and store it in statuswindow_properties
         self.retrieve_icon_position()
 

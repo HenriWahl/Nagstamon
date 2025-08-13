@@ -77,7 +77,7 @@ def get_enabled_servers():
     """
         list of enabled servers which connections outside should be used to check
     """
-    return([x for x in servers.values() if x.enabled is True])
+    return [x for x in servers.values() if x.enabled is True]
 
 
 def get_worst_status():
@@ -117,7 +117,7 @@ def get_status_count():
         state_count['UNREACHABLE'] += server.unreachable
         state_count['DOWN'] += server.down
 
-    return(state_count)
+    return state_count
 
 
 def get_errors():

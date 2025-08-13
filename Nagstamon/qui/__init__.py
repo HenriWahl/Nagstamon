@@ -65,7 +65,7 @@ from Nagstamon.qui.widgets.model import Model
 from Nagstamon.qui.widgets.status_window import StatusWindow
 from Nagstamon.qui.widgets.system_tray_icon import SystemTrayIcon
 from Nagstamon.qui.widgets.top_area import TopArea
-from Nagstamon.qui.widgets.top_area_widgets import ComboBoxServers
+from Nagstamon.qui.widgets.combobox_servers import ComboBoxServers
 
 from Nagstamon.qui.widgets.treeview import TreeView
 from Nagstamon.qui.widgets.nagstamon_logo import NagstamonLogo

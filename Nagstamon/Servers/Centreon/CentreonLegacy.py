@@ -605,7 +605,7 @@ class CentreonServer(GenericServer):
 
             # if there are errors return them
             if errors_occured is not None:
-                return(errors_occured)
+                return errors_occured
 
             # Check if the result is not empty
             if len(xmlobj) == 0:
@@ -626,7 +626,7 @@ class CentreonServer(GenericServer):
                 errors_occured = self.check_for_error(xmlobj, error, status_code)
                 # if there are errors return them
                 if errors_occured is not None:
-                    return(errors_occured)
+                    return errors_occured
 
                 # a second time a bad session id should raise an error
                 if xmlobj.text.lower() == 'bad session id':
@@ -691,7 +691,7 @@ class CentreonServer(GenericServer):
             errors_occured = self.check_for_error(xmlobj, error, status_code)
             # if there are errors return them
             if errors_occured is not None:
-                return(errors_occured)
+                return errors_occured
 
             # Check if the result is not empty
             if len(xmlobj) == 0:
@@ -711,7 +711,7 @@ class CentreonServer(GenericServer):
                 errors_occured = self.check_for_error(xmlobj, error, status_code)
                 # if there are errors return them
                 if errors_occured is not None:
-                    return(errors_occured)
+                    return errors_occured
 
                 # a second time a bad session id should raise an error
                 if xmlobj.text.lower() == 'bad session id':
@@ -736,7 +736,7 @@ class CentreonServer(GenericServer):
 
                 # if there are errors return them
                 if errors_occured is not None:
-                    return(errors_occured)
+                    return errors_occured
 
                 # a second time a bad session id should raise an error
                 if xmlobj_meta.text.lower() == 'bad session id':

@@ -656,7 +656,7 @@ class GenericServer:
                 errors_occured = self.check_for_error(htobj, error, status_code)
                 # if there are errors return them
                 if errors_occured is not None:
-                    return(errors_occured)
+                    return errors_occured
 
                 # put a copy of a part of htobj into table to be able to delete htobj
                 # too mnuch copy.deepcopy()s here give recursion crashs
@@ -781,7 +781,7 @@ class GenericServer:
                 errors_occured = self.check_for_error(htobj, error, status_code)
                 # if there are errors return them
                 if errors_occured is not None:
-                    return(errors_occured)
+                    return errors_occured
 
                 # too much copy.deepcopy()s here give recursion crashs
                 table = htobj('table', {'class': 'status'})[0]
@@ -970,7 +970,7 @@ class GenericServer:
                     self.status = status.result
                     self.status_description = status.error
                     self.status_code = status.status_code
-                    return(status)
+                    return status
             elif self.status_description.startswith('requests.exceptions.SSLError:'):
                 self.tls_error = True
             else:
@@ -1709,7 +1709,7 @@ class GenericServer:
         """
             return number of unseen events - those which are set True as unseen
         """
-        return(len(list((e for e in self.events_history if self.events_history[e] is True))))
+        return len(list((e for e in self.events_history if self.events_history[e] is True)))
 
     @staticmethod
     def check_for_error(result, error, status_code) -> Optional[Result]:

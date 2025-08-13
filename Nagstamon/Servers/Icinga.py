@@ -130,9 +130,9 @@ class IcingaServer(GenericServer):
 
                 # get status depending on JSONablility
                 if self.json:
-                    return(self._get_status_JSON())
+                    return self._get_status_JSON()
                 else:
-                    return(self._get_status_HTML())
+                    return self._get_status_HTML()
             else:
                 # error result in case version still was ''
                 return result
@@ -168,7 +168,7 @@ class IcingaServer(GenericServer):
                 errors_occured = self.check_for_error(jsonraw, error, status_code)
                 # if there are errors return them
                 if errors_occured is not None:
-                    return(errors_occured)    
+                    return errors_occured    
                 
                 jsondict = json.loads(jsonraw)
                 hosts = copy.deepcopy(jsondict['status']['host_status'])
@@ -232,7 +232,7 @@ class IcingaServer(GenericServer):
                 errors_occured = self.check_for_error(jsonraw, error, status_code)
                 # if there are errors return them
                 if errors_occured is not None:
-                    return(errors_occured)    
+                    return errors_occured    
 
                 jsondict = json.loads(jsonraw)
                 services = copy.deepcopy(jsondict['status']['service_status'])
@@ -340,7 +340,7 @@ class IcingaServer(GenericServer):
                 errors_occured = self.check_for_error(htobj, error, status_code)
                 # if there are errors return them
                 if errors_occured is not None:
-                    return(errors_occured)    
+                    return errors_occured    
 
                 # put a copy of a part of htobj into table to be able to delete htobj
                 table = htobj('table', {'class': 'status'})[0]
@@ -469,7 +469,7 @@ class IcingaServer(GenericServer):
                 errors_occured = self.check_for_error(htobj, error, status_code)
                 # if there are errors return them
                 if errors_occured is not None:
-                    return(errors_occured)    
+                    return errors_occured    
                 
                 table = htobj('table', {'class': 'status'})[0]
 

@@ -32,6 +32,8 @@ from Nagstamon.qui.qt import (QObject,
 
 # DBus only interesting for Linux too
 if OS not in OS_NON_LINUX:
+    # get DBUS availability - still possible it does not work due to missing
+    # .service file on certain distributions
     try:
         from dbus import (Interface,
                           SessionBus)
@@ -60,10 +62,6 @@ class DBus(QObject):
 
     def __init__(self):
         QObject.__init__(self)
-
-        # get DBUS availability - still possible it does not work due to missing
-        # .sevice file on certain distributions
-        global DBUS_AVAILABLE
 
         self.id = 0
         self.actions = [('open' + self.random_id), 'Open status window']

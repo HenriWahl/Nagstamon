@@ -31,7 +31,7 @@ from Nagstamon.qui.qt import (QLabel,
 
 class LabelAllOK(QLabel):
     """
-        Label which is shown in fullscreen and windowed mode when all is OK - pretty seldomly
+    label which is shown in fullscreen and windowed mode when all is OK - pretty seldomly
     """
 
     def __init__(self, text='', parent=None):

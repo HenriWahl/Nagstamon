@@ -343,7 +343,7 @@ def machine_sortable_date(raw):
             del number, period
 
     # convert collected duration data components into seconds for being comparable
-    return(16934400 * d['M'] + 604800 * d['w'] + 86400 * d['d'] + 3600 * d['h'] + 60 * d['m'] + d['s'])
+    return 16934400 * d['M'] + 604800 * d['w'] + 86400 * d['d'] + 3600 * d['h'] + 60 * d['m'] + d['s']
 
 
 def md5ify(string):
@@ -363,40 +363,40 @@ def lock_config_folder(folder):
     This is also the case if some setup uses the nagstamon.config directory which most probably
     will be read-only
     '''
-    pidFilePath = os.path.join(folder, 'nagstamon.pid')
+    pid_file_path = os.path.join(folder, 'nagstamon.pid')
 
     try:
         # Open the file for rw or create a new one if missing
-        if os.path.exists(pidFilePath):
+        if os.path.exists(pid_file_path):
             mode = 'r+t'
         else:
             mode = 'wt'
 
-        with open(pidFilePath, mode, newline=None) as pidFile:
-            curPid = os.getpid()
-            curBootTime = int(psutil.boot_time())
-            curUserName = getpass.getuser().replace('@', '_').strip()
+        with open(pid_file_path, mode, newline=None) as pid_file:
+            currrent_pid = os.getpid()
+            current_boot_time = int(psutil.boot_time())
+            current_user_name = getpass.getuser().replace('@', '_').strip()
 
             pid = None
-            bootTime = None
-            userName = None
+            boot_time = None
+            user_name = None
             if mode.startswith('r'):
                 try:
-                    procInfo = pidFile.readline().strip().split('@')
-                    pid = int(procInfo[0])
-                    bootTime = int(procInfo[1])
-                    userName = procInfo[2].strip()
+                    process_info = pid_file.readline().strip().split('@')
+                    pid = int(process_info[0])
+                    boot_time = int(process_info[1])
+                    user_name = process_info[2].strip()
                 except(ValueError, IndexError):
                     pass
 
-            if pid is not None and bootTime is not None and userName is not None:
+            if pid is not None and boot_time is not None and user_name is not None:
                 # Found a pid stored in the pid file, check if its still running
-                if bootTime == curBootTime and userName == curUserName and psutil.pid_exists(pid):
+                if boot_time == current_boot_time and user_name == current_user_name and psutil.pid_exists(pid):
                     return False
 
-            pidFile.seek(0)
-            pidFile.truncate()
-            pidFile.write('{}@{}@{}'.format(curPid, curBootTime, curUserName))
+            pid_file.seek(0)
+            pid_file.truncate()
+            pid_file.write('{}@{}@{}'.format(currrent_pid, current_boot_time, current_user_name))
     except Exception as error:
         print(error)
 
@@ -405,31 +405,31 @@ def lock_config_folder(folder):
 
 # the following functions are used for sorted() in sort_data_array()
 def compare_host(item):
-    return(item.lower())
+    return item.lower()
 
 
 def compare_service(item):
-    return(item.lower())
+    return item.lower()
 
 
 def compare_status(item):
-    return(STATES.index(item))
+    return STATES.index(item)
 
 
 def compare_last_check(item):
-    return(machine_sortable_date(item))
+    return machine_sortable_date(item)
 
 
 def compare_duration(item):
-    return(machine_sortable_date(item))
+    return machine_sortable_date(item)
 
 
 def compare_attempt(item):
-    return(item)
+    return item
 
 
 def compare_status_information(item):
-    return(item.lower())
+    return item.lower()
 
 
 def webbrowser_open(url):

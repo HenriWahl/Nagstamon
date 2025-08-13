@@ -37,16 +37,16 @@ from Nagstamon.qui.qt import (QAction,
 from Nagstamon.qui.widgets.buttons import (Button,
                                            CSS_CLOSE_BUTTON,
                                            PushButtonHamburger)
+from Nagstamon.qui.widgets.combobox_servers import (ComboBoxServers)
 from Nagstamon.qui.widgets.draggables import DraggableLabel
 from Nagstamon.qui.widgets.layout import HBoxLayout
 from Nagstamon.qui.widgets.menu import MenuAtCursor
 from Nagstamon.qui.widgets.nagstamon_logo import NagstamonLogo
-from Nagstamon.qui.widgets.top_area_widgets import (ComboBoxServers)
 
 
 class TopArea(QWidget):
     """
-        Top area of status window
+    top area of status window
     """
 
     mouse_entered = Signal()

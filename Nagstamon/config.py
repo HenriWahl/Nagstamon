@@ -152,7 +152,7 @@ class AppInfo:
 
 class Config:
     """
-        The place for central configuration.
+    the place for central configuration.
     """
 
     def __init__(self):

@@ -532,8 +532,8 @@ class TreeView(QTreeView):
         action_edit_actions = QAction('Edit actions...', self)
         action_edit_actions.triggered.connect(self.action_edit_actions)
         self.action_menu.addAction(action_edit_actions)
-        # put actions into menu after separator
 
+        # put actions into menu after separator
         self.action_menu.addSeparator()
         if 'Monitor' in self.server.MENU_ACTIONS and len(list_rows) == 1:
             action_monitor = QAction('Monitor', self)
@@ -716,7 +716,7 @@ class TreeView(QTreeView):
     @action_response_decorator
     def action_archive_event(self):
         """
-            archive events in Checkmk Multisite Event Console
+        archive events in Checkmk Multisite Event Console
         """
 
         # fill action and info dict for thread-safe action request
@@ -782,7 +782,6 @@ class TreeView(QTreeView):
         """
         copy host name to clipboard
         """
-
         list_host = []
         text = ''
 
@@ -807,7 +806,6 @@ class TreeView(QTreeView):
         """
         copy service name to clipboard
         """
-
         list_service = []
         text = ''
 
@@ -856,7 +854,6 @@ class TreeView(QTreeView):
         """
         copy all information to clipboard
         """
-
         list_host = []
         list_service = []
         text = ''
@@ -1014,8 +1011,8 @@ class TreeView(QTreeView):
         @Slot()
         def get_status(self):
             """
-                check every second if thread still has to run
-                if interval time is reached get status
+            check every second if thread still has to run
+            if interval time is reached get status
             """
             # if counter is at least update interval get status
             if self.server.thread_counter >= conf.update_interval_seconds:
@@ -1102,7 +1099,7 @@ class TreeView(QTreeView):
         @Slot(int, int)
         def fill_data_array(self, sort_column, sort_order):
             """
-                let worker do the dirty job of filling the array
+            let worker do the dirty job of filling the array
             """
 
             # data_array to be evaluated in data() of model
@@ -1164,8 +1161,8 @@ class TreeView(QTreeView):
         @Slot(int, int, bool)
         def sort_data_array(self, sort_column, sort_order, header_clicked=False):
             """
-                sort list of lists in data_array depending on sort criteria
-                used from fill_data_array() and when clicked on table headers
+            sort list of lists in data_array depending on sort criteria
+            used from fill_data_array() and when clicked on table headers
             """
             # store current sort_column and sort_data for next sort actions
             self.sort_column = sort_column
@@ -1207,9 +1204,9 @@ class TreeView(QTreeView):
         @Slot(dict)
         def acknowledge(self, info_dict):
             """
-                slot waiting for 'acknowledge' signal from ok button from acknowledge dialog
-                all information about target server, host, service and flags is contained
-                in dictionary 'info_dict'
+            slot waiting for 'acknowledge' signal from ok button from acknowledge dialog
+            all information about target server, host, service and flags is contained
+            in dictionary 'info_dict'
             """
             # because all monitors are connected to this slot we must check which one sent the signal,
             # otherwise there are several calls and not only one as wanted
@@ -1220,9 +1217,9 @@ class TreeView(QTreeView):
         @Slot(dict)
         def downtime(self, info_dict):
             """
-                slot waiting for 'downtime' signal from ok button from downtime dialog
-                all information about target server, host, service and flags is contained
-                in dictionary 'info_dict'
+            slot waiting for 'downtime' signal from ok button from downtime dialog
+            all information about target server, host, service and flags is contained
+            in dictionary 'info_dict'
             """
             # because all monitors are connected to this slot we must check which one sent the signal,
             # otherwise there are several calls and not only one as wanted
@@ -1233,9 +1230,9 @@ class TreeView(QTreeView):
         @Slot(dict)
         def submit(self, info_dict):
             """
-                slot waiting for 'submit' signal from ok button from submit dialog
-                all information about target server, host, service and flags is contained
-                in dictionary 'info_dict'
+            slot waiting for 'submit' signal from ok button from submit dialog
+            all information about target server, host, service and flags is contained
+            in dictionary 'info_dict'
             """
             # because all monitors are connected to this slot we must check which one sent the signal,
             # otherwise there are several calls and not only one as wanted
@@ -1246,7 +1243,7 @@ class TreeView(QTreeView):
         @Slot(dict)
         def recheck(self, info_dict):
             """
-                Slot to start server recheck method, getting signal from TableWidget context menu
+            Slot to start server recheck method, getting signal from TableWidget context menu
             """
             if conf.debug_mode:
                 # host
@@ -1263,7 +1260,7 @@ class TreeView(QTreeView):
         @Slot()
         def recheck_all(self):
             """
-                call server.set_recheck for every single host/service
+            call server.set_recheck for every single host/service
             """
             # only if no already rechecking
             if self.rechecking_all is False:
@@ -1308,7 +1305,7 @@ class TreeView(QTreeView):
         @Slot(str, str)
         def get_start_end(self, server_name, host):
             """
-                Investigates start and end time of a downtime asynchronously
+            Investigates start and end time of a downtime asynchronously
             """
             # because every server listens to this signal the name has to be filtered
             if server_name == self.server.name:
@@ -1319,7 +1316,7 @@ class TreeView(QTreeView):
         @Slot(dict, dict)
         def execute_action(self, action, info):
             """
-                runs action, may it be custom or included like the Checkmk Multisite actions
+            runs action, may it be custom or included like the Checkmk Multisite actions
             """
             # first replace placeholder variables in string with actual values
             #

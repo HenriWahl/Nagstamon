@@ -353,9 +353,6 @@ class StatusWindow(QWidget):
         """
         apply presentation mode
         """
-        # so sorry but how to solve this Qt-5.10-Windows-mess otherwise?
-        global systrayicon
-
         # hide everything first
         self.hide_window()
         self.statusbar.hide()
@@ -1273,8 +1270,7 @@ class StatusWindow(QWidget):
 
     def kill(self):
         """
-        Try to remove every piece of statuswindow to avoid artefacts when changing display mode
-        :return:
+        try to remove every piece of statuswindow to avoid artefacts when changing display mode
         """
         self.label_all_ok.deleteLater()
         self.toparea.deleteLater()
@@ -1387,12 +1383,10 @@ class StatusWindow(QWidget):
                 self.debug_loop_looping = False
 
     class WorkerNotification(QObject):
-
         """
         run a thread for doing all notification stuff
         """
-
-       # tell statusbar labels to flash
+        # tell statusbar labels to flash
         start_flash = Signal()
         stop_flash = Signal()
 

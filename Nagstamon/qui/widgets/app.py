@@ -37,7 +37,6 @@ if QT_VERSION_MAJOR < 6:
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
 
 
-
 # global application instance
 app = QApplication(argv)
 

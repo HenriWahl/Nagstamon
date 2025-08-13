@@ -231,13 +231,11 @@ class ServerVBox(QVBoxLayout):
         self.label_stretcher.show()
         # special table treatment
         self.table.hide()
-        # TODO: still needed?
-        # self.table.is_shown = False
 
     @Slot()
     def hide_all(self):
         """
-            hide all items in server vbox
+        hide all items in server vbox
         """
         self.button_authenticate.hide()
         self.button_edit.hide()
@@ -251,12 +249,11 @@ class ServerVBox(QVBoxLayout):
         self.label_stretcher.hide()
         # special table treatment
         self.table.hide()
-        # self.table.is_shown = False
 
     @Slot()
     def delete(self):
         """
-            delete VBox and its children
+        delete VBox and its children
         """
         for widget in (self.label,
                        self.button_monitor,
