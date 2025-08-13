@@ -8,7 +8,7 @@
 - [ ] statuswindow.is_shown_timestamp -= 1
 - [x] normal-light activated server in settings dialog when opening settings
   - was like this before already
-- [ ] spaceless comments
+- [x] spaceless comments
 - [x] shrink statuswindow when less alerts being active
 - [ ] debug_queue not in config.py?
 - [ ] check if statuswindow.update() works in macOS

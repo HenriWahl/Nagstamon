@@ -156,6 +156,9 @@ class TreeView(QTreeView):
         # change font if it has been changed by settings
         self.parent_statuswindow.injected_dialogs.settings.changed.connect(self.set_font)
 
+        # create brushes if colors have been changed
+        self.parent_statuswindow.injected_dialogs.settings.changed.connect(self.create_brushes)
+
         # create brushes for treeview
         self.create_brushes()
 
@@ -264,6 +267,7 @@ class TreeView(QTreeView):
         """
         self.setFont(font)
 
+    @Slot()
     def create_brushes(self):
         """
         fill static brushes with current colors for treeview
