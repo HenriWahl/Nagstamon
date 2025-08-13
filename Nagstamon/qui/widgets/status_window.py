@@ -333,6 +333,28 @@ class StatusWindow(QWidget):
         # finally show up
         self.set_mode()
 
+    @Slot()
+    def reinitialize(self):
+        # Worker stoppen
+        if hasattr(self, "worker"):
+            self.worker.running = False
+            self.worker.finish.emit()
+        if hasattr(self, "worker_notification"):
+            self.worker_notification.running = False
+            self.worker_notification.finish.emit()
+        # Statusbar und vboxes entfernen
+        if hasattr(self, "statusbar"):
+            self.statusbar.deleteLater()
+            self.statusbar = None
+        if hasattr(self, "servers_vbox"):
+            for vbox in self.servers_vbox.children():
+                if hasattr(vbox, "table") and hasattr(vbox.table, "worker"):
+                    vbox.table.worker.finish.emit()
+                vbox.deleteLater()
+            self.servers_vbox = None
+        self.__init__(self)
+
+
     def get_screen(self):
         """
         very hackish fix for https://github.com/HenriWahl/Nagstamon/issues/865

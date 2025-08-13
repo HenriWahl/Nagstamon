@@ -185,6 +185,9 @@ dialogs.settings.start_debug_loop.connect(statuswindow.worker.debug_loop)
 # clenaup vbox after server deletion
 dialogs.settings.server_deleted.connect(statuswindow.delete_server_vbox)
 
+# reinitialize statuswindow when display mode settings were changed
+dialogs.settings.changed_display_mode.connect(statuswindow.reinitialize)
+
 # systray connections
 # show status popup when systray icon was clicked
 systrayicon.show_popwin.connect(statuswindow.show_window_systrayicon)

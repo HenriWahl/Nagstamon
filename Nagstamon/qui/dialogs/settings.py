@@ -96,6 +96,9 @@ class DialogSettings(Dialog):
     # to be fired when the servers and actions lists have to be changed
     update_list = Signal(str, str, str)
 
+    # sent when display mode has changed
+    changed_display_mode = Signal()
+
     def __init__(self):
         Dialog.__init__(self, 'settings_main')
         # file chooser Dialog
@@ -554,11 +557,12 @@ class DialogSettings(Dialog):
 
         # when display mode was changed, it's the easiest to destroy the old status window and create a new one
         # store display_mode to decide if statuswindow has to be recreated
-        # if display_mode != str(conf.statusbar_floating) + \
-        #         str(conf.icon_in_systray) + \
-        #         str(conf.fullscreen) + \
-        #         str(conf.fullscreen_display) + \
-        #         str(conf.windowed):
+        if display_mode != str(conf.statusbar_floating) + \
+                str(conf.icon_in_systray) + \
+                str(conf.fullscreen) + \
+                str(conf.fullscreen_display) + \
+                str(conf.windowed):
+            self.changed_display_mode.emit()
         #
         #     # stop statuswindow workers
         #     statuswindow.worker.running = False
