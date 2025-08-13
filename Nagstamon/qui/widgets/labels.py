@@ -86,6 +86,7 @@ class ServerStatusLabel(ClosingLabel):
 
     # storage for label text if it needs to be restored
     text_old = ''
+    stylesheet_old = None
 
     def __init__(self, parent=None):
         QLabel.__init__(self, parent=parent)

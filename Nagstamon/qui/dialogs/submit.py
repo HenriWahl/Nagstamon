@@ -23,7 +23,7 @@ from Nagstamon.qui.qt import (Signal,
 
 class DialogSubmit(Dialog):
     """
-    Dialog for submitting arbitrarily chosen results
+    dialog for submitting arbitrarily chosen results
     """
     # store host and service to be used for OK button evaluation
     server = None

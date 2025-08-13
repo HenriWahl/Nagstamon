@@ -145,6 +145,8 @@ class MenuContextSystrayicon(MenuContext):
     Maybe in general a good idea to offer status window popup here
     """
 
+    action_status = None
+
     def __init__(self, parent=None):
         """
         clone of normal MenuContext which serves well in all other places

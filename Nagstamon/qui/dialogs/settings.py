@@ -457,15 +457,12 @@ class DialogSettings(Dialog):
         # jump to requested tab in settings dialog
         self.window.tabs.setCurrentIndex(tab)
 
-        # reset the window if it only needs smaller screen estate
-        # self.window.adjustSize()
-        # self.window.exec()
         super().show()
 
     @Slot()
     def show_new_server(self):
         """
-            opens settings and new server dialogs - used by dialogs.server_missing
+        opens settings and new server dialogs - used by dialogs.server_missing
         """
         # emulate button click
         self.window.button_new_server.clicked.emit()
@@ -497,6 +494,7 @@ class DialogSettings(Dialog):
             self.settings_ok.emit()
 
         # store hash of all display settings as display_mode to decide if statuswindow has to be recreated
+        # TODO: used some lines later when applying new settings
         display_mode = str(conf.statusbar_floating) + \
                        str(conf.icon_in_systray) + \
                        str(conf.fullscreen) + \
@@ -1014,7 +1012,7 @@ class DialogSettings(Dialog):
     @Slot()
     def choose_browser_executable(self):
         """
-            show dialog for selection of non-default browser
+        show dialog for selection of non-default browser
         """
         # present dialog with OS-specific sensible defaults
         if OS == OS_WINDOWS:
@@ -1038,7 +1036,7 @@ class DialogSettings(Dialog):
     @Slot()
     def toggle_zabbix_widgets(self):
         """
-            Depending on the existence of an enabled Zabbix monitor, the Zabbix widgets are shown or hidden
+        depending on the existence of an enabled Zabbix monitor, the Zabbix widgets are shown or hidden
         """
         use_zabbix = False
         for server in servers.values():
@@ -1064,7 +1062,7 @@ class DialogSettings(Dialog):
     @Slot()
     def toggle_op5monitor_widgets(self):
         """
-            Depending on the existence of an enabled Op5Monitor monitor, the Op5Monitor widgets are shown or hidden
+        depending on the existence of an enabled Op5Monitor monitor, the Op5Monitor widgets are shown or hidden
         """
         use_op5monitor = False
         for server in servers.values():
@@ -1082,7 +1080,7 @@ class DialogSettings(Dialog):
     @Slot()
     def toggle_expire_time_widgets(self):
         """
-            Depending on the existence of an enabled IcingaWeb2 or Alertmanager monitor, the expire_time widgets are shown or hidden
+        depending on the existence of an enabled IcingaWeb2 or Alertmanager monitor, the expire_time widgets are shown or hidden
         """
         use_expire_time = False
         for server in servers.values():
@@ -1100,7 +1098,7 @@ class DialogSettings(Dialog):
     @Slot()
     def toggle_systray_icon_offset(self):
         """
-            Only show offset spinbox when offset is enabled
+        only show offset spinbox when offset is enabled
         """
         if self.window.input_checkbox_systray_offset_use.isVisible():
             if self.window.input_checkbox_systray_offset_use.isChecked():

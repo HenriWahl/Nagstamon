@@ -36,4 +36,5 @@ class HBoxLayout(QHBoxLayout):
             self.setSpacing(0)
         else:
             self.setSpacing(spacing)
-        self.setContentsMargins(0, 0, 0, 0)  # no margin
+        # no margin
+        self.setContentsMargins(0, 0, 0, 0)

@@ -184,7 +184,7 @@ class ServerVBox(QVBoxLayout):
 
     def get_real_height(self):
         """
-            return summarized real height of hbox items and table
+        return summarized real height of hbox items and table
         """
         height = self.table.get_real_height()
         if self.label.isVisible() and self.button_monitor.isVisible():
@@ -198,7 +198,7 @@ class ServerVBox(QVBoxLayout):
     @Slot()
     def show_all(self):
         """
-            show all items in server vbox
+        show all items in server vbox
         """
         self.button_authenticate.hide()
         self.button_edit.show()
@@ -217,7 +217,7 @@ class ServerVBox(QVBoxLayout):
     @Slot()
     def show_only_header(self):
         """
-            show all items in server vbox except the table - not needed if empty or major connection problem
+        show all items in server vbox except the table - not needed if empty or major connection problem
         """
         self.button_authenticate.hide()
         self.button_edit.show()
@@ -231,6 +231,7 @@ class ServerVBox(QVBoxLayout):
         self.label_stretcher.show()
         # special table treatment
         self.table.hide()
+        # TODO: still needed?
         # self.table.is_shown = False
 
     @Slot()
