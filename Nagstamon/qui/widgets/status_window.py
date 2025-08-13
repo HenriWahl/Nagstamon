@@ -601,6 +601,8 @@ class StatusWindow(QWidget):
             # listen if statuswindow cries for event history clearance
             self.clear_event_history.connect(server_vbox.table.worker.unfresh_event_history)
 
+            # statuswindow.servers_vbox.addLayout(statuswindow.create_server_vbox(servers[server_name]))
+            self.servers_vbox.addLayout(server_vbox)
             self.sort_server_vboxes()
 
             return server_vbox

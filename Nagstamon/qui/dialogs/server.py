@@ -414,9 +414,6 @@ class DialogServer(Dialog):
                 servers[server_name].enabled = True
                 # create vbox
                 self.create_server_vbox.emit(server_name)
-                # statuswindow.servers_vbox.addLayout(statuswindow.create_server_vbox(servers[server_name]))
-                # # renew a list of server vboxes in the status window
-                # statuswindow.sort_server_vboxes()
 
             # reorder servers in dict to reflect changes
             servers_freshly_sorted = sorted(servers.items())
