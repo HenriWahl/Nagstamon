@@ -151,7 +151,7 @@ class StatusBar(QWidget):
     @Slot()
     def summarize_states(self):
         """
-            display summaries of states in statusbar
+        display summaries of states in statusbar
         """
         # initial zeros
         for label in self.color_labels.values():
@@ -193,7 +193,7 @@ class StatusBar(QWidget):
     @Slot()
     def flash(self):
         """
-            send color inversion signal to labels
+        send color inversion signal to labels
         """
         # only if currently a notification is necessary
         if statuswindow_properties.is_notifying:
@@ -204,7 +204,7 @@ class StatusBar(QWidget):
     @Slot()
     def reset(self):
         """
-            tell labels to set original colors
+        tell labels to set original colors
         """
         self.labels_reset.emit()
         # only if currently a notification is necessary
@@ -215,9 +215,9 @@ class StatusBar(QWidget):
     @Slot()
     def adjust_size(self):
         """
-            apply new size of widgets, especially Nagstamon logo
-            run through all labels to the the max height in case not all labels
-            are shown at the same time - which is very likely the case
+        apply new size of widgets, especially Nagstamon logo
+        run through all labels to the the max height in case not all labels
+        are shown at the same time - which is very likely the case
         """
         # take height for logo
         # height = 0
@@ -240,7 +240,7 @@ class StatusBar(QWidget):
     @Slot(str)
     def set_error(self, message):
         """
-            display error message if any error exists
+        display error message if any error exists
         """
         self.label_message.setText(message)
         self.label_message.show()
@@ -248,7 +248,7 @@ class StatusBar(QWidget):
     @Slot()
     def reset_error(self):
         """
-            delete error message if there is no error
+        delete error message if there is no error
         """
         if not get_errors():
             self.label_message.setText('')

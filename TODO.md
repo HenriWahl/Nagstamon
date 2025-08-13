@@ -9,7 +9,8 @@
 - [x] normal-light activated server in settings dialog when opening settings
   - was like this before already
 - [ ] spaceless comments
-- [ ] shrink statuswindow when less alerts being active
+- [x] shrink statuswindow when less alerts being active
 - [ ] debug_queue not in config.py?
 - [ ] check if statuswindow.update() works in macOS
-- [ ] check if 'submit check result' still works 
+- [ ] check if 'submit check result' still works
+- [ ] check if no multiple flashing in statusbar is triggered
