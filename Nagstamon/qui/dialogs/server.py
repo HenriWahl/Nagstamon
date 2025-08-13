@@ -36,7 +36,7 @@ from Nagstamon.Servers import (create_server,
 
 class DialogServer(Dialog):
     """
-    Dialog used to set up one single server
+    dialog used to set up one single server
     """
 
     # tell server has been edited
@@ -445,7 +445,7 @@ class DialogServer(Dialog):
     @Slot()
     def choose_custom_cert_ca_file(self):
         """
-            show dialog for selection of non-default browser
+        show dialog for selection of non-default browser
         """
         file_filter = 'All files (*)'
         file = self.file_chooser.getOpenFileName(self.window,

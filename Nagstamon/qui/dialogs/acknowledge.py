@@ -25,7 +25,7 @@ from Nagstamon.Servers import SERVER_TYPES
 
 class DialogAcknowledge(Dialog):
     """
-        Dialog for acknowledging host/service problems
+    dialog for acknowledging host/service problems
     """
 
     # store host and service to be used for OK button evaluation
@@ -119,7 +119,7 @@ class DialogAcknowledge(Dialog):
 
     def ok(self):
         """
-            acknowledge miserable host/service
+        acknowledge miserable host/service
         """
         # create a list of all service of selected host to acknowledge them all
         all_services = list()

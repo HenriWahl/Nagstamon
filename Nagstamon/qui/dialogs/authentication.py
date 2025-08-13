@@ -23,7 +23,7 @@ from Nagstamon.Servers import servers
 
 class DialogAuthentication(Dialog):
     """
-        Dialog for authentication
+    dialog for authentication
     """
     # store server
     server = None
@@ -39,7 +39,7 @@ class DialogAuthentication(Dialog):
 
     def initialize(self):
         """
-            setup dialog fitting to server
+        setup dialog fitting to server
         """
         if self.server is not None:
 
@@ -88,7 +88,7 @@ class DialogAuthentication(Dialog):
 
     def ok(self):
         """
-        Take username and password
+        take username and password
         """
 
         # close window fist to avoid lagging UI

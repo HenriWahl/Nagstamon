@@ -75,25 +75,19 @@ class CheckVersion(QObject):
     @Slot()
     def reset_checking(self):
         """
-            reset checking the flag to avoid QThread crashes
+        reset checking the flag to avoid QThread crashes
         """
         self.is_checking = False
 
     @Slot(str)
     def show_message(self, message):
         """
-            message dialog must be shown from GUI thread
+        message dialog must be shown from GUI thread
         """
         self.version_info_retrieved.emit()
 
         # attempt to solve https://github.com/HenriWahl/Nagstamon/issues/303
         # might be working this time
-
-        print('needs another handling: CheckVersion.show_message on macOS')
-        # if statuswindow.is_shown:
-        #     parent = statuswindow
-        # else:
-        #     parent = self.parent
         parent = self.parent
 
         messagebox = QMessageBox(QMessageBox.Icon.Information,
@@ -122,7 +116,7 @@ class CheckVersion(QObject):
 
         def check(self):
             """
-                check for update using server connection
+            check for update using server connection
             """
             # get servers to be used for checking the version
             enabled_servers = get_enabled_servers()

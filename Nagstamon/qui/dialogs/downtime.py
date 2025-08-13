@@ -23,7 +23,7 @@ from Nagstamon.qui.qt import (Signal,
 
 class DialogDowntime(Dialog):
     """
-    Dialog for putting hosts/services into downtime
+    dialog for putting hosts/services into downtime
     """
 
     # send signal to get start and end of downtime asynchronously
@@ -86,7 +86,7 @@ class DialogDowntime(Dialog):
 
     def ok(self):
         """
-            schedule downtime for miserable host/service
+        schedule downtime for miserable host/service
         """
         # type of downtime - fixed or flexible
         if self.window.input_radiobutton_type_fixed.isChecked() is True:
@@ -114,7 +114,7 @@ class DialogDowntime(Dialog):
     @Slot(str, str)
     def set_start_end(self, start, end):
         """
-            put values sent by worker into start and end fields
+        put values sent by worker into start and end fields
         """
         self.window.input_lineedit_start_time.setText(start)
         self.window.input_lineedit_end_time.setText(end)
@@ -122,7 +122,7 @@ class DialogDowntime(Dialog):
     @Slot()
     def set_type_fixed(self):
         """
-            enable/disable appropriate widgets if type is "Fixed"
+        enable/disable appropriate widgets if type is "Fixed"
         """
         self.window.label_duration.hide()
         self.window.label_duration_hours.hide()

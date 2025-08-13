@@ -51,16 +51,16 @@ class DialogAbout(Dialog):
 
         # fill in license information
         license_file = open(f'{RESOURCES}{sep}LICENSE', encoding='utf-8')
-        license = license_file.read()
+        license_file_content = license_file.read()
         license_file.close()
-        self.window.textedit_license.setPlainText(license)
+        self.window.textedit_license.setPlainText(license_file_content)
         self.window.textedit_license.setReadOnly(True)
 
         # fill in credits information
         credits_file = open(f'{RESOURCES}{sep}CREDITS', encoding='utf-8')
-        credits = credits_file.read()
+        credits_file_content = credits_file.read()
         credits_file.close()
-        self.window.textedit_credits.setText(credits)
+        self.window.textedit_credits.setText(credits_file_content)
         self.window.textedit_credits.setOpenExternalLinks(True)
         self.window.textedit_credits.setReadOnly(True)
 
