@@ -897,7 +897,7 @@ class DialogSettings(Dialog):
             background = self.window.__dict__[f'input_button_color_{status}_background'].styleSheet()
             background = background.split(':')[1].strip().split(';')[0]
             # set example color
-            self.window.__dict__[f'label_color_ {status}'].setStyleSheet(f'''color: {text};
+            self.window.__dict__[f'label_color_{status}'].setStyleSheet(f'''color: {text};
                                                                              background: {background};
                                                                           ''')
             # update alternation colors
