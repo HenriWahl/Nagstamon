@@ -93,6 +93,9 @@ class DialogSettings(Dialog):
     # signal to be fired when the settings dialog is cancelled
     cancelled = Signal()
 
+    # to be fired when the servers and actions lists have to be changed
+    update_list = Signal(str, str, str)
+
     def __init__(self):
         Dialog.__init__(self, 'settings_main')
         # file chooser Dialog
@@ -639,6 +642,7 @@ class DialogSettings(Dialog):
             if reply == QMessageBox.StandardButton.Yes:
                 # in case server is enabled to delete its vbox
                 if server.enabled:
+                    # TODO: needs to be run here? - connected with signal "server_deleted"
                     # for vbox in statuswindow.servers_vbox.children():
                     #     if vbox.server.name == server.name:
                     #         # stop thread by falsificate running flag
@@ -665,11 +669,8 @@ class DialogSettings(Dialog):
                 else:
                     # go down one row
                     row = row + 1
-
                 # refresh list and mark new current row
-                self.refresh_list(list_widget=self.window.list_servers,
-                                  list_conf=conf.servers,
-                                  current=self.window.list_servers.item(row).text())
+                self.update_list.emit('list_servers', 'servers', self.window.list_servers.item(row).text())
                 del row, count
 
             # delete server config file from disk
@@ -747,12 +748,8 @@ class DialogSettings(Dialog):
             else:
                 # go down one row
                 row = row + 1
-
             # refresh list and mark new current row
-            self.refresh_list(list_widget=self.window.list_actions,
-                              list_conf=conf.actions,
-                              current=self.window.list_actions.item(row).text())
-
+            self.update_list.emit('list_actions', 'actions', self.window.list_actions.item(row).text())
             del row, count
 
         # delete the action config file from disk

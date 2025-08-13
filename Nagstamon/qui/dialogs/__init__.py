@@ -136,3 +136,5 @@ dialogs.settings.action_copied.connect(dialogs.action.copy)
 dialogs.action.edited_update_list.connect(dialogs.settings.refresh_list)
 # server -> settings refresh_list
 dialogs.server.edited_update_list.connect(dialogs.settings.refresh_list)
+# servers and actions list update
+dialogs.settings.update_list.connect(dialogs.settings.refresh_list)

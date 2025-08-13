@@ -422,7 +422,6 @@ class DialogServer(Dialog):
             del servers_freshly_sorted
 
             # refresh the list of servers, give call the current server name to highlight it
-            # refresh list of actions, give call the current action name to highlight it
             self.edited_update_list.emit('list_servers', 'servers', self.server_conf.name)
 
             # tell the main window about changes (Zabbix, Opsview, for example)
@@ -431,7 +430,7 @@ class DialogServer(Dialog):
             # delete the old server .conf file to reflect name changes
             # new one will be written soon
             if self.previous_server_conf is not None:
-                conf.delete_file('servers', 'server_{0}.conf'.format(quote(self.previous_server_conf.name, safe='')))
+                conf.delete_file('servers', f"server_{quote(self.previous_server_conf.name, safe='')}.conf")
 
             # store server settings
             conf.save_multiple_config('servers', 'server')

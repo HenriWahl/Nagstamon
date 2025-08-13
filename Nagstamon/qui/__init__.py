@@ -181,6 +181,10 @@ dialogs.settings.changed.connect(statuswindow.toparea.combobox_servers.fill)
 check_version.version_info_retrieved.connect(statuswindow.hide_window)
 # start debug loop by signal
 dialogs.settings.start_debug_loop.connect(statuswindow.worker.debug_loop)
+
+# clenaup vbox after server deletion
+dialogs.settings.server_deleted.connect(statuswindow.delete_server_vbox)
+
 # systray connections
 # show status popup when systray icon was clicked
 systrayicon.show_popwin.connect(statuswindow.show_window_systrayicon)
