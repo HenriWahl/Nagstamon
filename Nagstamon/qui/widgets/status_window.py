@@ -284,11 +284,6 @@ class StatusWindow(QWidget):
         # stop notification if window gets shown or hidden
         self.hiding.connect(self.worker_notification.stop)
 
-        # context menu, checking for existence necessary at startup
-        # TODO: shall be done in systrayicon? Or is it enough if done in qui/__init__.py?
-        #if not menu == None:
-        #    systrayicon.set_menu(menu)
-
         self.worker_notification.moveToThread(self.worker_notification_thread)
         # start with low priority
         self.worker_notification_thread.start(QThread.Priority.LowestPriority)
@@ -1336,6 +1331,16 @@ class StatusWindow(QWidget):
                 vbox.table.worker.finish.emit()
                 # nothing more to do
                 break
+
+    @Slot()
+    def decrease_shown_timestamp(self):
+        """
+        small workaround for the timestamp trick to avoid flickering
+        if the 'Settings' button was clicked too fast the timestamp difference
+        is too short and the statuswindow will keep open
+        modifying the timestamp could help
+        """
+        statuswindow_properties.is_shown_timestamp -= 1
 
     @Slot()
     def exit(self):

@@ -451,13 +451,6 @@ class DialogSettings(Dialog):
         self.toggle_op5monitor_widgets()
         self.toggle_expire_time_widgets()
 
-        # # small workaround for the timestamp trick to avoid flickering
-        # # if the 'Settings' button was clicked too fast the timestamp difference
-        # # is too short and the statuswindow will keep open
-        # # modifying the timestamp could help
-        # TODO: still relevant? Let's assume yes, but signal-and-slotize later
-        #self.statuswindow.is_shown_timestamp -= 1
-
         # tell the world that dialog pops up
         self.show_dialog.emit()
 

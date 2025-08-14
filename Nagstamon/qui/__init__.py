@@ -143,6 +143,8 @@ statuswindow.toparea.action_exit.triggered.connect(statuswindow.exit)
 
 # hide if settings dialog pops up
 dialogs.settings.show_dialog.connect(statuswindow.hide_window)
+# workaround for the timestamp trick to avoid flickering
+dialogs.settings.show_dialog.connect(statuswindow.decrease_shown_timestamp)
 # refresh all information after changed settings
 dialogs.settings.changed.connect(statuswindow.refresh)
 dialogs.settings.changed.connect(statuswindow.toparea.combobox_servers.fill)

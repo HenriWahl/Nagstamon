@@ -5,7 +5,7 @@
 - [ ] show_macos_dock_icon_if_necessary should be called elsewhere
 - [ ] hide_macos_dock_icon_if_necessary should be called elsewhere
 - [ ] 'new' -> 'create'
-- [ ] statuswindow.is_shown_timestamp -= 1
+- [x] statuswindow.is_shown_timestamp -= 1
 - [x] normal-light activated server in settings dialog when opening settings
   - was like this before already
 - [x] spaceless comments
@@ -15,3 +15,4 @@
 - [ ] check if 'submit check result' still works
 - [ ] check if no multiple flashing in statusbar is triggered
 - [x] systray icon menu Window
+- [ ] switch from full screen to other mode
