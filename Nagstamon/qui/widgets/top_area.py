@@ -53,6 +53,7 @@ class TopArea(QWidget):
 
     def __init__(self, parent=None):
         QWidget.__init__(self)
+
         self.hbox = HBoxLayout(spacing=SPACE, parent=self)  # top HBox containing buttons
         self.hbox.setSizeConstraint(QHBoxLayout.SizeConstraint.SetMinimumSize)
 
@@ -73,13 +74,13 @@ class TopArea(QWidget):
         # fill default order fields combobox with server names
         self.combobox_servers.fill()
 
-        # hambuger menu
+        # hamburger menu
         self.button_hamburger_menu = PushButtonHamburger()
         self.button_hamburger_menu.setIcon(self.icons['menu'])
         self.hamburger_menu = MenuAtCursor()
-        action_exit = QAction("Exit", self)
-        action_exit.triggered.connect(exit)
-        self.hamburger_menu.addAction(action_exit)
+        self.action_exit = QAction("Exit", self)
+        self.action_exit.triggered.connect(exit)
+        self.hamburger_menu.addAction(self.action_exit)
         self.button_hamburger_menu.setMenu(self.hamburger_menu)
 
         # X

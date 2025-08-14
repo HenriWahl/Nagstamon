@@ -121,18 +121,25 @@ class MenuContext(MenuAtCursor):
         self.addSeparator()
 
         self.action_settings = QAction('Settings...', self)
+        self.action_settings.triggered.connect(self.parent_statuswindow.hide_window)
+        self.action_settings.triggered.connect(self.parent_statuswindow.injected_dialogs.settings.show)
         self.addAction(self.action_settings)
 
         self.action_save_position = QAction('Save position', self)
+        # TODO: remove action from menu if not needed aka not floating
         if conf.statusbar_floating:
             self.addAction(self.action_save_position)
+        self.action_save_position.triggered.connect(self.parent_statuswindow.save_position_to_conf)
 
         self.addSeparator()
 
         self.action_about = QAction('About...', self)
+        self.action_about.triggered.connect(self.parent_statuswindow.hide_window)
+        self.action_about.triggered.connect(self.parent_statuswindow.injected_dialogs.about.show)
         self.addAction(self.action_about)
+
         self.action_exit = QAction('Exit', self)
-        self.action_exit.triggered.connect(exit)
+        self.action_exit.triggered.connect(self.parent_statuswindow.exit)
         self.addAction(self.action_exit)
 
         # tell all widgets to use the new menu

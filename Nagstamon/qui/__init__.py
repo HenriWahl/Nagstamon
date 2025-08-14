@@ -83,31 +83,6 @@ if OS == OS_MACOS:
                         NSApplicationPresentationHideDock)
 
 
-@Slot()
-def exit():
-    """
-    stop all child threads before quitting instance
-    """
-    # store position of statuswindow/statusbar
-    statuswindow.store_position_to_conf()
-
-    # save configuration
-    conf.save_config()
-
-    # hide statuswindow first to avoid lag when waiting for finished threads
-    statuswindow.hide()
-
-    # stop statuswindow workers
-    statuswindow.worker.finish.emit()
-    statuswindow.worker_notification.finish.emit()
-
-    # tell all treeview threads to stop
-    for server_vbox in statuswindow.servers_vbox.children():
-        server_vbox.table.worker.finish.emit()
-
-    app.exit()
-
-
 # check for updates
 check_version = CheckVersion()
 
@@ -143,7 +118,7 @@ dialogs.server.create_server_vbox.connect(statuswindow.create_server_vbox)
 
 dialogs.authentication.show_up.connect(statuswindow.hide_window)
 
-dialogs.settings.settings_ok.connect(statuswindow.store_position_to_conf)
+dialogs.settings.settings_ok.connect(statuswindow.save_position_to_conf)
 # trigger the statuswindow.worker to check if debug loop is neede and if so, start it
 dialogs.settings.settings_ok.connect(statuswindow.worker.debug_loop)
 dialogs.settings.server_deleted.connect(statuswindow.worker.debug_loop)
@@ -163,15 +138,11 @@ dialogs.settings.changed.connect(statuswindow.statusbar.adjust_size)
 # menu
 dialogs.settings.changed.connect(menu.initialize)
 
-menu.action_settings.triggered.connect(statuswindow.hide_window)
-menu.action_settings.triggered.connect(dialogs.settings.show)
-menu.action_save_position.triggered.connect(statuswindow.store_position_to_conf)
-menu.action_about.triggered.connect(statuswindow.hide_window)
-menu.action_about.triggered.connect(dialogs.about.show)
-
 # statuswindow
 statuswindow.toparea.button_filters.clicked.connect(dialogs.settings.show_filters)
 statuswindow.toparea.button_settings.clicked.connect(dialogs.settings.show)
+statuswindow.toparea.action_exit.triggered.connect(statuswindow.exit)
+
 # hide if settings dialog pops up
 dialogs.settings.show_dialog.connect(statuswindow.hide_window)
 # refresh all information after changed settings
@@ -218,7 +189,7 @@ if not OS in OS_NON_LINUX:
     dialogs.settings.changed.connect(menu_systray.initialize)
     menu_systray.action_settings.triggered.connect(statuswindow.hide_window)
     menu_systray.action_settings.triggered.connect(dialogs.settings.show)
-    menu_systray.action_save_position.triggered.connect(statuswindow.store_position_to_conf)
+    menu_systray.action_save_position.triggered.connect(statuswindow.save_position_to_conf)
     menu_systray.action_about.triggered.connect(statuswindow.hide_window)
     menu_systray.action_about.triggered.connect(dialogs.about.show)
     menu_systray.menu_ready.connect(systrayicon.set_menu)

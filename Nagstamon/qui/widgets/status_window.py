@@ -114,6 +114,12 @@ class StatusWindow(QWidget):
     # shortcut to systray icon needed for connecting signals/slots
     injected_systrayicon = None
 
+    # cached coordinates
+    stored_x = None
+    stored_y = None
+    stored_height = None
+    stored_width = None
+
     def __init__(self, dialogs=None, systrayicon=None):
         """
         Status window combined from status bar and popup window
@@ -123,33 +129,28 @@ class StatusWindow(QWidget):
         # immediately hide to avoid flicker on Windows and OSX
         self.hide()
 
-        # needed to store position of status window
-        self.stored_y = None
-        self.stored_x = None
-        self.stored_width = None
-        self.stored_height = None
-
-        # ewmh.py in thirdparty directory needed to keep floating statusbar on all desktops in Linux
-        if not OS in OS_NON_LINUX and not DESKTOP_WAYLAND:
-            self.ewmh = EWMH()
-
         # avoid quitting when using Qt.Tool flag and closing settings dialog
         app.setQuitOnLastWindowClosed(False)
 
         # show tooltips even if popup window has no focus
         self.setAttribute(Qt.WidgetAttribute.WA_AlwaysShowToolTips)
+        # title + icon
+        self.setWindowTitle(AppInfo.NAME)
+        self.setWindowIcon(QIcon(f'{RESOURCES}{sep}nagstamon.svg'))
 
         if OS == OS_MACOS:
             # avoid hiding window if it has no focus - necessary on OSX if using flag Qt.Tool
             self.setAttribute(Qt.WidgetAttribute.WA_MacAlwaysShowToolWindow)
 
-        self.setWindowTitle(AppInfo.NAME)
-        self.setWindowIcon(QIcon(f'{RESOURCES}{sep}nagstamon.svg'))
+        # ewmh.py in thirdparty directory needed to keep floating statusbar on all desktops in Linux
+        if not OS in OS_NON_LINUX and not DESKTOP_WAYLAND:
+            self.ewmh = EWMH()
 
         # set shortcut for dialogs icon to be used for connecting signals/slots
         self.injected_dialogs = dialogs
         # set shortcut for systray icon to be used for connecting signals/slots
         self.injected_systrayicon = systrayicon
+
 
         self.vbox = QVBoxLayout(self)  # global VBox
         self.vbox.setSpacing(0)  # no spacing
@@ -177,7 +178,6 @@ class StatusWindow(QWidget):
 
         self.label_all_ok = LabelAllOK(parent=self)
         self.label_all_ok.hide()
-
         self.servers_vbox.addWidget(self.label_all_ok)
 
         # test with OSX top menubar
@@ -188,12 +188,25 @@ class StatusWindow(QWidget):
             self.menubar.addAction(action_settings)
             self.menubar.addAction(action_exit)
 
+        # stored x y values for systemtray icon
+        statuswindow_properties.icon_x = 0
+        statuswindow_properties.icon_y = 0
+
+        # if status_ok is true no server_vboxes are needed
+        statuswindow_properties.status_ok = True
+
+        # timer for waiting to set is_shown flag
+        self.timer = QTimer(self)
+
+        # react to open button in notification bubble
+        dbus_connection.open_statuswindow.connect(self.show_window_from_notification_bubble)
+
         # connect logo of statusbar
-        self.statusbar.logo.window_moved.connect(self.store_position)
+        self.statusbar.logo.window_moved.connect(self.save_position)
         self.statusbar.logo.window_moved.connect(self.hide_window)
         self.statusbar.logo.window_moved.connect(self.correct_moving_position)
-        self.statusbar.logo.window_moved.connect(self._update)
-        self.statusbar.logo.mouse_pressed.connect(self.store_position)
+        self.statusbar.logo.window_moved.connect(self.update)
+        self.statusbar.logo.mouse_pressed.connect(self.save_position)
 
         # after status summarization check if window has to be resized
         self.statusbar.resize.connect(self.adjust_size)
@@ -210,27 +223,27 @@ class StatusWindow(QWidget):
         self.statusbar.label_message.mouse_released_in_window.connect(self.hide_window)
 
         # when logo in toparea was pressed hurry up to save the position so the statusbar will not jump
-        self.toparea.logo.window_moved.connect(self.store_position)
+        self.toparea.logo.window_moved.connect(self.save_position)
         self.toparea.logo.window_moved.connect(self.hide_window)
         self.toparea.logo.window_moved.connect(self.correct_moving_position)
-        self.toparea.logo.window_moved.connect(self._update)
-        self.toparea.logo.mouse_pressed.connect(self.store_position)
+        self.toparea.logo.window_moved.connect(self.update)
+        self.toparea.logo.mouse_pressed.connect(self.save_position)
         self.toparea.logo.mouse_released_in_window.connect(self.hide_window)
 
         # when version label in toparea was pressed hurry up to save the position so the statusbar will not jump
-        self.toparea.label_version.window_moved.connect(self.store_position)
+        self.toparea.label_version.window_moved.connect(self.save_position)
         self.toparea.label_version.window_moved.connect(self.hide_window)
         self.toparea.label_version.window_moved.connect(self.correct_moving_position)
-        self.toparea.label_version.window_moved.connect(self._update)
-        self.toparea.label_version.mouse_pressed.connect(self.store_position)
+        self.toparea.label_version.window_moved.connect(self.update)
+        self.toparea.label_version.mouse_pressed.connect(self.save_position)
         self.toparea.label_version.mouse_released_in_window.connect(self.hide_window)
 
         # when empty space in toparea was pressed hurry up to save the position so the statusbar will not jump
-        self.toparea.label_empty_space.window_moved.connect(self.store_position)
+        self.toparea.label_empty_space.window_moved.connect(self.save_position)
         self.toparea.label_empty_space.window_moved.connect(self.hide_window)
         self.toparea.label_empty_space.window_moved.connect(self.correct_moving_position)
-        self.toparea.label_empty_space.window_moved.connect(self._update)
-        self.toparea.label_empty_space.mouse_pressed.connect(self.store_position)
+        self.toparea.label_empty_space.window_moved.connect(self.update)
+        self.toparea.label_empty_space.mouse_pressed.connect(self.save_position)
         self.toparea.label_empty_space.mouse_released_in_window.connect(self.hide_window)
 
         # buttons in toparea
@@ -241,6 +254,18 @@ class StatusWindow(QWidget):
 
         # if monitor was selected in combobox its monitor window is opened
         self.toparea.combobox_servers.monitor_opened.connect(self.hide_window)
+
+        self.initialize()
+
+    def initialize(self):
+        """
+        initialize the volatile widgets of the status window
+        """
+        # needed to store position of status window
+        self.stored_y = None
+        self.stored_x = None
+        self.stored_width = None
+        self.stored_height = None
 
         # worker and thread duo needed for notifications
         self.worker_notification_thread = QThread(parent=self)
@@ -255,9 +280,6 @@ class StatusWindow(QWidget):
 
         # desktop notification
         self.worker_notification.desktop_notification.connect(self.desktop_notification)
-
-        # react to open button in notification bubble
-        dbus_connection.open_statuswindow.connect(self.show_window_from_notification_bubble)
 
         # stop notification if window gets shown or hidden
         self.hiding.connect(self.worker_notification.stop)
@@ -294,10 +316,6 @@ class StatusWindow(QWidget):
         # helper values for QTimer.singleShot move attempt
         self.move_to_x = self.move_to_y = 0
 
-        # stored x y values for systemtray icon
-        statuswindow_properties.icon_x = 0
-        statuswindow_properties.icon_y = 0
-
         # flag to mark if window is shown or not
         if conf.windowed:
             statuswindow_properties.is_shown = True
@@ -309,12 +327,6 @@ class StatusWindow(QWidget):
 
         # store timestamp to avoid reappearing window shortly after clicking onto toparea
         statuswindow_properties.is_hiding_timestamp = time()
-
-        # if status_ok is true no server_vboxes are needed
-        statuswindow_properties.status_ok = True
-
-        # timer for waiting to set is_shown flag
-        self.timer = QTimer(self)
 
         # a thread + worker is necessary to do actions thread-safe in background
         # like debugging
@@ -335,25 +347,24 @@ class StatusWindow(QWidget):
 
     @Slot()
     def reinitialize(self):
-        # Worker stoppen
-        if hasattr(self, "worker"):
+        """
+        delete volatile widgets and initialize them again
+        """
+        # stop both workers
+        if hasattr(self, 'worker'):
             self.worker.running = False
             self.worker.finish.emit()
-        if hasattr(self, "worker_notification"):
+        if hasattr(self, 'worker_notification'):
             self.worker_notification.running = False
             self.worker_notification.finish.emit()
-        # Statusbar und vboxes entfernen
-        if hasattr(self, "statusbar"):
-            self.statusbar.deleteLater()
-            self.statusbar = None
-        if hasattr(self, "servers_vbox"):
+        # remove all server vboxes
+        if hasattr(self, 'servers_vbox'):
             for vbox in self.servers_vbox.children():
-                if hasattr(vbox, "table") and hasattr(vbox.table, "worker"):
+                if hasattr(vbox, 'table') and hasattr(vbox.table, 'worker'):
                     vbox.table.worker.finish.emit()
                 vbox.deleteLater()
-            self.servers_vbox = None
-        self.__init__(self)
-
+        # initialize all volatile widgets
+        self.initialize()
 
     def get_screen(self):
         """
@@ -416,8 +427,7 @@ class StatusWindow(QWidget):
             # X11/Linux needs some special treatment to get the statusbar floating on all virtual desktops
             if OS not in OS_NON_LINUX and not DESKTOP_WAYLAND:
                 # get all windows...
-                winid = self.winId().__int__()
-                self.ewmh.setWmDesktop(winid, 0xffffffff)
+                self.ewmh.setWmDesktop(self.winId().__int__(), 0xffffffff)
                 self.ewmh.display.flush()
 
             # show statusbar/statuswindow on last saved position
@@ -1108,7 +1118,7 @@ class StatusWindow(QWidget):
         return True
 
     @Slot()
-    def store_position(self):
+    def save_position(self):
         """
         store position for restoring it when hiding
         """
@@ -1187,7 +1197,7 @@ class StatusWindow(QWidget):
         statuswindow_properties.is_shown = True
 
     @Slot()
-    def store_position_to_conf(self):
+    def save_position_to_conf(self):
         """
         store position of statuswindow/statusbar
         """
@@ -1292,17 +1302,6 @@ class StatusWindow(QWidget):
                 # apparently a race condition could occur on set_mode() - grab it here and continue
                 print(error)
 
-    def kill(self):
-        """
-        try to remove every piece of statuswindow to avoid artefacts when changing display mode
-        """
-        self.label_all_ok.deleteLater()
-        self.toparea.deleteLater()
-        self.statusbar.deleteLater()
-        self.servers_scrollarea.deleteLater()
-        self.servers_scrollarea_widget.deleteLater()
-        return self.deleteLater()
-
     @Slot()
     def finish_worker_thread(self):
         """
@@ -1339,12 +1338,28 @@ class StatusWindow(QWidget):
                 break
 
     @Slot()
-    def _update(self):
+    def exit(self):
         """
-        update status window, wrapper to make .update() callable as slot from a signal
-        needed in DraggableWidget.mouseMoveEvent() for macOS - otherwise statusbar stays blank while moving
+        stop all child threads before quitting instance
         """
-        self.update()
+        # store position of statuswindow/statusbar
+        self.save_position_to_conf()
+
+        # save configuration
+        conf.save_config()
+
+        # hide statuswindow first to avoid lag when waiting for finished threads
+        self.hide()
+
+        # stop statuswindow workers
+        self.worker.finish.emit()
+        self.worker_notification.finish.emit()
+
+        # tell all treeview threads to stop
+        for server_vbox in self.servers_vbox.children():
+            server_vbox.table.worker.finish.emit()
+
+        app.exit()
 
 
     class Worker(QObject):
