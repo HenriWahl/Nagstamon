@@ -32,6 +32,7 @@ from Nagstamon.qui.constants import (COLORS,
                                      HEADERS_KEYS_HEADERS, HEADERS_HEADERS_KEYS)
 from Nagstamon.qui.globals import (dbus_connection,
                                    font,
+                                   font_icons,
                                    font_default)
 from Nagstamon.qui.qt import (Signal,
                               Slot,
@@ -493,7 +494,7 @@ class DialogSettings(Dialog):
         """
         # global FONT, ICONS_FONT, statuswindow, menu
         #global statuswindow, menu
-        global menu
+        #global menu
 
         # store position of statuswindow/statusbar only if statusbar is floating
         if conf.statusbar_floating:
@@ -544,13 +545,8 @@ class DialogSettings(Dialog):
         # apply font
         conf.font = self.font.toString()
         # update global font and icon font
-        font = self.font
-        # TODO: shall be changed by a signal/slot connection
-        font_icons = QFont('Nagstamon', font.pointSize() + 2, QFont.Weight.Normal, False)
-
-        # update brushes for treeview
-        # TODO: should be done in treeview itself
-        #create_brushes()
+        font.fromString(conf.font)
+        font_icons.setPointSize(font.pointSize() + 2)
 
         # save configuration
         conf.save_config()
@@ -563,32 +559,7 @@ class DialogSettings(Dialog):
                 str(conf.fullscreen_display) + \
                 str(conf.windowed):
             self.changed_display_mode.emit()
-        #
-        #     # stop statuswindow workers
-        #     statuswindow.worker.running = False
-        #     statuswindow.worker_notification.running = False
-        #
-        #     # hide window to avoid laggy GUI - better none than laggy
-        #     statuswindow.hide()
-        #
-        #     # tell all treeview threads to stop
-        #     for server_vbox in statuswindow.servers_vbox.children():
-        #         server_vbox.table.worker.finish.emit()
-        #
-        #     # stop statuswindow workers
-        #     statuswindow.worker.finish.emit()
-        #     statuswindow.worker_notification.finish.emit()
-        #
-        #     # kick out ol' statuswindow
-        #     statuswindow.kill()
-        #
-        #     # create a new global one
-        #     statuswindow = StatusWindow()
-        #
-        #     # context menu for systray and statuswindow
-        #     menu = MenuContext()
-
-        # tell statuswindow to refresh due to new settings
+        # tell statuswindow to reinitialize due to new settings
         self.changed.emit()
 
         # call close and macOS dock icon treatment from ancestor
@@ -646,13 +617,6 @@ class DialogSettings(Dialog):
             if reply == QMessageBox.StandardButton.Yes:
                 # in case server is enabled to delete its vbox
                 if server.enabled:
-                    # TODO: needs to be run here? - connected with signal "server_deleted"
-                    # for vbox in statuswindow.servers_vbox.children():
-                    #     if vbox.server.name == server.name:
-                    #         # stop thread by falsificate running flag
-                    #         vbox.table.worker.running = False
-                    #         vbox.table.worker.finish.emit()
-                    #         break
                     self.server_deleted.emit(server.name)
 
                 # kick server out of server instances
