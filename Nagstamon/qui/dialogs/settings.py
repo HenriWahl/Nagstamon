@@ -456,7 +456,7 @@ class DialogSettings(Dialog):
         # # is too short and the statuswindow will keep open
         # # modifying the timestamp could help
         # TODO: still relevant? Let's assume yes, but signal-and-slotize later
-        # statuswindow.is_shown_timestamp -= 1
+        #self.statuswindow.is_shown_timestamp -= 1
 
         # tell the world that dialog pops up
         self.show_dialog.emit()
@@ -501,7 +501,6 @@ class DialogSettings(Dialog):
             self.settings_ok.emit()
 
         # store hash of all display settings as display_mode to decide if statuswindow has to be recreated
-        # TODO: used some lines later when applying new settings
         display_mode = str(conf.statusbar_floating) + \
                        str(conf.icon_in_systray) + \
                        str(conf.fullscreen) + \
