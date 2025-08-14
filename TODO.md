@@ -1,6 +1,6 @@
 # Temporary file for tracking TODOs regarding The Big Split
 
-- [ ] Change font like in settings.py
+- [x] Change font like in settings.py
 - [ ] check_servers.check()
 - [ ] show_macos_dock_icon_if_necessary should be called elsewhere
 - [ ] hide_macos_dock_icon_if_necessary should be called elsewhere
