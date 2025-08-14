@@ -14,3 +14,4 @@
 - [ ] check if statuswindow.update() works in macOS
 - [ ] check if 'submit check result' still works
 - [ ] check if no multiple flashing in statusbar is triggered
+- [x] systray icon menu Window
