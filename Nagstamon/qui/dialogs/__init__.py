@@ -15,7 +15,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-
+from Nagstamon.config import (conf,
+                              OS,
+                              OS_MACOS)
 from Nagstamon.qui.dialogs.about import DialogAbout
 from Nagstamon.qui.dialogs.acknowledge import DialogAcknowledge
 from Nagstamon.qui.dialogs.action import DialogAction
@@ -26,9 +28,12 @@ from Nagstamon.qui.dialogs.server import DialogServer
 from Nagstamon.qui.dialogs.server_missing import DialogServerMissing
 from Nagstamon.qui.dialogs.settings import DialogSettings
 from Nagstamon.qui.dialogs.submit import DialogSubmit
+from Nagstamon.qui.helpers import hide_macos_dock_icon
+from Nagstamon.qui.qt import (QObject,
+                              Slot)
 
 
-class Dialogs():
+class Dialogs(QObject):
     """
     class for accessing all dialogs
     """
@@ -111,6 +116,32 @@ class Dialogs():
         """
         return [x for x in self.windows if x.isVisible()]
 
+    @Slot()
+    def show_macos_dock_icon_if_necessary(self):
+        """
+        show macOS dock icon again if it is configured to be hidden
+        was only necessary to show up to let dialog get keyboard focus
+        """
+        if OS == OS_MACOS and \
+                conf.icon_in_systray and \
+                conf.hide_macos_dock_icon:
+            # if no window is shown already show dock icon
+            if not len(self.get_shown_dialogs()):
+                hide_macos_dock_icon(False)
+
+    @Slot()
+    def hide_macos_dock_icon_if_necessary(self):
+        """
+        hide macOS dock icon again if it is configured to be hidden
+        was only necessary to show up to let the dialog get keyboard focus
+        """
+        if OS == OS_MACOS and \
+                conf.icon_in_systray and \
+                conf.hide_macos_dock_icon:
+            # if no window is shown anymore hide dock icon
+            if not len(self.get_shown_dialogs()):
+                hide_macos_dock_icon(True)
+
 
 dialogs = Dialogs()
 dialogs.initialize_dialog_settings(DialogSettings())
@@ -138,3 +169,12 @@ dialogs.action.edited_update_list.connect(dialogs.settings.refresh_list)
 dialogs.server.edited_update_list.connect(dialogs.settings.refresh_list)
 # servers and actions list update
 dialogs.settings.update_list.connect(dialogs.settings.refresh_list)
+# macOS dock icon fix
+dialogs.action.check_macos_dock_icon_fix_show.connect(dialogs.show_macos_dock_icon_if_necessary)
+dialogs.action.check_macos_dock_icon_fix_hide.connect(dialogs.hide_macos_dock_icon_if_necessary)
+dialogs.authentication.check_macos_dock_icon_fix_show.connect(dialogs.show_macos_dock_icon_if_necessary)
+dialogs.authentication.check_macos_dock_icon_fix_hide.connect(dialogs.hide_macos_dock_icon_if_necessary)
+dialogs.authentication.check_macos_dock_icon_fix_show.connect(dialogs.show_macos_dock_icon_if_necessary)
+dialogs.authentication.check_macos_dock_icon_fix_hide.connect(dialogs.hide_macos_dock_icon_if_necessary)
+dialogs.server.check_macos_dock_icon_fix_show.connect(dialogs.show_macos_dock_icon_if_necessary)
+dialogs.server.check_macos_dock_icon_fix_hide.connect(dialogs.hide_macos_dock_icon_if_necessary)

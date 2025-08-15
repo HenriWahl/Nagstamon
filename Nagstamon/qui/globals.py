@@ -19,14 +19,13 @@
 
 from dataclasses import dataclass
 
-from Nagstamon.helpers import FilesDict
-from Nagstamon.qui.qt import QFont
-
 from Nagstamon.config import (conf,
                               OS,
                               OS_MACOS,
                               RESOURCES)
+from Nagstamon.helpers import FilesDict
 from Nagstamon.qui.dbus import DBus
+from Nagstamon.qui.qt import QFont
 from Nagstamon.qui.widgets.app import app
 
 
@@ -76,9 +75,6 @@ else:
         print(error)
 
 
-
-
-
 @dataclass
 class StatusWindowProperties:
     """
@@ -99,7 +95,6 @@ class StatusWindowProperties:
     # current worst state worth a notification
     worst_notification_status: str = 'UP'
     notifying_server: str = ''
-
 
 # shared status window properties
 statuswindow_properties = StatusWindowProperties()

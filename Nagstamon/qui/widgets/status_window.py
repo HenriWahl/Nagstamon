@@ -382,10 +382,13 @@ class StatusWindow(QWidget):
         apply presentation mode
         """
         # hide everything first
-        self.hide_window()
+        self.hide()
         self.statusbar.hide()
         self.toparea.hide()
         self.servers_scrollarea.hide()
+
+        # restore to normal window in case it was fullscreen
+        self.showNormal()
 
         if conf.statusbar_floating:
             # show icon in dock if window is set

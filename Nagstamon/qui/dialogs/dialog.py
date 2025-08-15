@@ -21,6 +21,7 @@ from Nagstamon.config import (conf,
                               OS_MACOS)
 
 from Nagstamon.qui.constants import ICON
+from Nagstamon.qui.globals import statuswindow_properties
 from Nagstamon.qui.helpers import hide_macos_dock_icon
 from Nagstamon.qui.qt import (QBrush,
                               QListWidgetItem,
@@ -43,6 +44,10 @@ class Dialog(QObject):
     """
     # send a signal, e.g., to the status window if a dialog pops up
     show_dialog = Signal()
+
+    # signals for macOS dock icon fix
+    check_macos_dock_icon_fix_show = Signal()
+    check_macos_dock_icon_fix_hide = Signal()
 
     # dummy toggle dependencies
     TOGGLE_DEPS = {}
@@ -91,11 +96,11 @@ class Dialog(QObject):
     @Slot()
     def show(self, tab=0):
         """
-        simple how method, to be enriched
+        simple show method, to be enriched
         """
         # if running on macOS with disabled dock icon the dock icon might have to be made visible
         # to make Nagstamon accept keyboard input
-        self.show_macos_dock_icon_if_necessary()
+        self.check_macos_dock_icon_fix_show.emit()
 
         # in case dock icon is configured invisible in macOS it has to be shown while dialog is shown
         # to be able to get keyboard focus
@@ -184,7 +189,7 @@ class Dialog(QObject):
         """
         self.window.close()
         # en reverse the dock icon might be hidden again after a potential keyboard input
-        self.hide_macos_dock_icon_if_necessary()
+        self.check_macos_dock_icon_fix_show.emit()
 
     @Slot()
     def cancel(self):
@@ -193,33 +198,5 @@ class Dialog(QObject):
         """
         self.window.close()
         # en reverse the dock icon might be hidden again after a potential keyboard input
-        self.hide_macos_dock_icon_if_necessary()
+        self.check_macos_dock_icon_fix_hide.emit()
 
-    @staticmethod
-    def show_macos_dock_icon_if_necessary():
-        """
-        show macOS dock icon again if it is configured to be hidden
-        was only necessary to show up to let dialog get keyboard focus
-        """
-        if OS == OS_MACOS and \
-                conf.icon_in_systray and \
-                conf.hide_macos_dock_icon:
-            # if no window is shown already show dock icon
-            # TODO: check out later when caring about macOS
-            #       maybe convert to a helper something?
-            if not len(dialogs.get_shown_dialogs()):
-                hide_macos_dock_icon(False)
-
-    @staticmethod
-    def hide_macos_dock_icon_if_necessary():
-        """
-        hide macOS dock icon again if it is configured to be hidden
-        was only necessary to show up to let the dialog get keyboard focus
-        """
-        if OS == OS_MACOS and \
-                conf.icon_in_systray and \
-                conf.hide_macos_dock_icon:
-            # if no window is shown anymore hide dock icon
-            # TODO: check out later when caring about macOS
-            if not len(dialogs.get_shown_dialogs()):
-                hide_macos_dock_icon(True)

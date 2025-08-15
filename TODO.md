@@ -15,5 +15,5 @@
 - [ ] check if 'submit check result' still works
 - [ ] check if no multiple flashing in statusbar is triggered
 - [x] systray icon menu Windows
-- [ ] switch from full screen to other mode
-- [ ] hover over treeview rows leads to indent changes?
+- [x] switch from full screen to other mode
+- [x] hover over treeview rows leads to indent changes?

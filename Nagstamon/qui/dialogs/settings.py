@@ -485,10 +485,6 @@ class DialogSettings(Dialog):
         """
         what to do if OK was pressed
         """
-        # global FONT, ICONS_FONT, statuswindow, menu
-        #global statuswindow, menu
-        #global menu
-
         # store position of statuswindow/statusbar only if statusbar is floating
         if conf.statusbar_floating:
             self.settings_ok.emit()

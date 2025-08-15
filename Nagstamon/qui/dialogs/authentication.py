@@ -72,19 +72,16 @@ class DialogAuthentication(Dialog):
         """
         self.server = servers[server]
         self.initialize()
-        # # workaround instead of sent signal
-        # if not statuswindow is None:
-        #     statuswindow.hide_window()
         self.show_up.emit()
         self.window.adjustSize()
 
         # the dock icon might be needed to be shown for a potential keyboard input
-        self.show_macos_dock_icon_if_necessary()
+        self.check_macos_dock_icon_fix_show.emit()
 
         self.window.exec()
 
         # en reverse the dock icon might be hidden again after a potential keyboard input
-        self.hide_macos_dock_icon_if_necessary()
+        self.check_macos_dock_icon_fix_hide.emit()
 
     def ok(self):
         """

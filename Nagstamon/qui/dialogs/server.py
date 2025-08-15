@@ -48,7 +48,9 @@ class DialogServer(Dialog):
     # signal to emit when ok button is pressed - used to update the list of servers
     edited_update_list = Signal(str, str, str)
 
+    # signal to emit when a new server vbox has to be created
     create_server_vbox = Signal(str)
+
 
     def __init__(self):
         Dialog.__init__(self, 'settings_server')
@@ -276,12 +278,12 @@ class DialogServer(Dialog):
 
             # if running on macOS with disabled dock icon, the dock icon might have to be made visible
             # to make Nagstamon accept keyboard input
-            self.show_macos_dock_icon_if_necessary()
+            self.check_macos_dock_icon_fix_show.emit()
 
             self.window.exec()
 
             # en reverse the dock icon might be hidden again after a potential keyboard input
-            self.hide_macos_dock_icon_if_necessary()
+            self.check_macos_dock_icon_fix_hide.emit()
 
         # give back decorated function
         return decoration_function

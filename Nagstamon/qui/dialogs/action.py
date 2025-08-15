@@ -121,12 +121,12 @@ class DialogAction(Dialog):
 
             # if running on macOS with disabled dock icon, the dock icon might have to be made visible
             # to make Nagstamon accept keyboard input
-            self.show_macos_dock_icon_if_necessary()
+            self.check_macos_dock_icon_fix_show.emit()
 
             self.window.exec()
 
             # en reverse the dock icon might be hidden again after a potential keyboard input
-            self.hide_macos_dock_icon_if_necessary()
+            self.check_macos_dock_icon_fix_hide.emit()
 
         # give back decorated function
         return decoration_function
