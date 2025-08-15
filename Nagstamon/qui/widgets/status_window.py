@@ -456,6 +456,9 @@ class StatusWindow(QWidget):
             # need a close button
             self.toparea.button_close.show()
 
+            # reset systray icon position
+            statuswindow_properties.icon_x = statuswindow_properties.icon_y = 0
+
         elif conf.fullscreen:
             # no need for systray
             self.systrayicon_disabled.emit()
@@ -524,6 +527,9 @@ class StatusWindow(QWidget):
 
             # make sure window comes up
             self.raise_()
+
+        # force correct position of statuswindow
+        self.adjust_size()
 
         # store position for showing/hiding statuswindow
         self.stored_x = self.x()
