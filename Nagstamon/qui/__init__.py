@@ -138,6 +138,8 @@ dialogs.settings.changed.connect(menu.initialize)
 
 # statuswindow
 statuswindow.toparea.button_filters.clicked.connect(dialogs.settings.show_filters)
+# experimental
+#statuswindow.toparea.button_settings.clicked.connect(statuswindow.hide_window)
 statuswindow.toparea.button_settings.clicked.connect(dialogs.settings.show)
 statuswindow.toparea.action_exit.triggered.connect(statuswindow.exit)
 
