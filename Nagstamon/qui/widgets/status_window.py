@@ -115,10 +115,10 @@ class StatusWindow(QWidget):
     injected_systrayicon = None
 
     # cached coordinates
-    stored_x = None
-    stored_y = None
-    stored_height = None
-    stored_width = None
+    stored_x = 0
+    stored_y = 0
+    stored_height = 0
+    stored_width = 0
 
     def __init__(self, dialogs=None, systrayicon=None):
         """
@@ -262,10 +262,10 @@ class StatusWindow(QWidget):
         initialize the volatile widgets of the status window
         """
         # needed to store position of status window
-        self.stored_y = None
-        self.stored_x = None
-        self.stored_width = None
-        self.stored_height = None
+        self.stored_y = 0
+        self.stored_x = 0
+        self.stored_width = 0
+        self.stored_height = 0
 
         # worker and thread duo needed for notifications
         self.worker_notification_thread = QThread(parent=self)
@@ -283,6 +283,8 @@ class StatusWindow(QWidget):
 
         # stop notification if window gets shown or hidden
         self.hiding.connect(self.worker_notification.stop)
+
+        self.hiding.connect(self.move_while_hiding)
 
         self.worker_notification.moveToThread(self.worker_notification_thread)
         # start with low priority
@@ -864,12 +866,11 @@ class StatusWindow(QWidget):
                 # only hide if shown at least a fraction of a second
                 # or has not been hidden a too short time ago
                 if statuswindow_properties.is_shown_timestamp + 0.5 < time() or \
-                        statuswindow_properties.is_hiding_timestamp + 0.01 < time():
+                        statuswindow_properties.is_hiding_timestamp + 0.2 < time():
                     self.toparea.hide()
                     self.servers_scrollarea.hide()
                     if conf.statusbar_floating:
                         self.statusbar.show()
-                        self.move(self.stored_x, self.stored_y)
                     # macOS needs this since Qt6 to avoid statuswindow size changeability
                     # looks silly but works to force using the own hint as hint
                     if OS == OS_MACOS:
@@ -892,13 +893,24 @@ class StatusWindow(QWidget):
                     statuswindow_properties.icon_x = 0
                     statuswindow_properties.icon_y = 0
 
+                    if conf.windowed:
+                        self.hide()
+
                     # store time of hiding
                     statuswindow_properties.is_hiding_timestamp = time()
 
                     # tell the world that window goes down
                     self.hiding.emit()
-                    if conf.windowed:
-                        self.hide()
+
+    @Slot()
+    def move_while_hiding(self):
+        """
+        silly workaround to avoid flickering window in floating mode
+        """
+        # give some rest to avoid flickering
+        sleep(0.01)
+        # move the window to the last stored position
+        self.move(self.stored_x, self.stored_y)
 
     @Slot()
     def correct_moving_position(self):

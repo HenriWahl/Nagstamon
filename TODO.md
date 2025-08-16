@@ -17,5 +17,6 @@
 - [x] systray icon menu Windows
 - [x] switch from full screen to other mode
 - [x] hover over treeview rows leads to indent changes?
-- [ ] flickering statuswindow when dialog is opened
-  - compare with older version
+- [x] flickering statuswindow when dialog is opened
+- [ ] position of statuswindow is not centered in relation to statusbar
+  - somehow lagging behind?
