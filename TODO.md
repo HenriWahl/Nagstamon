@@ -5,7 +5,7 @@
 - [ ] show_macos_dock_icon_if_necessary should be called elsewhere
 - [ ] hide_macos_dock_icon_if_necessary should be called elsewhere
 - [ ] 'new' -> 'create'
-- [x] statuswindow.is_shown_timestamp -= 1
+- [ ] statuswindow.is_shown_timestamp -= 1
 - [x] normal-light activated server in settings dialog when opening settings
   - was like this before already
 - [x] spaceless comments
@@ -17,3 +17,5 @@
 - [x] systray icon menu Windows
 - [x] switch from full screen to other mode
 - [x] hover over treeview rows leads to indent changes?
+- [ ] flickering statuswindow when dialog is opened
+  - compare with older version

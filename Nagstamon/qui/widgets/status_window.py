@@ -305,8 +305,8 @@ class StatusWindow(QWidget):
 
         # needed for moving the statuswindow
         statuswindow_properties.moving = False
-        statuswindow_properties.relative_x = False
-        statuswindow_properties.relative_y = False
+        statuswindow_properties.relative_x = 0
+        statuswindow_properties.relative_y = 0
 
         # helper values for QTimer.singleShot move attempt
         self.move_to_x = self.move_to_y = 0
@@ -863,16 +863,13 @@ class StatusWindow(QWidget):
                     statuswindow_properties.moving is True:
                 # only hide if shown at least a fraction of a second
                 # or has not been hidden a too short time ago
-                # if statuswindow_properties.is_shown_timestamp + 0.5 < time() or \
-                #         statuswindow_properties.is_hiding_timestamp + 0.01 < time():
-                if True:
+                if statuswindow_properties.is_shown_timestamp + 0.5 < time() or \
+                        statuswindow_properties.is_hiding_timestamp + 0.01 < time():
                     self.toparea.hide()
                     self.servers_scrollarea.hide()
                     if conf.statusbar_floating:
-                        self.hide()
                         self.statusbar.show()
                         self.move(self.stored_x, self.stored_y)
-                        self.show()
                     # macOS needs this since Qt6 to avoid statuswindow size changeability
                     # looks silly but works to force using the own hint as hint
                     if OS == OS_MACOS:

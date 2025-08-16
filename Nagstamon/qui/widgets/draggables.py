@@ -94,9 +94,9 @@ class DraggableWidget(QWidget):
                 self.mouse_released.emit()
 
             # reset all helper values
-            statuswindow_properties.relative_x = False
-            statuswindow_properties.relative_y = False
             statuswindow_properties.moving = False
+            statuswindow_properties.relative_x = 0
+            statuswindow_properties.relative_y = 0
 
         if event.button() == Qt.MouseButton.RightButton:
             self.right_mouse_button_pressed = False
