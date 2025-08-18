@@ -35,9 +35,8 @@ class DialogServerMissing(Dialog):
         # simply hide the window if ignore button chosen
         self.window.button_ignore.clicked.connect(self.window.hide)
         self.window.button_ignore.clicked.connect(self.cancel)
-        # bye bye if exit button was pressed
+        # bye bye if exit button was pressed - exit is connected in qui/__init__.py
         self.window.button_exit.clicked.connect(self.window.hide)
-        self.window.button_exit.clicked.connect(exit)
         # check if servers are configured or enabled and show dialog if not
         check_servers.checked.connect(self.show)
         check_servers.checked.connect(self.initialize)

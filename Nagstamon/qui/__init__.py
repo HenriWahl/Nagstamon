@@ -161,6 +161,9 @@ dialogs.settings.server_deleted.connect(statuswindow.delete_server_vbox)
 # reinitialize statuswindow when display mode settings were changed
 dialogs.settings.changed_display_mode.connect(statuswindow.reinitialize)
 
+# connect application exit with server missing dialog
+dialogs.server_missing.window.button_exit.clicked.connect(statuswindow.exit)
+
 # systray connections
 # show status popup when systray icon was clicked
 systrayicon.show_popwin.connect(statuswindow.show_window_systrayicon)
