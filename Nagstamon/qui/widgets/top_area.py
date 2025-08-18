@@ -79,7 +79,6 @@ class TopArea(QWidget):
         self.button_hamburger_menu.setIcon(self.icons['menu'])
         self.hamburger_menu = MenuAtCursor()
         self.action_exit = QAction("Exit", self)
-        self.action_exit.triggered.connect(exit)
         self.hamburger_menu.addAction(self.action_exit)
         self.button_hamburger_menu.setMenu(self.hamburger_menu)
 
