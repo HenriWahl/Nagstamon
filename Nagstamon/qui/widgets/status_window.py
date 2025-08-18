@@ -15,8 +15,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-import os.path
 from os import sep
+from pathlib import Path
 from subprocess import Popen
 import sys
 from sys import stdout
@@ -74,8 +74,9 @@ if OS not in OS_NON_LINUX and not DESKTOP_WAYLAND:
     sys.path.insert(0, sep.join(RESOURCES.split(sep)[0:-1] + ['thirdparty']))
 
     # Xlib for EWMH needs the file ~/.Xauthority and crashes if it does not exist
-    if not os.path.exists(f'{os.path.expanduser('~')}{sep}.Xauthority'):
-        open(f'{os.path.expanduser('~')}{sep}.Xauthority', 'a').close()
+    xauthority_file = Path().home() / '.Xauthority'
+    if not xauthority_file.exists():
+        open(xauthority_file, 'a').close()
 
     from Nagstamon.thirdparty.ewmh import EWMH
 
