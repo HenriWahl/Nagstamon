@@ -867,10 +867,12 @@ class StatusWindow(QWidget):
                 # or has not been hidden a too short time ago
                 if statuswindow_properties.is_shown_timestamp + 0.5 < time() or \
                         statuswindow_properties.is_hiding_timestamp + 0.2 < time():
-                    self.toparea.hide()
-                    self.servers_scrollarea.hide()
+                    # to avoid flickering just hide shortly
+                    self.hide()
                     if conf.statusbar_floating:
                         self.statusbar.show()
+                    self.toparea.hide()
+                    self.servers_scrollarea.hide()
                     # macOS needs this since Qt6 to avoid statuswindow size changeability
                     # looks silly but works to force using the own hint as hint
                     if OS == OS_MACOS:
@@ -882,7 +884,9 @@ class StatusWindow(QWidget):
 
                     if conf.icon_in_systray:
                         self.close()
-
+                    else:
+                        # show again after reorganizing widgets
+                        self.show()
                     # switch off
                     statuswindow_properties.is_shown = False
 
