@@ -20,3 +20,5 @@
 - [x] flickering statuswindow when dialog is opened
 - [ ] position of statuswindow is not centered in relation to statusbar
   - somehow lagging behind?
+- [ ] starting to move the popped up statuswindow leads to loosing the statusbar
+- [ ] something weird happened to the CSS in treeview

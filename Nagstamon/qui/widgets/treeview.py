@@ -148,7 +148,7 @@ class TreeView(QTreeView):
                                                      color: white;
                                                      background-color: dimgrey;}
                               QTreeView::item:selected {margin: 0px;
-                                                        padding: 0px;
+                                                        padding: 5px;
                                                         color: white;
                                                         background-color: grey;}
                             ''')
