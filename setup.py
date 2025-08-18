@@ -19,9 +19,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 # from distutils.core import setup
-import sys
-import platform
 import os.path
+from pathlib import Path
+import platform
+import sys
 
 from Nagstamon.config import AppInfo, \
     OS
@@ -47,7 +48,7 @@ if OS not in ['Windows', 'Darwin']:
     NAME = NAME.lower()
 else:
     DIST = ""
-#VERSION = AppInfo.VERSION.replace('-', '.') + '.' + DIST + DIST_VERSION
+# VERSION = AppInfo.VERSION.replace('-', '.') + '.' + DIST + DIST_VERSION
 VERSION = AppInfo.VERSION.replace('-', '.')
 NAGSTAMON_SCRIPT = 'nagstamon.py'
 
@@ -88,10 +89,18 @@ bdist_mac_options = dict(iconfile='Nagstamon/resources/nagstamon.icns',
 bdist_dmg_options = dict(volume_label='{0} {1}'.format(NAME, VERSION),
                          applications_shortcut=False)
 
+# get paths of modules aka packages dynamically
+current_directory = Path().cwd()
+nagstamon_directory = current_directory / 'Nagstamon'
+packages_directories = [x.absolute().relative_to(current_directory)
+                        for x in list(nagstamon_directory.glob('**'))
+                        if '__pycache__' not in x.parts]
+packages = [str(x).replace('/', '.') for x in packages_directories]
+
 # older Fedora needs Qt5
 if OS not in ['Windows', 'Darwin']:
     if DIST.lower() == 'fedora' and int(DIST_VERSION) < 36 or \
-       DIST.lower() == 'rhel' and int(DIST_VERSION) <= 9:
+            DIST.lower() == 'rhel' and int(DIST_VERSION) <= 9:
         bdist_rpm_options = dict(requires='python3 '
                                           'python3-arrow '
                                           'python3-beautifulsoup4 '
@@ -140,17 +149,18 @@ setup(name=NAME,
       url='https://nagstamon.de',
       download_url='https://nagstamon.de/download',
       scripts=[NAGSTAMON_SCRIPT],
-      packages=['Nagstamon',
-                'Nagstamon.qui',
-                'Nagstamon.Servers',
-                'Nagstamon.Servers.Alertmanager',
-                'Nagstamon.Servers.Centreon',
-                'Nagstamon.thirdparty',
-                'Nagstamon.thirdparty.Xlib',
-                'Nagstamon.thirdparty.Xlib.ext',
-                'Nagstamon.thirdparty.Xlib.protocol',
-                'Nagstamon.thirdparty.Xlib.support',
-                'Nagstamon.thirdparty.Xlib.xobject'],
+      # packages=['Nagstamon',
+      #           'Nagstamon.qui',
+      #           'Nagstamon.Servers',
+      #           'Nagstamon.Servers.Alertmanager',
+      #           'Nagstamon.Servers.Centreon',
+      #           'Nagstamon.thirdparty',
+      #           'Nagstamon.thirdparty.Xlib',
+      #           'Nagstamon.thirdparty.Xlib.ext',
+      #           'Nagstamon.thirdparty.Xlib.protocol',
+      #           'Nagstamon.thirdparty.Xlib.support',
+      #           'Nagstamon.thirdparty.Xlib.xobject'],
+      packages=packages,
       package_dir={'Nagstamon': 'Nagstamon'},
       package_data={'Nagstamon': ['resources/*.*',
                                   'resources/qui/*',
