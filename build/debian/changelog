@@ -1,21 +1,21 @@
 nagstamon (3.17-20250818) unstable; urgency=low
   * New upstream
 
- -- Henri Wahl <henri@nagstamon.de> Mon, Aug 18 2025 08:00:00 +0200
+ -- Henri Wahl <henri@nagstamon.de> Mon, 18 Aug 2025 08:00:00 +0200
 
 nagstamon (3.16.2) stable; urgency=low
   * New upstream
     - fix sound problem
     - fix IncingaDBWeb
 
- -- Henri Wahl <henri@nagstamon.de> Mon, Oct 21 2024 08:00:00 +0200
+ -- Henri Wahl <henri@nagstamon.de> Mon, 21 Oct 2024 08:00:00 +0200
 
 nagstamon (3.16.1) stable; urgency=low
   * New upstream
     - fix ridiculous Windows 11 appearance
     - fix Zabbix all information copy action
 
- -- Henri Wahl <henri@nagstamon.de> Sun, Oct 20 2024 08:00:00 +0200
+ -- Henri Wahl <henri@nagstamon.de> Sun, 20 Oct 2024 08:00:00 +0200
 
 nagstamon (3.16.0) stable; urgency=low
   * New upstream
@@ -28,7 +28,7 @@ nagstamon (3.16.0) stable; urgency=low
     - fixes for pyinstaller
     - updated Qt6
 
- -- Henri Wahl <henri@nagstamon.de> Thu, Oct 10 2024 08:00:00 +0200
+ -- Henri Wahl <henri@nagstamon.de> Thu, 10 Oct 2024 08:00:00 +0200
 
 nagstamon (3.14.0) stable; urgency=low
   * New upstream
@@ -43,7 +43,7 @@ nagstamon (3.14.0) stable; urgency=low
     - added support for registering version in Windows
     - added support for using system certificates in Windows
 
- -- Henri Wahl <henri@nagstamon.de> Sun, Feb 25 2024 08:00:00 +0200
+ -- Henri Wahl <henri@nagstamon.de> Sun, 25 Feb 2024 08:00:00 +0200
 
 nagstamon (3.12.0) stable; urgency=low
   * New upstream
@@ -61,14 +61,14 @@ nagstamon (3.12.0) stable; urgency=low
     - fixes for Monitos
     - improved build pipeline on GitHub Actions
 
- -- Henri Wahl <henri@nagstamon.de> Sat, May 06 2023 08:00:00 +0200
+ -- Henri Wahl <henri@nagstamon.de> Sat, 06 May 2023 08:00:00 +0200
 
 nagstamon (3.10.1) stable; urgency=low
   * New upstream
     - fixes Centreon flapping bug
     - fixes Kubuntu 20.04 not starting bug
 
- -- Henri Wahl <henri@nagstamon.de> Fri, Nov 04 2022 08:00:00 +0100
+ -- Henri Wahl <henri@nagstamon.de> Fri, 04 Nov 2022 08:00:00 +0100
 
 nagstamon (3.10.0) stable; urgency=low
   * New upstream
@@ -81,7 +81,7 @@ nagstamon (3.10.0) stable; urgency=low
     - fixes for TLS
     - fixes for Checkmk
 
- -- Henri Wahl <henri@nagstamon.de> Thu, Oct 27 2022 08:00:00 +0100
+ -- Henri Wahl <henri@nagstamon.de> Thu, 27 Oct 2022 08:00:00 +0100
 
 nagstamon (3.8.0) stable; urgency=low
   * New upstream
@@ -93,7 +93,7 @@ nagstamon (3.8.0) stable; urgency=low
     - Zabbix fixes
     - dependency updates
 
- -- Henri Wahl <henri@nagstamon.de> Mon, Nov 15 2021 19:00:00 +0100
+ -- Henri Wahl <henri@nagstamon.de> Mon, 15 Nov 2021 19:00:00 +0100
 
 nagstamon (3.6.0) stable; urgency=low
   * New upstream
@@ -111,7 +111,7 @@ nagstamon (3.6.0) stable; urgency=low
    - fix for HighDPI
    - fix for distro detection
 
- -- Henri Wahl <henri@nagstamon.de> Sun, Apr 05 2021 17:00:00 +0100
+ -- Henri Wahl <henri@nagstamon.de> Sun, 05 Apr 2021 17:00:00 +0100
 
 nagstamon (3.4.1) stable; urgency=low
   * New upstream
