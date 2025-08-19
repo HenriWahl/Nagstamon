@@ -1036,7 +1036,7 @@ class TreeView(QTreeView):
                             not self.server.refresh_authentication and \
                             not self.server.tls_error:
                         # show last update time
-                        self.change_label_status.emit(f'Last updated at {datetime.now().strftime('%X')}', '')
+                        self.change_label_status.emit(f"Last updated at {datetime.now().strftime('%X')}", '')
 
                         # reset server error flag, needed for error label in statusbar
                         self.server.has_error = False
