@@ -94,7 +94,8 @@ current_directory = Path().cwd()
 nagstamon_directory = current_directory / 'Nagstamon'
 packages_directories = [x.absolute().relative_to(current_directory)
                         for x in list(nagstamon_directory.glob('**'))
-                        if '__pycache__' not in x.parts]
+                        if '__pycache__' not in x.parts and
+                        x.is_dir()]
 packages = [str(x).replace('/', '.') for x in packages_directories]
 
 # older Fedora needs Qt5
