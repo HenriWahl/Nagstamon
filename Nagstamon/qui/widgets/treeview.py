@@ -141,14 +141,11 @@ class TreeView(QTreeView):
         self.header().sortIndicatorChanged.connect(self.sort_columns)
 
         # set overall margin and hover colors - to be refined
-        self.setStyleSheet('''QTreeView::item {margin: 5px;
-                                               padding: 0x;}
+        self.setStyleSheet('''QTreeView::item {margin: 5px;}
                               QTreeView::item:hover {margin: 0px;
-                                                     padding: 0px;
                                                      color: white;
                                                      background-color: dimgrey;}
                               QTreeView::item:selected {margin: 0px;
-                                                        padding: 0px;
                                                         color: white;
                                                         background-color: grey;}
                             ''')
