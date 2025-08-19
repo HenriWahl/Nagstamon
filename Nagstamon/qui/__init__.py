@@ -62,9 +62,9 @@ from Nagstamon.qui.widgets.menu import (MenuAtCursor,
                                         MenuContext,
                                         MenuContextSystrayicon)
 from Nagstamon.qui.widgets.model import Model
-from Nagstamon.qui.widgets.status_window import StatusWindow
+from Nagstamon.qui.widgets.statuswindow import StatusWindow
 from Nagstamon.qui.widgets.system_tray_icon import SystemTrayIcon
-from Nagstamon.qui.widgets.top_area import TopArea
+from Nagstamon.qui.widgets.toparea import TopArea
 from Nagstamon.qui.widgets.combobox_servers import ComboBoxServers
 
 from Nagstamon.qui.widgets.treeview import TreeView

@@ -62,7 +62,7 @@ from Nagstamon.qui.widgets.app import app
 from Nagstamon.qui.widgets.labels import LabelAllOK
 from Nagstamon.qui.widgets.server_vbox import ServerVBox
 from Nagstamon.qui.widgets.statusbar import StatusBar
-from Nagstamon.qui.widgets.top_area import TopArea
+from Nagstamon.qui.widgets.toparea import TopArea
 from Nagstamon.Servers import (get_enabled_servers,
                                get_status_count,
                                servers)
@@ -867,9 +867,7 @@ class StatusWindow(QWidget):
                 # only hide if shown at least a fraction of a second
                 # or has not been hidden a too short time ago
                 if statuswindow_properties.is_shown_timestamp + 0.5 < time() or \
-                        statuswindow_properties.is_hiding_timestamp + 0.2 < time():
-                    # to avoid flickering just hide shortly
-                    self.hide()
+                        statuswindow_properties.is_hiding_timestamp + 0.1 < time():
                     if conf.statusbar_floating:
                         self.statusbar.show()
                     self.toparea.hide()
@@ -913,7 +911,7 @@ class StatusWindow(QWidget):
         silly workaround to avoid flickering window in floating mode
         """
         # give some rest to avoid flickering
-        sleep(0.01)
+        #sleep(0.1)
         # move the window to the last stored position
         self.move(self.stored_x, self.stored_y)
 
