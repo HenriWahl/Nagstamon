@@ -22,8 +22,8 @@
   - somehow lagging behind?
 - [ ] starting to move the popped up statuswindow leads to loosing the statusbar
 - [ ] something weird happened to the CSS in treeview
-- [ ] build RPM fails
-- [ ] basically workign OSes
+- [x] build RPM fails
+- [ ] basically working OSes
   - [x] Linux
     - [x] Ubuntu
     - [ ] Fedora

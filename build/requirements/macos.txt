@@ -1,6 +1,7 @@
 arrow
 beautifulsoup4
-keyring
+# problems since 24.x?
+keyring==23.13.1
 lxml
 packaging
 psutil
