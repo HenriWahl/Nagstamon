@@ -886,6 +886,7 @@ class StatusWindow(QWidget):
                     else:
                         # show again after reorganizing widgets
                         self.show()
+
                     # switch off
                     statuswindow_properties.is_shown = False
 
@@ -911,7 +912,7 @@ class StatusWindow(QWidget):
         silly workaround to avoid flickering window in floating mode
         """
         # give some rest to avoid flickering
-        #sleep(0.1)
+        sleep(0.0125)
         # move the window to the last stored position
         self.move(self.stored_x, self.stored_y)
 
