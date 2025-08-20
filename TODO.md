@@ -1,6 +1,6 @@
 # Temporary file for tracking TODOs regarding The Big Split
 
-- [x] Change font like in settings.py
+- [x] change font like in settings.py
 - [ ] check_servers.check()
 - [ ] show_macos_dock_icon_if_necessary should be called elsewhere
 - [ ] hide_macos_dock_icon_if_necessary should be called elsewhere
@@ -22,12 +22,13 @@
   - somehow lagging behind?
 - [x] starting to move the popped up statuswindow leads to loosing the statusbar
 - [ ] something weird happened to the CSS in treeview
+  - depending on OS?
 - [x] build RPM fails
 - [ ] basically working OSes
   - [x] Linux
     - [x] Ubuntu
-    - [ ] Fedora
-      -  /sbin/python3 not found - WTF?
+    - [x ] Fedora
+      -  ~~/sbin/python3 not found - WTF?~~
     - [x] Pyinstaller]
   - [x] Windows
   - [ ] macOS
