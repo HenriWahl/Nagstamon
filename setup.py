@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-# encoding: utf-8
-
+#
 # Nagstamon - Nagios status monitor for your desktop
 # Copyright (C) 2008-2025 Henri Wahl <henri@nagstamon.de> et al.
 #
@@ -18,7 +17,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-# from distutils.core import setup
 import os.path
 from pathlib import Path
 import platform
@@ -48,7 +46,7 @@ if OS not in ['Windows', 'Darwin']:
     NAME = NAME.lower()
 else:
     DIST = ""
-# VERSION = AppInfo.VERSION.replace('-', '.') + '.' + DIST + DIST_VERSION
+
 VERSION = AppInfo.VERSION.replace('-', '.')
 NAGSTAMON_SCRIPT = 'nagstamon.py'
 
@@ -156,9 +154,9 @@ setup(name=NAME,
                                   'resources/qui/*',
                                   'resources/LICENSE',
                                   'resources/CREDITS']},
-      data_files=[('%s/share/man/man1' % sys.prefix, ['Nagstamon/resources/nagstamon.1.gz']),
-                  ('%s/share/pixmaps' % sys.prefix, ['Nagstamon/resources/nagstamon.svg']),
-                  ('%s/share/applications' % sys.prefix, ['Nagstamon/resources/nagstamon.desktop'])],
+      data_files=[(f'{sys.prefix}/share/man/man1', ['Nagstamon/resources/nagstamon.1.gz']),
+                  (f'{sys.prefix}/share/pixmaps', ['Nagstamon/resources/nagstamon.svg']),
+                  (f'{sys.prefix}/share/applications', ['Nagstamon/resources/nagstamon.desktop'])],
       options=dict(build_exe=build_exe_options,
                    bdist_mac=bdist_mac_options,
                    bdist_dmg=bdist_dmg_options,

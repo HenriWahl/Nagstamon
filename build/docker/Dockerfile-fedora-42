@@ -33,6 +33,14 @@ RUN dnf -y install createrepo_c \
                    qt6-qtmultimedia \
                    rpm-build
 
+# Existing /usr/sbin/python3 causes problems with RPM package installation
+# /usr/sbin is a symlink to /usr/bin - deleting it causes next problem
+# with ldconfig, which therefore symlinked into /usr/sbin
+RUN rm -rf /usr/sbin
+RUN mkdir /usr/sbin
+# needed for RPM build
+RUN ln -s /usr/bin/ldconfig /usr/sbin/ldconfig
+
 # Finally build
 CMD cd /nagstamon/build && \
     /usr/bin/python3 build.py

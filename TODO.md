@@ -20,13 +20,16 @@
 - [x] flickering statuswindow when dialog is opened
 - [ ] position of statuswindow is not centered in relation to statusbar
   - somehow lagging behind?
-- [ ] starting to move the popped up statuswindow leads to loosing the statusbar
+- [x] starting to move the popped up statuswindow leads to loosing the statusbar
 - [ ] something weird happened to the CSS in treeview
 - [x] build RPM fails
 - [ ] basically working OSes
   - [x] Linux
     - [x] Ubuntu
     - [ ] Fedora
+      -  /sbin/python3 not found - WTF?
     - [x] Pyinstaller]
   - [x] Windows
   - [ ] macOS
+    - dock icon not hidden
+    - can't be exited?
