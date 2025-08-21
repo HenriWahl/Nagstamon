@@ -106,11 +106,11 @@ class SnagViewServer(GenericServer):
         self.cgiurl_services = None
         self.cgiurl_hosts = None
 
-    def init_HTTP(self):
+    def init_http(self):
         """
             Initializing of session object
         """
-        GenericServer.init_HTTP(self)
+        GenericServer.init_http(self)
 
         self.session.auth = NoAuth()
 
@@ -169,7 +169,7 @@ class SnagViewServer(GenericServer):
             if result.status_code < 400 and \
                     result.result.startswith('<'):
                 # in case of auth error reset HTTP session and try again
-                self.reset_HTTP()
+                self.reset_http()
                 result = self.fetch_url(
                     self.cgiurl_hosts, giveback='raw', cgi_data=form_data)
 

@@ -20,13 +20,13 @@ class SensuGoServer(GenericServer):
     def __init__(self, **kwds):
         GenericServer.__init__(self, **kwds)
         self._api_url = conf.servers[self.get_name()].monitor_cgi_url
-        self.reset_HTTP()
+        self.reset_http()
 
-    def init_HTTP(self):
-        GenericServer.init_HTTP(self)
+    def init_http(self):
+        GenericServer.init_http(self)
         self._setup_sensugo_api()
 
-    def reset_HTTP(self):
+    def reset_http(self):
         self._sensugo_api = SensuGoAPI(self._api_url)
 
     def _setup_sensugo_api(self):

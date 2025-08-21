@@ -99,7 +99,7 @@ class Monitos3Server(GenericServer):
             log.error('unable to parse monitor_url %s', self.monitor_url)
             self.enable = False
 
-    def init_HTTP(self):
+    def init_http(self):
         pass
 
     def communicate(self, data, response=True):

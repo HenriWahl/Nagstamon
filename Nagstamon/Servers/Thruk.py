@@ -68,13 +68,13 @@ class ThrukServer(GenericServer):
         GenericServer.__init__(self, **kwds)
 
 
-    def init_HTTP(self):
+    def init_http(self):
         """
             partly not constantly working Basic Authorization requires extra Autorization headers,
             different between various server types
         """
         if self.session is None:
-            GenericServer.init_HTTP(self)
+            GenericServer.init_http(self)
 
         # get cookie from login page via url retrieving as with other urls
         try:
@@ -113,7 +113,7 @@ class ThrukServer(GenericServer):
         """
         if self.session is None:
             self.refresh_authentication = False
-            GenericServer.init_HTTP(self)
+            GenericServer.init_http(self)
 
         if self.use_autologin is True:
             req = self.session.post(self.monitor_cgi_url + '/user.cgi?', data={}, headers={'X-Thruk-Auth-Key':self.autologin_key.strip()})

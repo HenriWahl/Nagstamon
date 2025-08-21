@@ -67,10 +67,10 @@ class MultisiteServer(GenericServer):
         self.CookieAuth = False
 
 
-    def init_HTTP(self):
+    def init_http(self):
         # general initialization
         if not self.session:
-            GenericServer.init_HTTP(self)
+            GenericServer.init_http(self)
 
         # Fix eventually missing tailing '/' in url
         if self.monitor_url.endswith('/'):

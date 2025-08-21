@@ -86,11 +86,11 @@ class IcingaDBWebServer(GenericServer):
         self.use_display_name_host = True
         self.use_display_name_service = True
 
-    def init_HTTP(self):
+    def init_http(self):
         """
             initializing of session object
         """
-        GenericServer.init_HTTP(self)
+        GenericServer.init_http(self)
 
         if self.session and not 'Referer' in self.session.headers:
             self.session.headers['Referer'] = self.monitor_cgi_url
@@ -144,7 +144,7 @@ class IcingaDBWebServer(GenericServer):
                 if result.status_code < 400 and\
                    result.result.startswith('<'):
                     # in case of auth error reset HTTP session and try again
-                    self.reset_HTTP()
+                    self.reset_http()
                     result = self.fetch_url(self.cgiurl_hosts[status_type], giveback='raw')
                     # if it does not work again tell GUI there is a problem
                     if result.status_code < 400 and\

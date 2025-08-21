@@ -105,12 +105,12 @@ class Monitos4xServer(GenericServer):
         self.cgiurl_services = None
         self.cgiurl_hosts = None
 
-    def init_HTTP(self):
+    def init_http(self):
         """
             Initializing of session object
         """
 
-        GenericServer.init_HTTP(self)
+        GenericServer.init_http(self)
 
         self.session.auth = NoAuth()
         if self.use_autologin is False:
@@ -177,7 +177,7 @@ class Monitos4xServer(GenericServer):
                 if result.status_code < 400 and \
                         result.result.startswith('<'):
                     # in case of auth error reset HTTP session and try again
-                    self.reset_HTTP()
+                    self.reset_http()
                     result = self.fetch_url(
                         cgiurl_hosts_page, giveback='raw', cgi_data=None)
 

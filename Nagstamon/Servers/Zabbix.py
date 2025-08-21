@@ -68,11 +68,11 @@ class ZabbixServer(GenericServer):
         self.auth_token = ''
         self.monitor_path = '/api_jsonrpc.php'
 
-    def init_HTTP(self):
+    def init_http(self):
         """
         things to do if HTTP is not initialized
         """
-        GenericServer.init_HTTP(self)
+        GenericServer.init_http(self)
 
         # prepare for JSON
         self.session.headers.update({'Accept': 'application/json',
