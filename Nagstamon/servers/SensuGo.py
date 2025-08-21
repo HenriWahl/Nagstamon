@@ -1,6 +1,6 @@
 import sys
 import traceback
-from Nagstamon.Servers.Generic import GenericServer
+from Nagstamon.servers.Generic import GenericServer
 from Nagstamon.objects import (GenericHost, GenericService, Result)
 from Nagstamon.config import conf
 from Nagstamon.thirdparty.sensugo_api import SensuGoAPI, SensuGoAPIException

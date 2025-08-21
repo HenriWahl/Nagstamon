@@ -25,7 +25,7 @@ from Nagstamon.helpers import webbrowser_open
 from Nagstamon.objects import Result
 from Nagstamon.objects import GenericHost
 from Nagstamon.objects import GenericService
-from Nagstamon.Servers.Generic import GenericServer
+from Nagstamon.servers.Generic import GenericServer
 from Nagstamon.config import conf
 
 import logging
@@ -295,7 +295,7 @@ class Monitos3Server(GenericServer):
     def set_acknowledge(self, info_dict):
         """
         acknowledge a service or host
-        {'author': 'username', 'all_services': ['PING', 'DUMMY'], 'host': 'fritz', 'service': '', 'server': <Nagstamon.Servers.Monitos3.Monitos3Server object at 0x000001FDF0781CC0>,
+        {'author': 'username', 'all_services': ['PING', 'DUMMY'], 'host': 'fritz', 'service': '', 'server': <Nagstamon.servers.Monitos3.Monitos3Server object at 0x000001FDF0781CC0>,
         'acknowledge_all_services': True, 'sticky': True, 'notify': True, 'comment': 'acknowledged', 'persistent': True}
         """
         log.info('called def set_acknowledge')
@@ -327,7 +327,7 @@ class Monitos3Server(GenericServer):
     def set_submit_check_result(self, info_dict):
         # INFO:Monitos3:info_dict is: {
         # 'host': 'BPMon', 'performance_data': 'ggggg', 'service': 'BP_test cw', 'state': 'critical',
-        # 'comment': 'check result submitted', 'server': <Nagstamon.Servers.Monitos3.Monitos3Server object at 0x0000021555881CC0>,
+        # 'comment': 'check result submitted', 'server': <Nagstamon.servers.Monitos3.Monitos3Server object at 0x0000021555881CC0>,
         # 'check_output': 'tesstestus'}
         log.debug( json.dumps( str( info_dict ), sort_keys=True, indent=4) )
         host = info_dict['host']

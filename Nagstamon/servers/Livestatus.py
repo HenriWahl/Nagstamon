@@ -20,7 +20,7 @@
 from Nagstamon.objects import Result
 from Nagstamon.objects import GenericHost
 from Nagstamon.objects import GenericService
-from Nagstamon.Servers.Generic import GenericServer
+from Nagstamon.servers.Generic import GenericServer
 from Nagstamon.config import conf
 
 import logging
