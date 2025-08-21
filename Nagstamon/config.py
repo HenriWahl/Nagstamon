@@ -417,7 +417,7 @@ class Config:
             # the one read from configfile and so it would fail to save next time
             self.configdir = configdir_temp
 
-            # Servers configuration...
+            # servers configuration...
             self.servers = self._load_servers_multiple_config()
             # ... and actions
             self.actions = self.load_multiple_config("actions", "action", "Action")

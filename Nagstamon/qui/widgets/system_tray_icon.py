@@ -39,7 +39,7 @@ from Nagstamon.qui.qt import (QCursor,
                               Signal,
                               Slot)
 from Nagstamon.qui.widgets.icon import QIconWithFilename
-from Nagstamon.Servers import get_worst_status
+from Nagstamon.servers import get_worst_status
 
 
 class SystemTrayIcon(QSystemTrayIcon):

@@ -32,7 +32,7 @@ from Nagstamon.qui.qt import (QSizePolicy,
 from Nagstamon.qui.widgets.draggables import DraggableLabel
 from Nagstamon.qui.widgets.layout import HBoxLayout
 from Nagstamon.qui.widgets.nagstamon_logo import NagstamonLogo
-from Nagstamon.Servers import servers, get_errors
+from Nagstamon.servers import servers, get_errors
 
 
 class StatusBarLabel(DraggableLabel):

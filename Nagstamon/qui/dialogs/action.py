@@ -19,7 +19,7 @@ from copy import deepcopy
 from functools import wraps
 from urllib.parse import quote
 
-from Nagstamon.Servers import SERVER_TYPES
+from Nagstamon.servers import SERVER_TYPES
 from Nagstamon.config import (Action,
                               conf)
 from Nagstamon.qui.dialogs.dialog import Dialog

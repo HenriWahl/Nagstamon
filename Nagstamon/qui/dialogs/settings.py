@@ -51,7 +51,7 @@ from Nagstamon.qui.widgets.app import app
 from Nagstamon.qui.widgets.mediaplayer import mediaplayer
 from Nagstamon.qui.dialogs.check_version import check_version
 from Nagstamon.qui.dialogs.dialog import Dialog
-from Nagstamon.Servers import servers
+from Nagstamon.servers import servers
 
 
 class DialogSettings(Dialog):

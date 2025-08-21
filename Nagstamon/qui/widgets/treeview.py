@@ -54,7 +54,7 @@ from Nagstamon.qui.qt import (get_sort_order_value,
 from Nagstamon.qui.widgets.app import app
 from Nagstamon.qui.widgets.menu import MenuAtCursor
 from Nagstamon.qui.widgets.model import Model
-from Nagstamon.Servers import SERVER_TYPES, servers
+from Nagstamon.servers import SERVER_TYPES, servers
 
 
 class TreeView(QTreeView):

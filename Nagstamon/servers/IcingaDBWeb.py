@@ -30,7 +30,7 @@
 #   Once IcingaWeb2 has an API, it's probably the better choice.
 
 
-from Nagstamon.Servers.Generic import GenericServer
+from Nagstamon.servers.Generic import GenericServer
 import urllib.parse
 import sys
 import copy

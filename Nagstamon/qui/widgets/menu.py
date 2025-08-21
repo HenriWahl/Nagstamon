@@ -24,7 +24,7 @@ from Nagstamon.qui.qt import (QAction,
                               QPoint,
                               Signal,
                               Slot)
-from Nagstamon.Servers import servers
+from Nagstamon.servers import servers
 
 
 class MenuAtCursor(QMenu):

@@ -23,7 +23,7 @@ from Nagstamon.qui.qt import (QMessageBox,
                               QWidget,
                               Signal,
                               Slot)
-from Nagstamon.Servers import get_enabled_servers
+from Nagstamon.servers import get_enabled_servers
 
 
 class CheckVersion(QObject):

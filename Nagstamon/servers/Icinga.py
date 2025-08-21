@@ -24,7 +24,7 @@ import json
 from bs4 import BeautifulSoup
 from collections import OrderedDict
 
-from Nagstamon.Servers.Generic import GenericServer
+from Nagstamon.servers.Generic import GenericServer
 from Nagstamon.objects import (GenericHost, GenericService, Result)
 from Nagstamon.helpers import not_empty
 

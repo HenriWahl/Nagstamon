@@ -31,7 +31,7 @@ from datetime import datetime
 from Nagstamon.objects import (GenericHost,
                                GenericService,
                                Result)
-from Nagstamon.Servers.Generic import GenericServer
+from Nagstamon.servers.Generic import GenericServer
 from Nagstamon.helpers import webbrowser_open
 from Nagstamon.config import conf
 

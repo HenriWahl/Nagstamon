@@ -29,7 +29,7 @@ from Nagstamon.qui.qt import (QFileDialog,
                               Signal,
                               Slot)
 from Nagstamon.qui.dialogs.dialog import Dialog
-from Nagstamon.Servers import (create_server,
+from Nagstamon.servers import (create_server,
                                servers,
                                SERVER_TYPES)
 

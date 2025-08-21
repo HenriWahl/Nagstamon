@@ -19,7 +19,7 @@ from Nagstamon.config import conf
 from Nagstamon.qui.dialogs.dialog import Dialog
 from Nagstamon.qui.qt import (Signal,
                               Slot)
-from Nagstamon.Servers import servers
+from Nagstamon.servers import servers
 
 class DialogAuthentication(Dialog):
     """
