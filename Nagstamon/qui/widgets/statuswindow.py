@@ -1327,7 +1327,7 @@ class StatusWindow(QWidget):
         attempt to shut down thread cleanly
         """
         # stop debugging
-        statuswindow_worker_debug_loop_looping = False
+        statuswindow_properties.worker_debug_loop_looping = False
         # tell thread to quit
         self.worker_thread.quit()
         # wait until thread is really stopped
@@ -1422,10 +1422,10 @@ class StatusWindow(QWidget):
             if debugging is enabled, poll debug_queue list and print/write its contents
             """
             if conf.debug_mode:
-                statuswindow_worker_debug_loop_looping = True
+                statuswindow_properties.worker_debug_loop_looping = True
 
                 # as long thread is supposed to run
-                while self.running and statuswindow_worker_debug_loop_looping:
+                while self.running and statuswindow_properties.worker_debug_loop_looping:
                     # only log something if there is something to tell
                     while len(debug_queue) > 0:
                         # always get the oldest item of queue list - FIFO
@@ -1442,7 +1442,7 @@ class StatusWindow(QWidget):
                     sleep(1)
 
                 # unset looping
-                statuswindow_worker_debug_loop_looping = False
+                statuswindow_properties.worker_debug_loop_looping = False
                 # close file if any
                 if self.debug_file is not None:
                     self.close_debug_file()

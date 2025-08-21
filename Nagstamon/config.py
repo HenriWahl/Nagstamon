@@ -51,8 +51,8 @@ OS_WINDOWS = 'Windows'
 OS_NON_LINUX = (OS_MACOS, OS_WINDOWS)
 
 # simple Wayland detection
-if 'WAYLAND_DISPLAY' in os.environ or\
-    'XDG_SESSION_TYPE' in os.environ and os.environ['XDG_SESSION_TYPE'] == 'wayland':
+if 'WAYLAND_DISPLAY' in os.environ or \
+        'XDG_SESSION_TYPE' in os.environ and os.environ['XDG_SESSION_TYPE'] == 'wayland':
     # dirty workaround to activate X11 support in Wayland environment - just a test
     if not os.environ.get('QT_QPA_PLATFORM'):
         os.environ['QT_QPA_PLATFORM'] = 'xcb'
@@ -61,10 +61,10 @@ else:
     DESKTOP_WAYLAND = False
 
 # detection of somehow quirky desktop enviroments which might need a fix
-QUIRKY_DESKTOPS =  ('cinnamon', 'gnome-flashback-metacity')
-if os.environ.get('CINNAMON_VERSION') or\
-    os.environ.get('DESKTOP_SESSION') in QUIRKY_DESKTOPS or \
-    os.environ.get('XDG_SESSION_DESKTOP') in QUIRKY_DESKTOPS:
+QUIRKY_DESKTOPS = ('cinnamon', 'gnome-flashback-metacity')
+if os.environ.get('CINNAMON_VERSION') or \
+        os.environ.get('DESKTOP_SESSION') in QUIRKY_DESKTOPS or \
+        os.environ.get('XDG_SESSION_DESKTOP') in QUIRKY_DESKTOPS:
     DESKTOP_NEEDS_FIX = True
 else:
     DESKTOP_NEEDS_FIX = False
@@ -140,9 +140,9 @@ class AppInfo:
     DOWNLOAD_SERVERS = {'nagstamon.de': 'https://github.com/HenriWahl/Nagstamon/releases'}
     # version URL depends on version string
     if 'alpha' in VERSION.lower() or \
-        'beta' in VERSION.lower() or \
-        'rc' in VERSION.lower() or \
-        '-' in VERSION.lower():
+            'beta' in VERSION.lower() or \
+            'rc' in VERSION.lower() or \
+            '-' in VERSION.lower():
         VERSION_URL = WEBSITE + '/version/unstable'
         VERSION_PATH = '/version/unstable'
     else:
@@ -715,11 +715,10 @@ class Config:
                                     # provoke crash if password saving does not work - this is the case
                                     # on newer Ubuntu releases
                                     try:
-                                        keyring.set_password('Nagstamon', '@'.join(('proxy',
-                                                                                    self.__dict__[settingsdir][
-                                                                                        s].proxy_username,
-                                                                                    self.__dict__[settingsdir][
-                                                                                        s].proxy_address)),
+                                        keyring.set_password('Nagstamon',
+                                                             '@'.join(('proxy',
+                                                                       self.__dict__[settingsdir][s].proxy_username,
+                                                                       self.__dict__[settingsdir][s].proxy_address)),
                                                              self.__dict__[settingsdir][s].proxy_password)
                                     except Exception:
                                         import traceback
@@ -938,19 +937,19 @@ class Config:
                                                            string="$MONITOR$/event?host=$HOST$&service=$SERVICE$",
                                                            enabled=False)
         defaultactions["Checkmk-1-Click-Acknowledge-Host"] = Action(name="Checkmk-1-Click-Acknowledge-Host",
-                                                                     type="url",
-                                                                     description="Acknowledges a host with one click.",
-                                                                     filter_target_service=False, enabled=False,
-                                                                     string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=hoststatus&host=$HOST$&_ack_comment=$COMMENT-ACK$&_acknowledge=Acknowledge")
+                                                                    type="url",
+                                                                    description="Acknowledges a host with one click.",
+                                                                    filter_target_service=False, enabled=False,
+                                                                    string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=hoststatus&host=$HOST$&_ack_comment=$COMMENT-ACK$&_acknowledge=Acknowledge")
         defaultactions["Checkmk-1-Click-Acknowledge-Service"] = Action(name="Checkmk-1-Click-Acknowledge-Service",
-                                                                        type="url",
-                                                                        description="Acknowledges a host with one click.",
-                                                                        filter_target_host=False, enabled=False,
-                                                                        string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=service&host=$HOST$&_ack_comment=$COMMENT-ACK$&_acknowledge=Acknowledge&service=$SERVICE$")
+                                                                       type="url",
+                                                                       description="Acknowledges a host with one click.",
+                                                                       filter_target_host=False, enabled=False,
+                                                                       string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=service&host=$HOST$&_ack_comment=$COMMENT-ACK$&_acknowledge=Acknowledge&service=$SERVICE$")
         defaultactions["Checkmk Edit host in WATO"] = Action(name="Checkmk Edit host in WATO", enabled=False,
-                                                              monitor_type="Checkmk Multisite",
-                                                              description="Edit host in WATO.",
-                                                              string="$MONITOR$/wato.py?host=$HOST$&mode=edit_host")
+                                                             monitor_type="Checkmk Multisite",
+                                                             description="Edit host in WATO.",
+                                                             string="$MONITOR$/wato.py?host=$HOST$&mode=edit_host")
         defaultactions["Email"] = Action(name="Email", enabled=False, description="Send email to someone.",
                                          type="browser",
                                          string="mailto:servicedesk@my.org?subject=Monitor alert: $HOST$ - $SERVICE$ - $STATUS-INFO$&body=Please help!.%0d%0aBest regards from Nagstamon")
@@ -1128,6 +1127,7 @@ class Server:
         # Thruk
         self.disabled_backends = ""
 
+
 class Action:
     """
     class for custom actions, which whill be thrown into one config dictionary like the servers
@@ -1212,6 +1212,7 @@ except Exception as err:
         # if resources dir is not available in CWD, try the
         # libs dir (site-packages) for the current Python
         from distutils.sysconfig import get_python_lib
+
         paths_to_check.append(os.path.normcase(os.path.join(get_python_lib(), "Nagstamon", "resources")))
     except Exception:
         pass
@@ -1219,6 +1220,7 @@ except Exception as err:
     # if we're still out of luck, maybe this was a user scheme install
     try:
         import site
+
         site.getusersitepackages()  # make sure USER_SITE is set
         paths_to_check.append(os.path.normcase(os.path.join(site.USER_SITE, "Nagstamon", "resources")))
     except Exception:
