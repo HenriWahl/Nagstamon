@@ -28,6 +28,7 @@ from Nagstamon.qui.dialogs.server import DialogServer
 from Nagstamon.qui.dialogs.server_missing import DialogServerMissing
 from Nagstamon.qui.dialogs.settings import DialogSettings
 from Nagstamon.qui.dialogs.submit import DialogSubmit
+from Nagstamon.qui.dialogs.weblogin import DialogWebLogin
 from Nagstamon.qui.helpers import hide_macos_dock_icon
 from Nagstamon.qui.qt import (QObject,
                               Slot)
@@ -37,17 +38,17 @@ class Dialogs(QObject):
     """
     class for accessing all dialogs
     """
-    windows = list()
-    settings = None
-    server = None
-    action = None
+    about = None
     acknowledge = None
+    action = None
+    authentication = None
     downtime = None
     submit = None
-    authentication = None
+    server = None
     server_missing = None
-    about = None
-
+    settings = None
+    weblogin = None
+    windows = list()
 
     def initialize_dialog_settings(self, dialog):
         """
@@ -110,6 +111,14 @@ class Dialogs(QObject):
         self.about = dialog
         self.windows.append(self.about.window)
 
+    def initialize_dialog_weblogin(self, dialog):
+        """
+        initialize web login dialog
+        """
+        self.weblogin = dialog
+        self.weblogin.initialize()
+        self.windows.append(self.weblogin.window)
+
     def get_shown_dialogs(self):
         """
         get a list of currently show dialog windows - needed for macOS hide dock icon stuff
@@ -153,6 +162,7 @@ dialogs.initialize_dialog_submit(DialogSubmit())
 dialogs.initialize_dialog_authentication(DialogAuthentication())
 dialogs.initialize_dialog_server_missing(DialogServerMissing())
 dialogs.initialize_dialog_server(DialogServer())
+dialogs.initialize_dialog_weblogin(DialogWebLogin())
 
 # signals and slots between dialogs
 # settings -> server

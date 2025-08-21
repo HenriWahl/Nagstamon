@@ -7,6 +7,7 @@ packaging
 psutil
 pyqt6
 pyqt6-qt6
+pyqt6-webengine
 pysocks
 python-dateutil
 requests

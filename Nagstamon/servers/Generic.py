@@ -349,6 +349,8 @@ class GenericServer:
             session.auth = HTTPSKerberos()
         elif self.authentication == 'bearer':
             session.auth = BearerAuth(self.password)
+        elif self.authentication == 'browser':
+            pass
 
         # default to check TLS validity
         if self.ignore_cert:

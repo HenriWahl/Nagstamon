@@ -204,8 +204,11 @@ elif QT_FLAVOR == 'PyQt6':
         QPixmap
     from PyQt6.QtMultimedia import QAudioOutput, \
         QMediaPlayer
+    from PyQt6.QtNetwork import QNetworkCookie
     from PyQt6.QtSvg import QSvgRenderer
     from PyQt6.QtSvgWidgets import QSvgWidget
+    from PyQt6.QtWebEngineCore import QWebEngineProfile as WebEngineProfile
+    from PyQt6.QtWebEngineWidgets import QWebEngineView as WebEngineView
     from PyQt6.QtWidgets import QAbstractItemView, \
         QApplication, \
         QColorDialog, \
