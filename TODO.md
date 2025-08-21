@@ -27,7 +27,7 @@
 - [x] basically working OSes
   - [x] Linux
     - [x] Ubuntu
-    - [x ] Fedora
+    - [x] Fedora
     - [x] Pyinstaller]
   - [x] Windows
   - [x] macOS
