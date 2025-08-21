@@ -157,7 +157,7 @@ class DialogServer(Dialog):
         self.window.button_choose_custom_cert_ca_file.clicked.connect(self.choose_custom_cert_ca_file)
 
         # fill authentication combobox
-        self.window.input_combobox_authentication.addItems(['Basic', 'Bearer', 'Browser', 'Digest'])
+        self.window.input_combobox_authentication.addItems(['Basic', 'Bearer', 'Digest', 'Web'])
         if ecp_available:
             self.window.input_combobox_authentication.addItems(['ECP'])
         if kerberos_available:

@@ -50,11 +50,13 @@ from Nagstamon.qui.dialogs import dialogs
 from Nagstamon.qui.dialogs.check_version import CheckVersion
 from Nagstamon.qui.qt import (MediaPlayer,
                               Slot)
+from Nagstamon.qui.widgets.combobox_servers import ComboBoxServers
 from Nagstamon.qui.widgets.buttons import PushButtonBrowserURL
 from Nagstamon.qui.widgets.draggables import (DraggableLabel,
                                               DraggableWidget)
 from Nagstamon.qui.widgets.icon import QIconWithFilename
-from Nagstamon.qui.widgets.labels import (LabelAllOK,
+from Nagstamon.qui.widgets.labels import (ClosingLabel,
+                                          LabelAllOK,
                                           ServerStatusLabel)
 from Nagstamon.qui.widgets.layout import HBoxLayout
 from Nagstamon.qui.widgets.mediaplayer import mediaplayer
@@ -62,14 +64,12 @@ from Nagstamon.qui.widgets.menu import (MenuAtCursor,
                                         MenuContext,
                                         MenuContextSystrayicon)
 from Nagstamon.qui.widgets.model import Model
+from Nagstamon.qui.widgets.nagstamon_logo import NagstamonLogo
 from Nagstamon.qui.widgets.statuswindow import StatusWindow
 from Nagstamon.qui.widgets.system_tray_icon import SystemTrayIcon
 from Nagstamon.qui.widgets.toparea import TopArea
-from Nagstamon.qui.widgets.combobox_servers import ComboBoxServers
-
 from Nagstamon.qui.widgets.treeview import TreeView
-from Nagstamon.qui.widgets.nagstamon_logo import NagstamonLogo
-from Nagstamon.qui.widgets.labels import ClosingLabel
+from Nagstamon.qui.widgets.web import webengine_view
 
 from Nagstamon.config import (conf,
                               OS_NON_LINUX,
@@ -205,3 +205,4 @@ else:
     statuswindow.systrayicon_disabled.emit()
 # tell the widgets that the menu is ready
 menu.menu_ready.emit(menu)
+
