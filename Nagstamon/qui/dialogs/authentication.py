@@ -112,7 +112,7 @@ class DialogAuthentication(Dialog):
                 conf.save_multiple_config('servers', 'server')
 
         # reset server connection
-        self.server.reset_HTTP()
+        self.server.reset_http()
 
         # force server to recheck right now
         self.server.thread_counter = conf.update_interval_seconds

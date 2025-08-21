@@ -46,11 +46,11 @@ class IcingaServer(GenericServer):
         self.cgiurl_hosts = None
 
 
-    def init_HTTP(self):
+    def init_http(self):
         """
             Icinga 1.11 needs extra Referer header for actions
         """
-        GenericServer.init_HTTP(self)
+        GenericServer.init_http(self)
 
         if not 'Referer' in self.session.headers:
             # to execute actions since Icinga 1.11 a Referer Header is necessary

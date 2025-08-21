@@ -61,6 +61,8 @@ from Nagstamon.config import (AppInfo,
                               OS_MACOS,
                               RESOURCES)
 
+from Nagstamon.qui.qt import QObject
+
 # flag to keep track of Kerberos availability
 KERBEROS_AVAILABLE = False
 if OS == OS_MACOS:
@@ -107,6 +109,7 @@ class BearerAuth(requests.auth.AuthBase):
     def __call__(self, r):
         r.headers["Authorization"] = "Bearer " + self.token
         return r
+
 
 class GenericServer:
 
@@ -296,7 +299,7 @@ class GenericServer:
             'hard': self.monitor_cgi_url + '/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=262144&limit=0',
             'soft': self.monitor_cgi_url + '/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12&hostprops=524288&limit=0'}
 
-    def init_HTTP(self):
+    def init_http(self):
         """
         initialize HTTP connection
         should return a valid session if none exists yet
@@ -383,7 +386,7 @@ class GenericServer:
             session.proxies = None
             session.trust_env = False
 
-    def reset_HTTP(self):
+    def reset_http(self):
         '''
             if authentication fails try to reset any HTTP session stuff - might be different for different monitors
         '''
@@ -923,7 +926,7 @@ class GenericServer:
             return Result()
 
         # initialize HTTP first
-        self.init_HTTP()
+        self.init_http()
 
         # get all trouble hosts/services from server specific _get_status()
         status = self._get_status()
@@ -964,8 +967,8 @@ class GenericServer:
                     # needed to get valid credentials
                     self.refresh_authentication = True
                     # clean existent authentication
-                    self.reset_HTTP()
-                    self.init_HTTP()
+                    self.reset_http()
+                    self.init_http()
                     status = self._get_status()
                     self.status = status.result
                     self.status_description = status.error
@@ -1494,8 +1497,8 @@ class GenericServer:
                 if no_auth is False and not self.refresh_authentication:
                     # check if there is really a session
                     if not self.session:
-                        self.reset_HTTP()
-                        self.init_HTTP()
+                        self.reset_http()
+                        self.init_http()
                     # most requests come without multipart/form-data
                     if multipart is False:
                         if cgi_data is None:

@@ -88,11 +88,11 @@ class PrometheusServer(GenericServer):
 
     API_PATH_ALERTS = "/api/v1/alerts"
 
-    def init_HTTP(self):
+    def init_http(self):
         """
         things to do if HTTP is not initialized
         """
-        GenericServer.init_HTTP(self)
+        GenericServer.init_http(self)
 
         # prepare for JSON
         self.session.headers.update({'Accept': 'application/json',

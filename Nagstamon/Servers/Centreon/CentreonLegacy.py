@@ -76,16 +76,16 @@ class CentreonServer(GenericServer):
         dummy init_config, called at thread start, not really needed here, just omit extra properties
         '''
         # set URLs here already
-        self.init_HTTP()
+        self.init_http()
         if not self.tls_error and self.centreon_version is not None:
             self._define_url()
 
-    def init_HTTP(self):
+    def init_http(self):
         """
         initialize HTTP connection
         """
         if self.session is None:
-            GenericServer.init_HTTP(self)
+            GenericServer.init_http(self)
 
         if self.centreon_version is None:
             result_versioncheck = self.fetch_url(self.monitor_cgi_url + '/index.php', giveback='raw')
@@ -176,7 +176,7 @@ class CentreonServer(GenericServer):
 
             del result_versioncheck, raw_versioncheck, error_versioncheck
 
-    def reset_HTTP(self):
+    def reset_http(self):
         '''
         Centreon needs deletion of SID
         '''

@@ -116,8 +116,8 @@ class CentreonServer(GenericServer):
         if not self.tls_error and self.urls_centreon is None:
             self.define_url()
 
-    def init_HTTP(self):
-        GenericServer.init_HTTP(self)
+    def init_http(self):
+        GenericServer.init_http(self)
         if self.session is None:
             self.session.headers.update({'Content-Type': 'application/json'})
             self.token = self.get_token().result
