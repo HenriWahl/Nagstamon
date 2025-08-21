@@ -231,7 +231,7 @@ class MultisiteServer(GenericServer):
 
     def _get_status(self):
         """
-            Get status from Checkmk Server
+        Get status from Checkmk Server
         """
 
         ret = Result()
