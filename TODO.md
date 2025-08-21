@@ -2,8 +2,8 @@
 
 - [x] change font like in settings.py
 - [ ] check_servers.check()
-- [ ] show_macos_dock_icon_if_necessary should be called elsewhere
-- [ ] hide_macos_dock_icon_if_necessary should be called elsewhere
+- [x] show_macos_dock_icon_if_necessary should be called elsewhere
+- [x] hide_macos_dock_icon_if_necessary should be called elsewhere
 - [ ] 'new' -> 'create'
 - [ ] statuswindow.is_shown_timestamp -= 1
 - [x] normal-light activated server in settings dialog when opening settings

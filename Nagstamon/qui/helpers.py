@@ -67,8 +67,8 @@ def hide_macos_dock_icon(hide=False):
 
 def get_screen_name(x, y):
     """
-        find out which screen the given coordinates belong to
-        gives back 'None' if coordinates are out of any known screen
+    find out which screen the given coordinates belong to
+    gives back 'None' if coordinates are out of any known screen
     """
     # integerify these values as they *might* be strings
     x = int(x)
@@ -88,7 +88,7 @@ def get_screen_name(x, y):
 
 def get_screen_geometry(screen_name):
     """
-        set screen for fullscreen
+    set screen for fullscreen
     """
     for screen in app.screens():
         if screen.name() == screen_name:

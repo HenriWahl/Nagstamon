@@ -131,30 +131,33 @@ class CheckVersion(QObject):
                     # dummy message just in case version check does not work
                     message = 'Cannot reach version check at <a href={0}>{0}</<a>.'.format(
                         f'https://{download_server}{AppInfo.VERSION_PATH}')
+
                     # retrieve VERSION_URL without auth information
                     response = server.fetch_url(f'https://{download_server}{AppInfo.VERSION_PATH}',
                                                 giveback='raw',
                                                 no_auth=True)
+
                     # stop searching the available download URLs
-                    if response.error == "" and \
+                    if response.error == '' and \
                             not response.result.startswith('<') and \
                             not '\n' in response.result and \
-                            len(response.result) > 5 and \
+                            5 < len(response.result) < 20 and \
                             response.result[0].isdigit():
                         latest_version = response.result.strip()
                         break
+
                 # ignore TLS error in case it was caused by requesting the latest version - not important for monitoring
                 server.tls_error = False
 
                 # stop searching via enabled servers
-                if response.error == "" and not response.result.startswith('<'):
+                if response.error == '' and not response.result.startswith('<'):
                     latest_version = response.result.strip()
                     break
 
             # compose a message according to version information
             if latest_version != 'unavailable':
                 if latest_version == AppInfo.VERSION:
-                    message = 'You are using the latest version <b>Nagstamon {0}</b>.'.format(AppInfo.VERSION)
+                    message = f'You are using the latest version <b>Nagstamon {AppInfo.VERSION}</b>.'
                 # avoid GitHub HTML being evaluated as version number -> checking for length
                 elif latest_version > AppInfo.VERSION and not len(latest_version) > 20:
                     message = f'The new version <b>Nagstamon {latest_version}</b> is available.<p>' \
@@ -172,6 +175,7 @@ class CheckVersion(QObject):
 
             # tell thread to finish
             self.finished.emit()
+
 
 # initialized an object to be used in other modules
 check_version = CheckVersion()
