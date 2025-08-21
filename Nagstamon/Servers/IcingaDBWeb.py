@@ -40,12 +40,11 @@ from datetime import timezone
 import socket
 
 from bs4 import BeautifulSoup
-from Nagstamon.Objects import (GenericHost,
+from Nagstamon.objects import (GenericHost,
                                GenericService,
                                Result)
-from Nagstamon.Config import (conf,
-                              AppInfo)
-from Nagstamon.Helpers import webbrowser_open
+from Nagstamon.config import conf
+from Nagstamon.helpers import webbrowser_open
 
 
 def strfdelta(tdelta, fmt):
@@ -798,7 +797,7 @@ class IcingaDBWebServer(GenericServer):
         try:
             # take ip from json output
             result = json.loads(jsonhost)[0]
-            ip = result["host_address"]
+            ip = result["address"]
 
             # print IP in debug mode
             if conf.debug_mode is True:

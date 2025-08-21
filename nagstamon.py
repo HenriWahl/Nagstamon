@@ -26,7 +26,7 @@ socket.setdefaulttimeout(30)
 
 try:
     if __name__ == '__main__':
-        from Nagstamon.Config import (conf,
+        from Nagstamon.config import (conf,
                                       OS,
                                       OS_WINDOWS)
 
@@ -34,7 +34,7 @@ try:
         if OS == OS_WINDOWS:
             import pip_system_certs.wrapt_requests
 
-        from Nagstamon.Helpers import lock_config_folder
+        from Nagstamon.helpers import lock_config_folder
 
         # Acquire the lock
         if not lock_config_folder(conf.configdir):
@@ -42,17 +42,15 @@ try:
             sys.exit(1)
 
         # get GUI
-        from Nagstamon.QUI import (APP,
-                                   statuswindow,
+        from Nagstamon.qui import (app,
                                    check_version,
-                                   check_servers,
-                                   QT_FLAVOR,
-                                   QT_VERSION_STR)
+                                   statuswindow)
+        from Nagstamon.qui.helpers import check_servers
 
         # ask for help if no servers are configured
-        check_servers()
+        check_servers.check()
 
-        # show and resize status window
+        # show and resize the status window
         statuswindow.show()
         if not conf.fullscreen:
             statuswindow.adjustSize()
@@ -60,7 +58,7 @@ try:
         if conf.check_for_new_version is True:
             check_version.check(start_mode=True, parent=statuswindow)
 
-        sys.exit(APP.exec())
+        sys.exit(app.exec())
 
 except Exception as err:
     import traceback

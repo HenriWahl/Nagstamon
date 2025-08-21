@@ -1,5 +1,5 @@
 # encoding: utf-8
-
+from Nagstamon.helpers import webbrowser_open
 # Nagstamon - Nagios status monitor for your desktop
 # Copyright (C) 2008-2025 Henri Wahl <henri@nagstamon.de> et al.
 #
@@ -22,11 +22,11 @@
 # 2017_06_27
 # studo
 
-from Nagstamon.Objects import Result
-from Nagstamon.Objects import GenericHost
-from Nagstamon.Objects import GenericService
+from Nagstamon.objects import Result
+from Nagstamon.objects import GenericHost
+from Nagstamon.objects import GenericService
 from Nagstamon.Servers.Generic import GenericServer
-from Nagstamon.Config import conf
+from Nagstamon.config import conf
 
 import logging
 # logging.basicConfig( level=logging.INFO )

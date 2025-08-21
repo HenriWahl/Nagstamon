@@ -39,22 +39,22 @@ try:
 except ImportError:
     ECP_AVAILABLE = False
 
-from Nagstamon.Helpers import (host_is_filtered_out_by_re,
-                               ServiceIsFilteredOutByRE,
-                               StatusInformationIsFilteredOutByRE,
-                               DurationIsFilteredOutByRE,
-                               AttemptIsFilteredOutByRE,
-                               GroupsIsFilteredOutByRE,
-                               CriticalityIsFilteredOutByRE,
+from Nagstamon.helpers import (host_is_filtered_out_by_re,
+                               service_is_filtered_out_by_re,
+                               status_information_is_filtered_out_by_re,
+                               duration_is_filtered_out_by_re,
+                               attempt_is_filtered_out_by_re,
+                               groups_is_filtered_out_by_re,
+                               criticality_is_filtered_out_by_re,
                                not_empty,
                                webbrowser_open,
                                STATES)
 
-from Nagstamon.Objects import (GenericService,
+from Nagstamon.objects import (GenericService,
                                GenericHost,
                                Result)
 
-from Nagstamon.Config import (AppInfo,
+from Nagstamon.config import (AppInfo,
                               conf,
                               debug_queue,
                               OS,
@@ -108,7 +108,7 @@ class BearerAuth(requests.auth.AuthBase):
         r.headers["Authorization"] = "Bearer " + self.token
         return r
 
-class GenericServer(object):
+class GenericServer:
 
     '''
         Abstract server which serves as template for all other types
@@ -165,7 +165,7 @@ class GenericServer(object):
         self.proxy_username = ''
         self.proxy_password = ''
         self.auth_type = ''
-        self.encoding = None
+        self.encoding = 'utf-8'
         self.hosts = dict()
         self.new_hosts = dict()
         self.isChecking = False
@@ -321,7 +321,10 @@ class GenericServer(object):
         # support for different authentication types
         if self.authentication == 'basic':
             # basic authentication
-            session.auth = requests.auth.HTTPBasicAuth(self.username, self.password)
+            # not encoding as 'utf-8' causes trouble with special characters
+            # https://github.com/HenriWahl/Nagstamon/issues/1126
+            # https://github.com/psf/requests/issues/4564#issuecomment-670771785
+            session.auth = (self.username.encode('utf-8'), self.password.encode('utf-8'))
         elif self.authentication == 'digest':
             session.auth = requests.auth.HTTPDigestAuth(self.username, self.password)
         elif self.authentication == 'ecp' and ECP_AVAILABLE:
@@ -653,7 +656,7 @@ class GenericServer(object):
                 errors_occured = self.check_for_error(htobj, error, status_code)
                 # if there are errors return them
                 if errors_occured is not None:
-                    return(errors_occured)
+                    return errors_occured
 
                 # put a copy of a part of htobj into table to be able to delete htobj
                 # too mnuch copy.deepcopy()s here give recursion crashs
@@ -778,7 +781,7 @@ class GenericServer(object):
                 errors_occured = self.check_for_error(htobj, error, status_code)
                 # if there are errors return them
                 if errors_occured is not None:
-                    return(errors_occured)
+                    return errors_occured
 
                 # too much copy.deepcopy()s here give recursion crashs
                 table = htobj('table', {'class': 'status'})[0]
@@ -967,7 +970,7 @@ class GenericServer(object):
                     self.status = status.result
                     self.status_description = status.error
                     self.status_code = status.status_code
-                    return(status)
+                    return status
             elif self.status_description.startswith('requests.exceptions.SSLError:'):
                 self.tls_error = True
             else:
@@ -1042,14 +1045,14 @@ class GenericServer(object):
                         self.debug(server=self.get_name(), debug='Filter: REGEXP ' + str(host.name))
                     host.visible = False
 
-                if StatusInformationIsFilteredOutByRE(host.status_information, conf) is True:
+                if status_information_is_filtered_out_by_re(host.status_information, conf) is True:
                     if conf.debug_mode:
                         self.debug(server=self.get_name(), debug='Filter: REGEXP ' + str(host.name))
                     host.visible = False
 
                 # The Criticality filter can be used only with centreon objects. Other objects don't have the criticality attribute.
                 if self.type == 'Centreon':
-                    if CriticalityIsFilteredOutByRE(host.criticality, conf):
+                    if criticality_is_filtered_out_by_re(host.criticality, conf):
                         if conf.debug_mode:
                             self.debug(server=self.get_name(), debug='Filter: REGEXP Criticality ' + str(host.name))
                         host.visible = False
@@ -1184,31 +1187,31 @@ class GenericServer(object):
                                    debug='Filter: REGEXP ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
-                if ServiceIsFilteredOutByRE(service.get_name(), conf) is True:
+                if service_is_filtered_out_by_re(service.get_name(), conf) is True:
                     if conf.debug_mode:
                         self.debug(server=self.get_name(),
                                    debug='Filter: REGEXP ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
-                if StatusInformationIsFilteredOutByRE(service.status_information, conf) is True:
+                if status_information_is_filtered_out_by_re(service.status_information, conf) is True:
                     if conf.debug_mode:
                         self.debug(server=self.get_name(),
                                    debug='Filter: REGEXP ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
-                if DurationIsFilteredOutByRE(service.duration, conf) is True:
+                if duration_is_filtered_out_by_re(service.duration, conf) is True:
                     if conf.debug_mode:
                         self.debug(server=self.get_name(),
                                    debug='Filter: REGEXP ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
-                if AttemptIsFilteredOutByRE(service.attempt, conf) is True:
+                if attempt_is_filtered_out_by_re(service.attempt, conf) is True:
                     if conf.debug_mode:
                         self.debug(server=self.get_name(),
                                    debug='Filter: REGEXP ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
-                if GroupsIsFilteredOutByRE(service.groups, conf) is True:
+                if groups_is_filtered_out_by_re(service.groups, conf) is True:
                     if conf.debug_mode:
                         self.debug(server=self.get_name(),
                                    debug='Filter: REGEXP ' + str(host.name) + ';' + str(service.name))
@@ -1216,7 +1219,7 @@ class GenericServer(object):
 
                 # The Criticality filter can be used only with centreon objects. Other objects don't have the criticality attribute.
                 if self.type == 'Centreon':
-                    if CriticalityIsFilteredOutByRE(service.criticality, conf):
+                    if criticality_is_filtered_out_by_re(service.criticality, conf):
                         if conf.debug_mode:
                             self.debug(server=self.get_name(), debug='Filter: REGEXP Criticality %s;%s %s' % (
                                 (str(host.name), str(service.name), str(service.criticality))))
@@ -1330,7 +1333,7 @@ class GenericServer(object):
 
         # in the following lines worst_status_diff only changes from UP to another value if there was some change in the
         # worst status - if it is the same as before it will just keep UP
-        # if both lists are identical there was no status change
+        # if both lists are identical, there was no status change
         if (self.nagitems_filtered_list == new_nagitems_filtered_list):
             self.worst_status_diff = 'UP'
         else:
@@ -1344,7 +1347,7 @@ class GenericServer(object):
             if len(diff) == 0:
                 self.worst_status_diff = 'UP'
             else:
-                # if there are different hosts/services in list of new hosts there must be a notification
+                # if there are different hosts/services in the list of new hosts there must be a notification
                 # get list of states for comparison
                 diff_states = []
                 for d in diff:
@@ -1352,7 +1355,7 @@ class GenericServer(object):
                 # temporary worst state index
                 worst = 0
                 for d in diff_states:
-                    # only check worst state if it is valid
+                    # only check the worst state if it is valid
                     if d in STATES:
                         if STATES.index(d) > worst:
                             worst = STATES.index(d)
@@ -1527,10 +1530,10 @@ class GenericServer(object):
                     if multipart is False:
                         if cgi_data is None:
                             #response = temporary_session.get(url, timeout=self.timeout, verify=not self.ignore_cert)
-                            response = temporary_session.get(url, timeout=self.timeout, verify=False)
+                            response = temporary_session.get(url, timeout=self.timeout, verify=False, headers=headers)
                         else:
                             #response = temporary_session.post(url, data=cgi_data, timeout=self.timeout, verify=not self.ignore_cert)
-                            response = temporary_session.post(url, data=cgi_data, timeout=self.timeout, verify=False)
+                            response = temporary_session.post(url, data=cgi_data, timeout=self.timeout, verify=False, headers=headers)
                     else:
                         # Checkmk and Opsview need multipart/form-data encoding
                         # http://stackoverflow.com/questions/23120974/python-requests-post-multipart-form-data-without-filename-in-http-request#23131823
@@ -1553,8 +1556,8 @@ class GenericServer(object):
                     self.tls_error = False
                 return Result(result=result, error=error, status_code=-1)
 
-            # store encoding in case it is not set yet and is not False
-            if self.encoding is None:
+            # store encoding in case it is not the server side encoding
+            if self.encoding != response.encoding:
                 self.encoding = response.encoding
 
             # give back pure HTML or XML in case giveback is 'raw'
@@ -1646,7 +1649,7 @@ class GenericServer(object):
 
     def get_items_generator(self):
         '''
-            Generator for plain listing of all filtered items, used in QUI for tableview
+            Generator for plain listing of all filtered items, used in qui for tableview
         '''
 
         # reset number of filtered items
@@ -1706,7 +1709,7 @@ class GenericServer(object):
         """
             return number of unseen events - those which are set True as unseen
         """
-        return(len(list((e for e in self.events_history if self.events_history[e] is True))))
+        return len(list((e for e in self.events_history if self.events_history[e] is True)))
 
     @staticmethod
     def check_for_error(result, error, status_code) -> Optional[Result]:
@@ -1749,6 +1752,6 @@ class GenericServer(object):
 
     def get_worst_status_diff(self):
         """
-            hand over the current worst status difference for QUI
+            hand over the current worst status difference for qui
         """
         return self.worst_status_diff

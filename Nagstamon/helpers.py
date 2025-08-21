@@ -21,6 +21,8 @@ import datetime
 import getpass
 from glob import glob
 import os
+from urllib.parse import quote
+
 import psutil
 from pathlib import Path
 import platform
@@ -32,9 +34,10 @@ import webbrowser
 # import md5 for centreon url autologin encoding
 from hashlib import md5
 
-from Nagstamon.Config import (conf,
+from Nagstamon.config import (conf,
                               OS,
-                              OS_MACOS)
+                              OS_MACOS,
+                              RESOURCES)
 
 # states needed for gravity comparison for notification and Generic.py
 STATES = ['UP',
@@ -117,7 +120,7 @@ class FilesDict(dict):
 
 def not_empty(x):
     '''
-        tiny helper function for BeautifulSoup in server Generic.py to filter text elements
+    tiny helper function for BeautifulSoup in server Generic.py to filter text elements
     '''
     return bool(x.replace('&nbsp;', '').strip())
 
@@ -142,7 +145,7 @@ def is_found_by_re(string, pattern, reverse):
 
 def host_is_filtered_out_by_re(host, conf=None):
     """
-        helper for applying RE filters in Generic.GetStatus()
+    helper for applying RE filters in Generic.GetStatus()
     """
     try:
         if conf.re_host_enabled is True:
@@ -153,9 +156,9 @@ def host_is_filtered_out_by_re(host, conf=None):
         traceback.print_exc(file=sys.stdout)
 
 
-def ServiceIsFilteredOutByRE(service, conf=None):
+def service_is_filtered_out_by_re(service, conf=None):
     """
-        helper for applying RE filters in Generic.GetStatus()
+    helper for applying RE filters in Generic.GetStatus()
     """
     try:
         if conf.re_service_enabled is True:
@@ -166,9 +169,9 @@ def ServiceIsFilteredOutByRE(service, conf=None):
         traceback.print_exc(file=sys.stdout)
 
 
-def StatusInformationIsFilteredOutByRE(status_information, conf=None):
+def status_information_is_filtered_out_by_re(status_information, conf=None):
     """
-        helper for applying RE filters in Generic.GetStatus()
+    helper for applying RE filters in Generic.GetStatus()
     """
     try:
         if conf.re_status_information_enabled is True:
@@ -178,9 +181,9 @@ def StatusInformationIsFilteredOutByRE(status_information, conf=None):
     except Exception:
         traceback.print_exc(file=sys.stdout)
 
-def DurationIsFilteredOutByRE(duration, conf=None):
+def duration_is_filtered_out_by_re(duration, conf=None):
     """
-        helper for applying RE filters in Generic.GetStatus()
+    helper for applying RE filters in Generic.GetStatus()
     """
     try:
         if conf.re_duration_enabled is True:
@@ -190,9 +193,9 @@ def DurationIsFilteredOutByRE(duration, conf=None):
     except Exception:
         traceback.print_exc(file=sys.stdout)
 
-def AttemptIsFilteredOutByRE(attempt, conf=None):
+def attempt_is_filtered_out_by_re(attempt, conf=None):
     """
-        helper for applying RE filters in Generic.GetStatus()
+    helper for applying RE filters in Generic.GetStatus()
     """
     try:
         if conf.re_attempt_enabled is True:
@@ -202,9 +205,9 @@ def AttemptIsFilteredOutByRE(attempt, conf=None):
     except Exception:
         traceback.print_exc(file=sys.stdout)
 
-def GroupsIsFilteredOutByRE(groups, conf=None):
+def groups_is_filtered_out_by_re(groups, conf=None):
     """
-        helper for applying RE filters in Generic.GetStatus()
+    helper for applying RE filters in Generic.GetStatus()
     """
     try:
         if conf.re_groups_enabled is True:
@@ -214,9 +217,9 @@ def GroupsIsFilteredOutByRE(groups, conf=None):
     except Exception:
         traceback.print_exc(file=sys.stdout)
 
-def CriticalityIsFilteredOutByRE(criticality, conf=None):
+def criticality_is_filtered_out_by_re(criticality, conf=None):
     """
-        helper for applying RE filters in Generic.GetStatus()
+    helper for applying RE filters in Generic.GetStatus()
     """
     try:
         if conf.re_criticality_enabled is True:
@@ -227,7 +230,7 @@ def CriticalityIsFilteredOutByRE(criticality, conf=None):
         traceback.print_exc(file=sys.stdout)
 
 
-def HumanReadableDurationFromSeconds(seconds):
+def human_readable_duration_from_seconds(seconds):
     """
     convert seconds given by Opsview to the form Nagios gives them
     like 70d 3h 34m 34s
@@ -253,7 +256,7 @@ def HumanReadableDurationFromSeconds(seconds):
         return seconds
 
 
-def HumanReadableDurationFromTimestamp(timestamp):
+def human_readable_duration_from_timestamp(timestamp):
     """
     Thruk server supplies timestamp of latest state change which
     has to be subtracted from .now()
@@ -275,10 +278,10 @@ def HumanReadableDurationFromTimestamp(timestamp):
         traceback.print_exc(file=sys.stdout)
 
 
-# unified machine readable date might go back to module Actions
-def MachineSortableDate(raw):
+# unified machine-readable date might go back to module Actions
+def machine_sortable_date(raw):
     """
-    Try to compute machine readable date for all types of monitor servers
+    Try to compute machine-readable date for all types of monitor servers
     """
     # dictionary for duration date string components
     d = {'M': 0, 'w': 0, 'd': 0, 'h': 0, 'm': 0, 's': 0}
@@ -340,60 +343,60 @@ def MachineSortableDate(raw):
             del number, period
 
     # convert collected duration data components into seconds for being comparable
-    return(16934400 * d['M'] + 604800 * d['w'] + 86400 * d['d'] + 3600 * d['h'] + 60 * d['m'] + d['s'])
+    return 16934400 * d['M'] + 604800 * d['w'] + 86400 * d['d'] + 3600 * d['h'] + 60 * d['m'] + d['s']
 
 
-def MD5ify(string):
+def md5ify(string):
     """
-        makes something md5y of a given username or password for Centreon web interface access
+    makes something md5y of a given username or password for Centreon web interface access
     """
     return md5(string).hexdigest()
 
 
 def lock_config_folder(folder):
     '''
-        Locks the config folder by writing a PID file into it.
-        The lock is relative to user name and system's boot time.
-        Returns True on success, False when lock failed
+    Locks the config folder by writing a PID file into it.
+    The lock is relative to user name and system's boot time.
+    Returns True on success, False when lock failed
 
-        Return True too if there is any locking error - if no locking ins possible it might run as well
-        This is also the case if some setup uses the nagstamon.config directory which most probably
-        will be read-only
+    Return True too if there is any locking error - if no locking ins possible it might run as well
+    This is also the case if some setup uses the nagstamon.config directory which most probably
+    will be read-only
     '''
-    pidFilePath = os.path.join(folder, 'nagstamon.pid')
+    pid_file_path = os.path.join(folder, 'nagstamon.pid')
 
     try:
         # Open the file for rw or create a new one if missing
-        if os.path.exists(pidFilePath):
+        if os.path.exists(pid_file_path):
             mode = 'r+t'
         else:
             mode = 'wt'
 
-        with open(pidFilePath, mode, newline=None) as pidFile:
-            curPid = os.getpid()
-            curBootTime = int(psutil.boot_time())
-            curUserName = getpass.getuser().replace('@', '_').strip()
+        with open(pid_file_path, mode, newline=None) as pid_file:
+            currrent_pid = os.getpid()
+            current_boot_time = int(psutil.boot_time())
+            current_user_name = getpass.getuser().replace('@', '_').strip()
 
             pid = None
-            bootTime = None
-            userName = None
+            boot_time = None
+            user_name = None
             if mode.startswith('r'):
                 try:
-                    procInfo = pidFile.readline().strip().split('@')
-                    pid = int(procInfo[0])
-                    bootTime = int(procInfo[1])
-                    userName = procInfo[2].strip()
+                    process_info = pid_file.readline().strip().split('@')
+                    pid = int(process_info[0])
+                    boot_time = int(process_info[1])
+                    user_name = process_info[2].strip()
                 except(ValueError, IndexError):
                     pass
 
-            if pid is not None and bootTime is not None and userName is not None:
+            if pid is not None and boot_time is not None and user_name is not None:
                 # Found a pid stored in the pid file, check if its still running
-                if bootTime == curBootTime and userName == curUserName and psutil.pid_exists(pid):
+                if boot_time == current_boot_time and user_name == current_user_name and psutil.pid_exists(pid):
                     return False
 
-            pidFile.seek(0)
-            pidFile.truncate()
-            pidFile.write('{}@{}@{}'.format(curPid, curBootTime, curUserName))
+            pid_file.seek(0)
+            pid_file.truncate()
+            pid_file.write('{}@{}@{}'.format(currrent_pid, current_boot_time, current_user_name))
     except Exception as error:
         print(error)
 
@@ -402,31 +405,31 @@ def lock_config_folder(folder):
 
 # the following functions are used for sorted() in sort_data_array()
 def compare_host(item):
-    return(item.lower())
+    return item.lower()
 
 
 def compare_service(item):
-    return(item.lower())
+    return item.lower()
 
 
 def compare_status(item):
-    return(STATES.index(item))
+    return STATES.index(item)
 
 
 def compare_last_check(item):
-    return(MachineSortableDate(item))
+    return machine_sortable_date(item)
 
 
 def compare_duration(item):
-    return(MachineSortableDate(item))
+    return machine_sortable_date(item)
 
 
 def compare_attempt(item):
-    return(item)
+    return item
 
 
 def compare_status_information(item):
-    return(item.lower())
+    return item.lower()
 
 
 def webbrowser_open(url):
@@ -472,6 +475,15 @@ def get_distro():
         # fix for non-working build on Debian<10
         dist_name, dist_version, dist_id = platform.dist()
         return dist_name.lower(), dist_version, dist_id
+
+
+def urlify(self, string):
+    """
+    return a string that fulfills requirements for URLs
+    exclude several chars
+    """
+    return quote(string, ":/=?&@+")
+
 
 # depending on column different functions have to be used
 # 0 + 1 are column "Hosts", 1 + 2 are column "Service" due to extra font flag pictograms

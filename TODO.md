@@ -1,0 +1,33 @@
+# Temporary file for tracking TODOs regarding The Big Split
+
+- [x] change font like in settings.py
+- [ ] check_servers.check()
+- [x] show_macos_dock_icon_if_necessary should be called elsewhere
+- [x] hide_macos_dock_icon_if_necessary should be called elsewhere
+- [ ] 'new' -> 'create'
+- [ ] statuswindow.is_shown_timestamp -= 1
+- [x] normal-light activated server in settings dialog when opening settings
+  - was like this before already
+- [x] spaceless comments
+- [x] shrink statuswindow when less alerts being active
+- [ ] debug_queue not in config.py?
+- [ ] check if statuswindow.update() works in macOS
+- [ ] check if 'submit check result' still works
+- [ ] check if no multiple flashing in statusbar is triggered
+- [x] systray icon menu Windows
+- [x] switch from full screen to other mode
+- [x] hover over treeview rows leads to indent changes?
+- [x] flickering statuswindow when dialog is opened
+- [ ] position of statuswindow is not centered in relation to statusbar
+  - somehow lagging behind?
+- [x] starting to move the popped up statuswindow leads to loosing the statusbar
+- [ ] something weird happened to the CSS in treeview
+  - depending on OS?
+- [x] build RPM fails
+- [x] basically working OSes
+  - [x] Linux
+    - [x] Ubuntu
+    - [x] Fedora
+    - [x] Pyinstaller]
+  - [x] Windows
+  - [x] macOS

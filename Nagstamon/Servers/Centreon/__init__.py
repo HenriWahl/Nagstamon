@@ -19,7 +19,7 @@ import json
 
 from . import CentreonAPI
 from ..Generic import GenericServer
-from Nagstamon.Config import conf
+from Nagstamon.config import conf
 
 class CentreonServer(GenericServer):
     """

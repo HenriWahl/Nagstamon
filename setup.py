@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-# encoding: utf-8
-
+#
 # Nagstamon - Nagios status monitor for your desktop
 # Copyright (C) 2008-2025 Henri Wahl <henri@nagstamon.de> et al.
 #
@@ -18,14 +17,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-# from distutils.core import setup
-import sys
-import platform
 import os.path
+from pathlib import Path
+import platform
+import sys
 
-from Nagstamon.Config import AppInfo, \
+from Nagstamon.config import AppInfo, \
     OS
-from Nagstamon.Helpers import get_distro
+from Nagstamon.helpers import get_distro
 
 # dummy debug queue for compiling
 debug_queue = list()
@@ -47,7 +46,7 @@ if OS not in ['Windows', 'Darwin']:
     NAME = NAME.lower()
 else:
     DIST = ""
-#VERSION = AppInfo.VERSION.replace('-', '.') + '.' + DIST + DIST_VERSION
+
 VERSION = AppInfo.VERSION.replace('-', '.')
 NAGSTAMON_SCRIPT = 'nagstamon.py'
 
@@ -88,10 +87,19 @@ bdist_mac_options = dict(iconfile='Nagstamon/resources/nagstamon.icns',
 bdist_dmg_options = dict(volume_label='{0} {1}'.format(NAME, VERSION),
                          applications_shortcut=False)
 
+# get paths of modules aka packages dynamically
+current_directory = Path().cwd()
+nagstamon_directory = current_directory / 'Nagstamon'
+packages_directories = [x.absolute().relative_to(current_directory)
+                        for x in list(nagstamon_directory.glob('**'))
+                        if '__pycache__' not in x.parts and
+                        x.is_dir()]
+packages = [str(x).replace('/', '.') for x in packages_directories]
+
 # older Fedora needs Qt5
 if OS not in ['Windows', 'Darwin']:
     if DIST.lower() == 'fedora' and int(DIST_VERSION) < 36 or \
-       DIST.lower() == 'rhel' and int(DIST_VERSION) <= 9:
+            DIST.lower() == 'rhel' and int(DIST_VERSION) <= 9:
         bdist_rpm_options = dict(requires='python3 '
                                           'python3-arrow '
                                           'python3-beautifulsoup4 '
@@ -131,7 +139,7 @@ if OS not in ['Windows', 'Darwin']:
 
 setup(name=NAME,
       version=VERSION,
-      license='GNU GPL v2',
+      license='GPL-2.0',
       description='Nagios status monitor for desktop',
       long_description='Nagstamon is a Nagios status monitor which takes place in systray or on desktop (GNOME, KDE, Windows) as floating statusbar to inform you in realtime about the status of your Nagios and derivatives monitored network. It allows to connect to multiple Nagios, Icinga, Opsview, Op5Monitor, Checkmk/Multisite, Centreon and Thruk servers.',
       classifiers=CLASSIFIERS,
@@ -140,25 +148,15 @@ setup(name=NAME,
       url='https://nagstamon.de',
       download_url='https://nagstamon.de/download',
       scripts=[NAGSTAMON_SCRIPT],
-      packages=['Nagstamon',
-                'Nagstamon.QUI',
-                'Nagstamon.Servers',
-                'Nagstamon.Servers.Alertmanager',
-                'Nagstamon.Servers.Centreon',
-                'Nagstamon.thirdparty',
-                'Nagstamon.thirdparty.Xlib',
-                'Nagstamon.thirdparty.Xlib.ext',
-                'Nagstamon.thirdparty.Xlib.protocol',
-                'Nagstamon.thirdparty.Xlib.support',
-                'Nagstamon.thirdparty.Xlib.xobject'],
+      packages=packages,
       package_dir={'Nagstamon': 'Nagstamon'},
       package_data={'Nagstamon': ['resources/*.*',
                                   'resources/qui/*',
                                   'resources/LICENSE',
                                   'resources/CREDITS']},
-      data_files=[('%s/share/man/man1' % sys.prefix, ['Nagstamon/resources/nagstamon.1.gz']),
-                  ('%s/share/pixmaps' % sys.prefix, ['Nagstamon/resources/nagstamon.svg']),
-                  ('%s/share/applications' % sys.prefix, ['Nagstamon/resources/nagstamon.desktop'])],
+      data_files=[(f'{sys.prefix}/share/man/man1', ['Nagstamon/resources/nagstamon.1.gz']),
+                  (f'{sys.prefix}/share/pixmaps', ['Nagstamon/resources/nagstamon.svg']),
+                  (f'{sys.prefix}/share/applications', ['Nagstamon/resources/nagstamon.desktop'])],
       options=dict(build_exe=build_exe_options,
                    bdist_mac=bdist_mac_options,
                    bdist_dmg=bdist_dmg_options,

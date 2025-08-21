@@ -26,9 +26,9 @@ import sys
 import dateutil.parser
 import urllib.parse
 
-from Nagstamon.Config import conf
+from Nagstamon.config import conf
 from Nagstamon.Servers.Generic import GenericServer
-from Nagstamon.Objects import (GenericHost, GenericService, Result)
+from Nagstamon.objects import (GenericHost, GenericService, Result)
 
 log = logging.getLogger(__name__)
 
@@ -179,7 +179,7 @@ class Icinga2APIServer(GenericServer):
         errors_occured = self.check_for_error(jsonraw, error, status_code)
         # if there are errors return them
         if errors_occured is not None:
-            return(errors_occured)
+            return errors_occured
 
         jsondict = json.loads(jsonraw)
         return jsondict.get('results', [])

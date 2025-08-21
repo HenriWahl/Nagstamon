@@ -23,10 +23,10 @@ import time
 
 from datetime import datetime
 
-from Nagstamon.Helpers import webbrowser_open
-from Nagstamon.Objects import (GenericHost, GenericService, Result)
+from Nagstamon.helpers import webbrowser_open
+from Nagstamon.objects import (GenericHost, GenericService, Result)
 from Nagstamon.Servers.Generic import GenericServer
-from Nagstamon.Config import BOOLPOOL
+from Nagstamon.config import BOOLPOOL
 
 def human_duration(start):
     """
@@ -152,7 +152,7 @@ class Op5MonitorServer(GenericServer):
             errors_occured = self.check_for_error(data, error, status_code)
             # if there are errors return them
             if errors_occured is not None:
-                return(errors_occured)    
+                return errors_occured    
                            
             if data['count']:
                 count = data['count']
@@ -213,7 +213,7 @@ class Op5MonitorServer(GenericServer):
             errors_occured = self.check_for_error(data, error, status_code)
             # if there are errors return them
             if errors_occured is not None:
-                return(errors_occured)    
+                return errors_occured    
 
             if data['count']:
                 count = data['count']

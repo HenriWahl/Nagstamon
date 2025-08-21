@@ -6,9 +6,9 @@ import logging
 import requests
 from packaging import version
 
-from Nagstamon.Helpers import HumanReadableDurationFromTimestamp
-from Nagstamon.Config import conf
-from Nagstamon.Objects import GenericHost, GenericService, Result
+from Nagstamon.helpers import human_readable_duration_from_timestamp
+from Nagstamon.config import conf
+from Nagstamon.objects import GenericHost, GenericService, Result
 from Nagstamon.Servers.Generic import GenericServer
 
 class ZabbixLightApi():
@@ -210,25 +210,25 @@ class ZabbixProblemBasedServer(GenericServer):
                         if trigger[0]['hosts'][0].get('available', '0') == "2":
                             self.new_hosts[host_id].status = "DOWN"
                             self.new_hosts[host_id].status_information = trigger[0]['hosts'][0]['error']
-                            self.new_hosts[host_id].duration = HumanReadableDurationFromTimestamp(trigger[0]['hosts'][0]['errors_from'])
+                            self.new_hosts[host_id].duration = human_readable_duration_from_timestamp(trigger[0]['hosts'][0]['errors_from'])
 
                         #host not available via ipmi
                         if trigger[0]['hosts'][0].get('ipmi_available', '0') == "2":
                             self.new_hosts[host_id].status = "DOWN"
                             self.new_hosts[host_id].status_information = trigger[0]['hosts'][0]['ipmi_error']
-                            self.new_hosts[host_id].duration = HumanReadableDurationFromTimestamp(trigger[0]['hosts'][0]['ipmi_errors_from'])
+                            self.new_hosts[host_id].duration = human_readable_duration_from_timestamp(trigger[0]['hosts'][0]['ipmi_errors_from'])
 
                         #host not available via jmx
                         if trigger[0]['hosts'][0].get('jmx_available', '0') == "2":
                             self.new_hosts[host_id].status = "DOWN"
                             self.new_hosts[host_id].status_information = trigger[0]['hosts'][0]['jmx_error']
-                            self.new_hosts[host_id].duration = HumanReadableDurationFromTimestamp(trigger[0]['hosts'][0]['jmx_errors_from'])
+                            self.new_hosts[host_id].duration = human_readable_duration_from_timestamp(trigger[0]['hosts'][0]['jmx_errors_from'])
 
                         #host not available via snmp
                         if trigger[0]['hosts'][0].get('snmp_available', '0') == "2":
                             self.new_hosts[host_id].status = "DOWN"
                             self.new_hosts[host_id].status_information = trigger[0]['hosts'][0]['snmp_error']
-                            self.new_hosts[host_id].duration = HumanReadableDurationFromTimestamp(trigger[0]['hosts'][0]['snmp_errors_from'])
+                            self.new_hosts[host_id].duration = human_readable_duration_from_timestamp(trigger[0]['hosts'][0]['snmp_errors_from'])
 
                     #new api shows host interfaces status in hostinterfaces object
                     else:
@@ -241,7 +241,7 @@ class ZabbixProblemBasedServer(GenericServer):
                             if hostinterface.get('available', '0') == "2":
                                 self.new_hosts[host_id].status = "DOWN"
                                 self.new_hosts[host_id].status_information = hostinterface['error']
-                                self.new_hosts[host_id].duration = HumanReadableDurationFromTimestamp(hostinterface['errors_from'])
+                                self.new_hosts[host_id].duration = human_readable_duration_from_timestamp(hostinterface['errors_from'])
                                 #we stop checking rest of interfaces
                                 break
 
@@ -249,7 +249,7 @@ class ZabbixProblemBasedServer(GenericServer):
                 self.new_hosts[host_id].services[service_id] = GenericService()
                 self.new_hosts[host_id].services[service_id].host = trigger[0]['hosts'][0]['name']
                 self.new_hosts[host_id].services[service_id].status = self.statemap.get(problem['severity'], problem['severity'])
-                self.new_hosts[host_id].services[service_id].duration = HumanReadableDurationFromTimestamp(problem['clock'])
+                self.new_hosts[host_id].services[service_id].duration = human_readable_duration_from_timestamp(problem['clock'])
                 self.new_hosts[host_id].services[service_id].name = trigger[0]['items'][0]['key_']
                 self.new_hosts[host_id].services[service_id].last_check = time.strftime("%d/%m/%Y %H:%M:%S", time.localtime(int(trigger[0]['items'][0]['lastclock'])))
 

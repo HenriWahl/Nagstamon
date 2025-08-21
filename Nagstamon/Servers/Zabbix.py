@@ -1,29 +1,21 @@
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
 # Zabbix.py based on Checkmk Multisite.py
-
+import base64
+import json
 import sys
-import urllib.request
-import urllib.parse
-import urllib.error
 import time
-import logging
 import datetime
 import socket
+from packaging import version
 
-from Nagstamon.Helpers import (HumanReadableDurationFromTimestamp,
+from Nagstamon.helpers import (human_readable_duration_from_timestamp,
                                webbrowser_open)
-from Nagstamon.Config import conf
-from Nagstamon.Objects import (GenericHost,
+from Nagstamon.config import conf
+from Nagstamon.objects import (GenericHost,
                                GenericService,
                                Result)
-from Nagstamon.Servers.Generic import GenericServer
-from Nagstamon.thirdparty.zabbix_api import (ZabbixAPI,
-                                             ZabbixAPIException,
-                                             APITimeout,
-                                             Already_Exists)
-
-log = logging.getLogger('Zabbix')
+from Nagstamon.Servers.Generic import GenericServer, BearerAuth
 
 
 class ZabbixError(Exception):
@@ -38,17 +30,12 @@ class ZabbixServer(GenericServer):
        special treatment for Zabbix, taken from Check_MK Multisite JSON API
     """
     TYPE = 'Zabbix'
-    zapi = None
-    if conf.debug_mode is True:
-        log_level = logging.DEBUG
-    else:
-        log_level = logging.WARNING
-    log.setLevel(log_level)
 
     def __init__(self, **kwds):
         GenericServer.__init__(self, **kwds)
 
         # Prepare all urls needed by nagstamon -
+        self.authentication = conf.servers[self.get_name()].authentication
         self.urls = {}
         # self.statemap = {}
         self.statemap = {
@@ -77,42 +64,104 @@ class ZabbixServer(GenericServer):
         self.timeout = conf.servers[self.get_name()].timeout
         self.ignore_cert = conf.servers[self.get_name()].ignore_cert
         self.use_description_name_service = conf.servers[self.get_name()].use_description_name_service
-        if self.ignore_cert is True:
-            self.validate_certs = False
-        else:
-            self.validate_certs = True
+        self.api_version = ''
+        self.auth_token = ''
+        self.monitor_path = '/api_jsonrpc.php'
 
-    def _login(self):
+    def init_HTTP(self):
+        """
+        things to do if HTTP is not initialized
+        """
+        GenericServer.init_HTTP(self)
+
+        # prepare for JSON
+        self.session.headers.update({'Accept': 'application/json',
+                                     'Content-Type': 'application/json-rpc'})
         try:
-            # create ZabbixAPI if not yet created
-            if self.zapi is None:
-                self.zapi = ZabbixAPI(server=self.monitor_url, path="", log_level=self.log_level,
-                                      validate_certs=self.validate_certs, timeout=self.timeout)
-            # login if not yet logged in, or if login was refused previously
-            if not self.zapi.logged_in():
-                self.zapi.login(self.username, self.password)
-        except ZabbixAPIException:
-            result, error = self.error(sys.exc_info())
-            return Result(result=result, error=error)
+            self.set_zabbix_version()
+            self.check_authentication()
+            if self.refresh_authentication:
+                self.login()
+        except Exception:
+            self.error(sys.exc_info())
+            return
 
-    def getLastApp(self, this_item):
-        if len(this_item) > 0:
-            if "applications" not in this_item[0]:
-                if 'tags' in this_item[0]:
-                    app = "NO APP"
-                    for tag in this_item[0]['tags']:
-                        if tag['tag'] == 'Application':
-                            app = tag['value']
-                    return app
-                else:
-                    return "NO APP"
-            last_app = len(this_item[0]['applications']) - 1  # use it to get the last application name
-            if last_app > -1:
-                return "%s" % this_item[0]['applications'][last_app]['name']
-            else:
-                return "NO APP"
+    def api_request(self, cgi_data, no_auth=False):
+        """
+            Make a request to the Zabbix API
+            Returns the response as a dictionary
+        """
+        url = self.monitor_url if self.monitor_url.endswith(self.monitor_path) else f"{self.monitor_url}{self.monitor_path}"
+        result = self.fetch_url(url,
+                                  headers=self.session.headers,
+                                  cgi_data=cgi_data,
+                                  giveback='json',
+                                  no_auth=no_auth)
+        # Check if the result is a valid JSON response
+        data = result.result
+        error = result.error
+        status_code = result.status_code
+        if error:
+            raise ZabbixError(terminate=True, result=Result(result=False, error=error, status_code=status_code))
+        return data
+
+    def login(self):
+        if conf.servers[self.get_name()].authentication == 'bearer':
+            return
+
+        # check version to use the correct keyword for username which changed since 6.4
+        if version.parse(self.api_version) < version.parse("6.4"):
+            username_keyword = 'user'
         else:
-            return "Web scenario"
+            username_keyword = 'username'
+
+        obj = self.generate_cgi_data('user.login', {username_keyword: self.username, 'password': self.password}, no_auth=True)
+        result = self.api_request(obj)
+        self.auth_token = result['result']  # Store the auth token for later use
+        # Use bearer authentication for Zabbix versions 6.4 and above
+        self.authentication = "bearer" if version.parse(self.api_version) >= version.parse("6.4") else "basic"
+        self.session.auth = BearerAuth(self.auth_token)
+        self.refresh_authentication = False  # Reset the flag after successful login
+
+    def check_authentication(self):
+        try:
+            if conf.servers[self.get_name()].authentication == 'bearer':
+                obj = self.generate_cgi_data('user.checkAuthentication', {'token': self.auth_token}, no_auth=True)
+            else:
+                obj = self.generate_cgi_data('user.checkAuthentication', {'sessionid': self.auth_token}, no_auth=True)
+            result = self.api_request(obj, no_auth=True)
+            if result['error']:
+                self.refresh_authentication = True
+        except Exception as e:
+            raise RuntimeError(f"Authentication check failed: {str(e)}")
+
+    def generate_cgi_data(self, method, params=None, no_auth=False):
+        """
+            Generate data for Zabbix API requests
+        """
+        if params is None:
+            params = {}
+        data = {
+            'jsonrpc': '2.0',
+            'method': method,
+            'params': params,
+            'id': 1
+        }
+        # Only include auth parameter for Zabbix versions before 6.4
+        if not no_auth and self.auth_token and version.parse(self.api_version) < version.parse("6.4"):
+            data['auth'] = self.auth_token
+        return json.dumps(data)
+
+    def set_zabbix_version(self):
+        """
+            Set the Zabbix API version and other related attributes
+        """
+        try:
+            obj = self.generate_cgi_data('apiinfo.version', no_auth=True)
+            result = self.api_request(obj, no_auth=True)
+            self.api_version = result['result']
+        except Exception as e:
+            raise RuntimeError(f"Failed to set Zabbix version: {str(e)}")
 
     def _get_status(self):
         """
@@ -122,331 +171,87 @@ class ZabbixServer(GenericServer):
         # create Nagios items dictionary with to lists for services and hosts
         # every list will contain a dictionary for every failed service/host
         # this dictionary is only temporarily
-        nagitems = {"services": [], "hosts": []}
-
-        # Create URLs for the configured filters
-        self._login()
-        # print(self.name)
 
         # =========================================
         # Service
         # =========================================
-        services = []
-        services_in_maintenance = set()
-
         try:
-            now_ts = int(datetime.datetime.utcnow().timestamp())
-            # only the maintenance object knows about services "in downtime"
-            maintenances = self.zapi.maintenance.get({
-                "output": ["active_since", "active_till", "tags"],
-                "selectTags": "extend"
-            })
-            for m in maintenances:
-                if int(m["active_since"]) > now_ts or int(m["active_till"]) < now_ts:
-                    continue
-                for tag in m["tags"]:
-                    if tag["tag"] == "triggerid":
-                        services_in_maintenance.add(tag["value"])
-        # Don't really care if this fails, just means we won't exclude any downtimed services
-        except Exception:
-            print(sys.exc_info())
-
-        try:
-            try:
-                # Get a list of all issues (AKA tripped triggers)
-                services = self.zapi.trigger.get({'only_true': True,
-                                                  'skipDependent': True,
-                                                  'monitored': True,
-                                                  'active': True,
-                                                  'output': ['triggerid', 'description', 'lastchange', 'manual_close'],
-                                                  # 'expandDescription': True,
-                                                  # 'expandComment': True,
-                                                  'selectLastEvent': ['eventid', 'name', 'ns', 'clock', 'acknowledged',
-                                                                      'value', 'severity'],
-                                                  'selectHosts': ["hostid", "host", "name", "status", "available",
-                                                                  "maintenance_status", "maintenance_from"],
-                                                  'selectItems': ['name', 'lastvalue', 'state', 'lastclock'],
-                                                  # thats for zabbix api 2.0+
-                                                  'filter': {'value': 1},
-                                                  })
-
-                # https://github.com/HenriWahl/Nagstamon/issues/826 Zabbix 5.0 may have an empty list for
-                # the 'lastEvent' key if the trigger has no associated events
-                for service in services:
-                    if not service['lastEvent']:
-                        service['lastEvent'] = {
-                            'eventid': -1,
-                            'acknowledged': '0',
-                            'name': service['description'],
-                            'severity': 'UNKN'
-                        }
-                    elif isinstance(service['lastEvent'], list):
-                        service['lastEvent'] = service['lastEvent'][0]
-
-            except ZabbixAPIException:
-                # FIXME Is there a cleaner way to handle this? I just borrowed
-                # this code from 80 lines ahead. -- AGV
-                # set checking flag back to False
-                self.isChecking = False
-                result, error = self.error(sys.exc_info())
-                print(sys.exc_info())
-                return Result(result=result, error=error)
-
-            except ZabbixError as e:
-                if e.terminate:
-                    return e.result
-                else:
-                    service = e.result.content
-                    ret = e.result
-
-            # =========================================
-            # Hosts Zabbix API data
-            # =========================================
-            # Create Hostids for shorten Query
-            try:
-                hosts = []
-                if self.zapi.api_version > '5.4':  # For Version 5.4 and higher
-                    # Some performance improvement for 5.4
-                    hostids = []
-                    # get just involved Hosts.
-                    for service in services:
-                        for host in service["hosts"]:
-                            hostids.append(host["hostid"])
-
-                    try:
-                        hosts = self.zapi.host.get({"output": ["hostid", "host", "name", "status", "available",
-                                                               "maintenance_status", "maintenance_from"],
-                                                    "hostids": hostids,
-                                                    "selectInterfaces": ["ip"],
-                                                    "filter": {}
-                                                    })
-                    except (ZabbixError, ZabbixAPIException, APITimeout, Already_Exists):
-                        # set checking flag back to False
-                        self.isChecking = False
-                        result, error = self.error(sys.exc_info())
-                        return Result(result=result, error=error)
-                else:
-                    try:
-                        # TODO: This Query can be removed when Zabbix Version 4 Support is dropped.
-                        hosts = self.zapi.host.get({"output": ["hostid", "host", "name", "status", "available",
-                                                               "error", "errors_from", # dropped in Version 5.4
-                                                               "snmp_available", "snmp_error", "snmp_errors_from", # dropped in Version 5.4
-                                                               "ipmi_available", "ipmi_error", "ipmi_errors_from", # dropped in Version 5.4
-                                                               "jmx_available", "jmx_error", "jmx_errors_from", # dropped in Version 5.4
-                                                               "maintenance_status", "maintenance_from"],
-                                                    "selectInterfaces": ["ip"],
-                                                    "filter": {}
-                                                    })
-                    except (ZabbixError, ZabbixAPIException, APITimeout, Already_Exists):
-                        # set checking flag back to False
-                        self.isChecking = False
-                        result, error = self.error(sys.exc_info())
-                        return Result(result=result, error=error)
-                # get All Hosts.
-                # 1. Store data in cache (to be used by events)
-                # 2. We store as faulty two kinds of hosts incidences:
-                #    - Disabled hosts
-                #    - Hosts with issues trying to connect to agent/service
-                #    - In maintenance
-                # status = 1 -> Disabled
-                # available ZBX: 0 -> No agents 1 -> available 2-> Agent access error
-                # ipmi_available IPMI: 0 -> No agents 1 -> available 2-> Agent access error
-                # maintenance_status = 1 In maintenance
-                for host in hosts:
-                    n = {
-                        'host': host['host'],
-                        'name': host['name'],
-                        'server': self.name,
-                        'status': 'UP',  # Host is OK by default
-                        'last_check': 'n/a',
-                        'duration': '',
-                        'attempt': 'N/A',
-                        'status_information': '',
-                        # status flags
-                        'passiveonly': False,
-                        'notifications_disabled': False,
-                        'flapping': False,
-                        'acknowledged': False,
-                        'scheduled_downtime': False,
-                        # Zabbix backend data
-                        'hostid': host['hostid'],
-                        'site': '',
-                        # 'address': host['interfaces'][0]['ip'],
-                    }
-
-                    # try to fix https://github.com/HenriWahl/Nagstamon/issues/687
-                    #
-                    n['address'] = host['interfaces'][0]['ip'] if len(host['interfaces']) > 0 else ''
-
-                    if host['maintenance_status'] == '1':
-                        n['scheduled_downtime'] = True
-
-                    if host['status'] == '1':
-                        # filter services and hosts by "filter_hosts_services_disabled_notifications"
-                        n['notifications_disabled'] = True
-                        # Filter only hosts by filter "Host & services with disabled checks"
-                        n['passiveonly'] = True
-                    # attempt to fix https://github.com/HenriWahl/Nagstamon/issues/535
-                    # TODO: This can be simplified if Zabbix Version 5.0 Support is dropped.
-                    # if host['available'] == '0' and host['snmp_available'] == '0' and host['ipmi_available'] == '0' and host['jmx_available'] == '0':
-                    #     n['status']             = 'UNREACHABLE'
-                    #     n['status_information'] = 'Host agents in unknown state'
-                    #     n['duration']           = 'Unknown'
-                    if host.get('ipmi_available', '0') == '2':
-                        n['status'] = 'DOWN'
-                        n['status_information'] = host['ipmi_error']
-                        n['duration'] = HumanReadableDurationFromTimestamp(host['ipmi_errors_from'])
-                    if host.get('snmp_available', '0') == '2':
-                        n['status'] = 'DOWN'
-                        n['status_information'] = host['snmp_error']
-                        n['duration'] = HumanReadableDurationFromTimestamp(host['snmp_errors_from'])
-                    if host.get('jmx_available', '0') == '2':
-                        n['status'] = 'DOWN'
-                        n['status_information'] = host['jmx_error']
-                        n['duration'] = HumanReadableDurationFromTimestamp(host['jmx_errors_from'])
-                    if host.get('available', '0') == '2':
-                        n['status'] = 'DOWN'
-                        n['status_information'] = host['error']
-                        n['duration'] = HumanReadableDurationFromTimestamp(host['errors_from'])
-                    # Zabbix shows OK hosts too - kick 'em!
-                    if not n['status'] == 'UP':
-                        # add dictionary full of information about this host item to nagitems
-                        nagitems["hosts"].append(n)
-
-                    # after collection data in nagitems create objects from its informations
-                    # host objects contain service objects
-                    # key_host = n["host"]
-                    key_host = n["name"] if len(n['name']) != 0 else n["host"]
-
-                    # key_host = n["hostid"]
-                    if key_host not in self.new_hosts:
-                        self.new_hosts[key_host] = GenericHost()
-                        self.new_hosts[key_host].hostid = n["hostid"]
-                        self.new_hosts[key_host].host = n["host"]
-                        self.new_hosts[key_host].name = n["name"]
-                        self.new_hosts[key_host].status = n["status"]
-                        self.new_hosts[key_host].last_check = n["last_check"]
-                        self.new_hosts[key_host].duration = n["duration"]
-                        self.new_hosts[key_host].attempt = n["attempt"]
-                        self.new_hosts[key_host].status_information = n["status_information"]
-                        self.new_hosts[key_host].site = n["site"]
-                        self.new_hosts[key_host].address = n["address"]
-                        self.new_hosts[key_host].notifications_disabled = n["notifications_disabled"]
-                        self.new_hosts[key_host].scheduled_downtime = n["scheduled_downtime"]
-                        self.new_hosts[key_host].passiveonly = n["passiveonly"]
-                        self.new_hosts[key_host].acknowledged = n["acknowledged"]
-                        self.new_hosts[key_host].flapping = n["flapping"]
-
-            except ZabbixError:
-                self.isChecking = False
-                result, error = self.error(sys.exc_info())
-                return Result(result=result, error=error)
-            ###
+            # Get a list of all issues (AKA tripped triggers)
+            # add Pagination
+            chunk_size = 200
+            # services_ids will contain all trigger ids of active services
+            results = self.api_request(
+                self.generate_cgi_data('trigger.get',
+                                       {
+                                           'only_true': True,
+                                           'skipDependent': True,
+                                           'monitored': True,
+                                           'active': True,
+                                           'output': ['triggerid']
+                                       }) )
+            services_ids = results['result']
+            services = []
+            for i in range(0, len(services_ids), chunk_size):
+                results = self.api_request(
+                    self.generate_cgi_data('trigger.get',
+                                           {
+                                               'only_true': True,
+                                               'skipDependent': True,
+                                               'monitored': True,
+                                               'active': True,
+                                               'output': ['triggerid', 'description', 'lastchange', 'manual_close'],
+                                               # 'expandDescription': True,
+                                               # 'expandComment': True,
+                                               'triggerids': [trigger['triggerid'] for trigger in services_ids[i:i + chunk_size]],
+                                               'selectLastEvent': ['eventid', 'name', 'ns', 'clock', 'acknowledged',
+                                                                   'value', 'severity'],
+                                               'selectHosts': ["hostid", "host", "name", "status", "available",
+                                                               "active_available", "maintenance_status", "maintenance_from"],
+                                               'selectItems': ['name', 'lastvalue', 'state', 'lastclock']
+                                           }))
+                services.extend(results['result'])
             for service in services:
-                # Zabbix probably shows OK services too - kick 'em!
-                # UPDATE Zabbix api 3.0 doesn't but I didn't tried with older
-                #        so I left it
-                # print(service)
-                status = self.statemap.get(service['lastEvent']['severity'], service['lastEvent']['severity'])
-                if not status == 'OK':
-                    # if not service['description'].endswith('...'):
-                    #     state = service['description']
-                    # else:
-                    #     state = service['items'][0]['lastvalue']
-                    # A trigger can be triggered by multiple items
-                    # Get last checking date of any of the items involved
-                    lastcheck = 0
-                    for item in service['items']:
-                        if int(item['lastclock']) > lastcheck:
-                            lastcheck = int(item['lastclock'])
+                status_information = ", ".join(
+                    [f"{item['name']}: {item['lastvalue']}" for item in service['items']])
 
-                    # if self.use_description_name_service and \
-                    #         len(service['comments']) != 0:
-                    #     srvc = self.nagiosify_service(service['comments'])
-                    # else:
-                    #     srvc = "Not Implemented"
-                    status_information = ""
-                    for item in service['items']:
-                        status_information = item['name'] + ": " + item['lastvalue'] + ", " + status_information
-                    n = {
-                        'host': service['hosts'][0]['host'],
-                        'hostid': service['hosts'][0]['hostid'],
-                        'hostname': service['hosts'][0]['name'],
-                        'service': service['lastEvent']['name'],
-                        'server': self.name,
-                        'status': status,
-                        # Putting service in attempt column allow to see it in GUI
-                        'attempt': '',
-                        'duration': HumanReadableDurationFromTimestamp(service['lastchange']),
-                        'status_information': status_information,
-                        'last_check': time.strftime("%d/%m/%Y %H:%M:%S", time.localtime(lastcheck)),
-                        'site': '',
-                        'command': 'zabbix',
-                        # status flags
-                        'passiveonly': False,
-                        'notifications_disabled': service['triggerid'] in services_in_maintenance,
-                        'flapping': False,
-                        'acknowledged': bool(int(service['lastEvent']['acknowledged'])),
-                        'scheduled_downtime': service['triggerid'] in services_in_maintenance,
-                        # Zabbix data
-                        'triggerid': service['triggerid'],
-                        'eventid': service['lastEvent']['eventid'],
-                        'allow_manual_close': 'manual_close' not in service or str(service['manual_close']) == '1',
-                    }
+                # Add opdata to status information if available (from problem API)
+                if 'opdata' in service['lastEvent']:
+                    if service['lastEvent']['opdata'] != "":
+                        status_information = service['lastEvent']['name'] + " (" + service['lastEvent'][
+                            'opdata'] + ")"
 
-                    key = n["hostname"] if len(n['hostname']) != 0 else n["host"]
-                    # key = n["hostid"];
+                service_obj = GenericService()
+                service_obj.name = service['lastEvent']['name']
+                service_obj.status = self.statemap.get(service['lastEvent']['severity'], service['lastEvent']['severity'])
+                service_obj.last_check = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(max(int(item['lastclock']) for item in service['items'])))
+                service_obj.duration = human_readable_duration_from_timestamp(service['lastEvent']['clock'])
+                service_obj.status_information = status_information
+                service_obj.acknowledged = False if service['lastEvent']['acknowledged'] == '0' else True
+                #service_obj.address = ''  # Todo: check if address is available
+                service_obj.triggerid = service['triggerid']
+                service_obj.eventid = service['lastEvent']['eventid']
+                service_obj.allow_manual_close = False if str(service['manual_close']) == '0' else True
 
-                    if self.new_hosts[key].scheduled_downtime:
-                        n['scheduled_downtime'] = True
-
-                    nagitems["services"].append(n)
-
-                    # after collection data in nagitems create objects of its informations
-                    # host objects contain service objects
-                    # if not created previously, host should be created with proper data
-                    if key not in self.new_hosts:
-                        # This should never happen, because we've stored all hosts in new_hosts array
-                        print("================================")
-                        print("Host " + key + "Not found in host cache")
-                        if conf.debug_mode is True:
-                            self.debug(server=self.get_name(), debug="Host not found [" + key + "]")
-
-                    # if a service does not exist create its object
-                    new_service = n["triggerid"]
-                    if new_service not in self.new_hosts[key].services:
-                        self.new_hosts[key].services[new_service] = GenericService()
-                        self.new_hosts[key].services[new_service].host = n["hostname"] if len(n['hostname']) != 0 else \
-                            n["host"]
-                        self.new_hosts[key].services[new_service].name = n["service"]
-                        self.new_hosts[key].services[new_service].status = n["status"]
-                        self.new_hosts[key].services[new_service].last_check = n["last_check"]
-                        self.new_hosts[key].services[new_service].duration = n["duration"]
-                        self.new_hosts[key].services[new_service].attempt = n["attempt"]
-                        self.new_hosts[key].services[new_service].status_information = n["status_information"]
-                        self.new_hosts[key].services[new_service].passiveonly = n["passiveonly"]
-                        self.new_hosts[key].services[new_service].notifications_disabled = n["notifications_disabled"]
-                        self.new_hosts[key].services[new_service].flapping = n["flapping"]
-                        self.new_hosts[key].services[new_service].acknowledged = n["acknowledged"]
-                        self.new_hosts[key].services[new_service].scheduled_downtime = n["scheduled_downtime"]
-                        self.new_hosts[key].services[new_service].site = n["site"]
-                        self.new_hosts[key].services[new_service].address = self.new_hosts[key].address
-                        self.new_hosts[key].services[new_service].command = n["command"]
-                        self.new_hosts[key].services[new_service].hostid = n["hostid"]
-                        self.new_hosts[key].services[new_service].triggerid = n["triggerid"]
-                        self.new_hosts[key].services[new_service].eventid = n["eventid"]
-                        self.new_hosts[key].services[new_service].allow_manual_close = n["allow_manual_close"]
-                        if conf.debug_mode is True:
-                            self.debug(server=self.get_name(),
-                                       debug="Adding new service[" + new_service + "] **" + n['service'] + "**")
-
-        except (ZabbixError, ZabbixAPIException):
-            # set checking flag back to False
+                if service['hosts']:
+                    # Get the first host only, because we only support one host per service
+                    for host in service['hosts']:
+                        self.new_hosts[host['name']] = GenericHost()
+                        self.new_hosts[host['name']].name = host['name']
+                        self.new_hosts[host['name']].server = self.name
+                        self.new_hosts[host['name']].status = 'UP'
+                        self.new_hosts[host['name']].scheduled_downtime = True if host["maintenance_status"] == '1' else False
+                        # Map Stuff from Service to Host
+                        self.new_hosts[host['name']].services[service["triggerid"]] = service_obj
+                        self.new_hosts[host['name']].services[service["triggerid"]].host = host['name']
+                        self.new_hosts[host['name']].services[service["triggerid"]].hostid = host['hostid']
+        except ZabbixError as e:
+            print(f"ZabbixError: {e.result}")
+            return Result(result=e.result, error=e.result.content)
+        except Exception:
             self.isChecking = False
             result, error = self.error(sys.exc_info())
             print(sys.exc_info())
             return Result(result=result, error=error)
-
         return ret
 
     def _open_browser(self, url):
@@ -482,7 +287,6 @@ class ZabbixServer(GenericServer):
             self.debug(server=self.get_name(),
                        debug="Set Acknowledge Host: " + host + " Service: " + service + " Sticky: " + str(
                            sticky) + " persistent:" + str(persistent) + " All services: " + str(all_services))
-        self._login()
         eventids = set()
         unclosable_events = set()
         if all_services is None:
@@ -511,6 +315,11 @@ class ZabbixServer(GenericServer):
             # 4 - add message
             # 8 - change severity
             # 16 - unacknowledge event
+            # 32 - suppress event;
+            # 64 - unsuppress event;
+            # 128 - change event rank to cause;
+            # 256 - change event rank to symptom.
+            # sticky = close problem  # TODO: make visible in GUI
             actions = 2
             if comment:
                 actions |= 4
@@ -521,13 +330,40 @@ class ZabbixServer(GenericServer):
             if sticky and unclosable_events:
                 closable_actions = actions | 1
                 closable_events = set(e for e in eventids if e not in unclosable_events)
-                self.zapi.event.acknowledge({'eventids': list(closable_events), 'message': comment, 'action': closable_actions})
-                self.zapi.event.acknowledge({'eventids': list(unclosable_events), 'message': comment, 'action': actions})
+                self.api_request(
+                    self.generate_cgi_data('event.acknowledge',
+                                           {
+                                               'eventids': list(closable_events),
+                                               'message': comment,
+                                               'action': closable_actions
+                                           }),
+                )
+                self.api_request(
+                    self.generate_cgi_data('event.acknowledge',
+                                           {
+                                               'eventids': list(unclosable_events),
+                                               'message': comment,
+                                               'action': actions
+                                           }),
+                )
             else:
                 if sticky:
                     actions |= 1
-                # print("Events to acknowledge: " + str(eventids) + " Close: " + str(actions))
-                self.zapi.event.acknowledge({'eventids': list(eventids), 'message': comment, 'action': actions})
+                try:
+                    self.api_request(
+                        self.generate_cgi_data('event.acknowledge',
+                                               {
+                                                   'eventids': list(eventids),
+                                                   'message': comment,
+                                                   'action': actions
+                                               }),
+                    )
+                except RuntimeError as e:
+                    if "Incorrect user name or password or account is temporarily blocked" in str(e):
+                        self.error(str(e))
+                        return
+                    else:
+                        raise e
 
     def _set_downtime(self, hostname, service, author, comment, fixed, start_time, end_time, hours, minutes):
         # Check if there is an associated Application tag with this trigger/item
@@ -536,7 +372,9 @@ class ZabbixServer(GenericServer):
             if self.hosts[hostname].services[host_service].name == service:
                 triggerid = self.hosts[hostname].services[host_service].triggerid
                 break
-
+        if self.hosts[hostname].hostid is None:
+            self.error("Host ID is None for " + hostname)
+            return
         hostids = [self.hosts[hostname].hostid]
 
         if fixed == 1:
@@ -564,9 +402,14 @@ class ZabbixServer(GenericServer):
             body['description'] = body['description'] + '(Nagstamon): ' + comment
             body['name'] = f'{hostname}: {service}'
         try:
-            self.zapi.maintenance.create(body)
-        except Already_Exists:
-            self.debug(server=self.get_name(), debug=f"Maintanence with name {body['name']} already exists")
+            self.api_request(
+                self.generate_cgi_data('maintenance.create', body)
+            )
+        except ValueError as e:
+            if "already exists" in str(e).lower():
+                self.debug(server=self.get_name(), debug=f"Maintanence with name {body['name']} already exists")
+            else:
+                raise e
 
     def get_start_end(self, host):
         return time.strftime("%Y-%m-%d %H:%M"), time.strftime("%Y-%m-%d %H:%M", time.localtime(time.time() + 7200))

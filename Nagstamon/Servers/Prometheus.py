@@ -55,12 +55,12 @@ import json
 from datetime import datetime, timedelta, timezone
 import dateutil.parser
 
-from Nagstamon.Config import conf
-from Nagstamon.Objects import (GenericHost,
+from Nagstamon.config import conf
+from Nagstamon.objects import (GenericHost,
                                GenericService,
                                Result)
 from Nagstamon.Servers.Generic import GenericServer
-from Nagstamon.Helpers import webbrowser_open
+from Nagstamon.helpers import webbrowser_open
 
 
 class PrometheusService(GenericService):
@@ -156,7 +156,7 @@ class PrometheusServer(GenericServer):
             # check if any error occured
             errors_occured = self.check_for_error(data, error, status_code)
             if errors_occured is not None:
-                return(errors_occured)
+                return errors_occured
 
             if conf.debug_mode:
                 self.debug(server=self.get_name(),

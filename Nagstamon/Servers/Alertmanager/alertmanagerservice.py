@@ -1,4 +1,4 @@
-from Nagstamon.Objects import GenericService
+from Nagstamon.objects import GenericService
 
 class AlertmanagerService(GenericService):
     """

@@ -1409,7 +1409,7 @@ class TextElements16(TextElements8):
 
 
 
-class GetAttrData(object):
+class GetAttrData:
     def __getattr__(self, attr):
         try:
             if self._data:

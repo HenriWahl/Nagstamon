@@ -35,7 +35,7 @@ class SensuAPIException(Exception):
     pass
 
 
-class SensuAPI(object):
+class SensuAPI:
     def __init__(self, url_base, username=None, password=None, verify=None):
         self._url_base = url_base
         self._session = requests.Session()

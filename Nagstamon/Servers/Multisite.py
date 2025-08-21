@@ -28,12 +28,12 @@ import html
 import tzlocal
 from datetime import datetime
 
-from Nagstamon.Objects import (GenericHost,
+from Nagstamon.objects import (GenericHost,
                                GenericService,
                                Result)
 from Nagstamon.Servers.Generic import GenericServer
-from Nagstamon.Helpers import webbrowser_open
-from Nagstamon.Config import conf
+from Nagstamon.helpers import webbrowser_open
+from Nagstamon.config import conf
 
 class MultisiteError(Exception):
     def __init__(self, terminate, result):
@@ -660,7 +660,7 @@ class MultisiteServer(GenericServer):
            get version of OMD Checkmk as [major_version, minor_version]
         """
         try:
-            version = [int(x) for x in self.fetch_url(self.urls['omd_version'], 'json').result['versions']['checkmk'].split('.')[:2]]
+            version = [int(x) for x in self.fetch_url(self.urls['omd_version'], giveback='json', no_auth=True).result['versions']['checkmk'].split('.')[:2]]
         # If /version api is not supported, return the lowest non-negative pair
         except:
             version = [0, 0]

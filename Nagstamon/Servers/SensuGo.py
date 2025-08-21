@@ -1,10 +1,10 @@
 import sys
 import traceback
 from Nagstamon.Servers.Generic import GenericServer
-from Nagstamon.Objects import (GenericHost, GenericService, Result)
-from Nagstamon.Config import conf
+from Nagstamon.objects import (GenericHost, GenericService, Result)
+from Nagstamon.config import conf
 from Nagstamon.thirdparty.sensugo_api import SensuGoAPI, SensuGoAPIException
-from Nagstamon.Helpers import HumanReadableDurationFromTimestamp
+from Nagstamon.helpers import human_readable_duration_from_timestamp
 from time import time
 from datetime import datetime
 
@@ -87,7 +87,7 @@ class SensuGoServer(GenericServer):
         if (timestamp == 0) or (timestamp > time()):
             duration_text = 'n/a'
         else:
-            duration_text = HumanReadableDurationFromTimestamp(timestamp)
+            duration_text = human_readable_duration_from_timestamp(timestamp)
         return duration_text
 
     def set_acknowledge(self, info_dict):

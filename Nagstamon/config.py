@@ -51,8 +51,8 @@ OS_WINDOWS = 'Windows'
 OS_NON_LINUX = (OS_MACOS, OS_WINDOWS)
 
 # simple Wayland detection
-if 'WAYLAND_DISPLAY' in os.environ or\
-    'XDG_SESSION_TYPE' in os.environ and os.environ['XDG_SESSION_TYPE'] == 'wayland':
+if 'WAYLAND_DISPLAY' in os.environ or \
+        'XDG_SESSION_TYPE' in os.environ and os.environ['XDG_SESSION_TYPE'] == 'wayland':
     # dirty workaround to activate X11 support in Wayland environment - just a test
     if not os.environ.get('QT_QPA_PLATFORM'):
         os.environ['QT_QPA_PLATFORM'] = 'xcb'
@@ -61,10 +61,10 @@ else:
     DESKTOP_WAYLAND = False
 
 # detection of somehow quirky desktop enviroments which might need a fix
-QUIRKY_DESKTOPS =  ('cinnamon', 'gnome-flashback-metacity')
-if os.environ.get('CINNAMON_VERSION') or\
-    os.environ.get('DESKTOP_SESSION') in QUIRKY_DESKTOPS or \
-    os.environ.get('XDG_SESSION_DESKTOP') in QUIRKY_DESKTOPS:
+QUIRKY_DESKTOPS = ('cinnamon', 'gnome-flashback-metacity')
+if os.environ.get('CINNAMON_VERSION') or \
+        os.environ.get('DESKTOP_SESSION') in QUIRKY_DESKTOPS or \
+        os.environ.get('XDG_SESSION_DESKTOP') in QUIRKY_DESKTOPS:
     DESKTOP_NEEDS_FIX = True
 else:
     DESKTOP_NEEDS_FIX = False
@@ -79,7 +79,7 @@ if not os.environ.get('QT_QPA_PLATFORMTHEME'):
 # queue.Queue() needs threading module which might be not such a good idea to be used
 # because QThread is already in use
 # maybe not the most logical place here to be defined but at least all
-# modules access Config.py so it can be distributed from here
+# modules access config.py so it can be distributed from here
 debug_queue = list()
 
 # temporary dict for string-to-bool-conversion
@@ -127,12 +127,12 @@ CONFIG_STRINGS = ['custom_browser',
                   ]
 
 
-class AppInfo(object):
+class AppInfo:
     """
         contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '3.17-20250414'
+    VERSION = '3.17-20250821'
     WEBSITE = 'https://nagstamon.de'
     COPYRIGHT = '©2008-2025 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -140,9 +140,9 @@ class AppInfo(object):
     DOWNLOAD_SERVERS = {'nagstamon.de': 'https://github.com/HenriWahl/Nagstamon/releases'}
     # version URL depends on version string
     if 'alpha' in VERSION.lower() or \
-        'beta' in VERSION.lower() or \
-        'rc' in VERSION.lower() or \
-        '-' in VERSION.lower():
+            'beta' in VERSION.lower() or \
+            'rc' in VERSION.lower() or \
+            '-' in VERSION.lower():
         VERSION_URL = WEBSITE + '/version/unstable'
         VERSION_PATH = '/version/unstable'
     else:
@@ -150,9 +150,9 @@ class AppInfo(object):
         VERSION_PATH = '/version/stable'
 
 
-class Config(object):
+class Config:
     """
-        The place for central configuration.
+    the place for central configuration.
     """
 
     def __init__(self):
@@ -418,27 +418,45 @@ class Config(object):
             self.configdir = configdir_temp
 
             # Servers configuration...
-            self.servers = self._LoadServersMultipleConfig()
+            self.servers = self._load_servers_multiple_config()
             # ... and actions
-            self.actions = self.LoadMultipleConfig("actions", "action", "Action")
+            self.actions = self.load_multiple_config("actions", "action", "Action")
 
             # seems like there is a config file so the app is not unconfigured anymore
             self.unconfigured = False
 
         # Load actions if Nagstamon is not unconfigured, otherwise load defaults
         if self.unconfigured is True:
-            self.actions = self._DefaultActions()
+            self.actions = self._default_actions()
 
         # do some conversion stuff needed because of config changes and code cleanup
-        self._LegacyAdjustments()
+        self._legacy_adjustments()
 
-    def _LoadServersMultipleConfig(self):
+    def _load_servers_multiple_config(self):
         """
-        load servers config - special treatment because of obfuscated passwords
-        """
-        self.keyring_available = self.KeyringAvailable()
+        Loads the servers configuration with special handling for obfuscated passwords.
 
-        servers = self.LoadMultipleConfig('servers', 'server', 'Server')
+        This method loads server configuration entries from files, handling deobfuscation
+        of usernames and passwords as needed. It supports migration from legacy formats,
+        integration with the system keyring for secure password storage, and conversion
+        of server types and settings for compatibility with newer versions.
+
+        Returns:
+            dict: A dictionary mapping server names to their configuration objects.
+
+        Error Handling:
+            Any exceptions during loading or deobfuscation are caught, a stack trace is printed,
+            and loading continues for other entries.
+
+        Special Considerations:
+            - Usernames and passwords are deobfuscated or retrieved from the system keyring if enabled.
+            - Legacy server types and settings are migrated to current formats.
+            - Handles both monitor and proxy credentials, as well as optional autologin keys.
+            - Ensures server names are always strings for consistency.
+        """
+        self.keyring_available = self.check_keyring_availability()
+
+        servers = self.load_multiple_config('servers', 'server', 'Server')
         # deobfuscate username + password inside a try-except loop
         # if entries have not been obfuscated yet this action should raise an error
         # and old values (from nagstamon < 0.9.0) stay and will be converted when next
@@ -449,8 +467,8 @@ class Config(object):
                 # see issue https://github.com/HenriWahl/Nagstamon/issues/1010
                 servers[server].name = str(servers[server].name)
                 # usernames for monitor server and proxy
-                servers[server].username = self.DeObfuscate(servers[server].username)
-                servers[server].proxy_username = self.DeObfuscate(servers[server].proxy_username)
+                servers[server].username = self.deobfuscate(servers[server].username)
+                servers[server].proxy_username = self.deobfuscate(servers[server].proxy_username)
                 # passwords for monitor server and proxy
                 if servers[server].save_password == 'False':
                     servers[server].password = ""
@@ -459,11 +477,11 @@ class Config(object):
                                                                            servers[server].monitor_url))) or ""
                     if password == "":
                         if servers[server].password != "":
-                            servers[server].password = self.DeObfuscate(servers[server].password)
+                            servers[server].password = self.deobfuscate(servers[server].password)
                     else:
                         servers[server].password = password
                 elif servers[server].password != "":
-                    servers[server].password = self.DeObfuscate(servers[server].password)
+                    servers[server].password = self.deobfuscate(servers[server].password)
                 # proxy password
                 if self.keyring_available and self.use_system_keyring:
                     proxy_password = keyring.get_password('Nagstamon', '@'.join(('proxy',
@@ -471,16 +489,16 @@ class Config(object):
                                                                                  servers[server].proxy_address))) or ""
                     if proxy_password == "":
                         if servers[server].proxy_password != "":
-                            servers[server].proxy_password = self.DeObfuscate(servers[server].proxy_password)
+                            servers[server].proxy_password = self.deobfuscate(servers[server].proxy_password)
                     else:
                         servers[server].proxy_password = proxy_password
                 elif servers[server].proxy_password != "":
-                    servers[server].proxy_password = self.DeObfuscate(servers[server].proxy_password)
+                    servers[server].proxy_password = self.deobfuscate(servers[server].proxy_password)
 
                 # do only deobfuscating if any autologin_key is set - will be only Centreon/Thruk
                 if 'autologin_key' in servers[server].__dict__.keys():
                     if len(servers[server].__dict__['autologin_key']) > 0:
-                        servers[server].autologin_key = self.DeObfuscate(servers[server].autologin_key)
+                        servers[server].autologin_key = self.deobfuscate(servers[server].autologin_key)
 
                 # only needed for those who used Icinga2 before it became IcingaWeb2
                 if servers[server].type == 'Icinga2':
@@ -502,9 +520,29 @@ class Config(object):
 
         return servers
 
-    def LoadMultipleConfig(self, settingsdir, setting, configobj):
+    def load_multiple_config(self, settingsdir, setting, configobj):
         """
-            load generic config into settings dict and return to central config
+        Loads configuration entries from files in a given settings directory and returns them as a dictionary.
+
+        This method scans the specified directory for configuration files matching the expected naming pattern,
+        parses each file, and creates an object for each configuration entry. It converts string values to
+        booleans or integers where appropriate and handles legacy file cleanup if necessary.
+
+        Args:
+            settingsdir (str): Name of the subdirectory containing the configuration files (e.g., 'servers' or 'actions').
+            setting (str): Prefix used in the configuration file names (e.g., 'server' or 'action').
+            configobj (str): Name of the class to instantiate for each configuration entry.
+
+        Returns:
+            OrderedDict: A dictionary mapping configuration entry names to their corresponding objects.
+
+        Error Handling:
+            Any exceptions during loading are caught, a stack trace is printed, and loading continues for other files.
+
+        Special Considerations:
+            - Only files matching the expected naming pattern are processed.
+            - Legacy or duplicate files are deleted if found.
+            - String values are converted to bool or int where possible for consistency.
         """
         # defaults as empty dict in case settings dir/files could not be found
         settings = OrderedDict()
@@ -546,9 +584,24 @@ class Config(object):
 
         return settings
 
-    def SaveConfig(self):
+    def save_config(self):
         """
-            save config file
+        Saves the current configuration to the configuration file.
+
+        This method writes all current settings of the Config object to the main configuration file,
+        as well as to separate files for server and action configurations. Before saving, it ensures
+        that the configuration directory exists. Passwords and sensitive data are encrypted or stored
+        in the system keyring, depending on the platform and settings.
+
+        Error Handling:
+            Exceptions during saving are caught, a stack trace is printed, and debug information is
+            logged if debug mode is enabled.
+
+        Special Considerations:
+            - The configuration directory is created if it does not exist.
+            - Server and action configurations are saved in their own subdirectories.
+            - Use of the system keyring is considered based on platform and configuration.
+            - Debug information is logged when debug mode is active.
         """
         try:
             # Make sure .nagstamon is created
@@ -575,13 +628,13 @@ class Config(object):
                     if OS in OS_NON_LINUX:
                         self.use_system_keyring = True
                     else:
-                        self.use_system_keyring = self.KeyringAvailable()
+                        self.use_system_keyring = self.check_keyring_availability()
 
             # save servers dict
-            self.SaveMultipleConfig('servers', 'server')
+            self.save_multiple_config('servers', 'server')
 
             # save actions dict
-            self.SaveMultipleConfig('actions', 'action')
+            self.save_multiple_config('actions', 'action')
 
             # open, save and close config file
             with open(os.path.normpath(self.configfile), 'w') as file:
@@ -601,17 +654,34 @@ class Config(object):
                                                                                    err,
                                                                                    self.configfile))
 
-    def SaveMultipleConfig(self, settingsdir, setting):
+    def save_multiple_config(self, settingsdir, setting):
         """
-            saves conf files for settings like actions in extra directories
-            "multiple" means that multiple confs for actions or servers are loaded,
-            not just one like for e.g. sound file
+        Saves configuration files for settings such as actions or servers in dedicated subdirectories.
+
+        This method iterates over the specified settings dictionary (e.g., servers or actions) and writes
+        each configuration entry to its own file within a subdirectory. Sensitive data such as passwords
+        are obfuscated or stored in the system keyring if enabled. The method ensures that the target
+        directory exists before saving and handles platform-specific keyring integration.
+
+        Args:
+            settingsdir (str): Name of the subdirectory where configuration files will be saved (e.g., 'servers' or 'actions').
+            setting (str): Prefix used for the configuration file names (e.g., 'server' or 'action').
+
+        Error Handling:
+            Exceptions during saving are caught and printed to the standard output. If password saving to
+            the keyring fails, the application will exit to prevent insecure storage.
+
+        Special Considerations:
+            - Each configuration entry is saved in a separate file for modularity.
+            - Passwords and sensitive fields are obfuscated or stored securely.
+            - The method creates the target directory if it does not exist.
+            - Old or duplicate configuration files may be cleaned up as needed.
         """
 
         # only import keyring lib if configured to do so - to avoid Windows crashes
         # like https://github.com/HenriWahl/Nagstamon/issues/97
         if self.use_system_keyring is True:
-            self.keyring_available = self.KeyringAvailable()
+            self.keyring_available = self.check_keyring_availability()
 
         # one section for each setting
         for s in self.__dict__[settingsdir]:
@@ -621,7 +691,7 @@ class Config(object):
                 # obfuscate certain entries in config file - special arrangement for servers
                 if settingsdir == 'servers':
                     if option in ['username', 'password', 'proxy_username', 'proxy_password', 'autologin_key']:
-                        value = self.Obfuscate(self.__dict__[settingsdir][s].__dict__[option])
+                        value = self.obfuscate(self.__dict__[settingsdir][s].__dict__[option])
                         if option == 'password':
                             if self.__dict__[settingsdir][s].save_password is False:
                                 value = ''
@@ -645,11 +715,10 @@ class Config(object):
                                     # provoke crash if password saving does not work - this is the case
                                     # on newer Ubuntu releases
                                     try:
-                                        keyring.set_password('Nagstamon', '@'.join(('proxy',
-                                                                                    self.__dict__[settingsdir][
-                                                                                        s].proxy_username,
-                                                                                    self.__dict__[settingsdir][
-                                                                                        s].proxy_address)),
+                                        keyring.set_password('Nagstamon',
+                                                             '@'.join(('proxy',
+                                                                       self.__dict__[settingsdir][s].proxy_username,
+                                                                       self.__dict__[settingsdir][s].proxy_address)),
                                                              self.__dict__[settingsdir][s].proxy_password)
                                     except Exception:
                                         import traceback
@@ -683,9 +752,25 @@ class Config(object):
             # ##        if not f.split(setting + "_")[1].split(".conf")[0] in self.__dict__[settingsdir]:
             # ##            os.unlink(self.configdir + os.sep + settingsdir + os.sep + f)
 
-    def KeyringAvailable(self):
+    def check_keyring_availability(self):
         """
-            determine if keyring module and an implementation is available for secure password storage
+        Determines if the keyring module and a suitable backend are available for secure password storage.
+
+        This method checks whether the keyring library is installed and whether a supported keyring backend
+        is accessible on the current platform. It handles platform-specific logic to avoid known issues,
+        such as crashes on certain Linux distributions. If keyring is available and functional, the method
+        returns True; otherwise, it returns False.
+
+        Returns:
+            bool: True if a working keyring backend is available, False otherwise.
+
+        Error Handling:
+            Any exceptions during the check are caught, a stack trace is printed, and the method returns False.
+
+        Special Considerations:
+            - On Linux, keyring is only used if it is provided by the distribution to avoid compatibility issues.
+            - The method avoids importing keyring unless necessary to prevent crashes on some platforms.
+            - Designed to be robust against missing dependencies or misconfigured environments.
         """
         try:
             # Linux systems should use keyring only if it comes with the distro, otherwise chances are small
@@ -721,9 +806,20 @@ class Config(object):
             traceback.print_exc(file=sys.stdout)
             return False
 
-    def Obfuscate(self, string, count=5):
+    def obfuscate(self, string, count=5):
         """
-            Obfuscate a given string to store passwords etc.
+        Obfuscates a given string to securely store sensitive information such as passwords.
+
+        Args:
+            string (str): The input string to be obfuscated (e.g., a password).
+            count (int, optional): The number of obfuscation rounds to apply. Default is 5.
+
+        Returns:
+            str: The obfuscated string, encoded as a base64 Unicode string.
+
+        Usage:
+            Use this method to obfuscate passwords or other sensitive fields before saving them
+            to disk. To retrieve the original value, use the corresponding DeObfuscate method.
         """
 
         string = string.encode()
@@ -740,9 +836,21 @@ class Config(object):
         string = base64.b64encode(string).decode()
         return string
 
-    def DeObfuscate(self, string, count=5):
+    def deobfuscate(self, string, count=5):
         """
-            Deobfucate previously obfuscated string
+        Deobfuscates a previously obfuscated string to retrieve the original sensitive information.
+
+        Args:
+            string (str): The obfuscated string to be deobfuscated.
+            count (int, optional): The number of deobfuscation rounds to apply. Default is 5.
+
+        Returns:
+            str: The original, deobfuscated string.
+
+        Usage:
+            Use this method to retrieve sensitive information (e.g., passwords) that was previously
+            obfuscated before storage. The obfuscation and deobfuscation routines must use the same
+            number of rounds to ensure correct results.
         """
         string = base64.b64decode(string)
 
@@ -759,9 +867,16 @@ class Config(object):
 
         return string
 
-    def _DefaultActions(self):
+    def _default_actions(self):
         """
-        create some default actions like SSH and so on
+        Creates a set of default actions such as SSH, RDP, VNC, and others for use within the application.
+
+        Returns:
+            dict: A dictionary mapping action names to their corresponding Action objects.
+
+        Usage:
+            Called during initial configuration or when resetting to defaults to ensure a baseline set of actions
+            is always available for the user.
         """
         if OS == OS_WINDOWS:
             defaultactions = {"RDP": Action(name="RDP", description="Connect via RDP.",
@@ -822,27 +937,39 @@ class Config(object):
                                                            string="$MONITOR$/event?host=$HOST$&service=$SERVICE$",
                                                            enabled=False)
         defaultactions["Checkmk-1-Click-Acknowledge-Host"] = Action(name="Checkmk-1-Click-Acknowledge-Host",
-                                                                     type="url",
-                                                                     description="Acknowledges a host with one click.",
-                                                                     filter_target_service=False, enabled=False,
-                                                                     string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=hoststatus&host=$HOST$&_ack_comment=$COMMENT-ACK$&_acknowledge=Acknowledge")
+                                                                    type="url",
+                                                                    description="Acknowledges a host with one click.",
+                                                                    filter_target_service=False, enabled=False,
+                                                                    string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=hoststatus&host=$HOST$&_ack_comment=$COMMENT-ACK$&_acknowledge=Acknowledge")
         defaultactions["Checkmk-1-Click-Acknowledge-Service"] = Action(name="Checkmk-1-Click-Acknowledge-Service",
-                                                                        type="url",
-                                                                        description="Acknowledges a host with one click.",
-                                                                        filter_target_host=False, enabled=False,
-                                                                        string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=service&host=$HOST$&_ack_comment=$COMMENT-ACK$&_acknowledge=Acknowledge&service=$SERVICE$")
+                                                                       type="url",
+                                                                       description="Acknowledges a host with one click.",
+                                                                       filter_target_host=False, enabled=False,
+                                                                       string="$MONITOR$/view.py?_transid=$TRANSID$&_do_actions=yes&_do_confirm=Yes!&output_format=python&view_name=service&host=$HOST$&_ack_comment=$COMMENT-ACK$&_acknowledge=Acknowledge&service=$SERVICE$")
         defaultactions["Checkmk Edit host in WATO"] = Action(name="Checkmk Edit host in WATO", enabled=False,
-                                                              monitor_type="Checkmk Multisite",
-                                                              description="Edit host in WATO.",
-                                                              string="$MONITOR$/wato.py?host=$HOST$&mode=edit_host")
+                                                             monitor_type="Checkmk Multisite",
+                                                             description="Edit host in WATO.",
+                                                             string="$MONITOR$/wato.py?host=$HOST$&mode=edit_host")
         defaultactions["Email"] = Action(name="Email", enabled=False, description="Send email to someone.",
                                          type="browser",
                                          string="mailto:servicedesk@my.org?subject=Monitor alert: $HOST$ - $SERVICE$ - $STATUS-INFO$&body=Please help!.%0d%0aBest regards from Nagstamon")
 
         return defaultactions
 
-    def _LegacyAdjustments(self):
-        # mere cosmetics but might be more clear for future additions - changing any "nagios"-setting to "monitor"
+    def _legacy_adjustments(self):
+        """
+        Performs legacy adjustments to configuration settings for improved clarity and future compatibility.
+
+        This section updates configuration keys and values to reflect naming conventions and structural changes
+        introduced in newer versions of the application. Specifically, it replaces any configuration keys or
+        references containing 'nagios' with 'monitor' to standardize terminology. This is primarily a cosmetic
+        change but helps maintain consistency and prepares the codebase for future enhancements.
+
+        Special Considerations:
+            - Ensures backward compatibility by migrating legacy configuration keys.
+            - Only affects settings where 'nagios' is present, leaving other settings unchanged.
+            - Intended to be clear and maintainable for future additions or refactoring.
+        """
         for server in self.servers.values():
             if 'nagios_url' in server.__dict__.keys():
                 server.monitor_url = server.nagios_url
@@ -872,11 +999,20 @@ class Config(object):
 
         # might be there only once after starting Nagstamon 3.4 the first time
         if 'save_config_after_urlencode' in self.__dict__.keys():
-            self.SaveConfig()
+            self.save_config()
 
-    def GetNumberOfEnabledMonitors(self):
+    def get_number_of_enabled_monitors(self):
         """
-            returns the number of enabled monitors - in case all are disabled there is no need to display the popwin
+        Returns the number of enabled monitors.
+
+        This method iterates through all configured servers and counts how many are currently enabled.
+        If all monitors are disabled, there is no need to display the popup window in the application.
+
+        Returns:
+            int: The number of enabled monitor servers.
+
+        Usage:
+            Used to determine whether the popup window should be shown based on active monitors.
         """
         # to be returned
         number = 0
@@ -900,7 +1036,7 @@ class Config(object):
                 traceback.print_exc(file=sys.stdout)
 
 
-class Server(object):
+class Server:
     """
         one Server realized as object for config info
     """
@@ -991,7 +1127,8 @@ class Server(object):
         # Thruk
         self.disabled_backends = ""
 
-class Action(object):
+
+class Action:
     """
     class for custom actions, which whill be thrown into one config dictionary like the servers
     """
@@ -1075,6 +1212,7 @@ except Exception as err:
         # if resources dir is not available in CWD, try the
         # libs dir (site-packages) for the current Python
         from distutils.sysconfig import get_python_lib
+
         paths_to_check.append(os.path.normcase(os.path.join(get_python_lib(), "Nagstamon", "resources")))
     except Exception:
         pass
@@ -1082,6 +1220,7 @@ except Exception as err:
     # if we're still out of luck, maybe this was a user scheme install
     try:
         import site
+
         site.getusersitepackages()  # make sure USER_SITE is set
         paths_to_check.append(os.path.normcase(os.path.join(site.USER_SITE, "Nagstamon", "resources")))
     except Exception:
