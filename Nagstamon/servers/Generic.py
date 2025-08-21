@@ -39,18 +39,17 @@ try:
 except ImportError:
     ECP_AVAILABLE = False
 
-
-from Nagstamon.helpers import (attempt_is_filtered_out_by_re,
-                               criticality_is_filtered_out_by_re,
-                               duration_is_filtered_out_by_re,
-                               groups_is_filtered_out_by_re,
-                               host_is_filtered_out_by_re,
-                               not_empty,
+from Nagstamon.helpers import (host_is_filtered_out_by_re,
                                service_is_filtered_out_by_re,
                                status_information_is_filtered_out_by_re,
-                               STATES,
-                               USER_AGENT,
-                               webbrowser_open)
+                               duration_is_filtered_out_by_re,
+                               attempt_is_filtered_out_by_re,
+                               groups_is_filtered_out_by_re,
+                               criticality_is_filtered_out_by_re,
+                               not_empty,
+                               webbrowser_open,
+                               STATES)
+
 from Nagstamon.objects import (GenericService,
                                GenericHost,
                                Result)
@@ -62,9 +61,7 @@ from Nagstamon.config import (AppInfo,
                               OS_MACOS,
                               RESOURCES)
 
-from Nagstamon.qui.qt import (QObject,
-                              Signal)
-
+from Nagstamon.qui.qt import QObject
 
 # flag to keep track of Kerberos availability
 KERBEROS_AVAILABLE = False
@@ -114,23 +111,12 @@ class BearerAuth(requests.auth.AuthBase):
         return r
 
 
-class BridgeToQt(QObject):
-    """
-    Bridge to Qt for browser login
-    """
-
-    set_url = Signal(str, str)
-
-    request_web_authentication = Signal()
-
-    def __init__(self):
-        QObject.__init__(self)
-
 class GenericServer:
-    """
-    Abstract server which serves as template for all other types
-    Default values are for Nagios servers
-    """
+
+    '''
+        Abstract server which serves as template for all other types
+        Default values are for Nagios servers
+    '''
 
     TYPE = 'Generic'
 
@@ -156,6 +142,8 @@ class GenericServer:
                     'services': '$MONITOR-CGI$/status.cgi?host=all&servicestatustypes=253',
                     'history': '$MONITOR-CGI$/history.cgi?host=all'}
 
+    USER_AGENT = '{0}/{1}/{2}'.format(AppInfo.NAME, AppInfo.VERSION, platform.system())
+
     # needed to check return code of monitor server in case of false authentication
     STATUS_CODES_NO_AUTH = [401, 403]
 
@@ -179,7 +167,7 @@ class GenericServer:
         self.proxy_address = ''
         self.proxy_username = ''
         self.proxy_password = ''
-        self.authentication = ''
+        self.auth_type = ''
         self.encoding = 'utf-8'
         self.hosts = dict()
         self.new_hosts = dict()
@@ -285,15 +273,10 @@ class GenericServer:
         # Thruk
         self.disabled_backends = None
 
-        # Browser login
-        self.bridge_to_qt = BridgeToQt()
-
-        pass
-
     def init_config(self):
-        """
-        set URLs for CGI - they are static and there is no need to set them with every cycle
-        """
+        '''
+            set URLs for CGI - they are static and there is no need to set them with every cycle
+        '''
         # create filters like described in
         # http://www.nagios-wiki.de/nagios/tips/host-_und_serviceproperties_fuer_status.cgi?s=servicestatustypes
         #
@@ -322,14 +305,10 @@ class GenericServer:
         should return a valid session if none exists yet
         when reauthentication is needed the session should be removed
         """
-        if self.authentication != 'web':
-            if self.refresh_authentication:
-                self.session = None
-                return False
-            elif self.session is None:
-                self.session = self.create_session()
-                return True
-        elif not self.session:
+        if self.refresh_authentication:
+            self.session = None
+            return False
+        elif self.session is None:
             self.session = self.create_session()
             return True
 
@@ -340,7 +319,7 @@ class GenericServer:
         different between various server types
         """
         session = requests.Session()
-        session.headers['User-Agent'] = USER_AGENT
+        session.headers['User-Agent'] = self.USER_AGENT
 
         # support for different authentication types
         if self.authentication == 'basic':
@@ -357,9 +336,6 @@ class GenericServer:
             session.auth = HTTPSKerberos()
         elif self.authentication == 'bearer':
             session.auth = BearerAuth(self.password)
-        elif self.authentication == 'web':
-            pass
-            print('browser web login')
 
         # default to check TLS validity
         if self.ignore_cert:
@@ -375,9 +351,9 @@ class GenericServer:
         return session
 
     def proxify(self, session):
-        """
-        add proxy information to session or single request
-        """
+        '''
+            add proxy information to session or single request
+        '''
         # check if proxies have to be used
         if self.use_proxy is True:
             if self.use_proxy_from_os is True:
@@ -411,34 +387,33 @@ class GenericServer:
             session.trust_env = False
 
     def reset_http(self):
-        """
-        if authentication fails try to reset any HTTP session stuff - might be different for different monitors
-        """
-        if self.authentication != 'web':
-            self.session = None
+        '''
+            if authentication fails try to reset any HTTP session stuff - might be different for different monitors
+        '''
+        self.session = None
 
     def get_name(self):
-        """
+        '''
         return stringified name
-        """
+        '''
         return str(self.name)
 
     def get_username(self):
-        """
+        '''
         return stringified username
-        """
+        '''
         return str(self.username)
 
     def get_password(self):
-        """
+        '''
         return stringified password
-        """
+        '''
         return str(self.password)
 
     def get_server_version(self):
-        """
+        '''
         dummy function, at the moment only used by Icinga
-        """
+        '''
         pass
 
     def set_recheck(self, info_dict):
@@ -475,9 +450,9 @@ class GenericServer:
             traceback.print_exc(file=sys.stdout)
 
     def set_acknowledge(self, info_dict):
-        """
-        different monitors might have different implementations of _set_acknowledge
-        """
+        '''
+            different monitors might have different implementations of _set_acknowledge
+        '''
         if info_dict['acknowledge_all_services'] is True:
             all_services = info_dict['all_services']
         else:
@@ -493,9 +468,9 @@ class GenericServer:
 
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None):
-        """
-        send acknowledge to monitor server - might be different on every monitor type
-        """
+        '''
+            send acknowledge to monitor server - might be different on every monitor type
+        '''
 
         url = self.monitor_cgi_url + '/cmd.cgi'
 
@@ -539,9 +514,9 @@ class GenericServer:
                 self.fetch_url(url, giveback='raw', cgi_data=cgi_data)
 
     def set_downtime(self, info_dict):
-        """
-        different monitors might have different implementations of _set_downtime
-        """
+        '''
+            different monitors might have different implementations of _set_downtime
+        '''
         self._set_downtime(info_dict['host'],
                            info_dict['service'],
                            info_dict['author'],
@@ -553,9 +528,9 @@ class GenericServer:
                            info_dict['minutes'])
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
-        """
-        finally send downtime command to monitor server
-        """
+        '''
+            finally send downtime command to monitor server
+        '''
         url = self.monitor_cgi_url + '/cmd.cgi'
 
         # for some reason Icinga is very fastidiuos about the order of CGI arguments, so please
@@ -584,7 +559,7 @@ class GenericServer:
 
     def set_submit_check_result(self, info_dict):
         """
-        start specific submission part
+            start specific submission part
         """
         self._set_submit_check_result(info_dict['host'],
                                       info_dict['service'],
@@ -594,9 +569,9 @@ class GenericServer:
                                       info_dict['performance_data'])
 
     def _set_submit_check_result(self, host, service, state, comment, check_output, performance_data):
-        """
-        worker for submitting check result
-        """
+        '''
+            worker for submitting check result
+        '''
         url = self.monitor_cgi_url + '/cmd.cgi'
 
         # decision about host or service - they have different URLs
@@ -619,11 +594,10 @@ class GenericServer:
             self.fetch_url(url, giveback='raw', cgi_data=cgi_data)
 
     def get_start_end(self, host):
-        """
-        for GUI to get actual downtime start and end from server - they may vary so it's better to get
-        directly from web interface
-        """
-
+        '''
+            for GUI to get actual downtime start and end from server - they may vary so it's better to get
+            directly from web interface
+        '''
         try:
             result = self.fetch_url(
                 self.monitor_cgi_url + '/cmd.cgi?' + urllib.parse.urlencode({'cmd_typ': '55', 'host': host}))
@@ -636,9 +610,9 @@ class GenericServer:
             return 'n/a', 'n/a'
 
     def open_monitor(self, host, service=''):
-        """
-        open monitor from tablewidget context menu
-        """
+        '''
+            open monitor from tablewidget context menu
+        '''
         # only type is important so do not care of service '' in case of host monitor
         if service == '':
             typ = 1
@@ -652,9 +626,9 @@ class GenericServer:
             {'type': typ, 'host': host, 'service': service}))
 
     def open_monitor_webpage(self):
-        """
-        open monitor from systray/toparea context menu
-        """
+        '''
+            open monitor from systray/toparea context menu
+        '''
 
         if conf.debug_mode:
             self.debug(server=self.get_name(),
@@ -662,9 +636,9 @@ class GenericServer:
         webbrowser_open(self.monitor_url)
 
     def _get_status(self):
-        """
-        Get status from Nagios Server
-        """
+        '''
+            Get status from Nagios Server
+        '''
         # create Nagios items dictionary with to lists for services and hosts
         # every list will contain a dictionary for every failed service/host
         # this dictionary is only temporarily
@@ -936,11 +910,11 @@ class GenericServer:
         return Result()
 
     def get_status(self, output=None):
-        """
-        get nagios status information from cgiurl and give it back
-        as dictionary
-        output parameter is needed in case authentication failed so that popwin might ask for credentials
-        """
+        '''
+            get nagios status information from cgiurl and give it back
+            as dictionary
+            output parameter is needed in case authentication failed so that popwin might ask for credentials
+        '''
 
         # set checking flag to be sure only one thread cares about this server
         self.isChecking = True
@@ -981,8 +955,6 @@ class GenericServer:
         if (self.status == 'ERROR' or
             self.status_description != '' or
             self.status_code >= 400):
-
-            print('status.description:', self.status_description, 'status_code:', self.status_code)
 
             # ask for password if authorization failed
             if 'HTTP Error 401' in self.status_description or \
@@ -1473,29 +1445,18 @@ class GenericServer:
         return Result()
 
     def fetch_url(self, url, giveback='obj', cgi_data=None, no_auth=False, multipart=False, headers=None):
-        """
-        get content of given url, cgi_data only used if present
-        'obj' fetch_url() gives back a dict full of miserable hosts/services,
-        'xml' giving back as objectified xml
-        'raw' it gives back pure HTML - useful for finding out IP or new version
-        'json' gives back JSON data
-        existence of cgi_data forces urllib to use POST instead of GET requests
-        NEW: gives back a list containing result and, if necessary, a more clear error description
-        """
+        '''
+            get content of given url, cgi_data only used if present
+            'obj' fetch_url() gives back a dict full of miserable hosts/services,
+            'xml' giving back as objectified xml
+            'raw' it gives back pure HTML - useful for finding out IP or new version
+            'json' gives back JSON data
+            existence of cgi_data forces urllib to use POST instead of GET requests
+            NEW: gives back a list containing result and, if necessary, a more clear error description
+        '''
 
         # assume TLS is OK when connecting
         self.tls_error = False
-
-        if self.authentication == 'web' and \
-           not self.session:
-           print('web login needs cookies')
-           return Result(result='',
-                         status_code=401)
-        elif self.authentication == 'web' and \
-            self.session:
-            print('session.cookies:', self.session.cookies)
-
-
 
         # run this method which checks itself if there is some action to take for initializing connection
         # if no_auth is true do not use Auth headers, used by check for new version
@@ -1533,12 +1494,7 @@ class GenericServer:
 
                 # use session only for connections to monitor servers, other requests like looking for updates
                 # should go out without credentials
-
-                print('no_auth:', no_auth, 'self.refresh_authentication:', self.refresh_authentication)
-
-                if no_auth is False and \
-                   not self.refresh_authentication or \
-                   no_auth is False and self.authentication == 'web':
+                if no_auth is False and not self.refresh_authentication:
                     # check if there is really a session
                     if not self.session:
                         self.reset_http()
@@ -1561,7 +1517,7 @@ class GenericServer:
                 else:
                     # send request without authentication data
                     temporary_session = requests.Session()
-                    temporary_session.headers['User-Agent'] = USER_AGENT
+                    temporary_session.headers['User-Agent'] = self.USER_AGENT
                     # default to check TLS validity
                     if self.ignore_cert:
                         temporary_session.verify = False
@@ -1574,10 +1530,12 @@ class GenericServer:
                     self.proxify(temporary_session)
 
                     # most requests come without multipart/form-data
-                    if not multipart:
+                    if multipart is False:
                         if cgi_data is None:
+                            #response = temporary_session.get(url, timeout=self.timeout, verify=not self.ignore_cert)
                             response = temporary_session.get(url, timeout=self.timeout, verify=False, headers=headers)
                         else:
+                            #response = temporary_session.post(url, data=cgi_data, timeout=self.timeout, verify=not self.ignore_cert)
                             response = temporary_session.post(url, data=cgi_data, timeout=self.timeout, verify=False, headers=headers)
                     else:
                         # Checkmk and Opsview need multipart/form-data encoding
@@ -1638,10 +1596,10 @@ class GenericServer:
         return Result(result=result, error=error, status_code=response.status_code)
 
     def get_host(self, host):
-        """
-        find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
-        have their ip saved in Nagios
-        """
+        '''
+            find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
+            have their ip saved in Nagios
+        '''
 
         # the fasted method is taking hostname as used in monitor
         if conf.connect_by_host is True or host == '':
@@ -1693,9 +1651,9 @@ class GenericServer:
         return Result(result=address)
 
     def get_items_generator(self):
-        """
-        Generator for plain listing of all filtered items, used in qui for tableview
-        """
+        '''
+            Generator for plain listing of all filtered items, used in qui for tableview
+        '''
 
         # reset number of filtered items
         self.nagitems_filtered_count = 0
@@ -1713,16 +1671,16 @@ class GenericServer:
                 yield (service)
 
     def hook(self):
-        """
-        allows to add some extra actions for a monitor server to be executed in RefreshLoop
-        inspired by Centreon and its seemingly Alzheimer disease regarding session ID/Cookie/whatever
-        """
+        '''
+            allows to add some extra actions for a monitor server to be executed in RefreshLoop
+            inspired by Centreon and its seemingly Alzheimer disease regarding session ID/Cookie/whatever
+        '''
         pass
 
     def error(self, error):
-        """
-        Handle errors somehow - print them or later log them into not yet existing log file
-        """
+        '''
+            Handle errors somehow - print them or later log them into not yet existing log file
+        '''
         if conf.debug_mode:
             debug = ''
             for line in traceback.format_exception(error[0], error[1], error[2], 5):
@@ -1732,9 +1690,9 @@ class GenericServer:
         return ['ERROR', traceback.format_exception_only(error[0], error[1])[0]]
 
     def debug(self, server='', host='', service='', debug='', head='DEBUG'):
-        """
-        centralized debugging
-        """
+        '''
+            centralized debugging
+        '''
 
         # initialize items in line to be logged
         log_line = [head + ':', str(datetime.datetime.now())]
