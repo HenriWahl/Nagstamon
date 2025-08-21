@@ -20,7 +20,8 @@ from Nagstamon.config import (conf,
                               OS,
                               OS_MACOS)
 from Nagstamon.qui.constants import COLOR_STATUS_LABEL
-from Nagstamon.qui.globals import statuswindow_properties
+from Nagstamon.qui.globals import (font,
+                                   statuswindow_properties)
 
 from Nagstamon.qui.qt import (QLabel,
                               QSizePolicy,
@@ -38,6 +39,7 @@ class LabelAllOK(QLabel):
         QLabel.__init__(self, text='OK', parent=parent)
         self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setFont(font)
         self.set_color()
 
     @Slot()
