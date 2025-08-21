@@ -24,13 +24,10 @@
 - [ ] something weird happened to the CSS in treeview
   - depending on OS?
 - [x] build RPM fails
-- [ ] basically working OSes
+- [x] basically working OSes
   - [x] Linux
     - [x] Ubuntu
     - [x ] Fedora
-      -  ~~/sbin/python3 not found - WTF?~~
     - [x] Pyinstaller]
   - [x] Windows
-  - [ ] macOS
-    - dock icon not hidden
-    - can't be exited?
+  - [x] macOS
