@@ -53,5 +53,5 @@ class CentreonServer(GenericServer):
             else:
                 from .CentreonLegacy import CentreonServer as CentreonServerReal
                 self.debug(server='[' + self.get_name() + ']', debug='Loading class LEGACY, Centreon version will be checked later')
-            # kind of mad but helps the Servers/__init__.py to detect if there is any other class to be used
+            # kind of mad but helps the servers/__init__.py to detect if there is any other class to be used
             self.ClassServerReal = CentreonServerReal

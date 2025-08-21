@@ -111,6 +111,14 @@ class BearerAuth(requests.auth.AuthBase):
         return r
 
 
+class BridgeToQt(QObject):
+    """
+    Bridge to Qt for browser login
+    """
+    def __init__(self):
+        QObject.__init__(self)
+
+
 class GenericServer:
 
     '''
@@ -272,6 +280,11 @@ class GenericServer:
 
         # Thruk
         self.disabled_backends = None
+
+        # Browser login
+        self.bridge_to_qt = BridgeToQt()
+
+        pass
 
     def init_config(self):
         '''

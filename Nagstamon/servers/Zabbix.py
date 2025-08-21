@@ -15,7 +15,7 @@ from Nagstamon.config import conf
 from Nagstamon.objects import (GenericHost,
                                GenericService,
                                Result)
-from Nagstamon.Servers.Generic import GenericServer, BearerAuth
+from Nagstamon.servers.Generic import GenericServer, BearerAuth
 
 
 class ZabbixError(Exception):

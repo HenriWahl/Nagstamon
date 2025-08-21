@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-"""Module Servers"""
+"""Module servers"""
 
 import urllib.request
 import urllib.error
@@ -26,28 +26,28 @@ import urllib.parse
 from collections import OrderedDict
 
 # load all existing server types
-from Nagstamon.Servers.Nagios import NagiosServer
-from Nagstamon.Servers.Centreon import CentreonServer
-from Nagstamon.Servers.Icinga import IcingaServer
-from Nagstamon.Servers.IcingaWeb2 import IcingaWeb2Server
-from Nagstamon.Servers.IcingaDBWeb import IcingaDBWebServer
-from Nagstamon.Servers.IcingaDBWebNotifications import IcingaDBWebNotificationsServer
-from Nagstamon.Servers.Icinga2API import Icinga2APIServer
-from Nagstamon.Servers.Multisite import MultisiteServer
-from Nagstamon.Servers.op5Monitor import Op5MonitorServer
-from Nagstamon.Servers.Opsview import OpsviewServer
-from Nagstamon.Servers.Thruk import ThrukServer
-from Nagstamon.Servers.Zabbix import ZabbixServer
-from Nagstamon.Servers.ZabbixProblemBased import ZabbixProblemBasedServer
-from Nagstamon.Servers.Livestatus import LivestatusServer
-from Nagstamon.Servers.Zenoss import ZenossServer
-from Nagstamon.Servers.Monitos3 import Monitos3Server
-from Nagstamon.Servers.Monitos4x import Monitos4xServer
-from Nagstamon.Servers.SnagView3 import SnagViewServer
-from Nagstamon.Servers.Sensu import SensuServer
-from Nagstamon.Servers.SensuGo import SensuGoServer
-from Nagstamon.Servers.Prometheus import PrometheusServer
-from Nagstamon.Servers.Alertmanager import AlertmanagerServer
+from Nagstamon.servers.Nagios import NagiosServer
+from Nagstamon.servers.Centreon import CentreonServer
+from Nagstamon.servers.Icinga import IcingaServer
+from Nagstamon.servers.IcingaWeb2 import IcingaWeb2Server
+from Nagstamon.servers.IcingaDBWeb import IcingaDBWebServer
+from Nagstamon.servers.IcingaDBWebNotifications import IcingaDBWebNotificationsServer
+from Nagstamon.servers.Icinga2API import Icinga2APIServer
+from Nagstamon.servers.Multisite import MultisiteServer
+from Nagstamon.servers.op5Monitor import Op5MonitorServer
+from Nagstamon.servers.Opsview import OpsviewServer
+from Nagstamon.servers.Thruk import ThrukServer
+from Nagstamon.servers.Zabbix import ZabbixServer
+from Nagstamon.servers.ZabbixProblemBased import ZabbixProblemBasedServer
+from Nagstamon.servers.Livestatus import LivestatusServer
+from Nagstamon.servers.Zenoss import ZenossServer
+from Nagstamon.servers.Monitos3 import Monitos3Server
+from Nagstamon.servers.Monitos4x import Monitos4xServer
+from Nagstamon.servers.SnagView3 import SnagViewServer
+from Nagstamon.servers.Sensu import SensuServer
+from Nagstamon.servers.SensuGo import SensuGoServer
+from Nagstamon.servers.Prometheus import PrometheusServer
+from Nagstamon.servers.Alertmanager import AlertmanagerServer
 
 from Nagstamon.config import conf
 

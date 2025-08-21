@@ -63,7 +63,7 @@ from Nagstamon.qui.widgets.labels import LabelAllOK
 from Nagstamon.qui.widgets.server_vbox import ServerVBox
 from Nagstamon.qui.widgets.statusbar import StatusBar
 from Nagstamon.qui.widgets.toparea import TopArea
-from Nagstamon.Servers import (get_enabled_servers,
+from Nagstamon.servers import (get_enabled_servers,
                                get_status_count,
                                servers)
 

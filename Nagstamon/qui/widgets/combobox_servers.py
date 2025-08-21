@@ -20,7 +20,7 @@ from Nagstamon.helpers import webbrowser_open
 from Nagstamon.qui.qt import (QComboBox,
                               Signal,
                               Slot)
-from Nagstamon.Servers import servers
+from Nagstamon.servers import servers
 
 
 class ComboBoxServers(QComboBox):

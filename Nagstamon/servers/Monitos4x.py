@@ -36,7 +36,7 @@ from bs4 import BeautifulSoup
 
 from Nagstamon.helpers import webbrowser_open
 from Nagstamon.objects import (GenericHost, GenericService, Result)
-from Nagstamon.Servers.Generic import GenericServer
+from Nagstamon.servers.Generic import GenericServer
 from Nagstamon.config import conf
 
 log = logging.getLogger('monitos4x')

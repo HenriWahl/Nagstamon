@@ -9,7 +9,7 @@ from packaging import version
 from Nagstamon.helpers import human_readable_duration_from_timestamp
 from Nagstamon.config import conf
 from Nagstamon.objects import GenericHost, GenericService, Result
-from Nagstamon.Servers.Generic import GenericServer
+from Nagstamon.servers.Generic import GenericServer
 
 class ZabbixLightApi():
 

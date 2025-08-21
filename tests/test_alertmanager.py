@@ -3,7 +3,7 @@ import json
 from pylint import lint
 
 import unittest
-from Nagstamon.Servers.Alertmanager import AlertmanagerServer
+from Nagstamon.servers.Alertmanager import AlertmanagerServer
 
 conf = {}
 conf['debug_mode'] = True
@@ -12,7 +12,7 @@ class test_alertmanager(unittest.TestCase):
 
     def test_lint_with_pylint(self):
         with self.assertRaises(SystemExit) as cm:
-            lint.Run(['Nagstamon/Servers/Alertmanager'])
+            lint.Run(['Nagstamon/servers/Alertmanager'])
         self.assertEqual(cm.exception.code, 0)
 
     def test_unit_alert_suppressed(self):

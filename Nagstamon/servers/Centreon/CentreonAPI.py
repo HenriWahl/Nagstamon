@@ -30,7 +30,7 @@ import requests
 from datetime import datetime, timedelta
 
 from Nagstamon.objects import *
-from Nagstamon.Servers.Generic import GenericServer
+from Nagstamon.servers.Generic import GenericServer
 from Nagstamon.config import conf
 from Nagstamon.helpers import webbrowser_open
 

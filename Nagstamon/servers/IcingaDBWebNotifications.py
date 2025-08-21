@@ -30,7 +30,7 @@
 #   Once IcingaWeb2 has an API, it's probably the better choice.
 
 
-from Nagstamon.Servers.Generic import GenericServer
+from Nagstamon.servers.Generic import GenericServer
 import urllib.parse
 import sys
 import json
@@ -44,7 +44,7 @@ from Nagstamon.objects import (GenericHost,
 from Nagstamon.config import (conf,
                               AppInfo)
 from Nagstamon.helpers import webbrowser_open
-from Nagstamon.Servers.IcingaDBWeb import IcingaDBWebServer
+from Nagstamon.servers.IcingaDBWeb import IcingaDBWebServer
 
 
 def strfdelta(tdelta, fmt):

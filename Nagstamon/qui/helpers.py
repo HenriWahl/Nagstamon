@@ -23,7 +23,7 @@ from Nagstamon.qui.qt import (QObject,
                               Signal,
                               Slot)
 from Nagstamon.qui.widgets.app import app
-from Nagstamon.Servers import servers
+from Nagstamon.servers import servers
 
 # make icon status in macOS dock accessible via NSApp, used by set_macos_dock_icon_visible()
 if OS == OS_MACOS:

@@ -21,7 +21,7 @@ from Nagstamon.qui.dialogs.dialog import Dialog
 from Nagstamon.qui.qt import (QDateTime,
                               Signal,
                               Slot)
-from Nagstamon.Servers import SERVER_TYPES
+from Nagstamon.servers import SERVER_TYPES
 
 class DialogAcknowledge(Dialog):
     """
