@@ -66,8 +66,8 @@ SERVER_TYPES = OrderedDict()
 
 def register_server(server):
     """
-        Once new server class is created, should be registered with this function
-        for being visible in config and accessible in application.
+    Once new server class is created, should be registered with this function
+    for being visible in config and accessible in application.
     """
     if server.TYPE not in SERVER_TYPES:
         SERVER_TYPES[server.TYPE] = server
@@ -75,14 +75,14 @@ def register_server(server):
 
 def get_enabled_servers():
     """
-        list of enabled servers which connections outside should be used to check
+    list of enabled servers which connections outside should be used to check
     """
     return [x for x in servers.values() if x.enabled is True]
 
 
 def get_worst_status():
     """
-        get worst status of all servers
+    get worst status of all servers
     """
     worst_status = 'UP'
     for server in get_enabled_servers():
@@ -95,7 +95,7 @@ def get_worst_status():
 
 def get_status_count():
     """
-        get all states of all servers and count them
+    get all states of all servers and count them
     """
     state_count = {'UNKNOWN': 0,
                    'INFORMATION': 0,
@@ -122,7 +122,7 @@ def get_status_count():
 
 def get_errors():
     """
-        find out if any server has any error, used by statusbar error label
+    find out if any server has any error, used by statusbar error label
     """
     for server in get_enabled_servers():
         if server.has_error:
@@ -134,7 +134,9 @@ def get_errors():
 
 
 def create_server(server=None):
-    # create Server from config
+    """
+    create server from config
+    """
     if server.type not in SERVER_TYPES:
         print(('Server type not supported: %s' % server.type))
         return
@@ -265,3 +267,5 @@ for server in conf.servers.values():
         servers[server.name] = created_server
         # for the next time no auth needed
         servers[server.name].refresh_authentication = False
+
+

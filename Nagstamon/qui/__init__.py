@@ -15,10 +15,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-from os import sep
-import os.path
-import sys
-
 # it is important that this import is done before importing any other qui module, because
 # they may need a QApplication instance to be created
 from Nagstamon.qui.widgets.app import app
@@ -69,7 +65,6 @@ from Nagstamon.qui.widgets.statuswindow import StatusWindow
 from Nagstamon.qui.widgets.system_tray_icon import SystemTrayIcon
 from Nagstamon.qui.widgets.toparea import TopArea
 from Nagstamon.qui.widgets.treeview import TreeView
-from Nagstamon.qui.widgets.web import webengine_view
 
 from Nagstamon.config import (conf,
                               OS_NON_LINUX,
@@ -205,4 +200,12 @@ else:
     statuswindow.systrayicon_disabled.emit()
 # tell the widgets that the menu is ready
 menu.menu_ready.emit(menu)
+
+from Nagstamon.servers import servers
+
+for server in servers.values():
+    server.bridge_to_qt.set_url.connect(dialogs.weblogin.set_url)
+    server.bridge_to_qt.signal_test.connect(dialogs.weblogin.slot_test)
+
+dialogs.weblogin.show()
 
