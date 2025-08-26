@@ -61,7 +61,9 @@ from Nagstamon.config import (AppInfo,
                               OS_MACOS,
                               RESOURCES)
 
-from Nagstamon.qui.qt import QObject
+from Nagstamon.qui.qt import (QObject,
+                              Signal)
+
 
 # flag to keep track of Kerberos availability
 KERBEROS_AVAILABLE = False
@@ -115,16 +117,22 @@ class BridgeToQt(QObject):
     """
     Bridge to Qt for browser login
     """
+
+    set_url = Signal(str, str)
+    signal_test = Signal()
+
     def __init__(self):
         QObject.__init__(self)
 
+    def test(self):
+        self.signal_test.emit()
+
 
 class GenericServer:
-
-    '''
-        Abstract server which serves as template for all other types
-        Default values are for Nagios servers
-    '''
+    """
+    Abstract server which serves as template for all other types
+    Default values are for Nagios servers
+    """
 
     TYPE = 'Generic'
 
@@ -287,9 +295,9 @@ class GenericServer:
         pass
 
     def init_config(self):
-        '''
-            set URLs for CGI - they are static and there is no need to set them with every cycle
-        '''
+        """
+        set URLs for CGI - they are static and there is no need to set them with every cycle
+        """
         # create filters like described in
         # http://www.nagios-wiki.de/nagios/tips/host-_und_serviceproperties_fuer_status.cgi?s=servicestatustypes
         #
@@ -349,8 +357,8 @@ class GenericServer:
             session.auth = HTTPSKerberos()
         elif self.authentication == 'bearer':
             session.auth = BearerAuth(self.password)
-        elif self.authentication == 'browser':
-            pass
+        elif self.authentication == 'web':
+            self.bridge_to_qt.set_url.emit(self.name, self.monitor_url)
 
         # default to check TLS validity
         if self.ignore_cert:
@@ -366,9 +374,9 @@ class GenericServer:
         return session
 
     def proxify(self, session):
-        '''
-            add proxy information to session or single request
-        '''
+        """
+        add proxy information to session or single request
+        """
         # check if proxies have to be used
         if self.use_proxy is True:
             if self.use_proxy_from_os is True:
@@ -402,33 +410,33 @@ class GenericServer:
             session.trust_env = False
 
     def reset_http(self):
-        '''
-            if authentication fails try to reset any HTTP session stuff - might be different for different monitors
-        '''
+        """
+        if authentication fails try to reset any HTTP session stuff - might be different for different monitors
+        """
         self.session = None
 
     def get_name(self):
-        '''
+        """
         return stringified name
-        '''
+        """
         return str(self.name)
 
     def get_username(self):
-        '''
+        """
         return stringified username
-        '''
+        """
         return str(self.username)
 
     def get_password(self):
-        '''
+        """
         return stringified password
-        '''
+        """
         return str(self.password)
 
     def get_server_version(self):
-        '''
+        """
         dummy function, at the moment only used by Icinga
-        '''
+        """
         pass
 
     def set_recheck(self, info_dict):
@@ -465,9 +473,9 @@ class GenericServer:
             traceback.print_exc(file=sys.stdout)
 
     def set_acknowledge(self, info_dict):
-        '''
-            different monitors might have different implementations of _set_acknowledge
-        '''
+        """
+        different monitors might have different implementations of _set_acknowledge
+        """
         if info_dict['acknowledge_all_services'] is True:
             all_services = info_dict['all_services']
         else:
@@ -483,9 +491,9 @@ class GenericServer:
 
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None):
-        '''
-            send acknowledge to monitor server - might be different on every monitor type
-        '''
+        """
+        send acknowledge to monitor server - might be different on every monitor type
+        """
 
         url = self.monitor_cgi_url + '/cmd.cgi'
 
@@ -529,9 +537,9 @@ class GenericServer:
                 self.fetch_url(url, giveback='raw', cgi_data=cgi_data)
 
     def set_downtime(self, info_dict):
-        '''
-            different monitors might have different implementations of _set_downtime
-        '''
+        """
+        different monitors might have different implementations of _set_downtime
+        """
         self._set_downtime(info_dict['host'],
                            info_dict['service'],
                            info_dict['author'],
@@ -543,9 +551,9 @@ class GenericServer:
                            info_dict['minutes'])
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
-        '''
-            finally send downtime command to monitor server
-        '''
+        """
+        finally send downtime command to monitor server
+        """
         url = self.monitor_cgi_url + '/cmd.cgi'
 
         # for some reason Icinga is very fastidiuos about the order of CGI arguments, so please
@@ -574,7 +582,7 @@ class GenericServer:
 
     def set_submit_check_result(self, info_dict):
         """
-            start specific submission part
+        start specific submission part
         """
         self._set_submit_check_result(info_dict['host'],
                                       info_dict['service'],
@@ -584,9 +592,9 @@ class GenericServer:
                                       info_dict['performance_data'])
 
     def _set_submit_check_result(self, host, service, state, comment, check_output, performance_data):
-        '''
-            worker for submitting check result
-        '''
+        """
+        worker for submitting check result
+        """
         url = self.monitor_cgi_url + '/cmd.cgi'
 
         # decision about host or service - they have different URLs
@@ -609,10 +617,11 @@ class GenericServer:
             self.fetch_url(url, giveback='raw', cgi_data=cgi_data)
 
     def get_start_end(self, host):
-        '''
-            for GUI to get actual downtime start and end from server - they may vary so it's better to get
-            directly from web interface
-        '''
+        """
+        for GUI to get actual downtime start and end from server - they may vary so it's better to get
+        directly from web interface
+        """
+
         try:
             result = self.fetch_url(
                 self.monitor_cgi_url + '/cmd.cgi?' + urllib.parse.urlencode({'cmd_typ': '55', 'host': host}))
@@ -625,9 +634,9 @@ class GenericServer:
             return 'n/a', 'n/a'
 
     def open_monitor(self, host, service=''):
-        '''
-            open monitor from tablewidget context menu
-        '''
+        """
+        open monitor from tablewidget context menu
+        """
         # only type is important so do not care of service '' in case of host monitor
         if service == '':
             typ = 1
@@ -641,9 +650,9 @@ class GenericServer:
             {'type': typ, 'host': host, 'service': service}))
 
     def open_monitor_webpage(self):
-        '''
-            open monitor from systray/toparea context menu
-        '''
+        """
+        open monitor from systray/toparea context menu
+        """
 
         if conf.debug_mode:
             self.debug(server=self.get_name(),
@@ -651,9 +660,9 @@ class GenericServer:
         webbrowser_open(self.monitor_url)
 
     def _get_status(self):
-        '''
-            Get status from Nagios Server
-        '''
+        """
+        Get status from Nagios Server
+        """
         # create Nagios items dictionary with to lists for services and hosts
         # every list will contain a dictionary for every failed service/host
         # this dictionary is only temporarily
@@ -925,11 +934,11 @@ class GenericServer:
         return Result()
 
     def get_status(self, output=None):
-        '''
-            get nagios status information from cgiurl and give it back
-            as dictionary
-            output parameter is needed in case authentication failed so that popwin might ask for credentials
-        '''
+        """
+        get nagios status information from cgiurl and give it back
+        as dictionary
+        output parameter is needed in case authentication failed so that popwin might ask for credentials
+        """
 
         # set checking flag to be sure only one thread cares about this server
         self.isChecking = True
@@ -1460,15 +1469,15 @@ class GenericServer:
         return Result()
 
     def fetch_url(self, url, giveback='obj', cgi_data=None, no_auth=False, multipart=False, headers=None):
-        '''
-            get content of given url, cgi_data only used if present
-            'obj' fetch_url() gives back a dict full of miserable hosts/services,
-            'xml' giving back as objectified xml
-            'raw' it gives back pure HTML - useful for finding out IP or new version
-            'json' gives back JSON data
-            existence of cgi_data forces urllib to use POST instead of GET requests
-            NEW: gives back a list containing result and, if necessary, a more clear error description
-        '''
+        """
+        get content of given url, cgi_data only used if present
+        'obj' fetch_url() gives back a dict full of miserable hosts/services,
+        'xml' giving back as objectified xml
+        'raw' it gives back pure HTML - useful for finding out IP or new version
+        'json' gives back JSON data
+        existence of cgi_data forces urllib to use POST instead of GET requests
+        NEW: gives back a list containing result and, if necessary, a more clear error description
+        """
 
         # assume TLS is OK when connecting
         self.tls_error = False
@@ -1611,10 +1620,10 @@ class GenericServer:
         return Result(result=result, error=error, status_code=response.status_code)
 
     def get_host(self, host):
-        '''
-            find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
-            have their ip saved in Nagios
-        '''
+        """
+        find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
+        have their ip saved in Nagios
+        """
 
         # the fasted method is taking hostname as used in monitor
         if conf.connect_by_host is True or host == '':
@@ -1666,9 +1675,9 @@ class GenericServer:
         return Result(result=address)
 
     def get_items_generator(self):
-        '''
-            Generator for plain listing of all filtered items, used in qui for tableview
-        '''
+        """
+        Generator for plain listing of all filtered items, used in qui for tableview
+        """
 
         # reset number of filtered items
         self.nagitems_filtered_count = 0
@@ -1686,16 +1695,16 @@ class GenericServer:
                 yield (service)
 
     def hook(self):
-        '''
-            allows to add some extra actions for a monitor server to be executed in RefreshLoop
-            inspired by Centreon and its seemingly Alzheimer disease regarding session ID/Cookie/whatever
-        '''
+        """
+        allows to add some extra actions for a monitor server to be executed in RefreshLoop
+        inspired by Centreon and its seemingly Alzheimer disease regarding session ID/Cookie/whatever
+        """
         pass
 
     def error(self, error):
-        '''
-            Handle errors somehow - print them or later log them into not yet existing log file
-        '''
+        """
+        Handle errors somehow - print them or later log them into not yet existing log file
+        """
         if conf.debug_mode:
             debug = ''
             for line in traceback.format_exception(error[0], error[1], error[2], 5):
@@ -1705,9 +1714,9 @@ class GenericServer:
         return ['ERROR', traceback.format_exception_only(error[0], error[1])[0]]
 
     def debug(self, server='', host='', service='', debug='', head='DEBUG'):
-        '''
-            centralized debugging
-        '''
+        """
+        centralized debugging
+        """
 
         # initialize items in line to be logged
         log_line = [head + ':', str(datetime.datetime.now())]
