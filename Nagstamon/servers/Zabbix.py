@@ -66,15 +66,27 @@ class ZabbixServer(GenericServer):
         self.use_description_name_service = conf.servers[self.get_name()].use_description_name_service
         self.api_version = ''
         self.auth_token = ''
+        # Force authentication refresh by default until verified
+        self.refresh_authentication = True
         self.monitor_path = '/api_jsonrpc.php'
 
     def init_HTTP(self):
         """
         things to do if HTTP is not initialized
+        Ensure a valid HTTP session exists before using it and handle re-auth flows.
         """
-        GenericServer.init_HTTP(self)
+        # Let GenericServer manage refresh/session lifecycle
+        super().init_HTTP()
+
+        # If refresh was requested, GenericServer cleared the session and returned False.
+        # Create a fresh session explicitly so we can proceed with headers, version and auth checks.
+        if self.session is None:
+            self.session = self.create_session()
 
         # prepare for JSON
+        if not hasattr(self.session, 'headers') or self.session.headers is None:
+            # extremely defensive, but keeps AttributeError away
+            self.session.headers = {}
         self.session.headers.update({'Accept': 'application/json',
                                      'Content-Type': 'application/json-rpc'})
         try:
@@ -125,13 +137,36 @@ class ZabbixServer(GenericServer):
 
     def check_authentication(self):
         try:
+            # Build request depending on configured auth method
             if conf.servers[self.get_name()].authentication == 'bearer':
                 obj = self.generate_cgi_data('user.checkAuthentication', {'token': self.auth_token}, no_auth=True)
             else:
                 obj = self.generate_cgi_data('user.checkAuthentication', {'sessionid': self.auth_token}, no_auth=True)
+
             result = self.api_request(obj, no_auth=True)
-            if result['error']:
+
+            # Zabbix JSON-RPC: success responses contain 'result', errors contain 'error'.
+            # Safely handle both without raising KeyError.
+            if isinstance(result, dict) and result.get('error'):
+                # Server explicitly reported an auth error
                 self.refresh_authentication = True
+                return
+
+            res = result.get('result') if isinstance(result, dict) else None
+
+            # Interpret common variants:
+            # - {'result': True/False}
+            # - {'result': {'authenticated': True/False}}
+            if isinstance(res, bool):
+                self.refresh_authentication = not res
+            elif isinstance(res, dict) and 'authenticated' in res:
+                self.refresh_authentication = not bool(res.get('authenticated'))
+            else:
+                # Unable to determine -> force refresh to be safe
+                self.refresh_authentication = True
+        except ZabbixError:
+            # Treat any transport/API error as needing re-authentication
+            self.refresh_authentication = True
         except Exception as e:
             raise RuntimeError(f"Authentication check failed: {str(e)}")
 
@@ -245,8 +280,8 @@ class ZabbixServer(GenericServer):
                         self.new_hosts[host['name']].services[service["triggerid"]].host = host['name']
                         self.new_hosts[host['name']].services[service["triggerid"]].hostid = host['hostid']
         except ZabbixError as e:
-            print(f"ZabbixError: {e.result}")
-            return Result(result=e.result, error=e.result.content)
+            print(f"ZabbixError: {e.result.error}")
+            return Result(result=e.result, error=e.result.error)
         except Exception:
             self.isChecking = False
             result, error = self.error(sys.exc_info())
