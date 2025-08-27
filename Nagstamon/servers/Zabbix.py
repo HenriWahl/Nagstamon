@@ -70,18 +70,12 @@ class ZabbixServer(GenericServer):
         self.refresh_authentication = True
         self.monitor_path = '/api_jsonrpc.php'
 
-    def init_HTTP(self):
+    def init_http(self):
         """
         things to do if HTTP is not initialized
         Ensure a valid HTTP session exists before using it and handle re-auth flows.
         """
-        # Let GenericServer manage refresh/session lifecycle
-        super().init_HTTP()
-
-        # If refresh was requested, GenericServer cleared the session and returned False.
-        # Create a fresh session explicitly so we can proceed with headers, version and auth checks.
-        if self.session is None:
-            self.session = self.create_session()
+        GenericServer.init_http(self)
 
         # prepare for JSON
         if not hasattr(self.session, 'headers') or self.session.headers is None:
