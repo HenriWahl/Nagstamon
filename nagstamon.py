@@ -42,10 +42,10 @@ try:
             sys.exit(1)
 
         # get GUI
-        from Nagstamon.qui import (app,
+        from Nagstamon.QUI import (app,
                                    check_version,
                                    statuswindow)
-        from Nagstamon.qui.helpers import check_servers
+        from Nagstamon.QUI.helpers import check_servers
 
         # ask for help if no servers are configured
         check_servers.check()
