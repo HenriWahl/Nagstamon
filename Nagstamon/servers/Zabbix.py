@@ -9,7 +9,7 @@ import datetime
 import socket
 from packaging import version
 
-from Nagstamon.helpers import (human_readable_duration_from_timestamp,
+from Nagstamon.helpers import (human_readable_duration_from_seconds,
                                webbrowser_open)
 from Nagstamon.config import conf
 from Nagstamon.objects import (GenericHost,
@@ -68,11 +68,11 @@ class ZabbixServer(GenericServer):
         self.auth_token = ''
         self.monitor_path = '/api_jsonrpc.php'
 
-    def init_http(self):
+    def init_HTTP(self):
         """
         things to do if HTTP is not initialized
         """
-        GenericServer.init_http(self)
+        GenericServer.init_HTTP(self)
 
         # prepare for JSON
         self.session.headers.update({'Accept': 'application/json',
@@ -224,7 +224,7 @@ class ZabbixServer(GenericServer):
                 service_obj.name = service['lastEvent']['name']
                 service_obj.status = self.statemap.get(service['lastEvent']['severity'], service['lastEvent']['severity'])
                 service_obj.last_check = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(max(int(item['lastclock']) for item in service['items'])))
-                service_obj.duration = human_readable_duration_from_timestamp(service['lastEvent']['clock'])
+                service_obj.duration = human_readable_duration_from_seconds(service['lastEvent']['clock'])
                 service_obj.status_information = status_information
                 service_obj.acknowledged = False if service['lastEvent']['acknowledged'] == '0' else True
                 #service_obj.address = ''  # Todo: check if address is available
