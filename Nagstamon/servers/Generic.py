@@ -47,8 +47,9 @@ from Nagstamon.helpers import (host_is_filtered_out_by_re,
                                groups_is_filtered_out_by_re,
                                criticality_is_filtered_out_by_re,
                                not_empty,
-                               webbrowser_open,
-                               STATES)
+                               STATES,
+                               USER_AGENT,
+                               webbrowser_open)
 
 from Nagstamon.objects import (GenericService,
                                GenericHost,
@@ -119,14 +120,9 @@ class BridgeToQt(QObject):
     """
 
     set_url = Signal(str, str)
-    signal_test = Signal()
 
     def __init__(self):
         QObject.__init__(self)
-
-    def test(self):
-        self.signal_test.emit()
-
 
 class GenericServer:
     """
@@ -157,8 +153,6 @@ class GenericServer:
                     'hosts': '$MONITOR-CGI$/status.cgi?hostgroup=all&style=hostdetail&hoststatustypes=12',
                     'services': '$MONITOR-CGI$/status.cgi?host=all&servicestatustypes=253',
                     'history': '$MONITOR-CGI$/history.cgi?host=all'}
-
-    USER_AGENT = '{0}/{1}/{2}'.format(AppInfo.NAME, AppInfo.VERSION, platform.system())
 
     # needed to check return code of monitor server in case of false authentication
     STATUS_CODES_NO_AUTH = [401, 403]
@@ -340,7 +334,7 @@ class GenericServer:
         different between various server types
         """
         session = requests.Session()
-        session.headers['User-Agent'] = self.USER_AGENT
+        session.headers['User-Agent'] = USER_AGENT
 
         # support for different authentication types
         if self.authentication == 'basic':
@@ -358,7 +352,9 @@ class GenericServer:
         elif self.authentication == 'bearer':
             session.auth = BearerAuth(self.password)
         elif self.authentication == 'web':
-            self.bridge_to_qt.set_url.emit(self.name, self.monitor_url)
+            #self.bridge_to_qt.set_url.emit(self.name, self.monitor_url)
+            pass
+            print('browser web login')
 
         # default to check TLS validity
         if self.ignore_cert:
@@ -951,6 +947,7 @@ class GenericServer:
 
         # initialize HTTP first
         self.init_http()
+        print('Initialized HTTP in get_status() for', self.name)
 
         # get all trouble hosts/services from server specific _get_status()
         status = self._get_status()
@@ -1541,7 +1538,7 @@ class GenericServer:
                 else:
                     # send request without authentication data
                     temporary_session = requests.Session()
-                    temporary_session.headers['User-Agent'] = self.USER_AGENT
+                    temporary_session.headers['User-Agent'] = USER_AGENT
                     # default to check TLS validity
                     if self.ignore_cert:
                         temporary_session.verify = False

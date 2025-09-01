@@ -1077,7 +1077,7 @@ class Server:
         self.use_display_name_host = False
         self.use_display_name_service = False
 
-        # IcingaWeb2 might authenticate without cookies too - default is WITH cookies
+        # IcingaWeb2 might authenticate_credentials without cookies too - default is WITH cookies
         self.no_cookie_auth = False
 
         # Checkmk Multisite

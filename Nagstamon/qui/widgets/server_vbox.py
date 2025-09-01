@@ -43,8 +43,11 @@ class ServerVBox(QVBoxLayout):
     # used to update status label text like 'Connected-'
     change_label_status = Signal(str, str)
 
-    # signal to submit server to authentication dialog
-    authenticate = Signal(str)
+    # signal to submit server to authentication dialog for credentials
+    authenticate_credentials = Signal(str)
+
+    # signal to submit server to weblogin dialog as browser
+    authenticate_weblogin = Signal(str)
 
     # handle TLS error button
     button_fix_tls_error_show = Signal()
@@ -167,7 +170,8 @@ class ServerVBox(QVBoxLayout):
         # care about authentications
         self.button_authenticate.clicked.connect(self.authenticate_server)
         # somehow a long way to connect the signal with the slot but works
-        self.authenticate.connect(self.parent_statuswindow.injected_dialogs.authentication.show_auth_dialog)
+        self.authenticate_credentials.connect(self.parent_statuswindow.injected_dialogs.authentication.show_auth_dialog)
+        self.authenticate_weblogin.connect(self.parent_statuswindow.injected_dialogs.weblogin.show_browser)
         self.parent_statuswindow.injected_dialogs.authentication.update.connect(self.update_label)
 
         # start ignoring TLS trouble when button clicked
@@ -285,7 +289,10 @@ class ServerVBox(QVBoxLayout):
         """
         send signal to open authentication dialog with self.server.name
         """
-        self.authenticate.emit(self.server.name)
+        if self.server.authentication != 'web':
+            self.authenticate_credentials.emit(self.server.name)
+        else:
+            self.authenticate_weblogin.emit(self.server.name)
 
     @Slot()
     def update_label(self):

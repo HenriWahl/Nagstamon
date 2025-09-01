@@ -57,13 +57,12 @@ class ClosingLabel(QLabel):
     """
     modified QLabel which might close the status window if left-clicked
     """
-
-    parent_statuswindow = None
     # neede to close status window
     mouse_released = Signal()
 
     def __init__(self, text='', parent=None):
         QLabel.__init__(self, text, parent=parent)
+        self.parent_statuswindow = None
 
     def mouseReleaseEvent(self, event):
         """
@@ -86,12 +85,11 @@ class ServerStatusLabel(ClosingLabel):
     extra class to apply simple slots for changing text or color
     """
 
-    # storage for label text if it needs to be restored
-    text_old = ''
-    stylesheet_old = None
-
     def __init__(self, parent=None):
         QLabel.__init__(self, parent=parent)
+        # storage for label text if it needs to be restored
+        self.text_old = ''
+        self.stylesheet_old = None
 
     @Slot(str, str)
     def change(self, text, style=''):

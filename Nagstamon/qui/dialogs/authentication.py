@@ -25,9 +25,6 @@ class DialogAuthentication(Dialog):
     """
     dialog for authentication
     """
-    # store server
-    server = None
-
     # signal for telling server_vbox label to update
     update = Signal(str)
 
@@ -36,6 +33,8 @@ class DialogAuthentication(Dialog):
 
     def __init__(self):
         Dialog.__init__(self, 'dialog_authentication')
+        # store server
+        self.server = None
 
     def initialize(self):
         """
