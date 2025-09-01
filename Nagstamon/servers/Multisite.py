@@ -64,7 +64,7 @@ class MultisiteServer(GenericServer):
         self.MENU_ACTIONS = ['Monitor', 'Recheck', 'Acknowledge', 'Downtime']
 
         # flag for newer cookie authentication
-        self.CookieAuth = False
+        self.cookie_auth = False
 
 
     def init_http(self):
@@ -126,7 +126,7 @@ class MultisiteServer(GenericServer):
             self._set_downtime = self._omd_set_downtime
             self._set_recheck = self._omd_set_recheck
 
-        if self.CookieAuth and not self.refresh_authentication:
+        if self.cookie_auth and not self.refresh_authentication:
             # get cookie to access Checkmk web interface
             if 'cookies' in dir(self.session):
                 if len(self.session.cookies) == 0:
@@ -135,7 +135,7 @@ class MultisiteServer(GenericServer):
             elif self.session == None:
                 # if no cookie yet login
                 self._get_cookie_login()
-        elif self.CookieAuth and self.refresh_authentication:
+        elif self.cookie_auth and self.refresh_authentication:
             #if self.session is None:
             self.session = self.create_session()
 
@@ -185,7 +185,7 @@ class MultisiteServer(GenericServer):
                                               status_code=status_code))
 
         # in case of auth problem enable GUI auth part in popup
-        #if self.CookieAuth and self.session is not None:
+        #if self.cookie_auth and self.session is not None:
         #    if not self._is_auth_in_cookies():
         #        self.refresh_authentication = True
         #        return ''
@@ -193,7 +193,7 @@ class MultisiteServer(GenericServer):
         # looks like cookieauth
         elif content.startswith('<') or\
                 '<!DOCTYPE html>' in content:
-            self.CookieAuth = True
+            self.cookie_auth = True
             # if first attempt login and then try to get data again
             if not self._is_auth_in_cookies():
                 self._get_cookie_login()

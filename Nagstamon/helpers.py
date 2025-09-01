@@ -34,10 +34,10 @@ import webbrowser
 # import md5 for centreon url autologin encoding
 from hashlib import md5
 
-from Nagstamon.config import (conf,
+from Nagstamon.config import (AppInfo,
+                              conf,
                               OS,
-                              OS_MACOS,
-                              RESOURCES)
+                              OS_MACOS)
 
 # states needed for gravity comparison for notification and Generic.py
 STATES = ['UP',
@@ -56,6 +56,8 @@ STATES_SOUND = ['WARNING',
                 'CRITICAL',
                 'DOWN']
 
+
+USER_AGENT = f'{AppInfo.NAME}/{AppInfo.VERSION}/{platform.system()}'
 
 # store default sounds as buffers to avoid https://github.com/HenriWahl/Nagstamon/issues/578
 # meanwhile used as backup copy in case they had been deleted by macOS

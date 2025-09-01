@@ -19,8 +19,10 @@
 
 from collections import OrderedDict
 from os import sep
+from platform import system
 
-from Nagstamon.config import RESOURCES
+from Nagstamon.config import (AppInfo,
+                              RESOURCES)
 from Nagstamon.qui.qt import (QIcon,
                               Qt)
 
