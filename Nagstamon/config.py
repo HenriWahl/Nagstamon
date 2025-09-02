@@ -129,7 +129,7 @@ CONFIG_STRINGS = ['custom_browser',
 
 class AppInfo:
     """
-        contains app information previously located in GUI.py
+    contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
     VERSION = '3.17-20250902'

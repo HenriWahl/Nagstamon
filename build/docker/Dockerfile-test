@@ -6,12 +6,12 @@ ARG REQUIREMENTS
 RUN echo "${REQUIREMENTS}"
 
 RUN apt -y update
-RUN apt -y install apt-utils \
-                   libgl1 \
-                   libgl4es0 \
-                   libpulse0 \
+RUN apt -y install apt-utils
+
+RUN apt -y install libpulse0 \
                    python3-pyqt6 \
-                   python3-pyqt6.qtwebengine
+                   python3-pyqt6.qtwebengine \
+                   qt6-wayland
 
 RUN apt -y install libdbus-1-dev libkrb5-dev
 RUN python -m pip install --upgrade pip
@@ -21,3 +21,6 @@ RUN echo ${REQUIREMENTS} | base64 --decode > requirements.txt
 RUN cat requirements.txt
 
 RUN pip install -r requirements.txt
+
+ENV QT_QPA_PLATFORM=wayland
+ENV QT_QPA_PLATFORMTHEME=offscreen
