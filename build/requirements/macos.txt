@@ -9,6 +9,8 @@ pyinstaller
 pyobjc-framework-ApplicationServices
 pyqt6==6.9.1
 pyqt6-qt6==6.9.1
+# really version 6.9.0
+pyqt6-webengine==6.9.0
 pysocks
 python-dateutil
 requests

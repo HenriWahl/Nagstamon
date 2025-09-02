@@ -9,7 +9,7 @@ import datetime
 import socket
 from packaging import version
 
-from Nagstamon.helpers import (human_readable_duration_from_seconds,
+from Nagstamon.helpers import (human_readable_duration_from_timestamp,
                                webbrowser_open)
 from Nagstamon.config import conf
 from Nagstamon.objects import (GenericHost,
@@ -75,7 +75,13 @@ class ZabbixServer(GenericServer):
         things to do if HTTP is not initialized
         Ensure a valid HTTP session exists before using it and handle re-auth flows.
         """
-        GenericServer.init_http(self)
+        # Let GenericServer manage refresh/session lifecycle
+        super().init_http()
+
+        # If refresh was requested, GenericServer cleared the session and returned False.
+        # Create a fresh session explicitly so we can proceed with headers, version and auth checks.
+        if self.session is None:
+            self.session = self.create_session()
 
         # prepare for JSON
         if not hasattr(self.session, 'headers') or self.session.headers is None:
@@ -253,7 +259,7 @@ class ZabbixServer(GenericServer):
                 service_obj.name = service['lastEvent']['name']
                 service_obj.status = self.statemap.get(service['lastEvent']['severity'], service['lastEvent']['severity'])
                 service_obj.last_check = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(max(int(item['lastclock']) for item in service['items'])))
-                service_obj.duration = human_readable_duration_from_seconds(service['lastEvent']['clock'])
+                service_obj.duration = human_readable_duration_from_timestamp(service['lastEvent']['clock'])
                 service_obj.status_information = status_information
                 service_obj.acknowledged = False if service['lastEvent']['acknowledged'] == '0' else True
                 #service_obj.address = ''  # Todo: check if address is available
