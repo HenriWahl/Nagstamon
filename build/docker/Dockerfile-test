@@ -7,7 +7,8 @@ RUN echo "${REQUIREMENTS}"
 
 RUN apt -y update
 RUN apt -y install apt-utils \
-                   libgl1
+                   python3-pyqt6 \
+                   python3-pyqt6.qtwebengine
 
 RUN apt -y install libdbus-1-dev libkrb5-dev
 RUN python -m pip install --upgrade pip
