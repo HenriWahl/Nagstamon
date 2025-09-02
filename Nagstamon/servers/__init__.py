@@ -82,7 +82,7 @@ def get_enabled_servers():
 
 def get_worst_status():
     """
-    get worst status of all servers
+    get the worst status of all servers
     """
     worst_status = 'UP'
     for server in get_enabled_servers():
@@ -138,7 +138,7 @@ def create_server(server=None):
     create server from config
     """
     if server.type not in SERVER_TYPES:
-        print(('Server type not supported: %s' % server.type))
+        print(f'Server type not supported: {server.type}')
         return
     # give argument servername so CentreonServer could use it for initializing MD5 cache
     new_server = SERVER_TYPES[server.type](name=server.name)

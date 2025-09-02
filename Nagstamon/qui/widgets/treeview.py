@@ -1058,6 +1058,8 @@ class TreeView(QTreeView):
                             self.change_label_status.emit('SSL/TLS problem', 'critical')
                         elif self.server.status_code in self.server.STATUS_CODES_NO_AUTH or \
                                 self.server.refresh_authentication:
+                            print(self.server.status_code)
+                            print(self.server.status_description)
                             self.change_label_status.emit('Authentication problem', 'critical')
                         elif self.server.status_code == 503:
                             self.change_label_status.emit('Service unavailable', 'error')

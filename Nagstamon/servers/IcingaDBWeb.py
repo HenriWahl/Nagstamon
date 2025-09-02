@@ -402,7 +402,6 @@ class IcingaDBWebServer(GenericServer):
             pageraw = result.result
 
         pagesoup = BeautifulSoup(pageraw, 'html.parser')
-        print(pagesoup.prettify())
 
         # Extract the relevant form element values
         formtag = pagesoup.select_one('form[action*="check-now"]')

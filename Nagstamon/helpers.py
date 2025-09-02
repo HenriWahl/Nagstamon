@@ -57,7 +57,8 @@ STATES_SOUND = ['WARNING',
                 'DOWN']
 
 
-USER_AGENT = f'{AppInfo.NAME}/{AppInfo.VERSION}/{platform.system()}'
+#USER_AGENT = f'{AppInfo.NAME}/{AppInfo.VERSION}/{platform.system()}'
+USER_AGENT = f'python-requests/2.32.4'
 
 # store default sounds as buffers to avoid https://github.com/HenriWahl/Nagstamon/issues/578
 # meanwhile used as backup copy in case they had been deleted by macOS
