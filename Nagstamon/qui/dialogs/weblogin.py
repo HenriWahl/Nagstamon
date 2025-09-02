@@ -32,7 +32,7 @@ class DialogWebLogin(Dialog):
     """
 
     def __init__(self):
-        Dialog.__init__(self, 'dialog_weblogin',)
+        Dialog.__init__(self, 'dialog_weblogin', )
         self.cookie_store = None
         self.profile = None
         self.webengine_view = WebEngineView()
@@ -46,8 +46,6 @@ class DialogWebLogin(Dialog):
         self.profile.setHttpUserAgent(USER_AGENT)
         self.cookie_store = self.profile.cookieStore()
         self.cookies = dict()
-        self.cookie_jar = requests.cookies.RequestsCookieJar()
-
         self.webengine_view.loadStarted.connect(self.on_load_started)
         self.webengine_view.loadFinished.connect(self.on_load_finished)
 
@@ -76,22 +74,7 @@ class DialogWebLogin(Dialog):
     def on_load_finished(self):
         print('weblogin load finished')
 
-    def cookie_data_to_jar(self, cookie_data):
-        self.cookie_jar.set(
-            name=cookie_data['name'],
-            value=cookie_data['value'],
-            domain=cookie_data['domain'],
-            path=cookie_data['path'],
-            expires=cookie_data['expiration'],
-            secure=cookie_data['secure'],
-            rest={'HttpOnly': cookie_data['httponly']}
-        )
-        return True
-
     def handle_cookie_added(self, cookie):
-        # Lädt bestehende Cookies aus der Datei
-        #cookies = load_cookies()
-
         # Extrahiert relevante Cookie-Daten als Dictionary
         cookie_data = {
             'name': cookie.name().data().decode(),
@@ -106,17 +89,19 @@ class DialogWebLogin(Dialog):
         cookey = f'{cookie.domain()}+{cookie.name().data().decode()}'
         if cookie_data not in self.cookies.values():
             self.cookies[cookey] = cookie_data
-            #save_cookies(cookies)
+            # save_cookies(cookies)
             print("Cookie gespeichert:", cookie_data['name'], cookie_data['value'])
-            self.cookie_data_to_jar(cookie_data)
+            self.server.session.cookies.set(
+                name=cookie_data['name'],
+                value=cookie_data['value'],
+                domain=cookie_data['domain'],
+                expires=cookie_data['expiration'],
+                path=cookie_data['path'],
+                secure=cookie_data['secure'],
+                rest={'HttpOnly': cookie_data['httponly']}
+            )
 
-        self.server.session.cookies.update(self.cookie_jar)
-
-
-        print(self.cookies)
-        print(self.cookie_jar)
-        print(self.server.session.cookies)
-
+        print(cookie_data)
 
         pass
 
@@ -125,8 +110,6 @@ class DialogWebLogin(Dialog):
         """
         initialize and show authentication browser window
         """
-
-
 
         self.server = servers[server]
         self.set_url(self.server.name, self.server.monitor_url)

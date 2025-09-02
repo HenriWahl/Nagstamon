@@ -39,18 +39,18 @@ try:
 except ImportError:
     ECP_AVAILABLE = False
 
-from Nagstamon.helpers import (host_is_filtered_out_by_re,
+
+from Nagstamon.helpers import (attempt_is_filtered_out_by_re,
+                               criticality_is_filtered_out_by_re,
+                               duration_is_filtered_out_by_re,
+                               groups_is_filtered_out_by_re,
+                               host_is_filtered_out_by_re,
+                               not_empty,
                                service_is_filtered_out_by_re,
                                status_information_is_filtered_out_by_re,
-                               duration_is_filtered_out_by_re,
-                               attempt_is_filtered_out_by_re,
-                               groups_is_filtered_out_by_re,
-                               criticality_is_filtered_out_by_re,
-                               not_empty,
                                STATES,
                                USER_AGENT,
                                webbrowser_open)
-
 from Nagstamon.objects import (GenericService,
                                GenericHost,
                                Result)
@@ -121,6 +121,8 @@ class BridgeToQt(QObject):
 
     set_url = Signal(str, str)
 
+    request_web_authentication = Signal()
+
     def __init__(self):
         QObject.__init__(self)
 
@@ -177,7 +179,7 @@ class GenericServer:
         self.proxy_address = ''
         self.proxy_username = ''
         self.proxy_password = ''
-        self.auth_type = ''
+        self.authentication = ''
         self.encoding = 'utf-8'
         self.hosts = dict()
         self.new_hosts = dict()
@@ -320,10 +322,14 @@ class GenericServer:
         should return a valid session if none exists yet
         when reauthentication is needed the session should be removed
         """
-        if self.refresh_authentication:
-            self.session = None
-            return False
-        elif self.session is None:
+        if self.authentication != 'web':
+            if self.refresh_authentication:
+                self.session = None
+                return False
+            elif self.session is None:
+                self.session = self.create_session()
+                return True
+        elif not self.session:
             self.session = self.create_session()
             return True
 
@@ -352,7 +358,6 @@ class GenericServer:
         elif self.authentication == 'bearer':
             session.auth = BearerAuth(self.password)
         elif self.authentication == 'web':
-            #self.bridge_to_qt.set_url.emit(self.name, self.monitor_url)
             pass
             print('browser web login')
 
@@ -409,7 +414,8 @@ class GenericServer:
         """
         if authentication fails try to reset any HTTP session stuff - might be different for different monitors
         """
-        self.session = None
+        if self.authentication != 'web':
+            self.session = None
 
     def get_name(self):
         """
@@ -947,7 +953,6 @@ class GenericServer:
 
         # initialize HTTP first
         self.init_http()
-        print('Initialized HTTP in get_status() for', self.name)
 
         # get all trouble hosts/services from server specific _get_status()
         status = self._get_status()
@@ -976,6 +981,8 @@ class GenericServer:
         if (self.status == 'ERROR' or
             self.status_description != '' or
             self.status_code >= 400):
+
+            print('status.description:', self.status_description, 'status_code:', self.status_code)
 
             # ask for password if authorization failed
             if 'HTTP Error 401' in self.status_description or \
@@ -1479,6 +1486,17 @@ class GenericServer:
         # assume TLS is OK when connecting
         self.tls_error = False
 
+        if self.authentication == 'web' and \
+           not self.session:
+           print('web login needs cookies')
+           return Result(result='',
+                         status_code=401)
+        elif self.authentication == 'web' and \
+            self.session:
+            print('session.cookies:', self.session.cookies)
+
+
+
         # run this method which checks itself if there is some action to take for initializing connection
         # if no_auth is true do not use Auth headers, used by check for new version
         try:
@@ -1515,7 +1533,12 @@ class GenericServer:
 
                 # use session only for connections to monitor servers, other requests like looking for updates
                 # should go out without credentials
-                if no_auth is False and not self.refresh_authentication:
+
+                print('no_auth:', no_auth, 'self.refresh_authentication:', self.refresh_authentication)
+
+                if no_auth is False and \
+                   not self.refresh_authentication or \
+                   no_auth is False and self.authentication == 'web':
                     # check if there is really a session
                     if not self.session:
                         self.reset_http()
@@ -1551,12 +1574,10 @@ class GenericServer:
                     self.proxify(temporary_session)
 
                     # most requests come without multipart/form-data
-                    if multipart is False:
+                    if not multipart:
                         if cgi_data is None:
-                            #response = temporary_session.get(url, timeout=self.timeout, verify=not self.ignore_cert)
                             response = temporary_session.get(url, timeout=self.timeout, verify=False, headers=headers)
                         else:
-                            #response = temporary_session.post(url, data=cgi_data, timeout=self.timeout, verify=not self.ignore_cert)
                             response = temporary_session.post(url, data=cgi_data, timeout=self.timeout, verify=False, headers=headers)
                     else:
                         # Checkmk and Opsview need multipart/form-data encoding

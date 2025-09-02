@@ -120,39 +120,45 @@ class MultisiteServer(GenericServer):
                 'PEND':    'PENDING',
             }
 
-        # Function overrides for Checkmk 2.3+
-        version = self._omd_get_version()
-        if version >= [2, 3]:
-            self._set_downtime = self._omd_set_downtime
-            self._set_recheck = self._omd_set_recheck
 
-        if self.cookie_auth and not self.refresh_authentication:
-            # get cookie to access Checkmk web interface
-            if 'cookies' in dir(self.session):
-                if len(self.session.cookies) == 0:
+        if self.authentication == 'web':
+            # Function overrides for Checkmk 2.3+
+            version = self._omd_get_version()
+            if version >= [2, 3]:
+                self._set_downtime = self._omd_set_downtime
+                self._set_recheck = self._omd_set_recheck
+
+            print('self.cookie_auth', self.cookie_auth)
+            print('self.refresh_authentication', self.refresh_authentication)
+
+            if self.cookie_auth and not self.refresh_authentication:
+                # get cookie to access Checkmk web interface
+                if 'cookies' in dir(self.session):
+                    if len(self.session.cookies) == 0:
+                        # if no cookie yet login
+                        self._get_cookie_login()
+                elif self.session == None:
                     # if no cookie yet login
                     self._get_cookie_login()
-            elif self.session == None:
-                # if no cookie yet login
-                self._get_cookie_login()
-        elif self.cookie_auth and self.refresh_authentication:
-            #if self.session is None:
-            self.session = self.create_session()
+            elif self.cookie_auth and \
+                    self.refresh_authentication:
+                if self.session is None:
+                    self.session = self.create_session()
 
-            # force re-auth
-            self._get_cookie_login()
+                    # force re-auth
+                    self._get_cookie_login()
 
 
     def init_config(self):
         """
-            dummy init_config, called at thread start, not really needed here, just omit extra properties
+        dummy init_config, called at thread start, not really needed here, just omit extra properties
         """
         pass
 
 
     def _is_auth_in_cookies(self):
         """
-            check if there is any valid auth session in cookies which has the name 'auth_<monitor_name>'
+        check if there is any valid auth session in cookies which has the name 'auth_<monitor_name>'
         """
         if self.session:
             for cookie in self.session.cookies:
@@ -168,6 +174,9 @@ class MultisiteServer(GenericServer):
             raise MultisiteError(True, Result(result=content,
                                               error=error,
                                               status_code=status_code))
+
+        print('self._is_auth_in_cookies()', self._is_auth_in_cookies())
+        print(content)
 
         if content.startswith('WARNING:'):
             c = content.split('\n')
@@ -213,7 +222,7 @@ class MultisiteServer(GenericServer):
 
     def _get_cookie_login(self):
         """
-            login on cookie monitor site
+        login on cookie monitor site
         """
         # put all necessary data into url string
         login_data = {'_username': self.get_username(),

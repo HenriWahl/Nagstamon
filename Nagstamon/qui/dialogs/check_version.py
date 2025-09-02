@@ -141,7 +141,7 @@ class CheckVersion(QObject):
                     if response.error == '' and \
                             not response.result.startswith('<') and \
                             not '\n' in response.result and \
-                            5 < len(response.result) < 20 and \
+                            5 < len(response.result) < 15 and \
                             response.result[0].isdigit():
                         latest_version = response.result.strip()
                         break
