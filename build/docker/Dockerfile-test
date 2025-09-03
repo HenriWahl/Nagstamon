@@ -22,5 +22,4 @@ RUN cat requirements.txt
 
 RUN pip install -r requirements.txt
 
-ENV QT_QPA_PLATFORM=wayland
-ENV QT_QPA_PLATFORMTHEME=offscreen
+ENV QT_QPA_PLATFORM=linuxfb
