@@ -19,6 +19,7 @@
 from Nagstamon.helpers import USER_AGENT
 from Nagstamon.qui.qt import (QUrl,
                               Slot,
+                              WebEngineCertificateError,
                               WebEnginePage,
                               WebEngineView,
                               WebEngineProfile)
@@ -30,10 +31,15 @@ class WebEnginePage(WebEnginePage):
     def __init__(self, ignore_tls_errors=False, parent=None):
         super().__init__(parent)
         self.ignore_tls_errors = ignore_tls_errors
+        self.certificateError.connect(self.handle_certificateError)
 
-    def certificateError(self, error):
+    @Slot(WebEngineCertificateError)
+    def handle_certificateError(self, error):
+
+        print("TLS error:", error.description())
+
         if self.ignore_tls_errors:
-            error.ignoreCertificateError()
+            error.acceptCertificate()
             return True
         return False
 
@@ -46,6 +52,7 @@ class DialogWebLogin(Dialog):
         Dialog.__init__(self, 'dialog_weblogin', )
         self.cookie_store = None
         self.profile = None
+        self.page = None
         self.webengine_view = WebEngineView()
 
     @Slot(str)
@@ -77,8 +84,9 @@ class DialogWebLogin(Dialog):
         set url to load
         """
         self.window.setWindowTitle('Nagstamon Web Login - ' + server_name)
-        self.webengine_view.setPage(WebEnginePage(ignore_tls_errors=True))
-        self.webengine_view.setUrl(QUrl(url))
+        self.page = WebEnginePage(ignore_tls_errors=True)
+        self.webengine_view.setPage(self.page)
+        self.page.setUrl(QUrl(url))
 
     def on_load_started(self):
         print('weblogin load started', self.webengine_view.url())

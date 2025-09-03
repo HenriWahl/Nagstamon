@@ -209,6 +209,7 @@ elif QT_FLAVOR == 'PyQt6':
     from PyQt6.QtSvgWidgets import QSvgWidget
     from PyQt6.QtWebEngineCore import QWebEnginePage as WebEnginePage
     from PyQt6.QtWebEngineCore import QWebEngineProfile as WebEngineProfile
+    from PyQt6.QtWebEngineCore import QWebEngineCertificateError as WebEngineCertificateError
     from PyQt6.QtWebEngineWidgets import QWebEngineView as WebEngineView
     from PyQt6.QtWidgets import QAbstractItemView, \
         QApplication, \
