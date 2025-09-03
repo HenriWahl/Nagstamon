@@ -15,16 +15,27 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-import requests
 
 from Nagstamon.helpers import USER_AGENT
 from Nagstamon.qui.qt import (QUrl,
                               Slot,
+                              WebEnginePage,
                               WebEngineView,
                               WebEngineProfile)
 from Nagstamon.qui.dialogs.dialog import Dialog
 from Nagstamon.servers import servers
 
+
+class WebEnginePage(WebEnginePage):
+    def __init__(self, ignore_tls_errors=False, parent=None):
+        super().__init__(parent)
+        self.ignore_tls_errors = ignore_tls_errors
+
+    def certificateError(self, error):
+        if self.ignore_tls_errors:
+            error.ignoreCertificateError()
+            return True
+        return False
 
 class DialogWebLogin(Dialog):
     """
@@ -66,6 +77,7 @@ class DialogWebLogin(Dialog):
         set url to load
         """
         self.window.setWindowTitle('Nagstamon Web Login - ' + server_name)
+        self.webengine_view.setPage(WebEnginePage(ignore_tls_errors=True))
         self.webengine_view.setUrl(QUrl(url))
 
     def on_load_started(self):
