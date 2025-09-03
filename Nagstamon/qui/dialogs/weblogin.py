@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-
+from Nagstamon.config import conf
 from Nagstamon.helpers import USER_AGENT
 from Nagstamon.qui.qt import (QUrl,
                               Slot,
@@ -83,10 +83,12 @@ class DialogWebLogin(Dialog):
         """
         set url to load
         """
-        self.window.setWindowTitle('Nagstamon Web Login - ' + server_name)
-        self.page = WebEnginePage(ignore_tls_errors=True)
-        self.webengine_view.setPage(self.page)
-        self.page.setUrl(QUrl(url))
+        server = servers.get(server_name)
+        if server:
+            self.window.setWindowTitle('Nagstamon Web Login - ' + server_name)
+            self.page = WebEnginePage(ignore_tls_errors=server.ignore_cert)
+            self.webengine_view.setPage(self.page)
+            self.page.setUrl(QUrl(url))
 
     def on_load_started(self):
         print('weblogin load started', self.webengine_view.url())
@@ -121,9 +123,6 @@ class DialogWebLogin(Dialog):
                 rest={'HttpOnly': cookie_data['httponly']}
             )
 
-        print(cookie_data)
-
-        pass
 
     @Slot(str)
     def show_browser(self, server):
