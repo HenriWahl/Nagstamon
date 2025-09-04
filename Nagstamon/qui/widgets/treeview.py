@@ -953,6 +953,7 @@ class TreeView(QTreeView):
 
         # send signal if monitor server has new status data
         new_status = Signal()
+        get_status_successful = Signal()
 
         # send signal if next cell can be filled
         next_cell = Signal(int, int, str, str, str, list, str)
@@ -1012,6 +1013,9 @@ class TreeView(QTreeView):
 
             self.parent_statuswindow = status_window
 
+            self.get_status_successful.connect(self.parent_statuswindow.injected_dialogs.weblogin.close_browser)
+
+
         @Slot()
         def get_status(self):
             """
@@ -1035,11 +1039,15 @@ class TreeView(QTreeView):
                         # show last update time
                         self.change_label_status.emit(f"Last updated at {datetime.now().strftime('%X')}", '')
 
+                        self.get_status_successful.emit()
+
                         # reset server error flag, needed for error label in statusbar
                         self.server.has_error = False
 
                         # tell statusbar there is no error
                         self.hide_error.emit()
+
+
                     else:
                         # try to display some more user-friendly error description
                         if self.server.status_code == 404:
