@@ -1012,7 +1012,7 @@ class TreeView(QTreeView):
             self.sort_order = sort_order
 
             self.parent_statuswindow = status_window
-
+            # TODO: server must be transmitted to avoid closing the browser window of another server
             self.get_status_successful.connect(self.parent_statuswindow.injected_dialogs.weblogin.close_browser)
 
 
