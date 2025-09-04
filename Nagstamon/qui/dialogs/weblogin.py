@@ -18,6 +18,7 @@
 from Nagstamon.config import conf
 from Nagstamon.helpers import USER_AGENT
 from Nagstamon.qui.qt import (QUrl,
+                              Signal,
                               Slot,
                               WebEngineCertificateError,
                               WebEnginePage,
@@ -48,41 +49,50 @@ class DialogWebLogin(Dialog):
     small dialog for web login
     """
 
+    page_loaded = Signal()
+
     def __init__(self):
         Dialog.__init__(self, 'dialog_weblogin', )
         self.cookie_store = None
         self.profile = None
         self.page = None
-        self.webengine_view = WebEngineView()
+        #self.webengine_view = WebEngineView()
+        self.webengine_view = None
 
-    @Slot(str)
-    def initialize(self):
-        """
-        ...
-        """
-        self.profile = WebEngineProfile.defaultProfile()
-        self.profile.setHttpUserAgent(USER_AGENT)
-        self.cookie_store = self.profile.cookieStore()
         self.cookies = dict()
-        self.webengine_view.loadStarted.connect(self.on_load_started)
-        self.webengine_view.loadFinished.connect(self.on_load_finished)
 
-        self.cookie_store.cookieAdded.connect(self.handle_cookie_added)
-
-        self.window.vbox.addWidget(self.webengine_view)
-
-    @Slot()
-    def slot_test(self):
-        """
-        ...
-        """
-        print('slot_test weblogin')
+    # @Slot(str)
+    # def initialize(self):
+    # #     """
+    # #     ...
+    # #     """
+    # #     self.profile = WebEngineProfile.defaultProfile()
+    # #     self.profile.setHttpUserAgent(USER_AGENT)
+    # #     self.cookie_store = self.profile.cookieStore()
+    #      self.cookies = dict()
+    # #     self.webengine_view.loadStarted.connect(self.on_load_started)
+    # #     self.webengine_view.loadFinished.connect(self.on_load_finished)
+    # #
+    # #     self.cookie_store.cookieAdded.connect(self.handle_cookie_added)
+    # #
+    # #     self.window.vbox.addWidget(self.webengine_view)
 
     @Slot(str, str)
     def set_url(self, server_name, url):
         """
         set url to load
         """
+
+        if not self.webengine_view:
+            self.webengine_view = WebEngineView()
+            self.profile = WebEngineProfile.defaultProfile()
+            self.profile.setHttpUserAgent(USER_AGENT)
+            self.cookie_store = self.profile.cookieStore()
+            self.webengine_view.loadStarted.connect(self.on_load_started)
+            self.webengine_view.loadFinished.connect(self.on_load_finished)
+            self.cookie_store.cookieAdded.connect(self.handle_cookie_added)
+            self.window.vbox.addWidget(self.webengine_view)
+
         server = servers.get(server_name)
         if server:
             self.window.setWindowTitle('Nagstamon Web Login - ' + server_name)
@@ -95,6 +105,7 @@ class DialogWebLogin(Dialog):
 
     def on_load_finished(self):
         print('weblogin load finished')
+        self.page_loaded.emit()
 
     def handle_cookie_added(self, cookie):
         # Extrahiert relevante Cookie-Daten als Dictionary
@@ -142,3 +153,14 @@ class DialogWebLogin(Dialog):
 
         # en reverse the dock icon might be hidden again after a potential keyboard input
         self.check_macos_dock_icon_fix_hide.emit()
+
+    @Slot()
+    def close_browser(self):
+        """
+        close browser window
+        """
+        # according to https://bugreports.qt.io/browse/QTBUG-128345 the QWebEngine can't be closed, so it will
+        # run further in the background
+        # this might be mitigated by only needing it once for initial login and cookie retrieval
+        self.window.close()
+        self.webengine_view.close()
