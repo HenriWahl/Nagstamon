@@ -16,6 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 from Nagstamon.config import conf
+from Nagstamon.cookies import handle_cookie_added
 from Nagstamon.helpers import USER_AGENT
 from Nagstamon.qui.qt import (QUrl,
                               Signal,
@@ -88,6 +89,7 @@ class DialogWebLogin(Dialog):
             self.profile = WebEngineProfile.defaultProfile()
             self.profile.setHttpUserAgent(USER_AGENT)
             self.cookie_store = self.profile.cookieStore()
+            self.cookie_store.cookieAdded.connect(handle_cookie_added)
             self.webengine_view.loadStarted.connect(self.on_load_started)
             self.webengine_view.loadFinished.connect(self.on_load_finished)
             self.cookie_store.cookieAdded.connect(self.handle_cookie_added)
@@ -163,4 +165,6 @@ class DialogWebLogin(Dialog):
         # run further in the background
         # this might be mitigated by only needing it once for initial login and cookie retrieval
         self.window.close()
-        self.webengine_view.close()
+        # rather useless?
+        if self.webengine_view:
+            self.webengine_view.close()
