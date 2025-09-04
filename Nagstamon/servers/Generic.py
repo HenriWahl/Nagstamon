@@ -32,6 +32,9 @@ from urllib.request import getproxies
 from bs4 import BeautifulSoup
 import requests
 
+from Nagstamon.cookies import (cookie_data_to_jar,
+                               load_cookies)
+
 # check ECP authentication support availability
 try:
     from requests_ecp import HTTPECPAuth
@@ -358,8 +361,8 @@ class GenericServer:
         elif self.authentication == 'bearer':
             session.auth = BearerAuth(self.password)
         elif self.authentication == 'web':
-            pass
-            print('browser web login')
+            cookies = load_cookies()
+            session.cookies = cookie_data_to_jar(cookies)
 
         # default to check TLS validity
         if self.ignore_cert:
