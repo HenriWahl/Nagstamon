@@ -19,8 +19,6 @@ from pathlib import Path
 import requests
 import sqlite3
 
-from ansible_collections.community.network.plugins.modules.cv_server_provision import connect
-
 from Nagstamon.config import conf
 
 COOKIE_DB_FILE = 'cookies.db'
