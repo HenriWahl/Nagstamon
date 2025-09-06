@@ -101,7 +101,6 @@ def load_cookies():
 
 def cookie_data_to_jar(cookie_data):
     jar = requests.cookies.RequestsCookieJar()
-    print(cookie_data)
     for cookie in cookie_data.values():
         jar.set(
             name=cookie['name'],
@@ -112,14 +111,13 @@ def cookie_data_to_jar(cookie_data):
             secure=cookie['secure'],
             rest={'HttpOnly': cookie['httponly']}
         )
-    print(jar)
     return jar
 
 
 def handle_cookie_added(cookie):
-    # Lädt bestehende Cookies aus der Datei
+    # load existing cookies from SQLite databases
     cookies = load_cookies()
-    # Extrahiert relevante Cookie-Daten als Dictionary
+    # extract relevant cookie data as dictionary
     cookie_data = {
         'name': cookie.name().data().decode(),
         'value': cookie.value().data().decode(),
@@ -129,7 +127,7 @@ def handle_cookie_added(cookie):
         'secure': cookie.isSecure(),
         'httponly': cookie.isHttpOnly(),
     }
-    # Fügt das Cookie nur hinzu, wenn es noch nicht gespeichert wurde
+    # Save cookie only if not already saved
     cookey = f"{cookie_data['domain']}+{cookie_data['path']}+{cookie_data['name']}"
     if cookie_data not in cookies.values():
         cookies[cookey] = cookie_data
