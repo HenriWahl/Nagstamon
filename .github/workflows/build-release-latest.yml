@@ -48,7 +48,7 @@ jobs:
 
   debian:
     runs-on: ubuntu-latest
-    #needs: test
+    needs: test
     steps:
       - uses: actions/checkout@v4
         # docker login is needed for pushing the build image
@@ -74,7 +74,7 @@ jobs:
 
   fedora:
     runs-on: ubuntu-latest
-    #needs: test
+    needs: test
     strategy:
       matrix:
         version: [ 40, 41, 42, 43 ]
@@ -103,7 +103,7 @@ jobs:
 
   rhel-9:
     runs-on: ubuntu-latest
-    #needs: test
+    needs: test
     steps:
       - uses: actions/checkout@v4
       # docker login is needed for pushing the build image
@@ -130,7 +130,7 @@ jobs:
   # see https://github.com/HenriWahl/Nagstamon/issues/1090
   linux-pyinstaller:
     runs-on: ubuntu-latest
-    #needs: test
+    needs: test
     steps:
       - uses: actions/checkout@v4
         # docker login is needed for pushing the build image
@@ -158,7 +158,7 @@ jobs:
 
   macos-intel:
     runs-on: macos-13
-    #needs: test
+    needs: test
     steps:
       - uses: actions/checkout@v4
       - run : brew install create-dmg
@@ -175,7 +175,7 @@ jobs:
 
   macos-arm:
     runs-on: macos-14
-    #needs: test
+    needs: test
     steps:
       - uses: actions/checkout@v4
       - run : brew install create-dmg
@@ -193,7 +193,7 @@ jobs:
   windows-32:
     # better depend on stable build image
     runs-on: windows-2022
-    #needs: test
+    needs: test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -222,7 +222,7 @@ jobs:
   windows-64:
     # better depend on stable build image
     runs-on: windows-2022
-    #needs: test
+    needs: test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -249,7 +249,7 @@ jobs:
   windows-64-debug:
     # better depend on stable build image
     runs-on: windows-2022
-    #needs: test
+    needs: test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -272,168 +272,168 @@ jobs:
           if-no-files-found: error
           name: ${{ github.job }}
 
-#  # borrowed from dhcpy6d
-#  repo-debian:
-#    runs-on: ubuntu-latest
-#    # try to avoid race condition and start uploading only after the last install package has been build
-#    needs: [debian, fedora, linux-pyinstaller, macos-arm, macos-intel, rhel-9, windows-32, windows-64, windows-64-debug]
-#    env:
-#      family: debian
-#    steps:
-#      # checkout to get Dockerfiles for steps.dockerfile_hash.outputs.HASH
-#      - uses: actions/checkout@v4
-#      # get binaries created by other jobs
-#      - uses: actions/download-artifact@v4
-#        with:
-#          pattern: 'debian*'
-#          path: artifact
-#          merge-multiple: true
-#      # get secret signing key
-#      - run: echo "${{ secrets.PACKAGE_SIGNING_KEY }}" >  signing_key.asc
-#      # organize SSH deploy key for nagstamon-jekyll repo
-#      - run: mkdir ~/.ssh
-#      - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
-#      - run: chmod -R go-rwx ~/.ssh
-#      # get and prepare nagstamon-jekyll
-#      - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
-#      - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.dist }}/${{ env.release }}
-#      - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.dist }}/${{ env.release }}
-#      # somehow weird way to get the hash over the Dockerfile to be aware if it changed
-#      - id: dockerfile_hash
-#        run: echo "HASH=$(md5sum build/docker/Dockerfile-${{ env.family }} | cut -d\  -f1)" >> $GITHUB_OUTPUT
-#      # create deb repo via Debian build container
-#      - run: |
-#          /usr/bin/docker run --rm \
-#          -v ${{ github.workspace }}:/workspace \
-#          -v $PWD/${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}:/repo \
-#          ${{ env.cr_image }}-${{ env.family }}:${{ steps.dockerfile_hash.outputs.HASH }} \
-#          /bin/sh -c "cd /workspace && \
-#                      gpg --import signing_key.asc && \
-#                      cp -r artifact/*.deb nagstamon-jekyll/docs/repo/${{ env.family }}/${{ env.release }} && \
-#                      cd nagstamon-jekyll/docs/repo/${{ env.family }}/${{ env.release }}
-#                      dpkg-scanpackages . > Packages && \
-#                      gzip -k -f Packages && \
-#                      apt-ftparchive release . > Release && \
-#                      gpg -abs -o Release.gpg Release && \
-#                      gpg --clearsign -o InRelease Release && \
-#                      gpg --output key.gpg --armor --export"
-#      # commit and push new binaries to nagstamon-jekyll
-#      - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
-#      - run: cd ${{ env.repo_dir }} && git add . && git commit -am "new ${{ env.release }} repo ${{ env.family }}" && git push
-#
-#  repo-rpm-fedora:
-#    runs-on: ubuntu-latest
-#    # if not all are ready there might be trouble when downloading artifacts
-#    # maybe faster now with build containers
-#    needs: [repo-debian]
-#    env:
-#      family: fedora
-#      # which image to use for packaging
-#      version_latest: 40
-#    steps:
-#      # checkout to get Dockerfiles for steps.dockerfile_hash.outputs.HASH
-#      - uses: actions/checkout@v4
-#      # get binaries created by other jobs
-#      - uses: actions/download-artifact@v4
-#        with:
-#          pattern: 'fedora*'
-#          path: artifact
-#          merge-multiple: true
-#      # docker login is needed for pushing the build image
-#      - uses: docker/login-action@v3
-#        with:
-#          registry: ghcr.io
-#          username: ${{ github.actor }}
-#          password: ${{ secrets.GITHUB_TOKEN }}
-#      # organize SSH deploy key for nagstamon-repo
-#      - run: mkdir ~/.ssh
-#      - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
-#      - run: chmod -R go-rwx ~/.ssh
-#      # get and prepare nagstamon-jekyll
-#      - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
-#      - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
-#      - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
-#      # somehow weird way to get the hash over the Dockerfile to be aware if it changed
-#      - id: dockerfile_hash
-#        run: echo "HASH=$(md5sum build/docker/Dockerfile-${{ env.family }}-${{ env.version_latest }} | cut -d\  -f1)" >> $GITHUB_OUTPUT
-#      # if image defined by variable steps.dockerfile_hash.outputs.HASH is not pullable aka does not exist it will be created and pushed
-#      # only needed for fedora
-#      - run: docker pull ${{ env.cr_image }}-${{ env.family }}-${{ env.version_latest }}:${{ steps.dockerfile_hash.outputs.HASH }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ env.family }}-${{ env.version_latest }}:${{ steps.dockerfile_hash.outputs.HASH }} -f build/docker/Dockerfile-${{ env.family }}-${{ env.version_latest }} .
-#      - run: docker push ${{ env.cr_image }}-${{ env.family }}-${{ env.version_latest }}:${{ steps.dockerfile_hash.outputs.HASH }}
-#      # copy *.rpm files into nagstamon-jekyll and create repodata
-#      - run: |
-#            version=${{ env.release }} && \
-#            mkdir -p mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${version} && \
-#            cp -r artifact/*.${{ env.family }}* ${{ env.repo_dir }}/${{ env.family }}/${version} && \
-#            docker run --rm -v ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}:/repo \
-#              ${{ env.cr_image }}-${{ env.family }}-${{ env.version_latest }}:${{ steps.dockerfile_hash.outputs.HASH }} \
-#              /bin/bash -c "createrepo --verbose --workers 1 /repo" && \
-#            ls -laR ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}
-#      # commit and push new binaries to nagstamon-repo
-#      - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
-#      - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ env.family }}" && git push
-#
-#  repo-rpm-rhel:
-#    runs-on: ubuntu-latest
-#    # if not all are ready there might be trouble when downloading artifacts
-#    # maybe faster now with build containers
-#    needs: [repo-rpm-fedora]
-#    env:
-#      family: rhel
-#      # currently just one version available
-#      version: 9
-#    steps:
-#      # checkout to get Dockerfiles for steps.dockerfile_hash.outputs.HASH
-#      - uses: actions/checkout@v4
-#      # get binaries created by other jobs
-#      - uses: actions/download-artifact@v4
-#        with:
-#          pattern: 'rhel*'
-#          path: artifact
-#          merge-multiple: true
-#      # organize SSH deploy key for nagstamon-repo
-#      - run: mkdir ~/.ssh
-#      - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
-#      - run: chmod -R go-rwx ~/.ssh
-#      # get and prepare nagstamon-jekyll
-#      - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
-#      - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
-#      - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
-#      # somehow weird way to get the hash over the Dockerfile to be aware if it changed
-#      - id: dockerfile_hash
-#        run: echo "HASH=$(md5sum build/docker/Dockerfile-${{ env.family }}-${{ env.version }} | cut -d\  -f1)" >> $GITHUB_OUTPUT
-#      # copy *.rpm files into nagstamon-jekyll and create repodata
-#      - run: |
-#            version=${{ env.release }} && \
-#            mkdir -p mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${version} && \
-#            cp -r artifact/*.${{ env.family }}* ${{ env.repo_dir }}/${{ env.family }}/${version} && \
-#            docker run --rm -v ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}:/repo \
-#              ${{ env.cr_image }}-${{ env.family }}-${{ env.version }}:${{ steps.dockerfile_hash.outputs.HASH }} \
-#              /bin/bash -c "createrepo --verbose --workers 1 /repo" && \
-#            ls -laR ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}
-#      # commit and push new binaries to nagstamon-repo
-#      - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
-#      - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ env.family }}" && git push
-#
-#  github-release:
-#    runs-on: ubuntu-latest
-#    needs: [repo-rpm-rhel]
-#    steps:
-#      - uses: actions/download-artifact@v4
-#        with:
-#          pattern: '*'
-#          path: artifact
-#          merge-multiple: true
-#      - run: cd artifact && md5sum *agstamon* > md5sums.txt
-#      - run: cd artifact && sha256sum *agstamon* > sha256sums.txt
-#      # finally some maintained solution for creating releases
-#      # https://github.com/marketplace/actions/create-release
-#      - uses: ncipollo/release-action@v1
-#        with:
-#          allowUpdates: true
-#          makeLatest: true
-#          prerelease: true
-#          tag: latest
-#          removeArtifacts: true
-#          replacesArtifacts: true
-#          artifacts: "artifact/*"
+  # borrowed from dhcpy6d
+  repo-debian:
+    runs-on: ubuntu-latest
+    # try to avoid race condition and start uploading only after the last install package has been build
+    needs: [debian, fedora, linux-pyinstaller, macos-arm, macos-intel, rhel-9, windows-32, windows-64, windows-64-debug]
+    env:
+      family: debian
+    steps:
+      # checkout to get Dockerfiles for steps.dockerfile_hash.outputs.HASH
+      - uses: actions/checkout@v4
+      # get binaries created by other jobs
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: 'debian*'
+          path: artifact
+          merge-multiple: true
+      # get secret signing key
+      - run: echo "${{ secrets.PACKAGE_SIGNING_KEY }}" >  signing_key.asc
+      # organize SSH deploy key for nagstamon-jekyll repo
+      - run: mkdir ~/.ssh
+      - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
+      - run: chmod -R go-rwx ~/.ssh
+      # get and prepare nagstamon-jekyll
+      - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
+      - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.dist }}/${{ env.release }}
+      - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.dist }}/${{ env.release }}
+      # somehow weird way to get the hash over the Dockerfile to be aware if it changed
+      - id: dockerfile_hash
+        run: echo "HASH=$(md5sum build/docker/Dockerfile-${{ env.family }} | cut -d\  -f1)" >> $GITHUB_OUTPUT
+      # create deb repo via Debian build container
+      - run: |
+          /usr/bin/docker run --rm \
+          -v ${{ github.workspace }}:/workspace \
+          -v $PWD/${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}:/repo \
+          ${{ env.cr_image }}-${{ env.family }}:${{ steps.dockerfile_hash.outputs.HASH }} \
+          /bin/sh -c "cd /workspace && \
+                      gpg --import signing_key.asc && \
+                      cp -r artifact/*.deb nagstamon-jekyll/docs/repo/${{ env.family }}/${{ env.release }} && \
+                      cd nagstamon-jekyll/docs/repo/${{ env.family }}/${{ env.release }}
+                      dpkg-scanpackages . > Packages && \
+                      gzip -k -f Packages && \
+                      apt-ftparchive release . > Release && \
+                      gpg -abs -o Release.gpg Release && \
+                      gpg --clearsign -o InRelease Release && \
+                      gpg --output key.gpg --armor --export"
+      # commit and push new binaries to nagstamon-jekyll
+      - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
+      - run: cd ${{ env.repo_dir }} && git add . && git commit -am "new ${{ env.release }} repo ${{ env.family }}" && git push
+
+  repo-rpm-fedora:
+    runs-on: ubuntu-latest
+    # if not all are ready there might be trouble when downloading artifacts
+    # maybe faster now with build containers
+    needs: [repo-debian]
+    env:
+      family: fedora
+      # which image to use for packaging
+      version_latest: 40
+    steps:
+      # checkout to get Dockerfiles for steps.dockerfile_hash.outputs.HASH
+      - uses: actions/checkout@v4
+      # get binaries created by other jobs
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: 'fedora*'
+          path: artifact
+          merge-multiple: true
+      # docker login is needed for pushing the build image
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # organize SSH deploy key for nagstamon-repo
+      - run: mkdir ~/.ssh
+      - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
+      - run: chmod -R go-rwx ~/.ssh
+      # get and prepare nagstamon-jekyll
+      - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
+      - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
+      - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
+      # somehow weird way to get the hash over the Dockerfile to be aware if it changed
+      - id: dockerfile_hash
+        run: echo "HASH=$(md5sum build/docker/Dockerfile-${{ env.family }}-${{ env.version_latest }} | cut -d\  -f1)" >> $GITHUB_OUTPUT
+      # if image defined by variable steps.dockerfile_hash.outputs.HASH is not pullable aka does not exist it will be created and pushed
+      # only needed for fedora
+      - run: docker pull ${{ env.cr_image }}-${{ env.family }}-${{ env.version_latest }}:${{ steps.dockerfile_hash.outputs.HASH }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ env.family }}-${{ env.version_latest }}:${{ steps.dockerfile_hash.outputs.HASH }} -f build/docker/Dockerfile-${{ env.family }}-${{ env.version_latest }} .
+      - run: docker push ${{ env.cr_image }}-${{ env.family }}-${{ env.version_latest }}:${{ steps.dockerfile_hash.outputs.HASH }}
+      # copy *.rpm files into nagstamon-jekyll and create repodata
+      - run: |
+            version=${{ env.release }} && \
+            mkdir -p mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${version} && \
+            cp -r artifact/*.${{ env.family }}* ${{ env.repo_dir }}/${{ env.family }}/${version} && \
+            docker run --rm -v ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}:/repo \
+              ${{ env.cr_image }}-${{ env.family }}-${{ env.version_latest }}:${{ steps.dockerfile_hash.outputs.HASH }} \
+              /bin/bash -c "createrepo --verbose --workers 1 /repo" && \
+            ls -laR ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}
+      # commit and push new binaries to nagstamon-repo
+      - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
+      - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ env.family }}" && git push
+
+  repo-rpm-rhel:
+    runs-on: ubuntu-latest
+    # if not all are ready there might be trouble when downloading artifacts
+    # maybe faster now with build containers
+    needs: [repo-rpm-fedora]
+    env:
+      family: rhel
+      # currently just one version available
+      version: 9
+    steps:
+      # checkout to get Dockerfiles for steps.dockerfile_hash.outputs.HASH
+      - uses: actions/checkout@v4
+      # get binaries created by other jobs
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: 'rhel*'
+          path: artifact
+          merge-multiple: true
+      # organize SSH deploy key for nagstamon-repo
+      - run: mkdir ~/.ssh
+      - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
+      - run: chmod -R go-rwx ~/.ssh
+      # get and prepare nagstamon-jekyll
+      - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
+      - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
+      - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
+      # somehow weird way to get the hash over the Dockerfile to be aware if it changed
+      - id: dockerfile_hash
+        run: echo "HASH=$(md5sum build/docker/Dockerfile-${{ env.family }}-${{ env.version }} | cut -d\  -f1)" >> $GITHUB_OUTPUT
+      # copy *.rpm files into nagstamon-jekyll and create repodata
+      - run: |
+            version=${{ env.release }} && \
+            mkdir -p mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${version} && \
+            cp -r artifact/*.${{ env.family }}* ${{ env.repo_dir }}/${{ env.family }}/${version} && \
+            docker run --rm -v ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}:/repo \
+              ${{ env.cr_image }}-${{ env.family }}-${{ env.version }}:${{ steps.dockerfile_hash.outputs.HASH }} \
+              /bin/bash -c "createrepo --verbose --workers 1 /repo" && \
+            ls -laR ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}
+      # commit and push new binaries to nagstamon-repo
+      - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
+      - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ env.family }}" && git push
+
+  github-release:
+    runs-on: ubuntu-latest
+    needs: [repo-rpm-rhel]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: '*'
+          path: artifact
+          merge-multiple: true
+      - run: cd artifact && md5sum *agstamon* > md5sums.txt
+      - run: cd artifact && sha256sum *agstamon* > sha256sums.txt
+      # finally some maintained solution for creating releases
+      # https://github.com/marketplace/actions/create-release
+      - uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          makeLatest: true
+          prerelease: true
+          tag: latest
+          removeArtifacts: true
+          replacesArtifacts: true
+          artifacts: "artifact/*"
