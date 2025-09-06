@@ -128,9 +128,6 @@ class MultisiteServer(GenericServer):
                 self._set_downtime = self._omd_set_downtime
                 self._set_recheck = self._omd_set_recheck
 
-            print('self.cookie_auth', self.cookie_auth)
-            print('self.refresh_authentication', self.refresh_authentication)
-
             if self.cookie_auth and not self.refresh_authentication:
                 # get cookie to access Checkmk web interface
                 if 'cookies' in dir(self.session):
@@ -174,9 +171,6 @@ class MultisiteServer(GenericServer):
             raise MultisiteError(True, Result(result=content,
                                               error=error,
                                               status_code=status_code))
-
-        print('self._is_auth_in_cookies()', self._is_auth_in_cookies())
-        print(content)
 
         if content.startswith('WARNING:'):
             c = content.split('\n')

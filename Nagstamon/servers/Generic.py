@@ -1492,11 +1492,6 @@ class GenericServer:
            print('web login needs cookies')
            return Result(result='',
                          status_code=401)
-        elif self.authentication == 'web' and \
-            self.session:
-            print('session.cookies:', self.session.cookies)
-
-
 
         # run this method which checks itself if there is some action to take for initializing connection
         # if no_auth is true do not use Auth headers, used by check for new version
