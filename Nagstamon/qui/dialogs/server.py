@@ -157,11 +157,14 @@ class DialogServer(Dialog):
         self.window.button_choose_custom_cert_ca_file.clicked.connect(self.choose_custom_cert_ca_file)
 
         # fill authentication combobox
-        self.window.input_combobox_authentication.addItems(['Basic', 'Bearer', 'Digest', 'Web'])
+        combobox_authentication_items = ['Basic', 'Bearer', 'Digest', 'Web']
         if ecp_available:
-            self.window.input_combobox_authentication.addItems(['ECP'])
+            combobox_authentication_items.append('ECP')
         if kerberos_available:
-            self.window.input_combobox_authentication.addItems(['Kerberos'])
+            combobox_authentication_items.append('Kerberos')
+        # sort items
+        self.window.input_combobox_authentication.addItems(sorted(combobox_authentication_items))
+
 
         # detect change of a server type which leads to certain options shown or hidden
         self.window.input_combobox_type.activated.connect(self.toggle_type)
