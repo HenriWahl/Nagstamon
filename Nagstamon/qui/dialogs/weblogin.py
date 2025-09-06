@@ -49,6 +49,8 @@ class DialogWebLogin(Dialog):
     small dialog for web login
     """
 
+    show_up = Signal()
+
     page_loaded = Signal()
 
     def __init__(self):
@@ -113,6 +115,7 @@ class DialogWebLogin(Dialog):
         """
         initialize and show authentication browser window
         """
+        self.show_up.emit()
 
         self.server = servers[server_name]
         self.set_url(self.server.name, self.server.monitor_url)

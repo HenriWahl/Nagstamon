@@ -859,6 +859,9 @@ class StatusWindow(QWidget):
         """
         hide window if not needed
         """
+
+        print('HIDE')
+
         if not conf.fullscreen and not conf.windowed:
             # only hide if shown and not locked or if not yet hidden if moving
             if statuswindow_properties.is_shown is True or \
