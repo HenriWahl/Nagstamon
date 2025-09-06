@@ -953,7 +953,7 @@ class TreeView(QTreeView):
 
         # send signal if monitor server has new status data
         new_status = Signal()
-        get_status_successful = Signal()
+        get_status_successful = Signal(str)
 
         # send signal if next cell can be filled
         next_cell = Signal(int, int, str, str, str, list, str)
@@ -1039,7 +1039,7 @@ class TreeView(QTreeView):
                         # show last update time
                         self.change_label_status.emit(f"Last updated at {datetime.now().strftime('%X')}", '')
 
-                        self.get_status_successful.emit()
+                        self.get_status_successful.emit(self.server.name)
 
                         # reset server error flag, needed for error label in statusbar
                         self.server.has_error = False

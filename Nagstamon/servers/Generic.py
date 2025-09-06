@@ -66,8 +66,8 @@ from Nagstamon.config import (AppInfo,
                               OS_MACOS,
                               RESOURCES)
 
-from Nagstamon.qui.qt import (QObject,
-                              Signal)
+# from Nagstamon.qui.qt import (QObject,
+#                               Signal)
 
 
 # flag to keep track of Kerberos availability
@@ -118,15 +118,15 @@ class BearerAuth(requests.auth.AuthBase):
         return r
 
 
-class BridgeToQt(QObject):
-    """
-    Bridge to Qt for browser login
-    """
-
-    set_url = Signal(str, str)
-
-    def __init__(self):
-        QObject.__init__(self)
+# class BridgeToQt(QObject):
+#     """
+#     Bridge to Qt for browser login
+#     """
+#
+#     set_url = Signal(str, str)
+#
+#     def __init__(self):
+#         QObject.__init__(self)
 
 
 class GenericServer:
@@ -289,7 +289,7 @@ class GenericServer:
         self.disabled_backends = None
 
         # Browser login
-        self.bridge_to_qt = BridgeToQt()
+        #self.bridge_to_qt = BridgeToQt()
 
         pass
 

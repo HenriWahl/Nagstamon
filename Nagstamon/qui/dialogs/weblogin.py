@@ -15,7 +15,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-from Nagstamon.config import conf
 from Nagstamon.cookies import handle_cookie_added
 from Nagstamon.helpers import USER_AGENT
 from Nagstamon.qui.qt import (QUrl,
@@ -37,13 +36,13 @@ class WebEnginePage(WebEnginePage):
 
     @Slot(WebEngineCertificateError)
     def handle_certificateError(self, error):
-
         print("TLS error:", error.description())
 
         if self.ignore_tls_errors:
             error.acceptCertificate()
             return True
         return False
+
 
 class DialogWebLogin(Dialog):
     """
@@ -57,7 +56,7 @@ class DialogWebLogin(Dialog):
         self.cookie_store = None
         self.profile = None
         self.page = None
-        #self.webengine_view = WebEngineView()
+        # self.webengine_view = WebEngineView()
         self.webengine_view = None
 
         self.cookies = dict()
@@ -107,43 +106,16 @@ class DialogWebLogin(Dialog):
 
     def on_load_finished(self):
         print('weblogin load finished')
-        self.page_loaded.emit()
-
-    def handle_cookie_added(self, cookie):
-        # Extrahiert relevante Cookie-Daten als Dictionary
-        cookie_data = {
-            'name': cookie.name().data().decode(),
-            'value': cookie.value().data().decode(),
-            'domain': cookie.domain(),
-            'path': cookie.path(),
-            'expiration': cookie.expirationDate().toSecsSinceEpoch() if cookie.expirationDate().isValid() else None,
-            'secure': cookie.isSecure(),
-            'httponly': cookie.isHttpOnly(),
-        }
-        # Fügt das Cookie nur hinzu, wenn es noch nicht gespeichert wurde
-        cookey = f'{cookie.domain()}+{cookie.name().data().decode()}'
-        if cookie_data not in self.cookies.values():
-            self.cookies[cookey] = cookie_data
-            # save_cookies(cookies)
-            print("Cookie gespeichert:", cookie_data['name'], cookie_data['value'])
-            self.server.session.cookies.set(
-                name=cookie_data['name'],
-                value=cookie_data['value'],
-                domain=cookie_data['domain'],
-                expires=cookie_data['expiration'],
-                path=cookie_data['path'],
-                secure=cookie_data['secure'],
-                rest={'HttpOnly': cookie_data['httponly']}
-            )
-
+        if self.server:
+            self.page_loaded.emit()
 
     @Slot(str)
-    def show_browser(self, server):
+    def show_browser(self, server_name):
         """
         initialize and show authentication browser window
         """
 
-        self.server = servers[server]
+        self.server = servers[server_name]
         self.set_url(self.server.name, self.server.monitor_url)
         self.show()
         self.window.adjustSize()
@@ -156,15 +128,17 @@ class DialogWebLogin(Dialog):
         # en reverse the dock icon might be hidden again after a potential keyboard input
         self.check_macos_dock_icon_fix_hide.emit()
 
-    @Slot()
-    def close_browser(self):
+    @Slot(str)
+    def close_browser(self, server_name):
         """
         close browser window
         """
         # according to https://bugreports.qt.io/browse/QTBUG-128345 the QWebEngine can't be closed, so it will
         # run further in the background
         # this might be mitigated by only needing it once for initial login and cookie retrieval
-        self.window.close()
-        # rather useless?
-        if self.webengine_view:
-            self.webengine_view.close()
+        if hasattr(self, 'server') and \
+                self.server.name == server_name:
+            self.window.close()
+            # rather useless?
+            if self.webengine_view:
+                self.webengine_view.close()
