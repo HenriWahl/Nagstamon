@@ -110,6 +110,7 @@ dialogs.server.edited_remove_previous.connect(statuswindow.remove_previous_serve
 dialogs.server.create_server_vbox.connect(statuswindow.create_server_vbox)
 
 dialogs.authentication.show_up.connect(statuswindow.hide_window)
+dialogs.weblogin.show_up.connect(statuswindow.hide_window)
 
 dialogs.settings.settings_ok.connect(statuswindow.save_position_to_conf)
 # trigger the statuswindow.worker to check if debug loop is neede and if so, start it
