@@ -19,7 +19,9 @@ from Nagstamon.cookies import (cookie_data_to_jar,
                                load_cookies,
                                save_cookies)
 from Nagstamon.helpers import USER_AGENT
-from Nagstamon.qui.qt import (QUrl,
+from Nagstamon.qui.qt import (QNetworkProxy,
+                              QNetworkProxyFactory,
+                              QUrl,
                               Signal,
                               Slot,
                               WebEngineCertificateError,
@@ -89,12 +91,35 @@ class DialogWebLogin(Dialog):
 
         if not self.webengine_view:
             self.webengine_view = WebEngineView()
+
             self.profile = WebEngineProfile.defaultProfile()
             self.profile.setHttpUserAgent(USER_AGENT)
+
             self.cookie_store = self.profile.cookieStore()
             self.cookie_store.cookieAdded.connect(self.handle_cookie_added)
+
+            self.proxy = QNetworkProxy()
+            if self.server.use_proxy:
+                self.proxy.setType(QNetworkProxy.HttpProxy)
+                if self.server.use_proxy_from_os:
+                    QNetworkProxyFactory.setUseSystemConfiguration(True)
+                else:
+                    self.proxy.setType(QNetworkProxy.HttpProxy)
+                    # kick out any protocol prefix
+                    host, port = self.server.proxy_address.split('https://')[-1].split('http://')[-1].split(':')
+                    self.proxy.setHostName(host)
+                    self.proxy.setPort(int(port))
+                    if self.server.proxy_username:
+                        self.proxy.setUser(self.server.proxy_username)
+                        self.proxy.setPassword(self.server.proxy_password)
+            else:
+                self.proxy.setType(QNetworkProxy.ProxyType.NoProxy)
+
+            QNetworkProxy.setApplicationProxy(self.proxy)
+
             self.webengine_view.loadStarted.connect(self.on_load_started)
             self.webengine_view.loadFinished.connect(self.on_load_finished)
+
             self.window.vbox.addWidget(self.webengine_view)
 
         server = servers.get(server_name)

@@ -35,6 +35,7 @@ try:
 except ImportError:
     try:
         from PyQt5.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
+
         # get int-ed version parts
         QT_VERSION_MAJOR, QT_VERSION_MINOR = [int(x) for x in QT_VERSION_STR.split('.')[0:2]]
         # for later decision which differences have to be considered
@@ -109,6 +110,7 @@ if QT_FLAVOR == 'PyQt5':
         QSignalMapper has method mappedString since Qt 5.15 which is not available in Ubuntu 20.04
         See https://github.com/HenriWahl/Nagstamon/issues/865 for details
         """
+
         def __init__(self):
             super().__init__()
             # map mappedString onto mapped
@@ -166,6 +168,7 @@ if QT_FLAVOR == 'PyQt5':
         """
         return event.globalPos()
 
+
     def get_sort_order_value(sort_order):
         """
         Qt5 has int for Qt.SortOrder but Qt6 has Qt.SortOrder.[Ascending|Descending]Order
@@ -175,66 +178,68 @@ if QT_FLAVOR == 'PyQt5':
 
 elif QT_FLAVOR == 'PyQt6':
     # PySide/PyQt compatibility
-    from PyQt6.QtCore import pyqtSignal as Signal, \
-        pyqtSlot as Slot, \
-        PYQT_VERSION_STR as QT_VERSION_STR, \
-        QAbstractTableModel, \
-        QByteArray, \
-        QDateTime, \
-        QModelIndex, \
-        QObject, \
-        QPoint, \
-        QSignalMapper, \
-        Qt, \
-        QThread, \
-        QTimer, \
-        QUrl, \
-        QVariant, \
-        QXmlStreamReader
-    from PyQt6.QtGui import QAction, \
-        QBrush, \
-        QColor, \
-        QCursor, \
-        QFont, \
-        QFontDatabase, \
-        QIcon, \
-        QKeySequence, \
-        QPainter, \
-        QPalette, \
-        QPixmap
-    from PyQt6.QtMultimedia import QAudioOutput, \
-        QMediaPlayer
-    from PyQt6.QtNetwork import QNetworkCookie
+    from PyQt6.QtCore import (pyqtSignal as Signal,
+                              pyqtSlot as Slot,
+                              PYQT_VERSION_STR as QT_VERSION_STR,
+                              QAbstractTableModel,
+                              QByteArray,
+                              QDateTime,
+                              QModelIndex,
+                              QObject,
+                              QPoint,
+                              QSignalMapper,
+                              Qt,
+                              QThread,
+                              QTimer,
+                              QUrl,
+                              QVariant,
+                              QXmlStreamReader)
+    from PyQt6.QtGui import (QAction,
+                             QBrush,
+                             QColor,
+                             QCursor,
+                             QFont,
+                             QFontDatabase,
+                             QIcon,
+                             QKeySequence,
+                             QPainter,
+                             QPalette,
+                             QPixmap)
+    from PyQt6.QtMultimedia import (QAudioOutput,
+                                    QMediaPlayer)
+    from PyQt6.QtNetwork import (QNetworkCookie,
+                                 QNetworkProxy,
+                                 QNetworkProxyFactory)
     from PyQt6.QtSvg import QSvgRenderer
     from PyQt6.QtSvgWidgets import QSvgWidget
     from PyQt6.QtWebEngineCore import QWebEnginePage as WebEnginePage
     from PyQt6.QtWebEngineCore import QWebEngineProfile as WebEngineProfile
     from PyQt6.QtWebEngineCore import QWebEngineCertificateError as WebEngineCertificateError
     from PyQt6.QtWebEngineWidgets import QWebEngineView as WebEngineView
-    from PyQt6.QtWidgets import QAbstractItemView, \
-        QApplication, \
-        QColorDialog, \
-        QComboBox, \
-        QDialog, \
-        QFileDialog, \
-        QFontDialog, \
-        QHBoxLayout, \
-        QHeaderView, \
-        QListWidgetItem, \
-        QMenu, \
-        QMenuBar, \
-        QMessageBox, \
-        QLabel, \
-        QPushButton, \
-        QScrollArea, \
-        QSizePolicy, \
-        QSpacerItem, \
-        QToolButton, \
-        QTreeView, \
-        QStyle, \
-        QSystemTrayIcon, \
-        QVBoxLayout, \
-        QWidget
+    from PyQt6.QtWidgets import (QAbstractItemView,
+                                 QApplication,
+                                 QColorDialog,
+                                 QComboBox,
+                                 QDialog,
+                                 QFileDialog,
+                                 QFontDialog,
+                                 QHBoxLayout,
+                                 QHeaderView,
+                                 QListWidgetItem,
+                                 QMenu,
+                                 QMenuBar,
+                                 QMessageBox,
+                                 QLabel,
+                                 QPushButton,
+                                 QScrollArea,
+                                 QSizePolicy,
+                                 QSpacerItem,
+                                 QToolButton,
+                                 QTreeView,
+                                 QStyle,
+                                 QSystemTrayIcon,
+                                 QVBoxLayout,
+                                 QWidget)
     from PyQt6 import uic
 
     # for later decision which differences have to be considered
@@ -285,6 +290,7 @@ elif QT_FLAVOR == 'PyQt6':
         Qt5 uses other method than Qt6
         """
         return event.globalPosition()
+
 
     def get_sort_order_value(sort_order):
         """
