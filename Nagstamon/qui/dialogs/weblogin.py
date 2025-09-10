@@ -15,7 +15,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-from Nagstamon.cookies import handle_cookie_added
+from Nagstamon.cookies import (cookie_data_to_jar,
+                               load_cookies,
+                               save_cookies)
 from Nagstamon.helpers import USER_AGENT
 from Nagstamon.qui.qt import (QUrl,
                               Signal,
@@ -90,7 +92,7 @@ class DialogWebLogin(Dialog):
             self.profile = WebEngineProfile.defaultProfile()
             self.profile.setHttpUserAgent(USER_AGENT)
             self.cookie_store = self.profile.cookieStore()
-            self.cookie_store.cookieAdded.connect(handle_cookie_added)
+            self.cookie_store.cookieAdded.connect(self.handle_cookie_added)
             self.webengine_view.loadStarted.connect(self.on_load_started)
             self.webengine_view.loadFinished.connect(self.on_load_finished)
             self.window.vbox.addWidget(self.webengine_view)
@@ -144,3 +146,25 @@ class DialogWebLogin(Dialog):
             # rather useless?
             if self.webengine_view:
                 self.webengine_view.close()
+
+    def handle_cookie_added(self, cookie):
+        # load existing cookies from SQLite databases
+        cookies = load_cookies()
+        # extract relevant cookie data as dictionary
+        cookie_data = {
+            'name': cookie.name().data().decode(),
+            'value': cookie.value().data().decode(),
+            'domain': cookie.domain(),
+            'path': cookie.path(),
+            'expiration': cookie.expirationDate().toSecsSinceEpoch() if cookie.expirationDate().isValid() else None,
+            'secure': cookie.isSecure(),
+            'httponly': cookie.isHttpOnly(),
+        }
+        # Save cookie only if not already saved
+        cookey = f"{cookie_data['domain']}+{cookie_data['path']}+{cookie_data['name']}"
+        if cookie_data not in cookies.values():
+            cookies[cookey] = cookie_data
+            save_cookies(cookies)
+
+        # update server cookies to jar format
+        self.server.session.cookies = cookie_data_to_jar(cookies)
