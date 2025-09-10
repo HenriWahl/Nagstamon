@@ -1271,7 +1271,7 @@ class StatusWindow(QWidget):
 
             # manipulate server thread counter so get_status loop will refresh when next looking
             # at thread counter
-            server.thread_counter = conf.update_interval_seconds
+            server.thread_counter = conf.update_interval_seconds + 1
 
     @Slot(dict)
     def desktop_notification(self, current_status_count):
