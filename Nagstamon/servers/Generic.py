@@ -182,7 +182,6 @@ class GenericServer:
         self.proxy_address = ''
         self.proxy_username = ''
         self.proxy_password = ''
-        self.auth_type = ''
         self.encoding = 'utf-8'
         self.hosts = dict()
         self.new_hosts = dict()
