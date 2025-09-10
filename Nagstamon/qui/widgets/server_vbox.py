@@ -296,7 +296,10 @@ class ServerVBox(QVBoxLayout):
 
     @Slot()
     def update_label(self):
-        self.label.setText('<big><b>&nbsp;{0}@{1}</b></big>'.format(self.server.username, self.server.name))
+        if self.server.authentication != 'web':
+            self.label.setText(f'<big><b>&nbsp;{self.server.username}@{self.server.name}</b></big>')
+        else:
+            self.label.setText(f'<big><b>&nbsp;{self.server.name}</b></big>')
         # let label padding keep top and bottom space - apparently not necessary on OSX
         if OS != OS_MACOS:
             self.label.setStyleSheet('''padding-top: {0}px;
