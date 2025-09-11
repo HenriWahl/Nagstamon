@@ -113,6 +113,8 @@ class DialogWebLogin(Dialog):
                 self.proxy.setType(QNetworkProxy.ProxyType.HttpProxy)
                 # kick out any protocol prefix
                 host, port = self.server.proxy_address.split('https://')[-1].split('http://')[-1].split(':')
+                # ...and any trailing path
+                port = port.split('/')[0]
                 self.proxy.setHostName(host)
                 self.proxy.setPort(int(port))
                 if self.server.proxy_username:
