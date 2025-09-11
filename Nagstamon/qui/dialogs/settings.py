@@ -416,6 +416,8 @@ class DialogSettings(Dialog):
 
         # select first item
         self.window.list_servers.setCurrentRow(0)
+        # set focus to distinguish active and inactive servers
+        self.window.list_servers.setFocus()
 
         # fill actions list widget with actions
         self.fill_list(self.window.list_actions, conf.actions)
