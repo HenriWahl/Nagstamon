@@ -128,7 +128,7 @@ class DialogServer(Dialog):
             self.window.input_lineedit_disabled_backends: ['Thruk'],
         }
 
-        # to be used when selecting authentication method Kerberos
+        # to be used when selecting authentication method Kerberos or Web
         self.AUTHENTICATION_WIDGETS = [
             self.window.label_username,
             self.window.input_lineedit_username,
@@ -143,6 +143,9 @@ class DialogServer(Dialog):
         self.AUTHENTICATION_ECP_WIDGETS = [
             self.window.label_idp_ecp_endpoint,
             self.window.input_lineedit_idp_ecp_endpoint]
+
+        # custom CA is not possible with authentification method Web due to the underlying Qt WebEngine aka Chromium
+        self.CUSTOM_CERT_CA_WIDGETS = [ self.window.input_checkbox_custom_cert_use ]
 
         # fill default order fields combobox with monitor server types
         self.window.input_combobox_type.addItems(sorted(SERVER_TYPES.keys(), key=str.lower))
@@ -217,6 +220,14 @@ class DialogServer(Dialog):
             for widget in self.AUTHENTICATION_BEARER_WIDGETS:
                 widget.show()
                 self.window.label_password.setText('Password')
+
+        # no need for username + password when using Web authentication
+        if self.window.input_combobox_authentication.currentText() == 'Web':
+            for widget in self.AUTHENTICATION_WIDGETS + self.CUSTOM_CERT_CA_WIDGETS:
+                widget.hide()
+        else:
+            for widget in self.AUTHENTICATION_WIDGETS + self.CUSTOM_CERT_CA_WIDGETS:
+                widget.show()
 
         # after hiding authentication widgets dialog might shrink
         self.window.adjustSize()
