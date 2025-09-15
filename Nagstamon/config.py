@@ -129,7 +129,7 @@ class AppInfo:
     contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '3.17-20250911'
+    VERSION = '3.17-20250915'
     WEBSITE = 'https://nagstamon.de'
     COPYRIGHT = '©2008-2025 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -1195,7 +1195,7 @@ RESOURCES = ""
 try:
     # first try to find local resources directory in case Nagstamon was frozen with cx-Freeze for OSX or Windows
     executable_dir = os.path.join(os.sep.join(sys.executable.split(os.sep)[:-1]))
-    if os.path.exists(os.path.normcase(os.sep.join((executable_dir, "resources")))):
+    if os.path.isdir(os.path.normcase(os.sep.join((executable_dir, "resources")))):
         RESOURCES = os.path.normcase(os.sep.join((executable_dir, "resources")))
     else:
         RESOURCES = str(resources.files("Nagstamon").joinpath("resources"))
