@@ -187,12 +187,13 @@ class DialogWebLogin(Dialog):
             'expiration': cookie.expirationDate().toSecsSinceEpoch() if cookie.expirationDate().isValid() else None,
             'secure': cookie.isSecure(),
             'httponly': cookie.isHttpOnly(),
+            'server': self.server.name
         }
         # Save cookie only if not already saved
-        cookey = f"{cookie_data['domain']}+{cookie_data['path']}+{cookie_data['name']}"
+        cookey = f"{self.server.name}+{cookie_data['domain']}+{cookie_data['path']}+{cookie_data['name']}"
         if cookie_data not in cookies.values():
             cookies[cookey] = cookie_data
             save_cookies(cookies)
 
         # update server cookies to jar format
-        self.server.session.cookies = cookie_data_to_jar(cookies)
+        self.server.session.cookies = cookie_data_to_jar(self.server.name, cookies)

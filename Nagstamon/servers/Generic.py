@@ -333,6 +333,8 @@ class GenericServer:
                 return True
         elif not self.session:
             self.session = self.create_session()
+            if not self.session.cookies:
+                print('no cookies found for web authentication in session')
             return True
 
     def create_session(self):
@@ -361,7 +363,10 @@ class GenericServer:
             session.auth = BearerAuth(self.password)
         elif self.authentication == 'web':
             cookies = load_cookies()
-            session.cookies = cookie_data_to_jar(cookies)
+            print(cookies)
+            print(self.name)
+            session.cookies = cookie_data_to_jar(self.name, cookies)
+            print(session.cookies)
 
         # default to check TLS validity
         if self.ignore_cert:
@@ -965,6 +970,8 @@ class GenericServer:
             self.status_code = status.status_code
         else:
             return Result()
+
+        print(self.status_description, self.status_code)
 
         # some monitor server seem to have a problem with too short intervals
         # and sometimes send a bad status line which would result in a misleading
