@@ -18,9 +18,9 @@
 # Select Qt version based on installation found
 # Prefer in this order: PyQt6 - PyQt5
 
+from os import environ
 from pathlib import Path
 import sys
-from statistics import median_low
 
 # Enough to handle with differences between PyQt5 + PyQt6, so PySide6 will be
 # ignored right now
@@ -42,6 +42,22 @@ except ImportError:
         QT_FLAVOR = 'PyQt5'
     except ImportError:
         sys.exit('Qt is missing')
+
+# useful for testing to force a specific Qt version
+if environ.get('NAGSTAMON_QT_FLAVOR'):
+    QT_FLAVOR = environ.get('NAGSTAMON_QT_FLAVOR')
+    if QT_FLAVOR == 'PyQt6':
+        from PyQt6.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
+
+        # get int-ed version parts
+        QT_VERSION_MAJOR, QT_VERSION_MINOR = [int(x) for x in QT_VERSION_STR.split('.')[0:2]]
+    elif QT_FLAVOR == 'PyQt5':
+        from PyQt5.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
+
+        # get int-ed version parts
+        QT_VERSION_MAJOR, QT_VERSION_MINOR = [int(x) for x in QT_VERSION_STR.split('.')[0:2]]
+    else:
+        sys.exit("NAGSTAMON_QT_FLAVOR has invalid value. Use 'PyQt5' or 'PyQt6'.")
 
 # because 'PyQt6' is in sys.modules even if the import some line before failed
 # the backup PyQt5 should be loaded earlier if it exists due to exception treatment
@@ -75,8 +91,15 @@ if QT_FLAVOR == 'PyQt5':
     from PyQt5.QtMultimedia import QMediaContent, \
         QMediaPlayer, \
         QMediaPlaylist
+    from PyQt5.QtNetwork import (QNetworkCookie,
+                                 QNetworkProxy,
+                                 QNetworkProxyFactory)
     from PyQt5.QtSvg import QSvgRenderer, \
         QSvgWidget
+    from PyQt5.QtWebEngineWidgets import (QWebEngineCertificateError as WebEngineCertificateError,
+                                          QWebEnginePage as WebEnginePage,
+                                          QWebEngineProfile as WebEngineProfile,
+                                          QWebEngineView as WebEngineView)
     from PyQt5.QtWidgets import QAbstractItemView, \
         QAction, \
         QApplication, \
@@ -212,9 +235,9 @@ elif QT_FLAVOR == 'PyQt6':
                                  QNetworkProxyFactory)
     from PyQt6.QtSvg import QSvgRenderer
     from PyQt6.QtSvgWidgets import QSvgWidget
-    from PyQt6.QtWebEngineCore import QWebEnginePage as WebEnginePage
-    from PyQt6.QtWebEngineCore import QWebEngineProfile as WebEngineProfile
-    from PyQt6.QtWebEngineCore import QWebEngineCertificateError as WebEngineCertificateError
+    from PyQt6.QtWebEngineCore import (QWebEngineCertificateError as WebEngineCertificateError,
+                                       QWebEnginePage as WebEnginePage,
+                                       QWebEngineProfile as WebEngineProfile)
     from PyQt6.QtWebEngineWidgets import QWebEngineView as WebEngineView
     from PyQt6.QtWidgets import (QAbstractItemView,
                                  QApplication,
