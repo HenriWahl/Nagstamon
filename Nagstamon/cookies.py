@@ -34,6 +34,8 @@ def init_db():
                        TEXT
                        PRIMARY
                        KEY,
+                       server
+                       TEXT,
                        name
                        TEXT,
                        value
@@ -50,6 +52,13 @@ def init_db():
                        INTEGER
                    )
                    ''')
+    # check if 'server' column exists, if not add it - will be kicked out later
+    cursor.execute("PRAGMA table_info(cookies)")
+    table_info = cursor.fetchall()
+    columns = [info[1] for info in table_info]
+    # only necessary for upgrade from 'older' versions
+    if 'server' not in columns:
+        cursor.execute('ALTER TABLE cookies ADD COLUMN server TEXT')
     connection.commit()
     connection.close()
 
@@ -61,10 +70,11 @@ def save_cookies(cookies):
     for cookey, cookie_data in cookies.items():
         cursor.execute('''
             INSERT OR REPLACE INTO cookies
-            (cookey, name, value, domain, path, expiration, secure, httponly)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            (cookey, server, name, value, domain, path, expiration, secure, httponly)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             cookey,
+            cookie_data['server'],
             cookie_data['name'],
             cookie_data['value'],
             cookie_data['domain'],
@@ -81,56 +91,39 @@ def load_cookies():
     init_db()
     connection = sqlite3.connect(COOKIE_DB_FILE_PATH)
     cursor = connection.cursor()
-    cursor.execute('SELECT * FROM cookies')
+    cursor.execute('SELECT cookey, server, name, value, domain, path, expiration, secure, httponly FROM cookies')
     rows = cursor.fetchall()
     connection.close()
     cookies = {}
     for row in rows:
         cookey = row[0]
         cookies[cookey] = {
-            'name': row[1],
-            'value': row[2],
-            'domain': row[3],
-            'path': row[4],
-            'expiration': row[5],
-            'secure': bool(row[6]),
-            'httponly': bool(row[7])
+            'server': row[1],
+            'name': row[2],
+            'value': row[3],
+            'domain': row[4],
+            'path': row[5],
+            'expiration': row[6],
+            'secure': bool(row[7]),
+            'httponly': bool(row[8])
         }
     return cookies
 
 
-def cookie_data_to_jar(cookie_data):
+def cookie_data_to_jar(server_name, cookie_data):
     jar = requests.cookies.RequestsCookieJar()
     for cookie in cookie_data.values():
-        jar.set(
-            name=cookie['name'],
-            value=cookie['value'],
-            domain=cookie['domain'],
-            path=cookie['path'],
-            expires=cookie['expiration'],
-            secure=cookie['secure'],
-            rest={'HttpOnly': cookie['httponly']}
-        )
+        if cookie['server'] == server_name:
+            jar.set(
+                name=cookie['name'],
+                value=cookie['value'],
+                domain=cookie['domain'],
+                path=cookie['path'],
+                expires=cookie['expiration'],
+                secure=cookie['secure'],
+                rest={'HttpOnly': cookie['httponly']}
+            )
+    print(jar)
     return jar
-
-
-def handle_cookie_added(cookie):
-    # load existing cookies from SQLite databases
-    cookies = load_cookies()
-    # extract relevant cookie data as dictionary
-    cookie_data = {
-        'name': cookie.name().data().decode(),
-        'value': cookie.value().data().decode(),
-        'domain': cookie.domain(),
-        'path': cookie.path(),
-        'expiration': cookie.expirationDate().toSecsSinceEpoch() if cookie.expirationDate().isValid() else None,
-        'secure': cookie.isSecure(),
-        'httponly': cookie.isHttpOnly(),
-    }
-    # Save cookie only if not already saved
-    cookey = f"{cookie_data['domain']}+{cookie_data['path']}+{cookie_data['name']}"
-    if cookie_data not in cookies.values():
-        cookies[cookey] = cookie_data
-        save_cookies(cookies)
 
 
