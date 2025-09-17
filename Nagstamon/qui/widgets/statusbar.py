@@ -126,7 +126,7 @@ class StatusBar(QWidget):
         self.labels_reset.connect(self.label_message.reset)
 
         # derive logo dimensions from status label
-        self.logo = NagstamonLogo('{0}{1}nagstamon_logo_bar.svg'.format(RESOURCES, sep),
+        self.logo = NagstamonLogo(f'{RESOURCES}{sep}nagstamon_logo_bar.svg',
                                   self.color_labels['OK'].fontMetrics().height(),
                                   self.color_labels['OK'].fontMetrics().height(),
                                   parent=parent)
