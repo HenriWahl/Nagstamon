@@ -17,7 +17,8 @@
 
 from Nagstamon.config import conf
 from Nagstamon.qui.dialogs.dialog import Dialog
-from Nagstamon.qui.qt import (Signal,
+from Nagstamon.qui.qt import (Qt,
+                              Signal,
                               Slot)
 from Nagstamon.servers import servers
 

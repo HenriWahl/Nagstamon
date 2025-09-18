@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
+import os
 
 from Nagstamon.cookies import (cookie_data_to_jar,
                                load_cookies,
@@ -21,6 +22,7 @@ from Nagstamon.cookies import (cookie_data_to_jar,
 from Nagstamon.helpers import USER_AGENT
 from Nagstamon.qui.qt import (QNetworkProxy,
                               QNetworkProxyFactory,
+                              Qt,
                               QUrl,
                               Signal,
                               Slot,
@@ -96,6 +98,8 @@ class DialogWebLogin(Dialog):
 
             self.cookie_store = self.profile.cookieStore()
             self.cookie_store.cookieAdded.connect(self.handle_cookie_added)
+
+            self.webengine_view.loadStarted.connect(self.on_load_started)
             self.webengine_view.loadFinished.connect(self.on_load_finished)
 
             self.window.vbox.addWidget(self.webengine_view)
@@ -129,6 +133,13 @@ class DialogWebLogin(Dialog):
             self.webengine_view.setPage(self.page)
             self.page.setUrl(QUrl(url))
 
+        pass
+
+    def on_load_started(self):
+        print('weblogin load started', self.webengine_view.url())
+        for item in sorted(os.environ):
+            print(f'{item}={os.environ[item]}')
+
     def on_load_finished(self):
         print('weblogin load finished')
         if self.server:
@@ -149,7 +160,7 @@ class DialogWebLogin(Dialog):
         # the dock icon might be needed to be shown for a potential keyboard input
         self.check_macos_dock_icon_fix_show.emit()
 
-        self.window.exec()
+        self.window.open()
 
         # en reverse the dock icon might be hidden again after a potential keyboard input
         self.check_macos_dock_icon_fix_hide.emit()
