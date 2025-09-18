@@ -26,6 +26,7 @@ from Nagstamon.qui.globals import (ecp_available,
 from Nagstamon.qui.qt import (QFileDialog,
                               QMessageBox,
                               QStyle,
+                              Qt,
                               Signal,
                               Slot)
 from Nagstamon.qui.dialogs.dialog import Dialog
@@ -294,6 +295,7 @@ class DialogServer(Dialog):
             # to make Nagstamon accept keyboard input
             self.check_macos_dock_icon_fix_show.emit()
 
+            # force modality - using .open() still allows to switch to main settings dialog
             self.window.exec()
 
             # en reverse the dock icon might be hidden again after a potential keyboard input
