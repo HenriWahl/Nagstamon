@@ -121,13 +121,15 @@ class MultisiteServer(GenericServer):
             }
 
 
-        if self.authentication == 'web':
-            # Function overrides for Checkmk 2.3+
-            version = self._omd_get_version()
-            if version >= [2, 3]:
-                self._set_downtime = self._omd_set_downtime
-                self._set_recheck = self._omd_set_recheck
+        # Function overrides for Checkmk 2.3+
+        version = self._omd_get_version()
+        if version >= [2, 3]:
+            self._set_downtime = self._omd_set_downtime
+            self._set_recheck = self._omd_set_recheck
 
+        print(self.authentication)
+
+        if self.authentication != 'web':
             if self.cookie_auth and not self.refresh_authentication:
                 # get cookie to access Checkmk web interface
                 if 'cookies' in dir(self.session):
@@ -199,7 +201,8 @@ class MultisiteServer(GenericServer):
             self.cookie_auth = True
             # if first attempt login and then try to get data again
             if not self._is_auth_in_cookies():
-                self._get_cookie_login()
+                if self.authentication != 'web':
+                    self._get_cookie_login()
                 result = self.fetch_url(url, 'raw')
                 content, error = result.result, result.error
                 if content.startswith('<') or\
