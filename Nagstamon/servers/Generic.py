@@ -109,6 +109,7 @@ try:
 except ImportError:
     pass
 
+
 # add possibility for bearer auth to requests
 class BearerAuth(requests.auth.AuthBase):
     def __init__(self, token):
@@ -116,17 +117,6 @@ class BearerAuth(requests.auth.AuthBase):
     def __call__(self, r):
         r.headers["Authorization"] = "Bearer " + self.token
         return r
-
-
-# class BridgeToQt(QObject):
-#     """
-#     Bridge to Qt for browser login
-#     """
-#
-#     set_url = Signal(str, str)
-#
-#     def __init__(self):
-#         QObject.__init__(self)
 
 
 class GenericServer:
@@ -362,6 +352,7 @@ class GenericServer:
         elif self.authentication == 'bearer':
             session.auth = BearerAuth(self.password)
         elif self.authentication == 'web':
+            session.auth = None
             cookies = load_cookies()
             print(cookies)
             print(self.name)
@@ -1626,8 +1617,6 @@ class GenericServer:
                 # .text gives content in unicode
                 return Result(result=json.loads(response.text),
                               status_code=response.status_code)
-
-
         except:
             self.error(sys.exc_info())
             result, error = self.error(sys.exc_info())

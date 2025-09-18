@@ -76,7 +76,6 @@ class DialogWebLogin(Dialog):
     # #     self.profile.setHttpUserAgent(USER_AGENT)
     # #     self.cookie_store = self.profile.cookieStore()
     #      self.cookies = dict()
-    # #     self.webengine_view.loadStarted.connect(self.on_load_started)
     # #     self.webengine_view.loadFinished.connect(self.on_load_finished)
     # #
     # #     self.cookie_store.cookieAdded.connect(self.handle_cookie_added)
@@ -97,8 +96,6 @@ class DialogWebLogin(Dialog):
 
             self.cookie_store = self.profile.cookieStore()
             self.cookie_store.cookieAdded.connect(self.handle_cookie_added)
-
-            self.webengine_view.loadStarted.connect(self.on_load_started)
             self.webengine_view.loadFinished.connect(self.on_load_finished)
 
             self.window.vbox.addWidget(self.webengine_view)
@@ -131,9 +128,6 @@ class DialogWebLogin(Dialog):
             self.page = WebEnginePage(ignore_tls_errors=server.ignore_cert)
             self.webengine_view.setPage(self.page)
             self.page.setUrl(QUrl(url))
-
-    def on_load_started(self):
-        print('weblogin load started', self.webengine_view.url())
 
     def on_load_finished(self):
         print('weblogin load finished')
