@@ -532,8 +532,8 @@ class SnagViewServer(GenericServer):
 
 class NoAuth(requests.auth.AuthBase):
     """
-        Override to avoid auth headers
-        Needed for LDAP login
+    Override to avoid auth headers
+    Needed for LDAP login
     """
 
     def __call__(self, r):

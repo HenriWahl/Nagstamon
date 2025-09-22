@@ -62,8 +62,9 @@ class DialogWebLogin(Dialog):
     def __init__(self):
         Dialog.__init__(self, 'dialog_weblogin', )
         self.cookie_store = None
-        self.profile = None
         self.page = None
+        self.profile = None
+        self.proxy = None
         # self.webengine_view = WebEngineView()
         self.webengine_view = None
 
@@ -90,21 +91,10 @@ class DialogWebLogin(Dialog):
         set url to load
         """
 
-        if not self.webengine_view:
-            self.webengine_view = WebEngineView()
-
-            self.profile = WebEngineProfile.defaultProfile()
-            self.profile.setHttpUserAgent(USER_AGENT)
-
-            self.cookie_store = self.profile.cookieStore()
-            self.cookie_store.cookieAdded.connect(self.handle_cookie_added)
-
-            self.webengine_view.loadStarted.connect(self.on_load_started)
-            self.webengine_view.loadFinished.connect(self.on_load_finished)
-
-            self.window.vbox.addWidget(self.webengine_view)
+        server = servers.get(server_name)
 
         self.proxy = QNetworkProxy()
+
         if self.server.use_proxy:
             QNetworkProxyFactory.setUseSystemConfiguration(False)
             self.proxy.setType(QNetworkProxy.ProxyType.HttpProxy)
@@ -121,12 +111,32 @@ class DialogWebLogin(Dialog):
                 if self.server.proxy_username:
                     self.proxy.setUser(self.server.proxy_username)
                     self.proxy.setPassword(self.server.proxy_password)
+                QNetworkProxy.setApplicationProxy(self.proxy)
         else:
             self.proxy.setType(QNetworkProxy.ProxyType.NoProxy)
+            QNetworkProxy.setApplicationProxy(self.proxy)
 
-        QNetworkProxy.setApplicationProxy(self.proxy)
+        # reset webengine view if already existing - especially for proxy changes
+        if self.webengine_view:
+            self.webengine_view.close()
+            self.webengine_view = None
+        if self.profile:
+            self.profile = None
 
-        server = servers.get(server_name)
+        self.webengine_view = WebEngineView()
+
+        self.profile = WebEngineProfile.defaultProfile()
+        self.profile.setHttpUserAgent(USER_AGENT)
+
+        self.cookie_store = self.profile.cookieStore()
+        self.cookie_store.cookieAdded.connect(self.handle_cookie_added)
+
+        self.webengine_view.loadStarted.connect(self.on_load_started)
+        self.webengine_view.loadFinished.connect(self.on_load_finished)
+
+        self.window.vbox.addWidget(self.webengine_view)
+
+
         if server:
             self.window.setWindowTitle('Nagstamon Web Login - ' + server_name)
             self.page = WebEnginePage(ignore_tls_errors=server.ignore_cert)
@@ -137,8 +147,6 @@ class DialogWebLogin(Dialog):
 
     def on_load_started(self):
         print('weblogin load started', self.webengine_view.url())
-        for item in sorted(os.environ):
-            print(f'{item}={os.environ[item]}')
 
     def on_load_finished(self):
         print('weblogin load finished')
