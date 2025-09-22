@@ -166,6 +166,7 @@ class ServerVBox(QVBoxLayout):
         # connect worker to status label to reflect connectivity
         self.table.worker.change_label_status.connect(self.label_status.change)
         self.table.worker.restore_label_status.connect(self.label_status.restore)
+        self.table.worker.authentication_needed.connect(self.parent_statuswindow.show_window_for_authentication)
 
         # care about authentications
         self.button_authenticate.clicked.connect(self.authenticate_server)

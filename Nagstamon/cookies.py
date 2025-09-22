@@ -123,7 +123,6 @@ def cookie_data_to_jar(server_name, cookie_data):
                 secure=cookie['secure'],
                 rest={'HttpOnly': cookie['httponly']}
             )
-    print(jar)
     return jar
 
 

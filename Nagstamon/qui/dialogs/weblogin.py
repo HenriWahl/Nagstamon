@@ -43,7 +43,6 @@ class WebEnginePage(WebEnginePage):
     @Slot(WebEngineCertificateError)
     def handle_certificateError(self, error):
         print("TLS error:", error.description())
-
         if self.ignore_tls_errors:
             error.acceptCertificate()
             return True
@@ -147,11 +146,10 @@ class DialogWebLogin(Dialog):
 
         pass
 
-    def on_load_started(self):
-        print('weblogin load started', self.webengine_view.url())
-
     def on_load_finished(self):
-        print('weblogin load finished')
+        """
+        send message when page is loaded so the statuswindow can refresh
+        """
         if self.server:
             self.page_loaded.emit()
 

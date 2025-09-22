@@ -717,6 +717,19 @@ class StatusWindow(QWidget):
             self.hide_window()
 
     @Slot()
+    def show_window_for_authentication(self):
+        """
+        show status window for authentication if not already shown
+        especially needed for systray icon and floating mode
+        """
+        if not self.injected_dialogs.weblogin.window.isVisible():
+            if conf.icon_in_systray:
+                self.show_window_systrayicon()
+            elif conf.statusbar_floating:
+                self.show_window()
+
+
+    @Slot()
     def show_window(self, event=None):
         """
         used to show status window when its appearance is triggered, also adjusts geometry
