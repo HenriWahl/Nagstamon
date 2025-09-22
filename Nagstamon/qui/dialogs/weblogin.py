@@ -132,7 +132,6 @@ class DialogWebLogin(Dialog):
         self.cookie_store = self.profile.cookieStore()
         self.cookie_store.cookieAdded.connect(self.handle_cookie_added)
 
-        self.webengine_view.loadStarted.connect(self.on_load_started)
         self.webengine_view.loadFinished.connect(self.on_load_finished)
 
         self.window.vbox.addWidget(self.webengine_view)
