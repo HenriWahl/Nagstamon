@@ -722,7 +722,7 @@ class StatusWindow(QWidget):
         show status window for authentication if not already shown
         especially needed for systray icon and floating mode
         """
-        if not self.injected_dialogs.weblogin.window.isVisible():
+        if not self.injected_dialogs.get_shown_dialogs():
             if conf.icon_in_systray:
                 self.show_window_systrayicon()
             elif conf.statusbar_floating:

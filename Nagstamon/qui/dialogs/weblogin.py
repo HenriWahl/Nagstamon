@@ -136,14 +136,11 @@ class DialogWebLogin(Dialog):
 
         self.window.vbox.addWidget(self.webengine_view)
 
-
         if server:
             self.window.setWindowTitle('Nagstamon Web Login - ' + server_name)
             self.page = WebEnginePage(ignore_tls_errors=server.ignore_cert)
             self.webengine_view.setPage(self.page)
             self.page.setUrl(QUrl(url))
-
-        pass
 
     def on_load_finished(self):
         """
