@@ -122,6 +122,8 @@ class DialogWebLogin(Dialog):
             self.webengine_view = None
         if self.profile:
             self.profile = None
+        if self.cookie_store:
+            self.cookie_store = None
 
         self.webengine_view = WebEngineView()
 
