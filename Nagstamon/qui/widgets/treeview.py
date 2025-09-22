@@ -988,6 +988,9 @@ class TreeView(QTreeView):
         show_error = Signal(str)
         hide_error = Signal()
 
+        # signal to request authentication
+        authentication_needed = Signal()
+
         # sent to treeview with new data_array
         worker_data_array_filled = Signal(list, dict)
 
@@ -1048,8 +1051,6 @@ class TreeView(QTreeView):
 
                         # tell statusbar there is no error
                         self.hide_error.emit()
-
-
                     else:
                         # try to display some more user-friendly error description
                         if self.server.status_code == 404:
@@ -1068,9 +1069,8 @@ class TreeView(QTreeView):
                             self.change_label_status.emit('SSL/TLS problem', 'critical')
                         elif self.server.status_code in self.server.STATUS_CODES_NO_AUTH or \
                                 self.server.refresh_authentication:
-                            print(self.server.status_code)
-                            print(self.server.status_description)
                             self.change_label_status.emit('Authentication problem', 'critical')
+                            self.authentication_needed.emit()
                         elif self.server.status_code == 503:
                             self.change_label_status.emit('Service unavailable', 'error')
                         else:
