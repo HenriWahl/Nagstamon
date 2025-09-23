@@ -158,7 +158,7 @@ dialogs.settings.changed_display_mode.connect(statuswindow.reinitialize)
 dialogs.server_missing.window.button_exit.clicked.connect(statuswindow.exit)
 
 # connect weblogin browser
-dialogs.weblogin.page_loaded.connect(statuswindow.refresh)
+#dialogs.weblogin.page_loaded.connect(statuswindow.refresh)
 
 # systray connections
 # show status popup when systray icon was clicked

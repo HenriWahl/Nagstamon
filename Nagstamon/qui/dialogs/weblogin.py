@@ -16,6 +16,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 import os
 
+from PyQt6.QtGui import QWindow
+
 from Nagstamon.cookies import (cookie_data_to_jar,
                                load_cookies,
                                save_cookies)
@@ -69,20 +71,6 @@ class DialogWebLogin(Dialog):
 
         self.cookies = dict()
 
-    # @Slot(str)
-    # def initialize(self):
-    # #     """
-    # #     ...
-    # #     """
-    # #     self.profile = WebEngineProfile.defaultProfile()
-    # #     self.profile.setHttpUserAgent(USER_AGENT)
-    # #     self.cookie_store = self.profile.cookieStore()
-    #      self.cookies = dict()
-    # #     self.webengine_view.loadFinished.connect(self.on_load_finished)
-    # #
-    # #     self.cookie_store.cookieAdded.connect(self.handle_cookie_added)
-    # #
-    # #     self.window.vbox.addWidget(self.webengine_view)
 
     @Slot(str, str)
     def set_url(self, server_name, url):
@@ -91,6 +79,24 @@ class DialogWebLogin(Dialog):
         """
 
         server = servers.get(server_name)
+
+    def on_load_finished(self):
+        """
+        send message when page is loaded so the statuswindow can refresh
+        """
+        print('load finished')
+        if self.server:
+            print('emit signal page_loaded')
+            self.page_loaded.emit()
+
+    @Slot(str)
+    def show_browser(self, server_name):
+        """
+        initialize and show authentication browser window
+        """
+        self.show_up.emit()
+
+        self.server = servers[server_name]
 
         self.proxy = QNetworkProxy()
 
@@ -115,9 +121,14 @@ class DialogWebLogin(Dialog):
             self.proxy.setType(QNetworkProxy.ProxyType.NoProxy)
             QNetworkProxy.setApplicationProxy(self.proxy)
 
-        # reset webengine view if already existing - especially for proxy changes
+        #reset webengine view if already existing - especially for proxy changes
+        if self.page:
+            self.page.deleteLater()
+            self.page = None
         if self.webengine_view:
             self.webengine_view.close()
+            self.window.vbox.removeWidget(self.webengine_view)
+            self.webengine_view.destroy()
             self.webengine_view = None
         if self.profile:
             self.profile = None
@@ -125,6 +136,7 @@ class DialogWebLogin(Dialog):
             self.cookie_store = None
 
         self.webengine_view = WebEngineView()
+        self.window.button_reload.clicked.connect(self.webengine_view.reload)
 
         self.profile = WebEngineProfile.defaultProfile()
         self.profile.setHttpUserAgent(USER_AGENT)
@@ -136,28 +148,11 @@ class DialogWebLogin(Dialog):
 
         self.window.vbox.addWidget(self.webengine_view)
 
-        if server:
-            self.window.setWindowTitle('Nagstamon Web Login - ' + server_name)
-            self.page = WebEnginePage(ignore_tls_errors=server.ignore_cert)
-            self.webengine_view.setPage(self.page)
-            self.page.setUrl(QUrl(url))
+        self.window.setWindowTitle('Nagstamon Web Login - ' + server_name)
+        self.page = WebEnginePage(ignore_tls_errors=self.server.ignore_cert)
+        self.webengine_view.setPage(self.page)
+        self.page.setUrl(QUrl(self.server.monitor_url))
 
-    def on_load_finished(self):
-        """
-        send message when page is loaded so the statuswindow can refresh
-        """
-        if self.server:
-            self.page_loaded.emit()
-
-    @Slot(str)
-    def show_browser(self, server_name):
-        """
-        initialize and show authentication browser window
-        """
-        self.show_up.emit()
-
-        self.server = servers[server_name]
-        self.set_url(self.server.name, self.server.monitor_url)
         self.show()
         self.window.adjustSize()
 
@@ -168,6 +163,11 @@ class DialogWebLogin(Dialog):
 
         # en reverse the dock icon might be hidden again after a potential keyboard input
         self.check_macos_dock_icon_fix_hide.emit()
+
+        self.webengine_view.show()
+        #self.page.triggerAction(WebEnginePage.WebAction.ReloadAndBypassCache)
+        #self.webengine_view.reload()
+        self.window.update()
 
     @Slot(str)
     def close_browser(self, server_name):
@@ -180,9 +180,20 @@ class DialogWebLogin(Dialog):
         if hasattr(self, 'server') and \
                 self.server.name == server_name:
             self.window.close()
-            # rather useless?
+            if self.page:
+                self.page.deleteLater()
+                self.page = None
             if self.webengine_view:
-                self.webengine_view.close()
+                self.window.vbox.removeWidget(self.webengine_view)
+                self.webengine_view.destroy()
+                self.webengine_view = None
+            if self.profile:
+                self.profile = None
+            if self.cookie_store:
+                self.cookie_store = None
+
+            print('closed weblogin for', server_name)
+
 
     def handle_cookie_added(self, cookie):
         # load existing cookies from SQLite databases

@@ -592,7 +592,8 @@ class StatusWindow(QWidget):
             if not conf.servers[server.name].save_password and \
                     not conf.servers[server.name].use_autologin and \
                     conf.servers[server.name].password == '' and \
-                    not conf.servers[server.name].authentication == 'kerberos':
+                    not conf.servers[server.name].authentication == 'kerberos' and\
+                    not conf.servers[server.name].authentication == 'weg':
                 self.authenticate.emit(server.name)
 
             # without parent, there is some flickering when starting
@@ -636,6 +637,7 @@ class StatusWindow(QWidget):
 
             # refresh table after changed settings
             self.injected_dialogs.settings.changed.connect(server_vbox.table.refresh)
+            self.injected_dialogs.weblogin.page_loaded.connect(server_vbox.table.refresh)
 
             # listen if statuswindow cries for event history clearance
             self.clear_event_history.connect(server_vbox.table.worker.unfresh_event_history)
