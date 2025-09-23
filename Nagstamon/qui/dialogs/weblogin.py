@@ -25,6 +25,7 @@ from Nagstamon.helpers import USER_AGENT
 from Nagstamon.qui.qt import (QNetworkProxy,
                               QNetworkProxyFactory,
                               Qt,
+                              QT_VERSION_MAJOR,
                               QUrl,
                               Signal,
                               Slot,
@@ -40,10 +41,13 @@ class WebEnginePage(WebEnginePage):
     def __init__(self, ignore_tls_errors=False, parent=None):
         super().__init__(parent)
         self.ignore_tls_errors = ignore_tls_errors
-        self.certificateError.connect(self.handle_certificateError)
+        if QT_VERSION_MAJOR >= 6:
+            self.certificateError.connect(self.handle_certificate_error)
+        else:
+            self.certificateError = self.handle_certificate_error
 
     @Slot(WebEngineCertificateError)
-    def handle_certificateError(self, error):
+    def handle_certificate_error(self, error):
         print("TLS error:", error.description())
         if self.ignore_tls_errors:
             error.acceptCertificate()
