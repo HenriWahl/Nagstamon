@@ -593,7 +593,7 @@ class StatusWindow(QWidget):
                     not conf.servers[server.name].use_autologin and \
                     conf.servers[server.name].password == '' and \
                     not conf.servers[server.name].authentication == 'kerberos' and\
-                    not conf.servers[server.name].authentication == 'weg':
+                    not conf.servers[server.name].authentication == 'web':
                 self.authenticate.emit(server.name)
 
             # without parent, there is some flickering when starting
