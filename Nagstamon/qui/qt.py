@@ -22,6 +22,27 @@ from os import environ
 from pathlib import Path
 import sys
 
+# Differences in *.ui files between PyQt5 and PyQt6, will be replaced when UI files are loaded
+UI_FILE_QT6_QT5_DOWNGRADES = {
+    'AnyTerritory': 'AnyCountry',
+    'QDialogButtonBox::StandardButton::Cancel': 'QDialogButtonBox::Cancel',
+    'QDialogButtonBox::StandardButton::Ok': 'QDialogButtonBox::Ok',
+    'QFrame::Shadow::Sunken': 'QFrame::Sunken',
+    'QFrame::Shape::Box': 'QFrame::Box',
+    'QLayout::SizeConstraint::SetMinimumSize': 'QLayout::SetMinimumSize',
+    'QLineEdit::EchoMode::Password': 'QLineEdit::Password',
+    'QListView::ResizeMode::Adjust': 'QListView::Adjust',
+    'Qt::AlignmentFlag::AlignCenter': 'Qt::AlignCenter',
+    'Qt::AlignmentFlag::AlignLeading': 'Qt::AlignLeading',
+    'Qt::AlignmentFlag::AlignLeft': 'Qt::AlignLeft',
+    'Qt::AlignmentFlag::AlignTop': 'Qt::AlignTop',
+    'Qt::AlignmentFlag::AlignVCenter': 'Qt::AlignVCenter',
+    'Qt::Orientation::Horizontal': 'Qt::Horizontal',
+    'Qt::Orientation::Vertical': 'Qt::Vertical',
+    'Qt::TextInteractionFlag::TextBrowserInteraction': 'Qt::TextBrowserInteraction',
+    'QTabWidget::TabShape::Rounded': 'QTabWidget::Rounded'
+}
+
 # Enough to handle with differences between PyQt5 + PyQt6, so PySide6 will be
 # ignored right now
 # by the little import the appropriate PyQt version will be loaded

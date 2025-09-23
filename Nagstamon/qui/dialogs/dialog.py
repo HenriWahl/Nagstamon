@@ -15,6 +15,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+from io import StringIO
+from pathlib import Path
+
 from Nagstamon.config import (conf,
                               RESOURCES,
                               OS,
@@ -31,7 +34,8 @@ from Nagstamon.qui.qt import (QBrush,
                               Qt,
                               Signal,
                               Slot,
-                              uic)
+                              uic,
+                              UI_FILE_QT6_QT5_DOWNGRADES)
 
 # make icon status in macOS dock accessible via NSApp, used by set_macos_dock_icon_visible()
 if OS == OS_MACOS:
@@ -63,8 +67,16 @@ class Dialog(QObject):
     def __init__(self, dialog):
         QObject.__init__(self)
 
-        # load UI file from resources
-        self.window = uic.loadUi(f'{RESOURCES}/qui/{dialog}.ui')
+        # load UI file for manipulation
+        ui_file_path = Path(f'{RESOURCES}/qui/{dialog}.ui')
+        ui_file_content = ui_file_path.read_text(encoding='utf-8')
+        # replace all problematic Qt6 names by Qt5 names to be able to use one single UI file for both Qt5 and Qt6
+        for qt6_name, qt5_name in UI_FILE_QT6_QT5_DOWNGRADES.items():
+            ui_file_content = ui_file_content.replace(qt6_name, qt5_name)
+        # convert string to file-like object for loadUi()
+        ui_file_content_io = StringIO(ui_file_content)
+        # load UI file from resource
+        self.window = uic.loadUi(ui_file_content_io)
 
         # explicitly set window flags to avoid '?' button on Windows
         self.window.setWindowFlags(Qt.WindowType.WindowCloseButtonHint)
