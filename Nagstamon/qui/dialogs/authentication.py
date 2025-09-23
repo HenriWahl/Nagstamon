@@ -43,7 +43,7 @@ class DialogAuthentication(Dialog):
         """
         if self.server is not None:
 
-            self.window.setWindowTitle('Authenticate {0}'.format(self.server.name))
+            self.window.setWindowTitle(f'Authenticate {self.server.name}')
             if self.server.type in ['Centreon', 'Thruk']:
                 self.window.input_checkbox_use_autologin.show()
                 self.window.input_lineedit_autologin_key.show()

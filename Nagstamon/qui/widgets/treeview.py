@@ -1020,7 +1020,6 @@ class TreeView(QTreeView):
 
             self.get_status_successful.connect(self.parent_statuswindow.injected_dialogs.weblogin.close_browser)
 
-
         @Slot()
         def get_status(self):
             """
