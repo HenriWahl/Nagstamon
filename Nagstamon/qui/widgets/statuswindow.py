@@ -637,7 +637,7 @@ class StatusWindow(QWidget):
 
             # refresh table after changed settings
             self.injected_dialogs.settings.changed.connect(server_vbox.table.refresh)
-            self.injected_dialogs.weblogin.page_loaded.connect(server_vbox.table.refresh)
+            self.injected_dialogs.weblogin.page_loaded.connect(server_vbox.table.worker.get_status)
 
             # listen if statuswindow cries for event history clearance
             self.clear_event_history.connect(server_vbox.table.worker.unfresh_event_history)

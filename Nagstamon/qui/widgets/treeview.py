@@ -31,6 +31,7 @@ from Nagstamon.qui.constants import (COLORS,
                                      HEADERS,
                                      SORT_COLUMNS_INDEX,
                                      SORT_ORDER)
+from Nagstamon.qui.dialogs.weblogin import DialogWebLogin
 from Nagstamon.qui.globals import (clipboard,
                                    font,
                                    qbrushes,
@@ -1026,8 +1027,9 @@ class TreeView(QTreeView):
             check every second if thread still has to run
             if interval time is reached get status
             """
-            # if counter is at least update interval get status
-            if self.server.thread_counter >= conf.update_interval_seconds:
+            # if counter is at least update interval get status or the weblogin dialog triggered this
+            if self.server.thread_counter >= conf.update_interval_seconds or \
+                type(self.sender()) is DialogWebLogin:
                 # only if no multiple selection is done at the moment and no context action menu is open
                 if not app.keyboardModifiers() and app.activePopupWidget() is None:
                     # reflect status retrieval attempt on server vbox label
