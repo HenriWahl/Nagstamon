@@ -33,10 +33,6 @@ try:
                                       OS,
                                       OS_WINDOWS)
 
-        # according to https://gitlab.com/alelec/pip-system-certs/-/issues/7#note_1066992053
-        if OS == OS_WINDOWS:
-            import pip_system_certs.wrapt_requests
-
         from Nagstamon.helpers import lock_config_folder
 
         # Acquire the lock

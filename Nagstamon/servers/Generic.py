@@ -22,6 +22,7 @@ import datetime
 import json
 from pathlib import Path
 import platform
+import ssl
 import socket
 import sys
 import traceback
@@ -31,6 +32,8 @@ from urllib.request import getproxies
 
 from bs4 import BeautifulSoup
 import requests
+from requests.adapters import HTTPAdapter
+from truststore import SSLContext
 
 from Nagstamon.cookies import (cookie_data_to_jar,
                                load_cookies)
@@ -118,6 +121,10 @@ class BearerAuth(requests.auth.AuthBase):
         r.headers["Authorization"] = "Bearer " + self.token
         return r
 
+class CustomHTTPAdapter(HTTPAdapter):
+    def init_poolmanager(self, *args, **kwargs):
+        ssl_context=SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        super().init_poolmanager(*args, **kwargs, ssl_context=ssl_context)
 
 class GenericServer:
     """
@@ -366,6 +373,7 @@ class GenericServer:
             session.verify = self.custom_cert_ca_file
         else:
             session.verify = True
+            session.mount('https://', CustomHTTPAdapter())
 
         # add proxy information
         self.proxify(session)
@@ -1559,6 +1567,10 @@ class GenericServer:
                         temporary_session.verify = self.custom_cert_ca_file
                     else:
                         temporary_session.verify = True
+                        try:
+                            temporary_session.mount("https://", CustomHTTPAdapter())
+                        except:
+                            traceback.print_tb()
 
                     # add proxy information if necessary
                     self.proxify(temporary_session)
