@@ -2,7 +2,6 @@ arrow
 beautifulsoup4
 keyring
 lxml
-pip-system-certs
 packaging
 psutil
 pyinstaller
@@ -17,6 +16,7 @@ requests
 requests-ecp
 # maybe requests-gssapi might become usable with https://github.com/pythongssapi/python-gssapi/issues/244#issuecomment-827404287
 requests-kerberos
+truststore
 tzlocal
 setuptools
 wheel

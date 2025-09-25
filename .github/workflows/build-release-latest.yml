@@ -7,8 +7,7 @@ on:
       - '!master'
       - '!*.*.*'
       - '!browser_login'
-      - '!qt5_web_login'
-      - '!split_cookies'
+      - '!truststore'
 
 env:
   python_win_version: 3.13.7

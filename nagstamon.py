@@ -20,9 +20,12 @@
 
 import sys
 import socket
+import truststore
 
 # fix/patch for https://bugs.launchpad.net/ubuntu/+source/nagstamon/+bug/732544
 socket.setdefaulttimeout(30)
+
+truststore.inject_into_ssl()
 
 try:
     if __name__ == '__main__':
