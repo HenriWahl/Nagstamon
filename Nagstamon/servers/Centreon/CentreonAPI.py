@@ -317,7 +317,7 @@ class CentreonServer(GenericServer):
 
         # filter regexep to reduce network traffic
         # waiting to find a solution to reverse regexp
-        # my first idea is 
+        # my first idea is
         # begin by (^(?!(.*
         # ending by )))
         # replace | by )))(^(?!(.*
@@ -328,7 +328,7 @@ class CentreonServer(GenericServer):
             self.re_service_filter = '&search={"s.description":{"$rg":"' + str(conf.re_service_pattern) + '"}}'
         if conf.re_host_enabled is True and conf.re_host_reverse is True:
             self.re_host_filter = '&search={"h.name":{"$rg":"' + str(conf.re_host_pattern) + '"}}'
-        
+
         # Services URL
         # https://demo.centreon.com/centreon/api/latest/monitoring/resources?page=1&limit=30&sort_by={"status_severity_code":"asc","last_status_change":"desc"}&types=["service"]&statuses=["WARNING","DOWN","CRITICAL","UNKNOWN"]
         url_services = self.urls_centreon[
@@ -783,7 +783,7 @@ class CentreonServer(GenericServer):
             if self.centreon_version_major == 21:
                 ressources_response_list = [401, 403, 500]
             else:
-                ressources_response_list = [401, 403]
+                ressources_response_list = [400, 401, 403]
 
             if result.status_code in ressources_response_list:
                 self.token = self.get_token().result
