@@ -129,6 +129,7 @@ if OS not in ['Windows', 'Darwin']:
                                           'python3-psutil '
                                           'python3-pysocks '
                                           'python3-pyqt6 '
+                                          'python3-pyqt6-webengine '
                                           'python3-requests '
                                           'python3-requests-kerberos '
                                           'python3-SecretStorage '
