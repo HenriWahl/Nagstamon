@@ -79,7 +79,7 @@ jobs:
     needs: test
     strategy:
       matrix:
-        version: [ 40, 41, 42, 43 ]
+        version: [ 41, 42, 43, 44 ]
     steps:
       - uses: actions/checkout@v4
       # docker login is needed for pushing the build image
