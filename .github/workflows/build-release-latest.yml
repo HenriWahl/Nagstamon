@@ -332,7 +332,7 @@ jobs:
     env:
       family: fedora
       # which image to use for packaging
-      version_latest: 40
+      version_latest: 41
     steps:
       # checkout to get Dockerfiles for steps.dockerfile_hash.outputs.HASH
       - uses: actions/checkout@v4
