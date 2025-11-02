@@ -1,9 +1,10 @@
-FROM fedora:41
+# switch to quay.io because fedora:43 on dockerhub is actually fedora:44 (!?!)
+FROM quay.io/fedora/fedora:44
 LABEL maintainer=henri@nagstamon.de
 
 # Because it happened that fedora:42 image actually was a fedora:43 image but stayed so
 # due to caching the image I add some random characters to force a rebuild of the image if needed:
-# 1 2 1 2 keep it on...
+# 1 2 1 2 3 keep it on....
 
 # avoid Cisco OpenH264 plugin causing upgrade failure
 RUN dnf config-manager setopt fedora-cisco-openh264.enabled=false
@@ -33,6 +34,14 @@ RUN dnf -y install createrepo_c \
                    qt6-qtsvg \
                    qt6-qtmultimedia \
                    rpm-build
+
+# Existing /usr/sbin/python3 causes problems with RPM package installation
+# /usr/sbin is a symlink to /usr/bin - deleting it causes next problem
+# with ldconfig, which therefore symlinked into /usr/sbin
+RUN rm -rf /usr/sbin
+RUN mkdir /usr/sbin
+# needed for RPM build
+RUN ln -s /usr/bin/ldconfig /usr/sbin/ldconfig
 
 # Finally build
 CMD cd /nagstamon/build && \

@@ -25,6 +25,7 @@ RUN dnf -y install createrepo_c \
                    python3-psutil \
                    python3-pyqt6 \
                    python3-pyqt6-devel \
+                   python3-pyqt6-webengine \
                    python3-requests \
                    python3-requests-kerberos \
                    python3-SecretStorage \
