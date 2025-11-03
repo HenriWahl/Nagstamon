@@ -119,7 +119,12 @@ class ZabbixServer(GenericServer):
 
     def login(self):
         if conf.servers[self.get_name()].authentication == 'bearer':
-            return
+            # In bearer mode the GUI stores the API token in the password field
+            token = self.password
+            if token:
+                self.session.auth = BearerAuth(token)
+                self.refresh_authentication = False
+                return
 
         # check version to use the correct keyword for username which changed since 6.4
         if version.parse(self.api_version) < version.parse("6.4"):
@@ -130,9 +135,9 @@ class ZabbixServer(GenericServer):
         obj = self.generate_cgi_data('user.login', {username_keyword: self.username, 'password': self.password}, no_auth=True)
         result = self.api_request(obj)
         self.auth_token = result['result']  # Store the auth token for later use
-        # Use bearer authentication for Zabbix versions 6.4 and above
-        self.authentication = "bearer" if version.parse(self.api_version) >= version.parse("6.4") else "basic"
-        self.session.auth = BearerAuth(self.auth_token)
+        # For Zabbix >= 6.4 the server expects HTTP Bearer and no JSON-RPC auth field
+        if version.parse(self.api_version) >= version.parse("6.4"):
+            self.session.auth = BearerAuth(self.auth_token)
         self.refresh_authentication = False  # Reset the flag after successful login
 
     def check_authentication(self):
