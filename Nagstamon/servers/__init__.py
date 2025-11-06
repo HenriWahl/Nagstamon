@@ -48,6 +48,7 @@ from Nagstamon.servers.Sensu import SensuServer
 from Nagstamon.servers.SensuGo import SensuGoServer
 from Nagstamon.servers.Prometheus import PrometheusServer
 from Nagstamon.servers.Alertmanager import AlertmanagerServer
+from Nagstamon.servers.LibreNMS import LibreNMSServer
 
 from Nagstamon.config import conf
 
@@ -215,6 +216,9 @@ def create_server(server=None):
     new_server.map_to_critical = server.map_to_critical
     new_server.map_to_down = server.map_to_down
 
+    # LibreNMS
+    new_server.treat_services_as_alerts = server.treat_services_as_alerts
+
     # Thruk
     new_server.disabled_backends = server.disabled_backends
 
@@ -241,6 +245,7 @@ servers_list = [AlertmanagerServer,
                 IcingaDBWebNotificationsServer,
                 IcingaWeb2Server,
                 Icinga2APIServer,
+                LibreNMSServer,
                 LivestatusServer,
                 Monitos3Server,
                 Monitos4xServer,

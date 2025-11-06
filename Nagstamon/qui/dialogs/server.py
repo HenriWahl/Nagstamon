@@ -105,6 +105,7 @@ class DialogServer(Dialog):
             self.window.input_lineedit_monitor_site: ['Sensu'],
             self.window.label_map_to_hostname: ['Prometheus', 'Alertmanager'],
             self.window.input_lineedit_map_to_hostname: ['Prometheus', 'Alertmanager'],
+            self.window.input_checkbox_treat_services_as_alerts: ['LibreNMS'],
             self.window.label_map_to_servicename: ['Prometheus', 'Alertmanager'],
             self.window.input_lineedit_map_to_servicename: ['Prometheus', 'Alertmanager'],
             self.window.label_map_to_status_information: ['Prometheus', 'Alertmanager'],
