@@ -754,6 +754,13 @@
         </property>
        </widget>
       </item>
+      <item row="29" column="1" colspan="2">
+       <widget class="QCheckBox" name="input_checkbox_treat_services_as_alerts">
+        <property name="text">
+         <string>Treat service status as alerts (LibreNMS only)</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
