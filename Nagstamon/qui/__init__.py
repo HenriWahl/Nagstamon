@@ -126,7 +126,7 @@ dialogs.settings.changed.connect(systrayicon.create_icons)
 # when there are new settings/colors refresh labels
 dialogs.settings.changed.connect(statuswindow.statusbar.reset)
 
-# when new setings are applied to adjust font size
+# when new settings are applied to adjust font size
 dialogs.settings.changed.connect(statuswindow.statusbar.adjust_size)
 
 # menu
