@@ -127,8 +127,6 @@ class MultisiteServer(GenericServer):
             self._set_downtime = self._omd_set_downtime
             self._set_recheck = self._omd_set_recheck
 
-        print(self.authentication)
-
         if self.authentication != 'web':
             if self.cookie_auth and not self.refresh_authentication:
                 # get cookie to access Checkmk web interface

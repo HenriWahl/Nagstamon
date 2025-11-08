@@ -354,10 +354,7 @@ class GenericServer:
         elif self.authentication == 'web':
             session.auth = None
             cookies = load_cookies()
-            print(cookies)
-            print(self.name)
             session.cookies = cookie_data_to_jar(self.name, cookies)
-            print(session.cookies)
 
         # default to check TLS validity
         if self.ignore_cert:

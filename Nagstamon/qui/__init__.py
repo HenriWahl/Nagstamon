@@ -113,7 +113,7 @@ dialogs.authentication.show_up.connect(statuswindow.hide_window)
 dialogs.weblogin.show_up.connect(statuswindow.hide_window)
 
 dialogs.settings.settings_ok.connect(statuswindow.save_position_to_conf)
-# trigger the statuswindow.worker to check if debug loop is neede and if so, start it
+# trigger the statuswindow.worker to check if debug loop is needed and if so, start it
 dialogs.settings.settings_ok.connect(statuswindow.worker.debug_loop)
 dialogs.settings.server_deleted.connect(statuswindow.worker.debug_loop)
 dialogs.settings.changed.connect(check_servers.check)

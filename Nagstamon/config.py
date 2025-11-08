@@ -451,7 +451,7 @@ class Config:
             - Handles both monitor and proxy credentials, as well as optional autologin keys.
             - Ensures server names are always strings for consistency.
         """
-        self.keyring_available = self.check_keyring_availability()
+        self.keyring_available = self.is_keyring_available()
 
         servers = self.load_multiple_config('servers', 'server', 'Server')
         # deobfuscate username + password inside a try-except loop
@@ -625,7 +625,7 @@ class Config:
                     if OS in OS_NON_LINUX:
                         self.use_system_keyring = True
                     else:
-                        self.use_system_keyring = self.check_keyring_availability()
+                        self.use_system_keyring = self.is_keyring_available()
 
             # save servers dict
             self.save_multiple_config('servers', 'server')
@@ -678,7 +678,7 @@ class Config:
         # only import keyring lib if configured to do so - to avoid Windows crashes
         # like https://github.com/HenriWahl/Nagstamon/issues/97
         if self.use_system_keyring is True:
-            self.keyring_available = self.check_keyring_availability()
+            self.keyring_available = self.is_keyring_available()
 
         # one section for each setting
         for s in self.__dict__[settingsdir]:
@@ -749,7 +749,7 @@ class Config:
             # ##        if not f.split(setting + "_")[1].split(".conf")[0] in self.__dict__[settingsdir]:
             # ##            os.unlink(self.configdir + os.sep + settingsdir + os.sep + f)
 
-    def check_keyring_availability(self):
+    def is_keyring_available(self):
         """
         Determines if the keyring module and a suitable backend are available for secure password storage.
 
@@ -778,7 +778,7 @@ class Config:
                     self.use_system_keyring = False
                 # only import keyring lib if configured to do so
                 # necessary to avoid Windows crashes like https://github.com/HenriWahl/Nagstamon/issues/97
-                if self.use_system_keyring is True:
+                if self.use_system_keyring:
                     # hint for packaging: nagstamon.spec always have to match module path
                     # keyring has to be bound to object to be used later
                     import keyring
@@ -909,7 +909,7 @@ class Config:
                                                      type="command",
                                                      string="/usr/bin/terminator -x ssh root@$HOST$ update.sh",
                                                      enabled=False)}
-            # OS agnostic actions as examples
+        # OS agnostic actions as examples
         defaultactions["Nagios-1-Click-Acknowledge-Host"] = Action(name="Nagios-1-Click-Acknowledge-Host", type="url",
                                                                    description="Acknowledges a host with one click.",
                                                                    filter_target_service=False, enabled=False,
@@ -1088,7 +1088,7 @@ class Server:
         self.host_filter = 'state !=0'
         self.service_filter = 'state !=0 or host.state != 0'
 
-        # For more information about he Opsview options below, see this link:
+        # For more information about the Opsview options below, see this link:
         # https://knowledge.opsview.com/reference/api-status-filtering-service-objects
 
         # The Opsview hashtag filter will filter out any services NOT having the
@@ -1109,6 +1109,7 @@ class Server:
         self.map_to_hostname = "pod_name,namespace,instance"
         self.map_to_servicename = "alertname"
         self.map_to_status_information = "message,summary,description"
+
         # Alertmanager mappings
         self.alertmanager_filter = ''
         self.map_to_critical = 'critical,error'

@@ -161,11 +161,15 @@ class DialogServer(Dialog):
         self.window.button_choose_custom_cert_ca_file.clicked.connect(self.choose_custom_cert_ca_file)
 
         # fill authentication combobox
-        combobox_authentication_items = ['Basic', 'Bearer', 'Digest', 'Web']
+        combobox_authentication_items = ['Basic', 'Bearer', 'Digest']
         if ecp_available:
             combobox_authentication_items.append('ECP')
         if kerberos_available:
             combobox_authentication_items.append('Kerberos')
+        # Keyring availability is checked in Config - only show Web authentication if keyring is available,
+        # because otherwise encryption key cannot be stored securely
+        if conf.keyring_available:
+            combobox_authentication_items.append('Web')
         # sort items
         self.window.input_combobox_authentication.addItems(sorted(combobox_authentication_items))
 

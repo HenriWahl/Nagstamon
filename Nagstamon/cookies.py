@@ -19,7 +19,15 @@ from pathlib import Path
 import requests
 import sqlite3
 
+from cryptography.fernet import (Fernet,
+                                 InvalidToken)
+
 from Nagstamon.config import conf
+if conf.is_keyring_available():
+    import keyring
+    encrypt_cookie = True
+else:
+    encrypt_cookie = False
 
 COOKIE_DB_FILE = 'cookies.db'
 COOKIE_DB_FILE_PATH = Path(conf.configdir) / COOKIE_DB_FILE
@@ -49,6 +57,8 @@ def init_db():
                        secure
                        INTEGER,
                        httponly
+                       INTEGER,
+                       encrypted
                        INTEGER
                    )
                    ''')
@@ -59,8 +69,18 @@ def init_db():
     # only necessary for upgrade from 'older' versions
     if 'server' not in columns:
         cursor.execute('ALTER TABLE cookies ADD COLUMN server TEXT')
+    if 'encrypted' not in columns:
+        cursor.execute('ALTER TABLE cookies ADD COLUMN encrypted INTEGER DEFAULT 0')
     connection.commit()
     connection.close()
+
+
+def get_encryption_key():
+    encryption_key = keyring.get_password('Nagstamon', 'cookie_encryption_key')
+    if not encryption_key:
+        encryption_key = Fernet.generate_key()
+        keyring.set_password('Nagstamon', 'cookie_encryption_key', encryption_key)
+    return encryption_key
 
 
 def save_cookies(cookies):
@@ -68,20 +88,38 @@ def save_cookies(cookies):
     connection = sqlite3.connect(COOKIE_DB_FILE_PATH)
     cursor = connection.cursor()
     for cookey, cookie_data in cookies.items():
+        if encrypt_cookie:
+            encryption_key = get_encryption_key()
+            fernet = Fernet(encryption_key)
+            print('saving', "cookie_data['value']:", type(cookie_data['value']), cookie_data['value'])
+            if type(cookie_data['value']) is str:
+                print('str')
+                value_to_be_encrypted = cookie_data['value'].encode()
+            elif type(cookie_data['value']) is bytes:
+                print('bytes')
+                value_to_be_encrypted = cookie_data['value'].decode()
+            value = fernet.encrypt(value_to_be_encrypted)
+            print(value)
+            encrypted = 1
+        else:
+            value = cookie_data['value']
+            encrypted = 0
+
         cursor.execute('''
             INSERT OR REPLACE INTO cookies
-            (cookey, server, name, value, domain, path, expiration, secure, httponly)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (cookey, server, name, value, domain, path, expiration, secure, httponly, encrypted)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             cookey,
             cookie_data['server'],
             cookie_data['name'],
-            cookie_data['value'],
+            value,
             cookie_data['domain'],
             cookie_data['path'],
             cookie_data['expiration'],
             int(cookie_data['secure']),
-            int(cookie_data['httponly'])
+            int(cookie_data['httponly']),
+            encrypted
         ))
     connection.commit()
     connection.close()
@@ -91,11 +129,12 @@ def load_cookies():
     init_db()
     connection = sqlite3.connect(COOKIE_DB_FILE_PATH)
     cursor = connection.cursor()
-    cursor.execute('SELECT cookey, server, name, value, domain, path, expiration, secure, httponly FROM cookies')
+    cursor.execute('SELECT cookey, server, name, value, domain, path, expiration, secure, httponly, encrypted FROM cookies')
     rows = cursor.fetchall()
     connection.close()
     cookies = {}
     for row in rows:
+        encrypted = bool(row[9])
         cookey = row[0]
         cookies[cookey] = {
             'server': row[1],
@@ -107,6 +146,23 @@ def load_cookies():
             'secure': bool(row[7]),
             'httponly': bool(row[8])
         }
+        if encrypted:
+            encryption_key = get_encryption_key()
+            fernet = Fernet(encryption_key)
+            print('loading', type(cookies[cookey]['value']), cookies[cookey]['value'])
+            if type(cookies[cookey]['value']) is str:
+                print('str')
+                value_to_be_decrypted = cookies[cookey]['value'].encode()
+            elif type(cookies[cookey]['value']) is bytes:
+                print('bytes')
+                value_to_be_decrypted = cookies[cookey]['value'].decode()
+            try:
+                decrypted_value = fernet.decrypt(value_to_be_decrypted)
+                print(decrypted_value)
+            except InvalidToken:
+                print('Invalid encryption token for cookie', cookey)
+                decrypted_value = b''
+            cookies[cookey]['value'] = decrypted_value.decode()
     return cookies
 
 

@@ -18,5 +18,3 @@
 from Nagstamon.qui.qt import WebEngineView
 
 webengine_view = WebEngineView()
-
-pass
