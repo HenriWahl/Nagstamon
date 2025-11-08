@@ -91,13 +91,14 @@ def save_cookies(cookies):
         if encrypt_cookie:
             encryption_key = get_encryption_key()
             fernet = Fernet(encryption_key)
-            print('saving', "cookie_data['value']:", type(cookie_data['value']), cookie_data['value'])
-            if type(cookie_data['value']) is str:
-                print('str')
-                value_to_be_encrypted = cookie_data['value'].encode()
-            elif type(cookie_data['value']) is bytes:
-                print('bytes')
-                value_to_be_encrypted = cookie_data['value'].decode()
+            # print('saving', "cookie_data['value']:", type(cookie_data['value']), cookie_data['value'])
+            # if type(cookie_data['value']) is str:
+            #     print('str')
+            #     value_to_be_encrypted = cookie_data['value'].encode()
+            # elif type(cookie_data['value']) is bytes:
+            #     print('bytes')
+            #     value_to_be_encrypted = cookie_data['value'].decode()
+            value_to_be_encrypted = cookie_data['value'].encode()
             value = fernet.encrypt(value_to_be_encrypted)
             print(value)
             encrypted = 1
@@ -150,12 +151,13 @@ def load_cookies():
             encryption_key = get_encryption_key()
             fernet = Fernet(encryption_key)
             print('loading', type(cookies[cookey]['value']), cookies[cookey]['value'])
-            if type(cookies[cookey]['value']) is str:
-                print('str')
-                value_to_be_decrypted = cookies[cookey]['value'].encode()
-            elif type(cookies[cookey]['value']) is bytes:
-                print('bytes')
-                value_to_be_decrypted = cookies[cookey]['value'].decode()
+            # if type(cookies[cookey]['value']) is str:
+            #     print('str')
+            #     value_to_be_decrypted = cookies[cookey]['value'].encode()
+            # elif type(cookies[cookey]['value']) is bytes:
+            #     print('bytes')
+            #     value_to_be_decrypted = cookies[cookey]['value'].decode()
+            value_to_be_decrypted = cookies[cookey]['value'].decode()
             try:
                 decrypted_value = fernet.decrypt(value_to_be_decrypted)
                 print(decrypted_value)
