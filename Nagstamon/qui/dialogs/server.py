@@ -168,7 +168,7 @@ class DialogServer(Dialog):
             combobox_authentication_items.append('Kerberos')
         # Keyring availability is checked in Config - only show Web authentication if keyring is available,
         # because otherwise encryption key cannot be stored securely
-        if conf.keyring_available:
+        if conf.is_keyring_available():
             combobox_authentication_items.append('Web')
         # sort items
         self.window.input_combobox_authentication.addItems(sorted(combobox_authentication_items))
