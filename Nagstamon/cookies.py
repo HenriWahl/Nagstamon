@@ -22,7 +22,9 @@ import sqlite3
 from cryptography.fernet import (Fernet,
                                  InvalidToken)
 
-from Nagstamon.config import conf
+from Nagstamon.config import (conf,
+                              OS,
+                              OS_WINDOWS)
 if conf.is_keyring_available():
     import keyring
     encrypt_cookie = True
@@ -79,8 +81,10 @@ def get_encryption_key():
     encryption_key = keyring.get_password('Nagstamon', 'cookie_encryption_key')
     if not encryption_key:
         encryption_key = Fernet.generate_key()
+        # Windows keyring stores bytes as strings like "b'keyvalue'" which confuses Fernet
+        if OS == OS_WINDOWS:
+            encryption_key = encryption_key.decode()
         keyring.set_password('Nagstamon', 'cookie_encryption_key', encryption_key)
-    print(type(encryption_key), encryption_key)
     return encryption_key
 
 
@@ -142,6 +146,7 @@ def load_cookies():
         }
         if encrypted:
             encryption_key = get_encryption_key()
+            print('encrypted', type(encryption_key), encryption_key)
             fernet = Fernet(encryption_key)
             value_to_be_decrypted = cookies[cookey]['value'].decode()
             try:
@@ -166,5 +171,3 @@ def cookie_data_to_jar(server_name, cookie_data):
                 rest={'HttpOnly': cookie['httponly']}
             )
     return jar
-
-
