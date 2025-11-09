@@ -6,9 +6,10 @@ keyring
 lxml
 packaging
 psutil
-pyqt6
-pyqt6-qt6
-pyqt6-webengine
+# problem with 6.10.0 on linux, downgrade to 6.9.1
+pyqt6==6.9.1
+pyqt6-qt6==6.9.1
+pyqt6-webengine==6.9.0
 pysocks
 python-dateutil
 requests
