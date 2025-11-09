@@ -9,10 +9,14 @@ pyinstaller
 pyobjc-framework-ApplicationServices
 # PyQt6 6.9.1 comes with undescribable sound issues on macOS, downgrading to 6.8.1 - hoping for the best
 # 6.8.1 is not enough, going back to 6.6.1 which is the last one known to work well
-pyqt6==6.6.1
-pyqt6-qt6==6.6.1
-# really version 6.8.0
-pyqt6-webengine==6.8.0
+#pyqt6==6.6.1
+#pyqt6-qt6==6.6.1
+# really version 6.6.0
+#pyqt6-webengine==6.6.0
+# new attempt, try with latest Qt6 6.10.0
+pyqt6==6.10.0
+pyqt6-qt6==6.10.0
+pyqt6-webengine==6.10.0
 pysocks
 python-dateutil
 requests
