@@ -80,6 +80,7 @@ def get_encryption_key():
     if not encryption_key:
         encryption_key = Fernet.generate_key()
         keyring.set_password('Nagstamon', 'cookie_encryption_key', encryption_key)
+    print(type(encryption_key), encryption_key)
     return encryption_key
 
 
