@@ -165,7 +165,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run : brew install create-dmg
-      - run: pip3 install --no-warn-script-location -r build/requirements/macos.txt
+      - run: pip3 install --no-warn-script-location -r build/requirements/macos.txt --break-system-packages
       - run: cd ${{ github.workspace }}/build; python3 build.py
         env:
           PYTHONPATH: ${{ github.workspace }}
