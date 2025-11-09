@@ -1,5 +1,6 @@
 arrow
 beautifulsoup4
+cryptography
 dbus-python
 keyring
 lxml

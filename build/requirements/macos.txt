@@ -1,5 +1,6 @@
 arrow
 beautifulsoup4
+cryptography
 # problems since 24.x?
 keyring==23.13.1
 lxml

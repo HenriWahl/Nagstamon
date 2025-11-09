@@ -24,7 +24,7 @@ from cryptography.fernet import (Fernet,
 
 from Nagstamon.config import (conf,
                               OS,
-                              OS_WINDOWS)
+                              OS_NON_LINUX)
 if conf.is_keyring_available():
     import keyring
     encrypt_cookie = True
@@ -35,8 +35,15 @@ COOKIE_DB_FILE = 'cookies.db'
 COOKIE_DB_FILE_PATH = Path(conf.configdir) / COOKIE_DB_FILE
 
 def init_db():
+    """
+    initialize the SQLite database for storing cookies
+    """
+    # make sure the config directory exists
+    conf.save_config()
+    # connect to the database file, which will be created if it does not exist
     connection = sqlite3.connect(COOKIE_DB_FILE_PATH)
     cursor = connection.cursor()
+    # create cookies table with schema if it does not exist
     cursor.execute('''
                    CREATE TABLE IF NOT EXISTS cookies
                    (
@@ -64,7 +71,7 @@ def init_db():
                        INTEGER
                    )
                    ''')
-    # check if 'server' column exists, if not add it - will be kicked out later
+    # check if 'server' and 'encrypted' columns exist, if not add them - will be kicked out later
     cursor.execute("PRAGMA table_info(cookies)")
     table_info = cursor.fetchall()
     columns = [info[1] for info in table_info]
@@ -86,7 +93,8 @@ def get_encryption_key():
     if not encryption_key:
         encryption_key = Fernet.generate_key()
         # Windows keyring stores bytes as strings like "b'keyvalue'" which confuses Fernet
-        if OS == OS_WINDOWS:
+        # macOS throws some pointer error, so it is happier with .decode() too
+        if OS in OS_NON_LINUX:
             encryption_key = encryption_key.decode()
         keyring.set_password('Nagstamon', 'cookie_encryption_key', encryption_key)
     return encryption_key

@@ -1,5 +1,6 @@
 arrow
 beautifulsoup4
+cryptography
 keyring
 lxml
 pip-system-certs
