@@ -30,7 +30,8 @@ class CentreonServer(GenericServer):
         # like all servers we need to initialize Generic
         GenericServer.__init__(self, **kwds)
         # due to not being initialized right now we need to access config directly to get this instance's config
-        if conf.servers[self.get_name()].enabled:
+        server_conf = conf.servers.get(kwds.get('name'))
+        if server_conf.enabled:
             self.authentication = conf.servers[self.get_name()].authentication
             # because auf being very early in init process the property ignore_cert is not known yet
             # add it here to be able to fetch URL and ignore certs if activated
