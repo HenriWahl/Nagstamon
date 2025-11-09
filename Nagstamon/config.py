@@ -154,8 +154,8 @@ class Config:
 
     def __init__(self):
         """
-            read config file and set the appropriate attributes
-            supposed to be sensible defaults
+        read config file and set the appropriate attributes
+        supposed to be sensible defaults
         """
         # move from minute interval to seconds
         self.update_interval_seconds = 60

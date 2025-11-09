@@ -78,6 +78,10 @@ def init_db():
 
 
 def get_encryption_key():
+    """
+    creates a key for encrypting the cookies in the database and stores it in the OS keyring.
+    if there alread is a key stored, it is retrieved and returned.
+    """
     encryption_key = keyring.get_password('Nagstamon', 'cookie_encryption_key')
     if not encryption_key:
         encryption_key = Fernet.generate_key()
@@ -89,13 +93,21 @@ def get_encryption_key():
 
 
 def save_cookies(cookies):
+    """
+    save cookies to the SQLite database
+    """
+    # initialize database file for access
     init_db()
     connection = sqlite3.connect(COOKIE_DB_FILE_PATH)
     cursor = connection.cursor()
+    # cookey is the unique key for each cookie
     for cookey, cookie_data in cookies.items():
+        # newer cookies will be encrypted
         if encrypt_cookie:
+            # get key from keyring
             encryption_key = get_encryption_key()
             fernet = Fernet(encryption_key)
+            # convert value to be encrypted
             value_to_be_encrypted = cookie_data['value'].encode()
             value = fernet.encrypt(value_to_be_encrypted)
             encrypted = 1
@@ -124,13 +136,19 @@ def save_cookies(cookies):
 
 
 def load_cookies():
+    """
+    load cookies from the SQLite database
+    """
+    # initialize database file for access
     init_db()
     connection = sqlite3.connect(COOKIE_DB_FILE_PATH)
     cursor = connection.cursor()
     cursor.execute('SELECT cookey, server, name, value, domain, path, expiration, secure, httponly, encrypted FROM cookies')
     rows = cursor.fetchall()
     connection.close()
+    # initialize cookies dictionary
     cookies = {}
+    # load cookies from database rows
     for row in rows:
         encrypted = bool(row[9])
         cookey = row[0]
@@ -145,10 +163,12 @@ def load_cookies():
             'httponly': bool(row[8])
         }
         if encrypted:
+            # get key from keyring
             encryption_key = get_encryption_key()
-            print('encrypted', type(encryption_key), encryption_key)
             fernet = Fernet(encryption_key)
+            # decrypt cookie value
             value_to_be_decrypted = cookies[cookey]['value'].decode()
+            # if decryption fails because of wrong key return empty string
             try:
                 decrypted_value = fernet.decrypt(value_to_be_decrypted)
             except InvalidToken:
@@ -158,6 +178,9 @@ def load_cookies():
 
 
 def cookie_data_to_jar(server_name, cookie_data):
+    """
+
+    """
     jar = requests.cookies.RequestsCookieJar()
     for cookie in cookie_data.values():
         if cookie['server'] == server_name:
