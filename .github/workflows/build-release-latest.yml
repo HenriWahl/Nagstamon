@@ -11,7 +11,7 @@ on:
       - '!split_cookies'
 
 env:
-  python_win_version: 3.13.7
+  python_win_version: 3.13.9
   repo_dir: nagstamon-jekyll/docs/repo
   cr_image: ghcr.io/henriwahl/build-nagstamon
   # release type this file is used for
