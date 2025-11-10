@@ -6,6 +6,7 @@ on:
       - '**'
       - '!master'
       - '!*.*.*'
+      - '!macos_audio_trouble'
 
 env:
   python_win_version: 3.13.9

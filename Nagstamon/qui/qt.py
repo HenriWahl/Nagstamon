@@ -250,6 +250,7 @@ elif QT_FLAVOR == 'PyQt6':
                              QPalette,
                              QPixmap)
     from PyQt6.QtMultimedia import (QAudioOutput,
+                                    QMediaDevices,
                                     QMediaPlayer)
     from PyQt6.QtNetwork import (QNetworkCookie,
                                  QNetworkProxy,
@@ -299,7 +300,14 @@ elif QT_FLAVOR == 'PyQt6':
 
         def __init__(self, resource_files):
             QObject.__init__(self)
+            mediadevices = QMediaDevices()
+            for audio_device in mediadevices.audioOutputs():
+                print(audio_device.description(), audio_device.isDefault(), audio_device.isNull())
+                if audio_device.isDefault():
+                    print(type(audio_device))
+                    break
             self.audio_output = QAudioOutput()
+            self.audio_output.setDevice(audio_device)
             self.player = QMediaPlayer(parent=self)
             self.player.setAudioOutput(self.audio_output)
             self.resource_files = resource_files
