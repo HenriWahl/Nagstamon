@@ -300,16 +300,10 @@ elif QT_FLAVOR == 'PyQt6':
 
         def __init__(self, resource_files):
             QObject.__init__(self)
-            mediadevices = QMediaDevices()
-            for audio_device in mediadevices.audioOutputs():
-                print(audio_device.description(), audio_device.isDefault(), audio_device.isNull())
-                if audio_device.isDefault():
-                    print(type(audio_device))
-                    break
+            # access to media devices
+            self.media_devices = QMediaDevices()
             self.audio_output = QAudioOutput()
-            self.audio_output.setDevice(audio_device)
             self.player = QMediaPlayer(parent=self)
-            self.player.setAudioOutput(self.audio_output)
             self.resource_files = resource_files
 
         @Slot(str)
@@ -333,6 +327,14 @@ elif QT_FLAVOR == 'PyQt6':
 
         @Slot()
         def play(self):
+            # because devices may change dynamically, get default output device each time before playing
+            for audio_device in self.media_devices.audioOutputs():
+                # default device found
+                if audio_device.isDefault():
+                    break
+            print(f'Using audio output device: {audio_device.description()}')
+            self.audio_output.setDevice(audio_device)
+            print(self.audio_output.volume())
             # just play sound
             self.player.play()
 
