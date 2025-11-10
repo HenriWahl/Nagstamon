@@ -333,17 +333,20 @@ elif QT_FLAVOR == 'PyQt6':
             play sound on default audio output device, triggered by signal
             """
             try:
+                # default audio device
+                audio_device = False
                 # because devices may change dynamically, get default output device each time before playing
                 for audio_device in self.media_devices.audioOutputs():
                     # default device found
                     if audio_device.isDefault():
                         break
-                # use audio output device
-                self.audio_output.setDevice(audio_device)
-                # connect player with audio output
-                self.player.setAudioOutput(self.audio_output)
-                # just play sound
-                self.player.play()
+                if audio_device:
+                    # use audio output device
+                    self.audio_output.setDevice(audio_device)
+                    # connect player with audio output
+                    self.player.setAudioOutput(self.audio_output)
+                    # just play sound
+                    self.player.play()
             except Exception as error:
                 print(error)
 
