@@ -302,7 +302,9 @@ elif QT_FLAVOR == 'PyQt6':
             QObject.__init__(self)
             # access to media devices
             self.media_devices = QMediaDevices()
+            # output needed fpr player
             self.audio_output = QAudioOutput()
+            # player gets the output device assigned before playing
             self.player = QMediaPlayer(parent=self)
             self.resource_files = resource_files
 
@@ -327,16 +329,23 @@ elif QT_FLAVOR == 'PyQt6':
 
         @Slot()
         def play(self):
-            # because devices may change dynamically, get default output device each time before playing
-            for audio_device in self.media_devices.audioOutputs():
-                # default device found
-                if audio_device.isDefault():
-                    break
-            print(f'Using audio output device: {audio_device.description()}')
-            self.audio_output.setDevice(audio_device)
-            print(self.audio_output.volume())
-            # just play sound
-            self.player.play()
+            """
+            play sound on default audio output device, triggered by signal
+            """
+            try:
+                # because devices may change dynamically, get default output device each time before playing
+                for audio_device in self.media_devices.audioOutputs():
+                    # default device found
+                    if audio_device.isDefault():
+                        break
+                # use audio output device
+                self.audio_output.setDevice(audio_device)
+                # connect player with audio output
+                self.player.setAudioOutput(self.audio_output)
+                # just play sound
+                self.player.play()
+            except Exception as error:
+                print(error)
 
 
     def get_global_position(event):
