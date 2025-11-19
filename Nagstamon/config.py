@@ -1125,6 +1125,9 @@ class Server:
         # Thruk
         self.disabled_backends = ""
 
+        # LibreNMS
+        self.treat_services_as_alerts = False
+
 
 class Action:
     """
