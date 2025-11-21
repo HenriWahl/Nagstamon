@@ -323,7 +323,6 @@ class GenericServer:
                 return True
         elif not self.session:
             self.session = self.create_session()
-            if not self.session.cookies:
             return True
 
     def create_session(self):
