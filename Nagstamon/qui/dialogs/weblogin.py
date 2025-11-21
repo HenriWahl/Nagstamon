@@ -75,14 +75,11 @@ class DialogWebLogin(Dialog):
 
         self.cookies = dict()
 
-
-    @Slot(str, str)
-    def set_url(self, server_name, url):
+    def on_url_changed(self, url):
         """
-        set url to load
+        change URL label when URL changes
         """
-
-        server = servers.get(server_name)
+        self.window.label_url.setText(url.toString())
 
     def on_load_finished(self):
         """
@@ -165,6 +162,7 @@ class DialogWebLogin(Dialog):
             self.cookie_store.setCookie(cookie)
         self.cookie_store.cookieAdded.connect(self.handle_cookie_added)
 
+        self.webengine_view.urlChanged.connect(self.on_url_changed)
         self.webengine_view.loadFinished.connect(self.on_load_finished)
 
         self.window.vbox.addWidget(self.webengine_view)
