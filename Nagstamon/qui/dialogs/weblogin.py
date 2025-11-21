@@ -15,11 +15,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+import datetime
 from Nagstamon.cookies import (cookie_data_to_jar,
                                load_cookies,
                                save_cookies)
 from Nagstamon.helpers import USER_AGENT
 from Nagstamon.qui.qt import (QNetworkProxy,
+                              QNetworkCookie,
                               QNetworkProxyFactory,
                               Qt,
                               QT_VERSION_MAJOR,
@@ -143,6 +145,22 @@ class DialogWebLogin(Dialog):
         self.profile.setHttpUserAgent(USER_AGENT)
 
         self.cookie_store = self.profile.cookieStore()
+        stored_cookies = load_cookies()
+        for entry in stored_cookies:
+            cookie = stored_cookies[entry]
+            # only add cookies which belongs to selected server
+            if self.server.name != cookie["server"]:
+                continue
+            qcookie = QNetworkCookie()
+            qcookie.setName(cookie["name"].encode("ascii"))
+            qcookie.setValue(cookie["value"].encode("ascii"))
+            qcookie.setDomain(cookie["domain"])
+            qcookie.setPath(cookie["path"])
+            if cookie["expiration"]:
+                qcookie.setExpirationDate(datetime.datetime.fromtimestamp(cookie["expiration"]))
+            qcookie.setSecure(cookie["secure"])
+            qcookie.setHttpOnly(cookie["httponly"])
+            self.cookie_store.setCookie(qcookie)
         self.cookie_store.cookieAdded.connect(self.handle_cookie_added)
 
         self.webengine_view.loadFinished.connect(self.on_load_finished)
