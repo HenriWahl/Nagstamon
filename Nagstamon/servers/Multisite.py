@@ -1,5 +1,3 @@
-# encoding: utf-8
-import json
 # Nagstamon - Nagios status monitor for your desktop
 # Copyright (C) 2008-2025 Henri Wahl <henri@nagstamon.de> et al.
 #
@@ -20,13 +18,16 @@ import json
 # The initial implementation was contributed to the Nagstamon project
 # by tribe29 GmbH.
 
+from datetime import datetime
+import copy
+import html
+import json
+import socket
 import sys
 import urllib.request, urllib.parse, urllib.error
 import time
-import copy
-import html
+
 import tzlocal
-from datetime import datetime
 
 from Nagstamon.objects import (GenericHost,
                                GenericService,
@@ -34,6 +35,7 @@ from Nagstamon.objects import (GenericHost,
 from Nagstamon.servers.Generic import GenericServer
 from Nagstamon.helpers import webbrowser_open
 from Nagstamon.config import conf
+
 
 class MultisiteError(Exception):
     def __init__(self, terminate, result):
@@ -583,27 +585,27 @@ class MultisiteServer(GenericServer):
 
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None):
-        p = {
+        specific_params = {
             '_acknowledge':    'Acknowledge',
             '_ack_sticky':     sticky == 1 and 'on' or '',
             '_ack_notify':     notify == 1 and 'on' or '',
             '_ack_persistent': persistent == 1 and 'on' or '',
             '_ack_comment':    author == self.username and comment or '%s: %s' % (author, comment)
         }
-        self._action(self.hosts[host].site, host, service, p)
+        self._action(self.hosts[host].site, host, service, specific_params)
 
         # acknowledge all services on a host when told to do so
         if all_services:
             for s in all_services:
-                self._action(self.hosts[host].site, host, s, p)
+                self._action(self.hosts[host].site, host, s, specific_params)
 
 
     def _set_recheck(self, host, service):
-        p = {
+        specific_params = {
             '_resched_checks': 'Reschedule active checks',
-            '_resched_pread':  '0'
+            '_resched_spread':  '0'
         }
-        self._action(self.hosts[host].site, host, service, p)
+        self._action(self.hosts[host].site, host, service, specific_params)
 
 
     def _omd_set_recheck(self, host, service):

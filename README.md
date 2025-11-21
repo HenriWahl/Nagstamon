@@ -27,5 +27,6 @@ Successfully tested monitors include:
  - Zenoss – experimental
  - monitos 3 - experimental
  - SNAG-View3 - experimental
+ - LibreNMS - experimental
 
 See https://nagstamon.de for further information.
