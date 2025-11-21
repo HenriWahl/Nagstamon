@@ -6,7 +6,7 @@ on:
       - '**'
       - '!master'
       - '!*.*.*'
-      - '!cookies_and_more'
+
 env:
   python_win_version: 3.13.9
   repo_dir: nagstamon-jekyll/docs/repo
