@@ -55,9 +55,9 @@ class ZabbixServer(GenericServer):
         self.MENU_ACTIONS = ["Monitor", "Acknowledge", "Downtime"]
         # URLs for browser shortlinks/buttons on popup window
         self.BROWSER_URLS = {'monitor': '$MONITOR$',
-                             'hosts': '$MONITOR-CGI$/hosts.php?ddreset=1',
-                             'services': '$MONITOR-CGI$/zabbix.php?action=problem.view&fullscreen=0&page=1&filter_show=3&filter_set=1',
-                             'history': '$MONITOR-CGI$/zabbix.php?action=problem.view&fullscreen=0&page=1&filter_show=2&filter_set=1'}
+                             'hosts': '$MONITOR$/zabbix.php?action=host.view',
+                             'services': '$MONITOR$/zabbix.php?action=problem.view&fullscreen=0&page=1&filter_show=3&filter_set=1',
+                             'history': '$MONITOR$/zabbix.php?action=problem.view&fullscreen=0&page=1&filter_show=2&filter_set=1'}
 
         self.username = conf.servers[self.get_name()].username
         self.password = conf.servers[self.get_name()].password
@@ -69,7 +69,11 @@ class ZabbixServer(GenericServer):
         # Force authentication refresh by default until verified
         self.refresh_authentication = True
         self.monitor_path = '/api_jsonrpc.php'
+
+    def init_config(self):
+        super().init_config()
         self.monitor_url = self.monitor_url.split(self.monitor_path)[0]
+        self.monitor_cgi_url = f"{self.monitor_url}{self.monitor_path}"
 
     def init_http(self):
         """
@@ -104,7 +108,7 @@ class ZabbixServer(GenericServer):
             Make a request to the Zabbix API
             Returns the response as a dictionary
         """
-        url = self.monitor_url if self.monitor_url.endswith(self.monitor_path) else f"{self.monitor_url}{self.monitor_path}"
+        url = self.monitor_cgi_url
         result = self.fetch_url(url,
                                   headers=self.session.headers,
                                   cgi_data=cgi_data,
@@ -297,18 +301,23 @@ class ZabbixServer(GenericServer):
         """
             open monitor from treeview context menu
         """
-        monitor_url = self.monitor_url.split(self.monitor_path)[0]
-        host = self.hosts.get(host, None)
-        triggerid = None
-        # host.services ist ein Dict {triggerid: service_obj} – über Werte iterieren
-        for service_obj in host.services.values():
-            if service_obj.name == service_str:
-                triggerid = service_obj.triggerid
-                break
+        try:
+            host = self.hosts.get(host, None)
+            triggerid = None
+            # host.services ist ein Dict {triggerid: service_obj} – über Werte iterieren
+            for service_obj in host.services.values():
+                if service_obj.name == service_str:
+                    triggerid = service_obj.triggerid
+                    break
 
-        url = f"{monitor_url}/zabbix.php?action=problem.view&triggerids%5B%5D={triggerid}&filter_set=1&show_suppressed=1"
+            url = f"{self.monitor_url}/zabbix.php?action=problem.view&triggerids%5B%5D={triggerid}&filter_set=1&show_suppressed=1"
 
-        webbrowser_open(url)
+            webbrowser_open(url)
+        except Exception as e:
+            if conf.debug_mode is True:
+                self.debug(server=self.get_name(),
+                           debug=f'Error while opening monitor page: {e}')
+            return
 
     # Disable set_recheck (nosense in Zabbix)
     def set_recheck(self, info_dict):
