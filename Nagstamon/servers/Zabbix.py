@@ -69,6 +69,7 @@ class ZabbixServer(GenericServer):
         # Force authentication refresh by default until verified
         self.refresh_authentication = True
         self.monitor_path = '/api_jsonrpc.php'
+        self.monitor_url = self.monitor_url.split(self.monitor_path)[0]
 
     def init_http(self):
         """
@@ -285,37 +286,28 @@ class ZabbixServer(GenericServer):
                         self.new_hosts[host['name']].services[service["triggerid"]].host = host['name']
                         self.new_hosts[host['name']].services[service["triggerid"]].hostid = host['hostid']
         except ZabbixError as e:
-            print(f"ZabbixError: {e.result.error}")
             return Result(result=e.result, error=e.result.error)
         except Exception:
             self.isChecking = False
             result, error = self.error(sys.exc_info())
-            print(sys.exc_info())
             return Result(result=result, error=error)
         return ret
 
-    def _open_browser(self, url):
-        webbrowser_open(url)
-
-        if conf.debug_mode is True:
-            self.debug(server=self.get_name(), debug="Open web page " + url)
-
-    def open_services(self):
-        self._open_browser(self.urls['human_services'])
-
-    def open_hosts(self):
-        self._open_browser(self.urls['human_hosts'])
-
-    def open_monitor(self, host, service=""):
+    def open_monitor(self, host, service_str=""):
         """
             open monitor from treeview context menu
         """
-        host_id = self.hosts[host].hostid
-        url = f"{self.monitor_url}/zabbix.php?action=problem.view&hostids%5B%5D={host_id}&filter_set=1&show_suppressed=1"
+        monitor_url = self.monitor_url.split(self.monitor_path)[0]
+        host = self.hosts.get(host, None)
+        triggerid = None
+        # host.services ist ein Dict {triggerid: service_obj} – über Werte iterieren
+        for service_obj in host.services.values():
+            if service_obj.name == service_str:
+                triggerid = service_obj.triggerid
+                break
 
-        if conf.debug_mode is True:
-            self.debug(server=self.get_name(), host=host, service=service,
-                       debug="Open host/service monitor web page " + url)
+        url = f"{monitor_url}/zabbix.php?action=problem.view&triggerids%5B%5D={triggerid}&filter_set=1&show_suppressed=1"
+
         webbrowser_open(url)
 
     # Disable set_recheck (nosense in Zabbix)
@@ -336,8 +328,7 @@ class ZabbixServer(GenericServer):
         # Through all Services
         for s in all_services:
             # find Trigger ID
-            for host_service in get_host.services:
-                host_service = get_host.services[host_service]
+            for host_service in get_host.services.values():
                 if host_service.name == s:
                     eventid = host_service.eventid
                     # https://github.com/HenriWahl/Nagstamon/issues/826 we may have set eventid = -1 earlier if there was no associated event
@@ -431,7 +422,6 @@ class ZabbixServer(GenericServer):
             self.debug(server=self.get_name(),
                        debug="Downtime for " + hostname + "[" + str(hostids) + "] stime:" + str(
                            stime) + " etime:" + str(etime))
-        # print("Downtime for " + hostname + "[" + str(hostids) + "] stime:" + str(stime) + " etime:" + str(etime))
         body = {'hostids': hostids, 'name': comment, 'description': author, 'active_since': stime, 'active_till': etime,
                 'maintenance_type': 0, "timeperiods": [
                         {"timeperiod_type": 0, "start_date": stime, "period": etime - stime}
