@@ -15,11 +15,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+from datetime import datetime
+
 from Nagstamon.cookies import (cookie_data_to_jar,
                                load_cookies,
                                save_cookies)
 from Nagstamon.helpers import USER_AGENT
 from Nagstamon.qui.qt import (QNetworkProxy,
+                              QNetworkCookie,
                               QNetworkProxyFactory,
                               Qt,
                               QT_VERSION_MAJOR,
@@ -45,7 +48,7 @@ class WebEnginePage(WebEnginePage):
 
     @Slot(WebEngineCertificateError)
     def handle_certificate_error(self, error):
-        print("TLS error:", error.description())
+        print('TLS error:', error.description())
         if self.ignore_tls_errors:
             error.acceptCertificate()
             return True
@@ -72,22 +75,17 @@ class DialogWebLogin(Dialog):
 
         self.cookies = dict()
 
-
-    @Slot(str, str)
-    def set_url(self, server_name, url):
+    def on_url_changed(self, url):
         """
-        set url to load
+        change URL label when URL changes
         """
-
-        server = servers.get(server_name)
+        self.window.label_url.setText(url.toString())
 
     def on_load_finished(self):
         """
         send message when page is loaded so the statuswindow can refresh
         """
-        print('load finished')
         if self.server:
-            print('emit signal page_loaded')
             self.page_loaded.emit()
 
     @Slot(str)
@@ -143,8 +141,28 @@ class DialogWebLogin(Dialog):
         self.profile.setHttpUserAgent(USER_AGENT)
 
         self.cookie_store = self.profile.cookieStore()
+
+        # get already stored cookies and add them to the cookie store
+        stored_cookies = load_cookies()
+        for entry in stored_cookies:
+            stored_cookie = stored_cookies[entry]
+            # only add cookies which belongs to selected server
+            if self.server.name != stored_cookie['server']:
+                continue
+            cookie = QNetworkCookie()
+            # RFCs state that cookie names and values should be ASCII - let's see what happens
+            cookie.setName(stored_cookie['name'].encode('ascii', errors='ignore'))
+            cookie.setValue(stored_cookie['value'].encode('ascii', errors='ignore'))
+            cookie.setDomain(stored_cookie['domain'])
+            cookie.setPath(stored_cookie['path'])
+            if stored_cookie['expiration']:
+                cookie.setExpirationDate(datetime.fromtimestamp(stored_cookie['expiration']))
+            cookie.setSecure(stored_cookie['secure'])
+            cookie.setHttpOnly(stored_cookie['httponly'])
+            self.cookie_store.setCookie(cookie)
         self.cookie_store.cookieAdded.connect(self.handle_cookie_added)
 
+        self.webengine_view.urlChanged.connect(self.on_url_changed)
         self.webengine_view.loadFinished.connect(self.on_load_finished)
 
         self.window.vbox.addWidget(self.webengine_view)
@@ -192,9 +210,6 @@ class DialogWebLogin(Dialog):
                 self.profile = None
             if self.cookie_store:
                 self.cookie_store = None
-
-            print('closed weblogin for', server_name)
-
 
     def handle_cookie_added(self, cookie):
         # load existing cookies from SQLite databases

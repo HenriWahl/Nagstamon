@@ -1,5 +1,3 @@
-# encoding: utf-8
-import json
 # Nagstamon - Nagios status monitor for your desktop
 # Copyright (C) 2008-2025 Henri Wahl <henri@nagstamon.de> et al.
 #
@@ -20,13 +18,16 @@ import json
 # The initial implementation was contributed to the Nagstamon project
 # by tribe29 GmbH.
 
+from datetime import datetime
+import copy
+import html
+import json
+import socket
 import sys
 import urllib.request, urllib.parse, urllib.error
 import time
-import copy
-import html
+
 import tzlocal
-from datetime import datetime
 
 from Nagstamon.objects import (GenericHost,
                                GenericService,
@@ -34,6 +35,7 @@ from Nagstamon.objects import (GenericHost,
 from Nagstamon.servers.Generic import GenericServer
 from Nagstamon.helpers import webbrowser_open
 from Nagstamon.config import conf
+
 
 class MultisiteError(Exception):
     def __init__(self, terminate, result):
@@ -120,12 +122,11 @@ class MultisiteServer(GenericServer):
                 'PEND':    'PENDING',
             }
 
-
         # Function overrides for Checkmk 2.3+
-        version = self._omd_get_version()
+        version = self._get_version()
         if version >= [2, 3]:
-            self._set_downtime = self._omd_set_downtime
-            self._set_recheck = self._omd_set_recheck
+            self._set_downtime = self._set_downtime_since_2_3
+            self._set_recheck = self._set_recheck_since_2_3
 
         if self.authentication != 'web':
             if self.cookie_auth and not self.refresh_authentication:
@@ -421,7 +422,7 @@ class MultisiteServer(GenericServer):
 
     def open_monitor(self, host, service=''):
         """
-            open monitor from treeview context menu
+        open monitor from treeview context menu
         """
 
         if service == '':
@@ -436,8 +437,8 @@ class MultisiteServer(GenericServer):
 
     def get_host(self, host):
         """
-            find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
-            have their ip saved in Nagios
+        find out ip or hostname of given host to access hosts/devices which do not appear in DNS but
+        have their ip saved in Nagios
         """
 
         # the fastest method is taking hostname as used in monitor
@@ -495,7 +496,10 @@ class MultisiteServer(GenericServer):
             self.debug(server=self.get_name(), host=host, debug ='Submitting action: ' + url + '&' + urllib.parse.urlencode(params))
 
         # apply action
-        self.fetch_url(url + '&' + urllib.parse.urlencode(params))
+        result = self.fetch_url(url + '&' + urllib.parse.urlencode(params))
+        print(result.result)
+        print(result.status_code)
+        print(result.error)
 
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
@@ -542,9 +546,9 @@ class MultisiteServer(GenericServer):
                            debug='Invalid start/end date/time given')
 
 
-    def _omd_set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
+    def _set_downtime_since_2_3(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
         """
-           _set_downtime function for Checkmk version 2.3+
+        _set_downtime function for Checkmk version 2.3+
         """
         try:
             # Headers required for Checkmk API
@@ -583,32 +587,32 @@ class MultisiteServer(GenericServer):
 
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None):
-        p = {
+        specific_params = {
             '_acknowledge':    'Acknowledge',
             '_ack_sticky':     sticky == 1 and 'on' or '',
             '_ack_notify':     notify == 1 and 'on' or '',
             '_ack_persistent': persistent == 1 and 'on' or '',
             '_ack_comment':    author == self.username and comment or '%s: %s' % (author, comment)
         }
-        self._action(self.hosts[host].site, host, service, p)
+        self._action(self.hosts[host].site, host, service, specific_params)
 
         # acknowledge all services on a host when told to do so
         if all_services:
             for s in all_services:
-                self._action(self.hosts[host].site, host, s, p)
+                self._action(self.hosts[host].site, host, s, specific_params)
 
 
     def _set_recheck(self, host, service):
-        p = {
+        specific_params = {
             '_resched_checks': 'Reschedule active checks',
-            '_resched_pread':  '0'
+            '_resched_spread':  '0'
         }
-        self._action(self.hosts[host].site, host, service, p)
+        self._action(self.hosts[host].site, host, service, specific_params)
 
 
-    def _omd_set_recheck(self, host, service):
+    def _set_recheck_since_2_3(self, host, service):
         """
-           _set_recheck function for Checkmk version 2.3+
+        _set_recheck function for Checkmk version 2.3+
         """
         csrf_token = self._get_csrf_token(host, service)
         data = {
@@ -623,7 +627,7 @@ class MultisiteServer(GenericServer):
 
     def recheck_all(self):
         """
-            special method for Checkmk as there is one URL for rescheduling all problems to be checked
+        special method for Checkmk as there is one URL for rescheduling all problems to be checked
         """
         params = dict()
         params['_resched_checks'] = 'Reschedule active checks'
@@ -637,7 +641,7 @@ class MultisiteServer(GenericServer):
 
     def _get_transid(self, host, service):
         """
-            get transid for an action
+        get transid for an action
         """
         # since Checkmk 2.0 it seems to be a problem if service is empty so fill it with a definitively existing one
         if not service:
@@ -649,7 +653,7 @@ class MultisiteServer(GenericServer):
 
     def _get_csrf_token(self, host, service):
         """
-           get csrf token for the session
+        get csrf token for the session
         """
         # since Checkmk 2.0 it seems to be a problem if service is empty so fill it with a definitively existing one
         if not service:
@@ -659,12 +663,13 @@ class MultisiteServer(GenericServer):
         return csrf_token
 
 
-    def _omd_get_version(self):
+    def _get_version(self):
         """
-           get version of OMD Checkmk as [major_version, minor_version]
+        get version of OMD Checkmk as [major_version, minor_version]
         """
         try:
-            version = [int(x) for x in self.fetch_url(self.urls['omd_version'], giveback='json', no_auth=True).result['versions']['checkmk'].split('.')[:2]]
+            # need authentication to access /version api
+            version = [int(x) for x in self.fetch_url(self.urls['omd_version'], giveback='json').result['versions']['checkmk'].split('.')[:2]]
         # If /version api is not supported, return the lowest non-negative pair
         except:
             version = [0, 0]

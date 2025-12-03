@@ -161,7 +161,7 @@ class GenericService(GenericObject):
 
 class Result:
     """
-    multi purpose result object, used in servers.Generic.fetch_url()
+    multipurpose result object, used in servers.Generic.fetch_url()
     """
     result = ''
     error = ''

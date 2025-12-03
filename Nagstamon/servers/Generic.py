@@ -323,8 +323,6 @@ class GenericServer:
                 return True
         elif not self.session:
             self.session = self.create_session()
-            if not self.session.cookies:
-                print('no cookies found for web authentication in session')
             return True
 
     def create_session(self):
@@ -959,8 +957,6 @@ class GenericServer:
         else:
             return Result()
 
-        print(self.status_description, self.status_code)
-
         # some monitor server seem to have a problem with too short intervals
         # and sometimes send a bad status line which would result in a misleading
         # ERROR display - it seems safe to ignore these errors
@@ -1483,7 +1479,6 @@ class GenericServer:
 
         if self.authentication == 'web' and \
            not self.session:
-           print('web login needs cookies')
            return Result(result='',
                          status_code=401)
 
