@@ -6,7 +6,6 @@ on:
       - '**'
       - '!master'
       - '!*.*.*'
-      - '!recheck_checkmk'
 
 env:
   python_win_version: 3.13.9

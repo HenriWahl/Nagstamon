@@ -620,7 +620,7 @@ class MultisiteServer(GenericServer):
             "host": host,
             "service": service,
             "wait_svc": service,
-            "csrf_token": csrf_token,
+            "_csrf_token": csrf_token,
         }
         self.fetch_url(self.urls["recheck"], cgi_data=data)
 
