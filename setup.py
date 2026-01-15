@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #
 # Nagstamon - Nagios status monitor for your desktop
-# Copyright (C) 2008-2025 Henri Wahl <henri@nagstamon.de> et al.
+# Copyright (C) 2008-2026 Henri Wahl <henri@nagstamon.de> et al.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
