@@ -8,9 +8,10 @@ packaging
 psutil
 pyinstaller
 pypiwin32
-pyqt6==6.10.0
-pyqt6-qt6==6.10.0
+pyqt6==6.10.2
+pyqt6-qt6==6.10.1
 pyqt6-webengine==6.10.0
+pyqt6-webengine-qt6==6.10.1
 pysocks
 python-dateutil
 requests

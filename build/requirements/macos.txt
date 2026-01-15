@@ -14,10 +14,11 @@ pyobjc-framework-ApplicationServices
 #pyqt6-qt6==6.6.1
 # really version 6.6.0
 #pyqt6-webengine==6.6.0
-# new attempt, try with latest Qt6 6.10.0
-pyqt6==6.10.0
-pyqt6-qt6==6.10.0
+# new attempt, try with latest Qt6 6.10.*
+pyqt6==6.10.2
+pyqt6-qt6==6.10.1
 pyqt6-webengine==6.10.0
+pyqt6-webengine-qt6==6.10.1
 pysocks
 python-dateutil
 requests
