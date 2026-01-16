@@ -182,6 +182,9 @@ def load_cookies():
             except InvalidToken:
                 decrypted_value = b''
             cookies[cookey]['value'] = decrypted_value.decode()
+    if conf.debug_mode:
+        # no initialized server and thus no debug method available here - just print to console
+        print(f'Loaded cookies: {cookies}')
     return cookies
 
 

@@ -28,6 +28,6 @@
   - [x] Linux
     - [x] Ubuntu
     - [x] Fedora
-    - [x] Pyinstaller]
+    - [x] Pyinstaller
   - [x] Windows
   - [x] macOS
