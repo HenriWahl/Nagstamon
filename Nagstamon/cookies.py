@@ -183,24 +183,6 @@ def load_cookies():
             cookies[cookey]['value'] = decrypted_value.decode()
     return cookies
 
-def purge_cookie_by_name_if_session(server_name: str, cookie_name: str):
-    """
-    Delete a specific cookie for a server from SQLite DB if it is a session cookie (expiration IS NULL).
-    Intended to clean up persisted session cookies from older installations.
-    """
-    init_db()
-    connection = sqlite3.connect(COOKIE_DB_FILE_PATH)
-    cursor = connection.cursor()
-
-    cursor.execute(
-        'DELETE FROM cookies WHERE server = ? AND name = ? AND expiration IS NULL',
-        (server_name, cookie_name)
-    )
-
-    connection.commit()
-    connection.close()
-
-
 def cookie_data_to_jar(server_name, cookie_data):
     """
 
