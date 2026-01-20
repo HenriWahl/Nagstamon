@@ -131,7 +131,7 @@ class AppInfo:
     NAME = 'Nagstamon'
     VERSION = '3.17-20260115'
     WEBSITE = 'https://nagstamon.de'
-    COPYRIGHT = '©2008-2025 Henri Wahl et al.'
+    COPYRIGHT = '©2008-2026 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
     # dict of servers to offer for downloads if an update is available
     DOWNLOAD_SERVERS = {'nagstamon.de': 'https://github.com/HenriWahl/Nagstamon/releases'}

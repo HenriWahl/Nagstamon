@@ -142,7 +142,6 @@ def save_cookies(cookies):
     connection.commit()
     connection.close()
 
-
 def load_cookies():
     """
     load cookies from the SQLite database
@@ -187,7 +186,6 @@ def load_cookies():
         print(f'Loaded cookies: {cookies}')
     return cookies
 
-
 def cookie_data_to_jar(server_name, cookie_data):
     """
 
@@ -205,3 +203,61 @@ def cookie_data_to_jar(server_name, cookie_data):
                 rest={'HttpOnly': cookie['httponly']}
             )
     return jar
+
+import time
+
+def has_any_cookie(server_name: str, cookie_name: str) -> bool:
+    cookies = load_cookies()
+    for c in cookies.values():
+        if c.get('server') == server_name and c.get('name') == cookie_name:
+            return True
+    return False
+
+def has_valid_cookie(server_name: str, cookie_name: str, now: int | None = None, skew_seconds: int = 30) -> bool:
+    """
+    Return True if at least one cookie with given name has an expiration in the future.
+    skew_seconds: small safety window to avoid edge cases at the boundary.
+    """
+    if now is None:
+        now = int(time.time())
+
+    cookies = load_cookies()
+    for c in cookies.values():
+        if c.get('server') != server_name:
+            continue
+        if c.get('name') != cookie_name:
+            continue
+        exp = c.get('expiration')
+        if exp is None:
+            continue
+        if int(exp) > (now + skew_seconds):
+            return True
+    return False
+
+
+def delete_cookie(server_name: str, cookie_name: str, domain: str | None = None, path: str | None = None) -> int:
+    """
+    Delete cookie rows from SQLite DB. Returns number of deleted rows.
+    Optional domain/path narrow down the deletion.
+    """
+    init_db()
+    connection = sqlite3.connect(COOKIE_DB_FILE_PATH)
+    cursor = connection.cursor()
+
+    sql = "DELETE FROM cookies WHERE server = ? AND name = ?"
+    params = [server_name, cookie_name]
+
+    if domain is not None:
+        sql += " AND domain = ?"
+        params.append(domain)
+
+    if path is not None:
+        sql += " AND path = ?"
+        params.append(path)
+
+    cursor.execute(sql, tuple(params))
+    deleted = cursor.rowcount
+
+    connection.commit()
+    connection.close()
+    return deleted
