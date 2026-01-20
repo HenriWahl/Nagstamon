@@ -45,7 +45,7 @@ from Nagstamon.objects import (GenericHost,
                                Result)
 from Nagstamon.config import conf
 from Nagstamon.helpers import webbrowser_open
-from Nagstamon.cookies import (load_cookies, cookie_data_to_jar, has_any_cookie, has_valid_cookie, delete_cookie, server_has_domain_fragment)
+from Nagstamon.cookies import (load_cookies, cookie_data_to_jar, has_any_cookie, has_valid_cookie, delete_cookie)
 
 def strfdelta(tdelta, fmt):
     d = {'days': tdelta.days}

@@ -276,19 +276,3 @@ def delete_cookie(server_name: str, cookie_name: str, domain: str | None = None,
     connection.commit()
     connection.close()
     return deleted
-
-
-def server_has_domain_fragment(server_name: str, fragment: str) -> bool:
-    """
-    True if there is any cookie for server_name whose domain contains fragment.
-    Used to detect whether Keycloak cookies exist at all (OIDC setup).
-    """
-    cookies = load_cookies()
-    fragment = fragment.lower()
-    for c in cookies.values():
-        if c.get('server') != server_name:
-            continue
-        dom = (c.get('domain') or '').lower()
-        if fragment in dom:
-            return True
-    return False
