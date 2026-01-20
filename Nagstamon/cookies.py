@@ -18,6 +18,7 @@
 from pathlib import Path
 import requests
 import sqlite3
+from time import time
 
 from cryptography.fernet import (Fernet,
                                  InvalidToken)
@@ -33,6 +34,7 @@ else:
 
 COOKIE_DB_FILE = 'cookies.db'
 COOKIE_DB_FILE_PATH = Path(conf.configdir) / COOKIE_DB_FILE
+
 
 def init_db():
     """
@@ -142,6 +144,7 @@ def save_cookies(cookies):
     connection.commit()
     connection.close()
 
+
 def load_cookies():
     """
     load cookies from the SQLite database
@@ -186,6 +189,7 @@ def load_cookies():
         print(f'Loaded cookies: {cookies}')
     return cookies
 
+
 def cookie_data_to_jar(server_name, cookie_data):
     """
 
@@ -204,14 +208,17 @@ def cookie_data_to_jar(server_name, cookie_data):
             )
     return jar
 
-import time
 
 def has_any_cookie(server_name: str, cookie_name: str) -> bool:
+    """
+    Return True if at least one cookie with given name exists.
+    """
     cookies = load_cookies()
     for c in cookies.values():
         if c.get('server') == server_name and c.get('name') == cookie_name:
             return True
     return False
+
 
 def has_valid_cookie(server_name: str, cookie_name: str, now: int | None = None, skew_seconds: int = 30) -> bool:
     """
@@ -219,7 +226,7 @@ def has_valid_cookie(server_name: str, cookie_name: str, now: int | None = None,
     skew_seconds: small safety window to avoid edge cases at the boundary.
     """
     if now is None:
-        now = int(time.time())
+        now = int(time())
 
     cookies = load_cookies()
     for c in cookies.values():

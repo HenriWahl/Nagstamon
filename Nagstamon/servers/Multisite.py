@@ -104,7 +104,11 @@ class MultisiteServer(GenericServer):
               # thus access to normal webinterface is used
               'api_host_act':    self.monitor_url + '/view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&view_name=hoststatus&filled_in=actions&lang=',
               'api_service_act': self.monitor_url + '/view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&view_name=service&filled_in=actions&lang=',
-              'api_svcprob_act': self.monitor_url + '/view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&view_name=svcproblems&filled_in=actions&lang=',
+
+              # https://checkmk.nkrn.de/cmk/check_mk/view.py?_csrf_token=6769fe9d-44e4-4638-b7a9-2fb7c8d09b75&filled_in=actions&_transid=1768551477%2F300479071&_do_actions=yes&actions=yes&_resched_spread=5&_resched_checks=Reschedule&view_name=svcproblems&lang=
+              'api_svcprob_act': self.monitor_url + '/view.py',
+              'api_svcprob_act_orig': self.monitor_url + '/view.py?_transid=-1&_do_actions=yes&_do_confirm=Yes!&view_name=svcproblems&filled_in=actions&lang=',
+
               'human_events':    self.monitor_url + '/index.py?%s' %
                                                    urllib.parse.urlencode({'start_url': 'view.py?view_name=events'}),
               'omd_host_downtime': self.monitor_url + '/api/1.0/domain-types/downtime/collections/host',
@@ -490,17 +494,13 @@ class MultisiteServer(GenericServer):
 
         # get current transid
         transid = self._get_transid(host, service)
-        url = url.replace('?_transid=-1&', '?_transid=%s&' % (transid))
+        url = url.replace('?_transid=-1&', f'?_transid={transid}&')
 
         if conf.debug_mode:
-            self.debug(server=self.get_name(), host=host, debug ='Submitting action: ' + url + '&' + urllib.parse.urlencode(params))
+            self.debug(server=self.get_name(), host=host, debug =f'Submitting action: {url} & {urllib.parse.urlencode(params)}')
 
         # apply action
-        result = self.fetch_url(url + '&' + urllib.parse.urlencode(params))
-        print(result.result)
-        print(result.status_code)
-        print(result.error)
-
+        self.fetch_url(url + '&' + urllib.parse.urlencode(params))
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time, end_time, hours, minutes):
         try:
@@ -579,7 +579,7 @@ class MultisiteServer(GenericServer):
                 url = self.urls['omd_svc_downtime']
                 params['downtime_type'] = 'service'
                 params['service_descriptions'] = [service]
-            self.fetch_url(url, headers=headers, cgi_data=json.dumps(params))
+            result = self.fetch_url(url, headers=headers, cgi_data=json.dumps(params))
         except Exception as error:
             if conf.debug_mode:
                 self.debug(server=self.get_name(), host=host,
@@ -622,21 +622,11 @@ class MultisiteServer(GenericServer):
             "wait_svc": service,
             "_csrf_token": csrf_token,
         }
-        self.fetch_url(self.urls["recheck"], cgi_data=data)
+        result = self.fetch_url(self.urls["recheck"], cgi_data=data)
 
-
-    def recheck_all(self):
-        """
-        special method for Checkmk as there is one URL for rescheduling all problems to be checked
-        """
-        params = dict()
-        params['_resched_checks'] = 'Reschedule active checks'
-        url = self.urls['api_svcprob_act']
-
-        if conf.debug_mode:
-            self.debug(server=self.get_name(), debug ='Rechecking all action: ' + url + '&' + urllib.parse.urlencode(params))
-
-        result = self.fetch_url(url + '&' + urllib.parse.urlencode(params), giveback ='raw')
+        print(result.error)
+        print(result.result)
+        print(result.status_code)
 
 
     def _get_transid(self, host, service):
