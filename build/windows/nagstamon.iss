@@ -44,7 +44,7 @@ begin
 end;
 
 // PrepareToInstall already knows the desired target {app} directory
-procedure PrepareToInstall(var NeedsRestart: Boolean): String;
+function PrepareToInstall(var NeedsRestart: Boolean): String;
 var
   UninstallerPath: String;
   ReturnCode: Integer;
