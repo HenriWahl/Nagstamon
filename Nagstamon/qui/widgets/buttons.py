@@ -19,8 +19,11 @@ from Nagstamon.config import (conf,
                               OS,
                               OS_MACOS)
 from Nagstamon.helpers import webbrowser_open
-from Nagstamon.qui.qt import (QMenu,
+from Nagstamon.qui.qt import (QIcon,
+                              QMenu,
+                              QProxyStyle,
                               QPushButton,
+                              QStyle,
                               QToolButton,
                               Signal,
                               Slot)
@@ -131,3 +134,20 @@ class PushButtonBrowserURL(Button):
         # hide status window to get screen space for browser
         if not conf.fullscreen and not conf.windowed:
             self.webbrowser_opened.emit()
+
+
+class StandardDialogIconsProxyStyle(QProxyStyle):
+    """
+    proxy style to block standard dialog icons (OK, Cancel) to enforce no-ugly-icons
+    """
+    def standardIcon(self, standard_pixmap, option=None, widget=None):
+        blocked = {
+            QStyle.StandardPixmap.SP_DialogOkButton,
+            QStyle.StandardPixmap.SP_DialogCancelButton,
+            QStyle.StandardPixmap.SP_DialogYesButton,
+            QStyle.StandardPixmap.SP_DialogNoButton,
+            QStyle.StandardPixmap.SP_DialogHelpButton
+        }
+        if standard_pixmap in blocked:
+            return QIcon()
+        return super().standardIcon(standard_pixmap, option, widget)
