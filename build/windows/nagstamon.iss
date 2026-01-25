@@ -46,20 +46,20 @@ end;
 // PrepareToInstall already knows the desired target {app} directory
 procedure PrepareToInstall(var NeedsRestart: Boolean);
 var
-  FindData: TFindRec;
+  FindRec: TFindRec;
   UninstPath: String;
   ReturnCode: Integer;
 begin
   KillRunningNagstamon();
 
-  if FindFirst(ExpandConstant('{app}\unins0*.exe'), faAnyFile, FindData) = 0 then
+  if FindFirst(ExpandConstant('{app}\unins0*.exe'), FindRec) = 0 then
   begin
     try
-      UninstPath := ExpandConstant('{app}\') + FindData.Name;
+      UninstPath := ExpandConstant('{app}\') + FindRec.Name;
       if FileExists(UninstPath) then
         Exec(UninstPath, '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART', '', SW_HIDE, ewWaitUntilTerminated, ReturnCode);
     finally
-      FindClose(FindData);
+      FindClose(FindRec);
     end;
   end;
 end;
