@@ -44,16 +44,22 @@ begin
 end;
 
 // PrepareToInstall already knows the desired target {app} directory
-function PrepareToInstall(var NeedsRestart: Boolean): String;
+procedure PrepareToInstall(var NeedsRestart: Boolean);
 var
-  UninstallerPath: String;
+  FindData: TFindRec;
+  UninstPath: String;
   ReturnCode: Integer;
 begin
   KillRunningNagstamon();
-  // execute uninstaller if Nagstamon is already installed to get a clean directory
-  // expecially a thing when installing over version 3.14, because with
-  // that version the internal structure changed significantly by PyInstaller
-  UninstallerPath := ExpandConstant('{app}\unins000.exe');
-  if FileExists(UninstallerPath) then
-    Exec(UninstallerPath, '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART', '', SW_HIDE, ewWaitUntilTerminated, ReturnCode);
+
+  if FindFirst(ExpandConstant('{app}\unins0*.exe'), faAnyFile, FindData) = 0 then
+  begin
+    try
+      UninstPath := ExpandConstant('{app}\') + FindData.Name;
+      if FileExists(UninstPath) then
+        Exec(UninstPath, '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART', '', SW_HIDE, ewWaitUntilTerminated, ReturnCode);
+    finally
+      FindClose(FindData);
+    end;
+  end;
 end;
