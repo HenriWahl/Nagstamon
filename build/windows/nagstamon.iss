@@ -44,7 +44,7 @@ begin
 end;
 
 // PrepareToInstall already knows the desired target {app} directory
-procedure PrepareToInstall(var NeedsRestart: Boolean);
+function PrepareToInstall(var NeedsRestart: Boolean);
 var
   FindRec: TFindRec;
   UninstPath: String;
