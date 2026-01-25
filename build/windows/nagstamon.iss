@@ -52,7 +52,7 @@ var
 begin
   KillRunningNagstamon();
 
-  if FindFirst(ExpandConstant('{app}\unins0*.exe'), 0, FindRec) = 0 then
+  if FindFirst(ExpandConstant('{app}\unins0*.exe'), FindRec) = 0 then
   begin
     try
       UninstPath := ExpandConstant('{app}\') + FindRec.Name;
