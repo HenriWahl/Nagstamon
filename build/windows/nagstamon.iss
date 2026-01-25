@@ -46,7 +46,7 @@ end;
 // PrepareToInstall already knows the desired target {app} directory
 procedure PrepareToInstall(var NeedsRestart: Boolean);
 var
-  UninstPath: String;
+  UninstallerPath: String;
   ReturnCode: Integer;
 begin
   KillRunningNagstamon();
