@@ -44,6 +44,8 @@ app = QApplication(argv)
 app.setStyleSheet('''QToolTip { margin: 3px;
                                 }''')
 
+
+
 # as long as Windows 11 + Qt6 looks that ugly it's better to choose another app style
 # might be mitigated with sometimes, so commented out now
 if OS == OS_WINDOWS and release() >= '11':

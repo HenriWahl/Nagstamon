@@ -136,6 +136,7 @@ if QT_FLAVOR == 'PyQt5':
         QMenuBar, \
         QMessageBox, \
         QLabel, \
+        QProxyStyle, \
         QPushButton, \
         QScrollArea, \
         QSizePolicy, \
@@ -275,6 +276,7 @@ elif QT_FLAVOR == 'PyQt6':
                                  QMenuBar,
                                  QMessageBox,
                                  QLabel,
+                                 QProxyStyle,
                                  QPushButton,
                                  QScrollArea,
                                  QSizePolicy,
@@ -409,6 +411,7 @@ elif QT_FLAVOR == 'PyQt6':
 #         QMenuBar, \
 #         QMessageBox, \
 #         QLabel, \
+#
 #         QPushButton, \
 #         QScrollArea, \
 #         QSizePolicy, \
