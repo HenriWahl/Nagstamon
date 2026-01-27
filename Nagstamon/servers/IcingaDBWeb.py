@@ -147,11 +147,6 @@ class IcingaDBWebServer(GenericServer):
             
             # Store current custom_filter to detect future changes
             self._current_custom_filter = self.custom_filter
-            
-            # Debug output
-            print(f"DEBUG: Building URLs with custom_filter='{self.custom_filter}'")
-            print(f"DEBUG: Service filter suffix: '{service_filter_suffix}'")
-            print(f"DEBUG: Host filter suffix: '{host_filter_suffix}'")
 
             # services (unknown, warning or critical?)
             self.cgiurl_services = {'hard': self.monitor_cgi_url + '/icingadb/services?service.state.is_problem=y&service.state.state_type=hard&columns=service.host.name,service.host.display_name,service.name,service.display_name,service.state.hard_state,service.state.last_update,service.state.check_attempt,service.max_check_attempts,service.state.output,service.active_checks_enabled,service.notifications_enabled,service.state.is_flapping,service.state.is_acknowledged,service.state.in_downtime,service.state.last_state_change,service.state.is_reachable' + service_filter_suffix + '&format=json', \
@@ -161,9 +156,6 @@ class IcingaDBWebServer(GenericServer):
                                  'soft': self.monitor_cgi_url + '/icingadb/hosts?host.state.is_problem=y&host.state.state_type=soft&columns=host.name,host.display_name,host.state.soft_state,host.state.last_update,state.check_attempt,max_check_attempts,state.output,active_checks_enabled,notifications_enabled,state.is_flapping,state.is_acknowledged,state.in_downtime,state.last_state_change' + host_filter_suffix + '&format=json'}
             # monitoring health
             self.cgiurl_monitoring_health = self.monitor_cgi_url + '/health?format=json'
-            
-            # Debug output
-            print(f"DEBUG: Service URL (hard): {self.cgiurl_services['hard']}")
 
         # new_hosts dictionary
         self.new_hosts = dict()
