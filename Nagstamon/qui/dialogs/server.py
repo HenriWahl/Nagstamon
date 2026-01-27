@@ -126,6 +126,8 @@ class DialogServer(Dialog):
             self.window.label_notification_filter: ['IcingaDBWebNotifications'],
             self.window.input_lineedit_notification_lookback: ['IcingaDBWebNotifications'],
             self.window.label_notification_lookback: ['IcingaDBWebNotifications'],
+            self.window.input_lineedit_custom_filter: ['IcingaDBWeb'],
+            self.window.label_custom_filter: ['IcingaDBWeb'],
             self.window.label_disabled_backends: ['Thruk'],
             self.window.input_lineedit_disabled_backends: ['Thruk'],
         }

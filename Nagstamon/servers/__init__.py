@@ -189,6 +189,9 @@ def create_server(server=None):
     new_server.notification_filter = server.notification_filter
     new_server.notification_lookback = server.notification_lookback
 
+    # IcingaDBWeb custom filter
+    new_server.custom_filter = server.custom_filter
+
     # Checkmk Multisite
     new_server.force_authuser = server.force_authuser
     new_server.checkmk_view_hosts = server.checkmk_view_hosts
