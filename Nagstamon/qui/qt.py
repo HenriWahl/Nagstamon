@@ -54,6 +54,8 @@ try:
     from PyQt6.QtMultimedia import QAudioOutput
     from PyQt6.QtWebEngineCore import QWebEnginePage
     from PyQt6.QtWebEngineWidgets import QWebEngineView
+    from PyQt6.QtSvg import QSvgRenderer
+    from PyQt6.QtSvgWidgets import QSvgWidget
 
     # get int-ed version parts
     QT_VERSION_MAJOR, QT_VERSION_MINOR = [int(x) for x in QT_VERSION_STR.split('.')[0:2]]
@@ -80,6 +82,8 @@ if environ.get('NAGSTAMON_QT_FLAVOR'):
             from PyQt6.QtMultimedia import QAudioOutput
             from PyQt6.QtWebEngineCore import QWebEnginePage
             from PyQt6.QtWebEngineWidgets import QWebEngineView
+            from PyQt6.QtSvg import QSvgRenderer
+            from PyQt6.QtSvgWidgets import QSvgWidget
 
             # get int-ed version parts
             QT_VERSION_MAJOR, QT_VERSION_MINOR = [int(x) for x in QT_VERSION_STR.split('.')[0:2]]
