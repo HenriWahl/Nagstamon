@@ -56,8 +56,11 @@ class StatusBarLabel(DraggableLabel):
         DraggableLabel.__init__(self, parent=parent)
         self.setObjectName('StatusBarLabel')  # For QSS styling
         # Apply user-configurable colors (must remain dynamic)
+        # Note: inline styles must include QSS properties to avoid losing them
         self.setStyleSheet(f'''color: {conf.__dict__[f'color_{state.lower()}_text']};
                                background-color: {conf.__dict__[f'color_{state.lower()}_background']};
+                               padding-left: 4px;
+                               padding-right: 4px;
                             ''')
         # just let labels grow as much as they need
         self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
@@ -79,6 +82,8 @@ class StatusBarLabel(DraggableLabel):
         # Swap colors for inverted state (user-configurable colors)
         self.setStyleSheet(f'''color: {conf.__dict__[f'color_{self.state.lower()}_background']};
                                background-color: {conf.__dict__[f'color_{self.state.lower()}_text']};
+                               padding-left: 4px;
+                               padding-right: 4px;
                             ''')
 
     @Slot()
@@ -86,6 +91,8 @@ class StatusBarLabel(DraggableLabel):
         # Reset to normal colors (user-configurable colors)
         self.setStyleSheet(f'''color: {conf.__dict__[f'color_{self.state.lower()}_text']};
                                background-color: {conf.__dict__[f'color_{self.state.lower()}_background']};
+                               padding-left: 4px;
+                               padding-right: 4px;
                             ''')
 
 
