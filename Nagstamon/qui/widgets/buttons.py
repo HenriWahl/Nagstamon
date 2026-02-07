@@ -43,7 +43,7 @@ class FlatButton(QToolButton):
     def __init__(self, text='', parent=None, server=None, url_type=''):
         QToolButton.__init__(self, parent=parent)
         self.setAutoRaise(True)
-        self.setStyleSheet('''padding: 3px;''')
+        self.setStyleSheet('''padding: 8px 16px;''')
         self.setText(text)
 
 
@@ -52,18 +52,26 @@ if OS == OS_MACOS:
     Button = QPushButton
     CSS_CLOSE_BUTTON = '''QPushButton {border-width: 0px;
                                        border-style: none;
-                                       margin-right: 5px;}
-                          QPushButton:hover {background-color: white;
-                                             border-radius: 4px;}'''
+                                       margin-right: 8px;
+                                       padding: 8px;
+                                       border-radius: 6px;}
+                          QPushButton:hover {background-color: rgba(255, 255, 255, 0.8);
+                                             border-radius: 6px;}'''
     CSS_HAMBURGER_MENU = '''QPushButton {border-width: 0px;
-                                         border-style: none;}
+                                         border-style: none;
+                                         padding: 8px;
+                                         border-radius: 6px;}
                             QPushButton::menu-indicator{image:url(none.jpg)};
-                            QPushButton:hover {background-color: white;
-                                               border-radius: 4px;}'''
+                            QPushButton:hover {background-color: rgba(255, 255, 255, 0.8);
+                                               border-radius: 6px;}'''
 else:
     Button = FlatButton
-    CSS_CLOSE_BUTTON = '''margin-right: 5px;'''
-    CSS_HAMBURGER_MENU = '''FlatButton::menu-indicator{image:url(none.jpg);}'''
+    CSS_CLOSE_BUTTON = '''margin-right: 8px;
+                          padding: 8px;
+                          border-radius: 6px;'''
+    CSS_HAMBURGER_MENU = '''FlatButton::menu-indicator{image:url(none.jpg)};
+                           padding: 8px;
+                           border-radius: 6px;'''
 
 
 class PushButtonHamburger(Button):

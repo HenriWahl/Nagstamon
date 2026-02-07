@@ -111,8 +111,8 @@ SORT_COLUMNS_INDEX = {0: 0,
                       8: 8,
                       9: 8}
 
-# space used in LayoutBoxes
-SPACE = 10
+# space used in LayoutBoxes - increased for modern look
+SPACE = 15
 
 # Flags for statusbar - experiment with Qt.ToolTip for Windows because
 # statusbar permanently seems to vanish at some users desktops
