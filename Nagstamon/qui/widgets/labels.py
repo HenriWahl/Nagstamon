@@ -46,8 +46,13 @@ class LabelAllOK(QLabel):
     @Slot()
     def set_color(self):
         # Apply user-configurable colors (these must remain dynamic)
+        # Note: inline styles must include QSS properties to avoid losing them
         self.setStyleSheet(f'''color: {conf.__dict__['color_ok_text']};
                                background-color: {conf.__dict__['color_ok_background']};
+                               padding-left: 4px;
+                               padding-right: 4px;
+                               font-size: 92px;
+                               font-weight: bold;
                             ''')
 
 
@@ -98,8 +103,11 @@ class ServerStatusLabel(ClosingLabel):
 
         # set stylesheet depending on submitted style
         # Dynamic colors must remain inline as they're user-configurable
+        # Note: inline styles must include QSS properties to avoid losing them
         if style in COLOR_STATUS_LABEL:
-            self.setStyleSheet(f'''background: {COLOR_STATUS_LABEL[style]};''')
+            self.setStyleSheet(f'''background: {COLOR_STATUS_LABEL[style]};
+                                   border-radius: 6px;
+                                   padding: 4px 8px;''')
         elif style == '':
             self.setStyleSheet('')
 
