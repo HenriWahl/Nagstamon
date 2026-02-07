@@ -41,9 +41,16 @@ if QT_VERSION_MAJOR < 6:
 # global application instance
 app = QApplication(argv)
 
-# set style for tooltips globally - to sad not all properties can be set here
-app.setStyleSheet('''QToolTip { margin: 3px;
-                                }''')
+# Load modern theme stylesheet
+modern_theme_path = f'{RESOURCES}{sep}modern_theme.qss'
+try:
+    with open(modern_theme_path, 'r', encoding='utf-8') as qss_file:
+        modern_stylesheet = qss_file.read()
+    app.setStyleSheet(modern_stylesheet)
+except FileNotFoundError:
+    # Fallback to basic styling if modern theme file is not found
+    app.setStyleSheet('''QToolTip { margin: 3px;
+                                    }''')
 
 # proxy style helps to remove ugly icons in Linux Fusion style
 app.setStyle(StandardDialogIconsProxyStyle())

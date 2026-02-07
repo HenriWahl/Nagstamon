@@ -84,6 +84,7 @@ class TopArea(QWidget):
 
         # X
         self.button_close = Button()
+        self.button_close.setObjectName('button_close')  # For QSS styling
         self.button_close.setIcon(self.icons['close'])
         self.button_close.setStyleSheet(CSS_CLOSE_BUTTON)
 

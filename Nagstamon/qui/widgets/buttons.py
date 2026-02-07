@@ -43,29 +43,28 @@ class FlatButton(QToolButton):
         Inherits all attributes from QToolButton.
     """
 
-    def __init__(self, text='', parent=None, server=None, url_type=''):
+    def __init__(self, text='', parent=None):
         QToolButton.__init__(self, parent=parent)
         self.setAutoRaise(True)
-        self.setStyleSheet('''padding: 3px;''')
+        # Styling now centralized in modern_theme.qss under FlatButton selector
         self.setText(text)
 
 
 # OSX does not support flat QToolButtons so keep the neat default ones
 if OS == OS_MACOS:
     Button = QPushButton
+    # Modern styling is now primarily in modern_theme.qss, only platform-specific overrides here
     CSS_CLOSE_BUTTON = '''QPushButton {border-width: 0px;
-                                       border-style: none;
-                                       margin-right: 5px;}
-                          QPushButton:hover {background-color: white;
-                                             border-radius: 4px;}'''
+                                       border-style: none;}
+                          QPushButton:hover {background-color: rgba(255, 255, 255, 0.8);}'''
     CSS_HAMBURGER_MENU = '''QPushButton {border-width: 0px;
                                          border-style: none;}
                             QPushButton::menu-indicator{image:url(none.jpg)};
-                            QPushButton:hover {background-color: white;
-                                               border-radius: 4px;}'''
+                            QPushButton:hover {background-color: rgba(255, 255, 255, 0.8);}'''
 else:
     Button = FlatButton
-    CSS_CLOSE_BUTTON = '''margin-right: 5px;'''
+    # Styling is now in modern_theme.qss using #button_close and #button_hamburger_menu IDs
+    CSS_CLOSE_BUTTON = ''
     CSS_HAMBURGER_MENU = '''FlatButton::menu-indicator{image:url(none.jpg);}'''
 
 
@@ -89,6 +88,7 @@ class PushButtonHamburger(Button):
 
     def __init__(self):
         super().__init__()
+        self.setObjectName('button_hamburger_menu')  # For QSS styling
         self.setStyleSheet(CSS_HAMBURGER_MENU)
 
     def mousePressEvent(self, event):

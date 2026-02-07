@@ -54,9 +54,9 @@ class StatusBarLabel(DraggableLabel):
 
     def __init__(self, state, parent=None):
         DraggableLabel.__init__(self, parent=parent)
-        self.setStyleSheet(f'''padding-left: 1px;
-                               padding-right: 1px;
-                               color: {conf.__dict__[f'color_{state.lower()}_text']};
+        self.setObjectName('StatusBarLabel')  # For QSS styling
+        # Apply user-configurable colors (must remain dynamic)
+        self.setStyleSheet(f'''color: {conf.__dict__[f'color_{state.lower()}_text']};
                                background-color: {conf.__dict__[f'color_{state.lower()}_background']};
                             ''')
         # just let labels grow as much as they need
@@ -76,17 +76,15 @@ class StatusBarLabel(DraggableLabel):
 
     @Slot()
     def invert(self):
-        self.setStyleSheet(f'''padding-left: 1px;
-                               padding-right: 1px;
-                               color: {conf.__dict__[f'color_{self.state.lower()}_background']};
+        # Swap colors for inverted state (user-configurable colors)
+        self.setStyleSheet(f'''color: {conf.__dict__[f'color_{self.state.lower()}_background']};
                                background-color: {conf.__dict__[f'color_{self.state.lower()}_text']};
                             ''')
 
     @Slot()
     def reset(self):
-        self.setStyleSheet(f'''padding-left: 1px;
-                               padding-right: 1px;
-                               color: {conf.__dict__[f'color_{self.state.lower()}_text']};
+        # Reset to normal colors (user-configurable colors)
+        self.setStyleSheet(f'''color: {conf.__dict__[f'color_{self.state.lower()}_text']};
                                background-color: {conf.__dict__[f'color_{self.state.lower()}_background']};
                             ''')
 
