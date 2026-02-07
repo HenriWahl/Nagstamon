@@ -373,3 +373,68 @@ QStatusBar {
     background-color: #f5f5f5;
     border-top: 1px solid #d0d0d0;
 }
+
+/* ===================================================================== */
+/* Nagstamon-Specific Widget Styles */
+/* ===================================================================== */
+
+/* StatusBar Labels - padding for status indicators */
+StatusBarLabel {
+    padding-left: 4px;
+    padding-right: 4px;
+}
+
+/* LabelAllOK - Large OK display label */
+LabelAllOK {
+    padding-left: 4px;
+    padding-right: 4px;
+    font-size: 92px;
+    font-weight: bold;
+}
+
+/* ServerStatusLabel - Status badges with rounded corners */
+ServerStatusLabel {
+    border-radius: 6px;
+    padding: 4px 8px;
+}
+
+/* TreeView customization for Nagstamon status display */
+TreeView QTreeView::item {
+    margin: 8px;
+    padding: 4px;
+}
+
+TreeView QTreeView::item:hover {
+    margin: 0px;
+    padding: 12px 8px;
+    color: white;
+    background-color: #666666;
+    border-radius: 4px;
+}
+
+TreeView QTreeView::item:selected {
+    margin: 0px;
+    padding: 12px 8px;
+    color: white;
+    background-color: #4a90e2;
+    border-radius: 4px;
+}
+
+/* FlatButton - Auto-raised toolbar buttons */
+FlatButton {
+    padding: 8px 16px;
+    border-radius: 6px;
+}
+
+/* Close button styling */
+#button_close {
+    margin-right: 8px;
+    padding: 8px;
+    border-radius: 6px;
+}
+
+/* Hamburger menu button */
+#button_hamburger_menu {
+    padding: 8px;
+    border-radius: 6px;
+}

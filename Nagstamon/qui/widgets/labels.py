@@ -37,6 +37,7 @@ class LabelAllOK(QLabel):
 
     def __init__(self, text='', parent=None):
         QLabel.__init__(self, text='OK', parent=parent)
+        self.setObjectName('LabelAllOK')  # For QSS styling
         self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setFont(font)
@@ -44,12 +45,9 @@ class LabelAllOK(QLabel):
 
     @Slot()
     def set_color(self):
-        self.setStyleSheet(f'''padding-left: 1px;
-                               padding-right: 1px;
-                               color: {conf.__dict__['color_ok_text']};
+        # Apply user-configurable colors (these must remain dynamic)
+        self.setStyleSheet(f'''color: {conf.__dict__['color_ok_text']};
                                background-color: {conf.__dict__['color_ok_background']};
-                               font-size: 92px;
-                               font-weight: bold;
                             ''')
 
 
@@ -87,6 +85,7 @@ class ServerStatusLabel(ClosingLabel):
 
     def __init__(self, parent=None):
         QLabel.__init__(self, parent=parent)
+        self.setObjectName('ServerStatusLabel')  # For QSS styling
         # storage for label text if it needs to be restored
         self.text_old = ''
         self.stylesheet_old = None
@@ -98,19 +97,9 @@ class ServerStatusLabel(ClosingLabel):
         self.stylesheet_old = self.styleSheet()
 
         # set stylesheet depending on submitted style
+        # Dynamic colors must remain inline as they're user-configurable
         if style in COLOR_STATUS_LABEL:
-            if OS == OS_MACOS:
-                self.setStyleSheet(f'''background: {COLOR_STATUS_LABEL[style]};
-                                       border-radius: 3px;
-                                    ''')
-            else:
-                self.setStyleSheet(f'''background: {COLOR_STATUS_LABEL[style]};
-                                       margin-top: 8px;
-                                       padding-top: 3px;
-                                       margin-bottom: 8px;
-                                       padding-bottom: 3px;
-                                       border-radius: 4px;
-                                       ''')
+            self.setStyleSheet(f'''background: {COLOR_STATUS_LABEL[style]};''')
         elif style == '':
             self.setStyleSheet('')
 

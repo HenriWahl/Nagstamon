@@ -141,17 +141,8 @@ class TreeView(QTreeView):
         # small method needed to tell worker which column and sort order to use
         self.header().sortIndicatorChanged.connect(self.sort_columns)
 
-        # set overall margin and hover colors - to be refined
-        self.setStyleSheet('''QTreeView::item {margin: 5px;}
-                              QTreeView::item:hover {margin: 0px;
-                                                     padding: 5px;
-                                                     color: white;
-                                                     background-color: dimgrey;}
-                              QTreeView::item:selected {margin: 0px;
-                                                        padding: 5px;
-                                                        color: white;
-                                                        background-color: grey;}
-                            ''')
+        # Set object name for QSS styling - styling is now centralized in modern_theme.qss
+        self.setObjectName('TreeView')
 
         # set application font
         self.set_font()
