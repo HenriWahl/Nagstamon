@@ -244,10 +244,10 @@ Focused:   ╭──────────╮   Border: 2px #4a90e2 (blue acce
 
 | Element          | Before  | After    | Change    |
 |------------------|---------|----------|-----------|
-| Button padding   | 3px     | 10px 20px| +233% V, +567% H |
-| Button radius    | 0px     | 8px      | +∞        |
+| Button padding   | 3px     | 10px 20px| +233% vertical, +567% horizontal |
+| Button radius    | 0px     | 8px      | New feature |
 | Layout spacing   | 10px    | 15px     | +50%      |
-| Input padding    | ~2px    | 8px 12px | +300% V, +500% H |
+| Input padding    | ~2px    | 8px 12px | +300% vertical, +500% horizontal |
 | Checkbox size    | ~13px   | 20px     | +54%      |
 | ScrollBar width  | ~15px   | 12px     | -20%      |
 | GroupBox padding | ~5px    | 16px     | +220%     |

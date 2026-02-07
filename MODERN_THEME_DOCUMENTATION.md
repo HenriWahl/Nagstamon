@@ -234,7 +234,7 @@ Potential improvements for the future:
 
 ## Files Modified
 
-1. `Nagstamon/resources/modern_theme.qss` (NEW) - 6.9 KB stylesheet
+1. `Nagstamon/resources/modern_theme.qss` (NEW) - 440 lines of comprehensive styling
 2. `Nagstamon/qui/widgets/app.py` - Load and apply the QSS theme
 3. `Nagstamon/qui/constants.py` - Increase SPACE constant
 4. `Nagstamon/qui/widgets/buttons.py` - Update button padding and styling
