@@ -274,6 +274,9 @@ class GenericServer:
         self.notification_filter = None
         self.notification_lookback = None
 
+        # IcingaDBWeb custom filter
+        self.custom_filter = ''
+
         # Thruk
         self.disabled_backends = None
 

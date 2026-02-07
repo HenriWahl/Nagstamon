@@ -1122,6 +1122,9 @@ class Server:
         self.notification_filter = "user.name=*"
         self.notification_lookback = "30 minutes"
 
+        # IcingaDBWeb custom filter
+        self.custom_filter = ""
+
         # Thruk
         self.disabled_backends = ""
 

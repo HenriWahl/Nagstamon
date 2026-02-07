@@ -754,6 +754,26 @@
         </property>
        </widget>
       </item>
+      <item row="17" column="1">
+       <widget class="QLabel" name="label_custom_filter">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Custom filter:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="17" column="2" colspan="2">
+       <widget class="QLineEdit" name="input_lineedit_custom_filter">
+        <property name="placeholderText">
+         <string>e.g., host.name~*web*</string>
+        </property>
+       </widget>
+      </item>
       <item row="29" column="1" colspan="2">
        <widget class="QCheckBox" name="input_checkbox_treat_services_as_alerts">
         <property name="text">
@@ -825,6 +845,7 @@
   <tabstop>input_lineedit_service_filter</tabstop>
   <tabstop>input_lineedit_notification_filter</tabstop>
   <tabstop>input_lineedit_notification_lookback</tabstop>
+  <tabstop>input_lineedit_custom_filter</tabstop>
   <tabstop>input_lineedit_alertmanager_filter</tabstop>
   <tabstop>input_lineedit_map_to_hostname</tabstop>
   <tabstop>input_lineedit_map_to_servicename</tabstop>

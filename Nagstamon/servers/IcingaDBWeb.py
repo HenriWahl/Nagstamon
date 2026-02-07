@@ -78,6 +78,8 @@ class IcingaDBWebServer(GenericServer):
         self.cgiurl_services = None
         self.cgiurl_hosts = None
         self.cgiurl_monitoring_health = None
+        # Store current custom_filter to detect changes
+        self._current_custom_filter = None
 
         # https://github.com/HenriWahl/Nagstamon/issues/400
         # The displayed name for host and service is the Icinga2 "internal" name and not the display_name from host/service configuration
@@ -137,13 +139,38 @@ class IcingaDBWebServer(GenericServer):
             Get status from Icinga Server - only JSON
         """
         # define CGI URLs for hosts and services
-        if self.cgiurl_hosts is None and self.cgiurl_services is None and self.cgiurl_monitoring_health is None:
+        # Rebuild URLs if custom_filter has changed or URLs not yet initialized
+        urls_not_initialized = (self.cgiurl_hosts is None and self.cgiurl_services is None and self.cgiurl_monitoring_health is None)
+        filter_changed = (self._current_custom_filter != self.custom_filter)
+        
+        if urls_not_initialized or filter_changed:
+            # Build optional custom filter suffixes
+            # Intelligently apply filters based on their prefix
+            service_filter_suffix = ''
+            host_filter_suffix = ''
+            
+            if self.custom_filter:
+                # If filter starts with 'service.' - only apply to services
+                # If filter starts with 'host.' - only apply to hosts  
+                # Otherwise apply to both
+                if self.custom_filter.startswith('service.'):
+                    service_filter_suffix = '&' + self.custom_filter
+                elif self.custom_filter.startswith('host.'):
+                    host_filter_suffix = '&' + self.custom_filter
+                else:
+                    # Generic filter - apply to both
+                    service_filter_suffix = '&' + self.custom_filter
+                    host_filter_suffix = '&' + self.custom_filter
+            
+            # Store current custom_filter to detect future changes
+            self._current_custom_filter = self.custom_filter
+
             # services (unknown, warning or critical?)
-            self.cgiurl_services = {'hard': self.monitor_cgi_url + '/icingadb/services?service.state.is_problem=y&service.state.state_type=hard&columns=service.host.name,service.host.display_name,service.name,service.display_name,service.state.hard_state,service.state.last_update,service.state.check_attempt,service.max_check_attempts,service.state.output,service.active_checks_enabled,service.notifications_enabled,service.state.is_flapping,service.state.is_acknowledged,service.state.in_downtime,service.state.last_state_change,service.state.is_reachable&format=json', \
-                                    'soft': self.monitor_cgi_url + '/icingadb/services?service.state.is_problem=y&service.state.state_type=soft&columns=service.host.name,service.host.display_name,service.name,service.display_name,service.state.soft_state,service.state.last_update,service.state.check_attempt,service.max_check_attempts,service.state.output,service.active_checks_enabled,service.notifications_enabled,service.state.is_flapping,service.state.is_acknowledged,service.state.in_downtime,service.state.last_state_change,service.state.is_reachable&format=json'}
+            self.cgiurl_services = {'hard': self.monitor_cgi_url + '/icingadb/services?service.state.is_problem=y&service.state.state_type=hard&columns=service.host.name,service.host.display_name,service.name,service.display_name,service.state.hard_state,service.state.last_update,service.state.check_attempt,service.max_check_attempts,service.state.output,service.active_checks_enabled,service.notifications_enabled,service.state.is_flapping,service.state.is_acknowledged,service.state.in_downtime,service.state.last_state_change,service.state.is_reachable' + service_filter_suffix + '&format=json', \
+                                    'soft': self.monitor_cgi_url + '/icingadb/services?service.state.is_problem=y&service.state.state_type=soft&columns=service.host.name,service.host.display_name,service.name,service.display_name,service.state.soft_state,service.state.last_update,service.state.check_attempt,service.max_check_attempts,service.state.output,service.active_checks_enabled,service.notifications_enabled,service.state.is_flapping,service.state.is_acknowledged,service.state.in_downtime,service.state.last_state_change,service.state.is_reachable' + service_filter_suffix + '&format=json'}
             # hosts (up or down or unreachable)
-            self.cgiurl_hosts = {'hard': self.monitor_cgi_url + '/icingadb/hosts?host.state.is_problem=y&host.state.state_type=hard&columns=host.name,host.display_name,host.state.hard_state,host.state.last_update,state.check_attempt,max_check_attempts,state.output,active_checks_enabled,notifications_enabled,state.is_flapping,state.is_acknowledged,state.in_downtime,state.last_state_change&format=json', \
-                                 'soft': self.monitor_cgi_url + '/icingadb/hosts?host.state.is_problem=y&host.state.state_type=soft&columns=host.name,host.display_name,host.state.soft_state,host.state.last_update,state.check_attempt,max_check_attempts,state.output,active_checks_enabled,notifications_enabled,state.is_flapping,state.is_acknowledged,state.in_downtime,state.last_state_change&format=json'}
+            self.cgiurl_hosts = {'hard': self.monitor_cgi_url + '/icingadb/hosts?host.state.is_problem=y&host.state.state_type=hard&columns=host.name,host.display_name,host.state.hard_state,host.state.last_update,state.check_attempt,max_check_attempts,state.output,active_checks_enabled,notifications_enabled,state.is_flapping,state.is_acknowledged,state.in_downtime,state.last_state_change' + host_filter_suffix + '&format=json', \
+                                 'soft': self.monitor_cgi_url + '/icingadb/hosts?host.state.is_problem=y&host.state.state_type=soft&columns=host.name,host.display_name,host.state.soft_state,host.state.last_update,state.check_attempt,max_check_attempts,state.output,active_checks_enabled,notifications_enabled,state.is_flapping,state.is_acknowledged,state.in_downtime,state.last_state_change' + host_filter_suffix + '&format=json'}
             # monitoring health
             self.cgiurl_monitoring_health = self.monitor_cgi_url + '/health?format=json'
 
