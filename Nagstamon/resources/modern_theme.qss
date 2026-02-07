@@ -62,7 +62,13 @@ QComboBox:hover {
 
 QComboBox::drop-down {
     border: none;
+    width: 20px;
     padding-right: 8px;
+}
+
+QComboBox::down-arrow {
+    width: 12px;
+    height: 12px;
 }
 
 QComboBox QAbstractItemView {
@@ -124,7 +130,6 @@ QCheckBox::indicator:hover {
 QCheckBox::indicator:checked {
     background-color: #4a90e2;
     border: 2px solid #4a90e2;
-    image: url(none);
 }
 
 /* RadioButton Styling */
@@ -230,9 +235,43 @@ QScrollBar::handle:horizontal:hover {
     background-color: #a0a0a0;
 }
 
-QScrollBar::add-line, QScrollBar::sub-line {
+QScrollBar::add-line:vertical {
     border: none;
-    background: none;
+    background-color: #f5f5f5;
+    height: 12px;
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:vertical {
+    border: none;
+    background-color: #f5f5f5;
+    height: 12px;
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::add-line:horizontal {
+    border: none;
+    background-color: #f5f5f5;
+    width: 12px;
+    subcontrol-position: right;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:horizontal {
+    border: none;
+    background-color: #f5f5f5;
+    width: 12px;
+    subcontrol-position: left;
+    subcontrol-origin: margin;
+}
+
+QScrollBar::add-line:vertical:hover,
+QScrollBar::sub-line:vertical:hover,
+QScrollBar::add-line:horizontal:hover,
+QScrollBar::sub-line:horizontal:hover {
+    background-color: #e0e0e0;
 }
 
 /* TreeView/TableView Styling */
@@ -299,6 +338,32 @@ QSpinBox, QDoubleSpinBox {
 
 QSpinBox:focus, QDoubleSpinBox:focus {
     border: 2px solid #4a90e2;
+}
+
+QSpinBox::up-button, QDoubleSpinBox::up-button {
+    subcontrol-origin: border;
+    subcontrol-position: top right;
+    width: 20px;
+    border-left: 1px solid #d0d0d0;
+    border-top-right-radius: 6px;
+}
+
+QSpinBox::down-button, QDoubleSpinBox::down-button {
+    subcontrol-origin: border;
+    subcontrol-position: bottom right;
+    width: 20px;
+    border-left: 1px solid #d0d0d0;
+    border-bottom-right-radius: 6px;
+}
+
+QSpinBox::up-arrow, QDoubleSpinBox::up-arrow {
+    width: 10px;
+    height: 10px;
+}
+
+QSpinBox::down-arrow, QDoubleSpinBox::down-arrow {
+    width: 10px;
+    height: 10px;
 }
 
 /* ToolTip Styling */
