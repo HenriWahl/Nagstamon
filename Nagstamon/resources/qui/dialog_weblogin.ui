@@ -93,6 +93,13 @@
         </spacer>
        </item>
        <item>
+        <widget class="QPushButton" name="button_delete_web_cookies">
+         <property name="text">
+          <string>Delete cookies</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="button_reload">
          <property name="text">
           <string>Reload</string>

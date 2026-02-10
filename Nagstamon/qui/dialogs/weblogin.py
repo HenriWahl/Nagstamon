@@ -24,8 +24,8 @@ from Nagstamon.helpers import USER_AGENT
 from Nagstamon.qui.qt import (QNetworkProxy,
                               QNetworkCookie,
                               QNetworkProxyFactory,
-                              Qt,
                               QT_VERSION_MAJOR,
+                              QWidget,
                               QUrl,
                               Signal,
                               Slot,
@@ -61,8 +61,8 @@ class DialogWebLogin(Dialog):
     """
 
     show_up = Signal()
-
     page_loaded = Signal()
+    delete_web_cookies = Signal(str, QWidget)
 
     def __init__(self):
         Dialog.__init__(self, 'dialog_weblogin', )
@@ -136,6 +136,7 @@ class DialogWebLogin(Dialog):
 
         self.webengine_view = WebEngineView()
         self.window.button_reload.clicked.connect(self.webengine_view.reload)
+        self.window.button_delete_web_cookies.clicked.connect(self.on_delete_web_cookies)
 
         self.profile = WebEngineProfile.defaultProfile()
         self.profile.setHttpUserAgent(USER_AGENT)
@@ -233,3 +234,10 @@ class DialogWebLogin(Dialog):
 
         # update server cookies to jar format
         self.server.session.cookies = cookie_data_to_jar(self.server.name, cookies)
+
+    def on_delete_web_cookies(self):
+        """
+        delete all cookies for given server
+        """
+        #self.delete_web_cookies.emit(self.server.name, self.window)
+        self.delete_web_cookies.emit(self.server.name, self)

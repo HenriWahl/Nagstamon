@@ -125,7 +125,8 @@ if QT_FLAVOR == 'PyQt5':
         QKeySequence, \
         QPainter, \
         QPalette, \
-        QPixmap
+        QPixmap, \
+        QWindow
     from PyQt5.QtMultimedia import QMediaContent, \
         QMediaPlayer, \
         QMediaPlaylist
@@ -266,7 +267,8 @@ elif QT_FLAVOR == 'PyQt6':
                              QKeySequence,
                              QPainter,
                              QPalette,
-                             QPixmap)
+                             QPixmap, \
+                             QWindow)
     from PyQt6.QtMultimedia import (QAudioOutput,
                                     QMediaDevices,
                                     QMediaPlayer)

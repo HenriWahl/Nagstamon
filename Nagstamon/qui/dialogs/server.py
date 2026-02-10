@@ -21,6 +21,7 @@ import os
 from urllib.parse import quote
 
 from Nagstamon.config import conf, CONFIG_STRINGS, BOOLPOOL, Server
+from Nagstamon.cookies import delete_cookie
 from Nagstamon.qui.globals import (ecp_available,
                                    kerberos_available)
 from Nagstamon.qui.qt import (QFileDialog,
@@ -175,7 +176,6 @@ class DialogServer(Dialog):
             combobox_authentication_items.append('Web')
         # sort items
         self.window.input_combobox_authentication.addItems(sorted(combobox_authentication_items))
-
 
         # detect change of a server type which leads to certain options shown or hidden
         self.window.input_combobox_type.activated.connect(self.toggle_type)
@@ -484,3 +484,18 @@ class DialogServer(Dialog):
     @Slot()
     def checkmk_view_services_reset(self):
         self.window.input_lineedit_checkmk_view_services.setText('nagstamon_svc')
+
+    @Slot(str)
+    def delete_web_cookies(self, server_name=None, parent=None):
+        # strip name to avoid whitespace
+        if server_name is None:
+            server_name = self.window.input_lineedit_name.text().strip()
+        if parent is None:
+            parent = self.window
+
+        reply = QMessageBox.question(parent, 'Nagstamon',
+                                     f'Do you really want to delete <b>all web cookies</b> of monitor server <b>{server_name}</b>?',
+                                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                     QMessageBox.StandardButton.No)
+        if reply == QMessageBox.StandardButton.Yes:
+            delete_cookie(server_name)

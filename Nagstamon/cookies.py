@@ -242,17 +242,22 @@ def has_valid_cookie(server_name: str, cookie_name: str, now: int | None = None,
     return False
 
 
-def delete_cookie(server_name: str, cookie_name: str, domain: str | None = None, path: str | None = None) -> int:
+def delete_cookie(server_name: str, cookie_name: str | None = None, domain: str | None = None, path: str | None = None) -> int:
     """
     Delete cookie rows from SQLite DB. Returns number of deleted rows.
-    Optional domain/path narrow down the deletion.
+    Optional name/domain/path narrow down the deletion.
     """
     init_db()
     connection = sqlite3.connect(COOKIE_DB_FILE_PATH)
     cursor = connection.cursor()
 
-    sql = "DELETE FROM cookies WHERE server = ? AND name = ?"
-    params = [server_name, cookie_name]
+    # when no cookie name is given, delete all cookies for the server, otherwise only the cookie with the given name
+    if cookie_name:
+        sql = "DELETE FROM cookies WHERE server = ? AND name = ?"
+        params = [server_name, cookie_name]
+    else:
+        sql = "DELETE FROM cookies WHERE server = ?"
+        params = [server_name]
 
     if domain is not None:
         sql += " AND domain = ?"
