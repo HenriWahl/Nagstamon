@@ -233,9 +233,11 @@ class DialogServer(Dialog):
         if self.window.input_combobox_authentication.currentText() == 'Web':
             for widget in self.AUTHENTICATION_WIDGETS + self.CUSTOM_CERT_CA_WIDGETS:
                 widget.hide()
+            self.window.button_delete_web_cookies.show()
         else:
             for widget in self.AUTHENTICATION_WIDGETS + self.CUSTOM_CERT_CA_WIDGETS:
                 widget.show()
+            self.window.button_delete_web_cookies.hide()
 
         # after hiding authentication widgets dialog might shrink
         self.window.adjustSize()
