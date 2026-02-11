@@ -1054,7 +1054,7 @@ class Server:
         self.proxy_password = 'proxypassword'
         # defaults to 'basic', other possible values are 'digest' and 'kerberos'
         self.authentication = 'basic'
-        self.timeout = 10
+        self.timeout = 30
         # just GUI-wise deciding if more options are shown in server dialog
         self.show_options = False
 
