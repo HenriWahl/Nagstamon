@@ -70,9 +70,7 @@ class DialogWebLogin(Dialog):
         self.page = None
         self.profile = None
         self.proxy = None
-        # self.webengine_view = WebEngineView()
         self.webengine_view = None
-
         self.cookies = dict()
 
     def on_url_changed(self, url):

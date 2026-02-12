@@ -554,9 +554,6 @@ class IcingaDBWebServer(GenericServer):
 
         # Extract the relevant form element values
         formtag = pagesoup.select_one('form[action*="acknowledge"]')
-        #print('-----------------')
-        #print(formtag.prettify())
-        #print('-----------------')
 
         if conf.debug_mode:
             self.debug(server=self.get_name(), host=host, service=service,
@@ -631,10 +628,7 @@ class IcingaDBWebServer(GenericServer):
 
         # Extract the relevant form element values
         formtag = pagesoup.select_one('form[action*="process-checkresult"]')
-        #print('-----------------')
-        #print(formtag.prettify())
-        #print('-----------------')
-        
+
         if conf.debug_mode:
             self.debug(server=self.get_name(), host=host, service=service,
                        debug='[Submit check result] Retrieve html form from {0}: \n{1}'.format(url,formtag.prettify()))
@@ -696,10 +690,7 @@ class IcingaDBWebServer(GenericServer):
 
         # Extract the relevant form element values
         formtag = pagesoup.select_one('form[action*="schedule-downtime"]')
-        #print('-----------------')
-        #print(formtag.prettify())
-        #print('-----------------')
-        
+
         if conf.debug_mode:
             self.debug(server=self.get_name(), host=host, service=service,
                        debug='[Set downtime] Retrieve html form from {0}: \n{1}'.format(url,formtag.prettify()))
@@ -769,10 +760,6 @@ class IcingaDBWebServer(GenericServer):
     
             pagesoup = BeautifulSoup(pageraw, 'html.parser')
 
-            #print('-----------------')
-            #print(pagesoup.prettify())
-            #print('-----------------')
-        
             # Super debug
             if conf.debug_mode:
                 self.debug(server=self.get_name(), host=host, service='',

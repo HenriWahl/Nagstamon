@@ -624,11 +624,6 @@ class MultisiteServer(GenericServer):
         }
         result = self.fetch_url(self.urls["recheck"], cgi_data=data)
 
-        print(result.error)
-        print(result.result)
-        print(result.status_code)
-
-
     def _get_transid(self, host, service):
         """
         get transid for an action

@@ -1236,7 +1236,6 @@ except Exception as err:
     for path in paths_to_check:
         if os.path.exists(path):
             RESOURCES = path
-            print('resources 3: ' + RESOURCES, paths_to_check)
             break
     else:
         RESOURCES = str(Path(__file__).parent.absolute().joinpath('resources'))
