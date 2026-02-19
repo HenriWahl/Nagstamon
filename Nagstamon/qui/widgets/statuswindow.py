@@ -257,7 +257,8 @@ class StatusWindow(QWidget):
         self.toparea.combobox_servers.monitor_opened.connect(self.hide_window)
 
         # due to lack of a better place the 'Delete cookies' button action is defined here
-        self.injected_dialogs.weblogin.delete_web_cookies.connect(self.injected_dialogs.server.delete_web_cookies)
+        self.injected_dialogs.weblogin.delete_web_cookies.connect(self.injected_dialogs.server.delete_web_cookies_action)
+        self.injected_dialogs.server.delete_web_cookies.connect(self.injected_dialogs.server.delete_web_cookies_action)
 
         self.initialize()
 

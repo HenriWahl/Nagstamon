@@ -27,7 +27,7 @@ from Nagstamon.qui.globals import (ecp_available,
 from Nagstamon.qui.qt import (QFileDialog,
                               QMessageBox,
                               QStyle,
-                              Qt,
+                              QWidget,
                               Signal,
                               Slot)
 from Nagstamon.qui.dialogs.dialog import Dialog
@@ -53,6 +53,8 @@ class DialogServer(Dialog):
     # signal to emit when a new server vbox has to be created
     create_server_vbox = Signal(str)
 
+    # signal to emit when web cookies should be deleted for a server
+    delete_web_cookies = Signal(str, QWidget)
 
     def __init__(self):
         Dialog.__init__(self, 'settings_server')
@@ -186,6 +188,8 @@ class DialogServer(Dialog):
         # reset Checkmk views
         self.window.button_checkmk_view_hosts_reset.clicked.connect(self.checkmk_view_hosts_reset)
         self.window.button_checkmk_view_services_reset.clicked.connect(self.checkmk_view_services_reset)
+
+        self.window.button_delete_web_cookies.clicked.connect(self.on_delete_web_cookies)
 
         # mode needed for evaluate dialog after ok button pressed - defaults to 'new'
         self.mode = 'new'
@@ -487,8 +491,16 @@ class DialogServer(Dialog):
     def checkmk_view_services_reset(self):
         self.window.input_lineedit_checkmk_view_services.setText('nagstamon_svc')
 
+    def on_delete_web_cookies(self):
+        """
+        delete all cookies for given server
+        """
+        # strip name to avoid whitespace
+        server_name = self.window.input_lineedit_name.text().strip()
+        self.delete_web_cookies.emit(server_name, self)
+
     @Slot(str)
-    def delete_web_cookies(self, server_name=None, parent=None):
+    def delete_web_cookies_action(self, server_name=None, parent=None):
         # strip name to avoid whitespace
         if server_name is None:
             server_name = self.window.input_lineedit_name.text().strip()

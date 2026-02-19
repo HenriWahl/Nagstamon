@@ -1,4 +1,4 @@
-nagstamon (3.17-20260209) unstable; urgency=low
+nagstamon (3.17-20260219) unstable; urgency=low
 
   * New upstream
     - added web login via cookies

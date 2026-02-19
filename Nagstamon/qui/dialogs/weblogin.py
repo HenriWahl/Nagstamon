@@ -118,7 +118,7 @@ class DialogWebLogin(Dialog):
             self.proxy.setType(QNetworkProxy.ProxyType.NoProxy)
             QNetworkProxy.setApplicationProxy(self.proxy)
 
-        #reset webengine view if already existing - especially for proxy changes
+        # reset webengine view if already existing - especially for proxy changes
         if self.page:
             self.page.deleteLater()
             self.page = None
@@ -237,5 +237,4 @@ class DialogWebLogin(Dialog):
         """
         delete all cookies for given server
         """
-        #self.delete_web_cookies.emit(self.server.name, self.window)
         self.delete_web_cookies.emit(self.server.name, self)
