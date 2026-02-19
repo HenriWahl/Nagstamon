@@ -40,6 +40,8 @@ from datetime import timezone
 import socket
 
 from bs4 import BeautifulSoup
+from tzlocal import get_localzone
+from requests.utils import cookiejar_from_dict
 from Nagstamon.objects import (GenericHost,
                                GenericService,
                                Result)
@@ -114,6 +116,9 @@ class IcingaDBWebServer(GenericServer):
                     # fire up login button with all needed data
                     self.fetch_url('{0}/authentication/login'.format(self.monitor_url), cgi_data=form_inputs)
 
+                # Add icingaweb2-tzo cookie to ensure Icinga to correctly handle provide date time string
+                utc_offset = int(get_localzone().utcoffset(datetime.datetime.now()).total_seconds())
+                self.session.cookies.update(cookiejar_from_dict({'icingaweb2-tzo': f'{utc_offset}-0'}))
 
     def _get_status(self):
         """
