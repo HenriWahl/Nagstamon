@@ -38,8 +38,9 @@ import json
 import datetime
 from datetime import timezone
 import socket
+import warnings
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, MarkupResemblesLocatorWarning
 from tzlocal import get_localzone
 from requests.utils import cookiejar_from_dict
 from Nagstamon.objects import (GenericHost,
@@ -47,6 +48,8 @@ from Nagstamon.objects import (GenericHost,
                                Result)
 from Nagstamon.config import conf
 from Nagstamon.helpers import webbrowser_open
+
+warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
 
 
 def strfdelta(tdelta, fmt):
