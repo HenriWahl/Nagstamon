@@ -49,8 +49,8 @@ class DialogAcknowledge(Dialog):
                                           x.TYPE not in PROMETHEUS_OR_ALERTMANAGER]
 
         self.VOLATILE_WIDGETS = {
-            self.window.input_checkbox_use_expire_time: ['IcingaWeb2', 'Icinga2API'],
-            self.window.input_datetime_expire_time: ['IcingaWeb2', 'Icinga2API', 'Alertmanager'],
+            self.window.input_checkbox_use_expire_time: ['IcingaWeb2', 'Icinga2API', 'IcingaDBWeb'],
+            self.window.input_datetime_expire_time: ['IcingaWeb2', 'Icinga2API', 'IcingaDBWeb', 'Alertmanager'],
             self.window.input_checkbox_sticky_acknowledgement: NOT_PROMETHEUS_OR_ALERTMANAGER,
             self.window.input_checkbox_send_notification: NOT_PROMETHEUS_OR_ALERTMANAGER,
             self.window.input_checkbox_persistent_comment: NOT_PROMETHEUS_OR_ALERTMANAGER,

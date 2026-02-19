@@ -1040,7 +1040,7 @@ class DialogSettings(Dialog):
         use_expire_time = False
         for server in servers.values():
             if server.enabled:
-                if server.type in ['IcingaWeb2', 'Icinga2API', 'Alertmanager']:
+                if server.type in ['IcingaWeb2', 'Icinga2API', 'IcingaDBWeb', 'Alertmanager']:
                     use_expire_time = True
                     break
         if use_expire_time:

@@ -38,13 +38,19 @@ import json
 import datetime
 from datetime import timezone
 import socket
+import warnings
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, MarkupResemblesLocatorWarning
+from tzlocal import get_localzone
+from requests.utils import cookiejar_from_dict
 from Nagstamon.objects import (GenericHost,
                                GenericService,
                                Result)
 from Nagstamon.config import conf
 from Nagstamon.helpers import webbrowser_open
+
+warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
+
 from Nagstamon.cookies import (load_cookies, cookie_data_to_jar, has_any_cookie, has_valid_cookie, delete_cookie)
 
 def strfdelta(tdelta, fmt):
@@ -133,6 +139,9 @@ class IcingaDBWebServer(GenericServer):
                     # fire up login button with all needed data
                     self.fetch_url('{0}/authentication/login'.format(self.monitor_url), cgi_data=form_inputs)
 
+                # Add icingaweb2-tzo cookie to ensure Icinga to correctly handle provide date time string
+                utc_offset = int(get_localzone().utcoffset(datetime.datetime.now()).total_seconds())
+                self.session.cookies.update(cookiejar_from_dict({'icingaweb2-tzo': f'{utc_offset}-0'}))
 
     def _get_status(self):
         """
