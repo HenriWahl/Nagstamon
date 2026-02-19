@@ -256,6 +256,9 @@ class StatusWindow(QWidget):
         # if monitor was selected in combobox its monitor window is opened
         self.toparea.combobox_servers.monitor_opened.connect(self.hide_window)
 
+        # due to lack of a better place the 'Delete cookies' button action is defined here
+        self.injected_dialogs.weblogin.delete_web_cookies.connect(self.injected_dialogs.server.delete_web_cookies)
+
         self.initialize()
 
     def initialize(self):
@@ -642,7 +645,7 @@ class StatusWindow(QWidget):
             # listen if statuswindow cries for event history clearance
             self.clear_event_history.connect(server_vbox.table.worker.unfresh_event_history)
 
-             # statuswindow.servers_vbox.addLayout(statuswindow.create_server_vbox(servers[server_name]))
+            # statuswindow.servers_vbox.addLayout(statuswindow.create_server_vbox(servers[server_name]))
             self.servers_vbox.addLayout(server_vbox)
             self.sort_server_vboxes()
 

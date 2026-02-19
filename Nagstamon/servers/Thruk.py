@@ -137,7 +137,6 @@ class ThrukServer(GenericServer):
 
         if self.disabled_backends is not None:
             self.session.cookies.set('thruk_backends', '&'.join((f"{v}=2" for v in self.disabled_backends.split(','))))
-            print(self.session.cookies.get('thruk_backends'))
 
     def open_monitor(self, host, service=''):
         '''

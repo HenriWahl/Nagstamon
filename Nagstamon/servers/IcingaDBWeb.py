@@ -51,6 +51,7 @@ from Nagstamon.helpers import webbrowser_open
 
 warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
 
+from Nagstamon.cookies import (load_cookies, cookie_data_to_jar, has_any_cookie, has_valid_cookie, delete_cookie)
 
 def strfdelta(tdelta, fmt):
     d = {'days': tdelta.days}
@@ -83,6 +84,8 @@ class IcingaDBWebServer(GenericServer):
         self.cgiurl_services = None
         self.cgiurl_hosts = None
         self.cgiurl_monitoring_health = None
+        # Store current custom_filter to detect changes
+        self._current_custom_filter = None
 
         # https://github.com/HenriWahl/Nagstamon/issues/400
         # The displayed name for host and service is the Icinga2 "internal" name and not the display_name from host/service configuration
@@ -90,12 +93,29 @@ class IcingaDBWebServer(GenericServer):
         # The "internal" name must still be used to query IcingaWeb2 and is in dict under key 'real_name' since https://github.com/HenriWahl/Nagstamon/issues/192
         self.use_display_name_host = True
         self.use_display_name_service = True
+        self._cookie_cleanup_done = False
 
     def init_http(self):
         """
             initializing of session object
         """
         GenericServer.init_http(self)
+
+        # Run cookie cleanup only once per application run / server instance (https://github.com/HenriWahl/Nagstamon/issues/1163)
+        if not getattr(self, '_cookie_cleanup_done', False):
+            self._cookie_cleanup_done = True
+
+            # Only do this if Keycloak cookies are present at all (OIDC case) 
+            if has_any_cookie(self.name, 'KEYCLOAK_SESSION') or has_any_cookie(self.name, 'KEYCLOAK_IDENTITY'):
+                # If there is no valid KEYCLOAK_SESSION left, drop Icingaweb2 (session cookie persisted in DB)
+                if not has_valid_cookie(self.name, 'KEYCLOAK_SESSION'):
+                    deleted = delete_cookie(self.name, 'Icingaweb2')
+                    if conf.debug_mode:
+                        self.debug(server=self.get_name(), host='', service='',
+                                debug=f'[OIDC] Cleanup-on-start: KEYCLOAK_SESSION expired/missing -> deleted {deleted}x cookie "Icingaweb2" from cookies.db')
+                    cookies = load_cookies()
+                    self.session.cookies = cookie_data_to_jar(self.name, cookies)
+
 
         if self.session and not 'Referer' in self.session.headers:
             self.session.headers['Referer'] = self.monitor_cgi_url
@@ -128,13 +148,38 @@ class IcingaDBWebServer(GenericServer):
             Get status from Icinga Server - only JSON
         """
         # define CGI URLs for hosts and services
-        if self.cgiurl_hosts is None and self.cgiurl_services is None and self.cgiurl_monitoring_health is None:
+        # Rebuild URLs if custom_filter has changed or URLs not yet initialized
+        urls_not_initialized = (self.cgiurl_hosts is None and self.cgiurl_services is None and self.cgiurl_monitoring_health is None)
+        filter_changed = (self._current_custom_filter != self.custom_filter)
+        
+        if urls_not_initialized or filter_changed:
+            # Build optional custom filter suffixes
+            # Intelligently apply filters based on their prefix
+            service_filter_suffix = ''
+            host_filter_suffix = ''
+            
+            if self.custom_filter:
+                # If filter starts with 'service.' - only apply to services
+                # If filter starts with 'host.' - only apply to hosts  
+                # Otherwise apply to both
+                if self.custom_filter.startswith('service.'):
+                    service_filter_suffix = '&' + self.custom_filter
+                elif self.custom_filter.startswith('host.'):
+                    host_filter_suffix = '&' + self.custom_filter
+                else:
+                    # Generic filter - apply to both
+                    service_filter_suffix = '&' + self.custom_filter
+                    host_filter_suffix = '&' + self.custom_filter
+            
+            # Store current custom_filter to detect future changes
+            self._current_custom_filter = self.custom_filter
+
             # services (unknown, warning or critical?)
-            self.cgiurl_services = {'hard': self.monitor_cgi_url + '/icingadb/services?service.state.is_problem=y&service.state.state_type=hard&columns=service.host.name,service.host.display_name,service.name,service.display_name,service.state.hard_state,service.state.last_update,service.state.check_attempt,service.max_check_attempts,service.state.output,service.active_checks_enabled,service.notifications_enabled,service.state.is_flapping,service.state.is_acknowledged,service.state.in_downtime,service.state.last_state_change,service.state.is_reachable&format=json', \
-                                    'soft': self.monitor_cgi_url + '/icingadb/services?service.state.is_problem=y&service.state.state_type=soft&columns=service.host.name,service.host.display_name,service.name,service.display_name,service.state.soft_state,service.state.last_update,service.state.check_attempt,service.max_check_attempts,service.state.output,service.active_checks_enabled,service.notifications_enabled,service.state.is_flapping,service.state.is_acknowledged,service.state.in_downtime,service.state.last_state_change,service.state.is_reachable&format=json'}
+            self.cgiurl_services = {'hard': self.monitor_cgi_url + '/icingadb/services?service.state.is_problem=y&service.state.state_type=hard&columns=service.host.name,service.host.display_name,service.name,service.display_name,service.state.hard_state,service.state.last_update,service.state.check_attempt,service.max_check_attempts,service.state.output,service.active_checks_enabled,service.notifications_enabled,service.state.is_flapping,service.state.is_acknowledged,service.state.in_downtime,service.state.last_state_change,service.state.is_reachable' + service_filter_suffix + '&format=json', \
+                                    'soft': self.monitor_cgi_url + '/icingadb/services?service.state.is_problem=y&service.state.state_type=soft&columns=service.host.name,service.host.display_name,service.name,service.display_name,service.state.soft_state,service.state.last_update,service.state.check_attempt,service.max_check_attempts,service.state.output,service.active_checks_enabled,service.notifications_enabled,service.state.is_flapping,service.state.is_acknowledged,service.state.in_downtime,service.state.last_state_change,service.state.is_reachable' + service_filter_suffix + '&format=json'}
             # hosts (up or down or unreachable)
-            self.cgiurl_hosts = {'hard': self.monitor_cgi_url + '/icingadb/hosts?host.state.is_problem=y&host.state.state_type=hard&columns=host.name,host.display_name,host.state.hard_state,host.state.last_update,state.check_attempt,max_check_attempts,state.output,active_checks_enabled,notifications_enabled,state.is_flapping,state.is_acknowledged,state.in_downtime,state.last_state_change&format=json', \
-                                 'soft': self.monitor_cgi_url + '/icingadb/hosts?host.state.is_problem=y&host.state.state_type=soft&columns=host.name,host.display_name,host.state.soft_state,host.state.last_update,state.check_attempt,max_check_attempts,state.output,active_checks_enabled,notifications_enabled,state.is_flapping,state.is_acknowledged,state.in_downtime,state.last_state_change&format=json'}
+            self.cgiurl_hosts = {'hard': self.monitor_cgi_url + '/icingadb/hosts?host.state.is_problem=y&host.state.state_type=hard&columns=host.name,host.display_name,host.state.hard_state,host.state.last_update,state.check_attempt,max_check_attempts,state.output,active_checks_enabled,notifications_enabled,state.is_flapping,state.is_acknowledged,state.in_downtime,state.last_state_change' + host_filter_suffix + '&format=json', \
+                                 'soft': self.monitor_cgi_url + '/icingadb/hosts?host.state.is_problem=y&host.state.state_type=soft&columns=host.name,host.display_name,host.state.soft_state,host.state.last_update,state.check_attempt,max_check_attempts,state.output,active_checks_enabled,notifications_enabled,state.is_flapping,state.is_acknowledged,state.in_downtime,state.last_state_change' + host_filter_suffix + '&format=json'}
             # monitoring health
             self.cgiurl_monitoring_health = self.monitor_cgi_url + '/health?format=json'
 
@@ -414,6 +459,14 @@ class IcingaDBWebServer(GenericServer):
         # Extract the relevant form element values
         formtag = pagesoup.select_one('form[action*="check-now"]')
 
+        if formtag is None:
+            # This typically happens when authentication expired and we got redirected HTML,
+            # or the page layout changed.
+            if conf.debug_mode:
+                self.debug(server=self.get_name(), host=host, service=service,
+                        debug=f'[Recheck] Could not find check-now form. URL={url}. Possibly not authenticated or page changed.')
+            return Result(result=pageraw, error='Recheck form not found (authentication expired?)')
+
         if conf.debug_mode:
             self.debug(server=self.get_name(), host=host, service=service,
                        debug='[Recheck] Retrieve html form from {0}: \n{1}'.format(url,formtag.prettify()))
@@ -510,9 +563,6 @@ class IcingaDBWebServer(GenericServer):
 
         # Extract the relevant form element values
         formtag = pagesoup.select_one('form[action*="acknowledge"]')
-        #print('-----------------')
-        #print(formtag.prettify())
-        #print('-----------------')
 
         if conf.debug_mode:
             self.debug(server=self.get_name(), host=host, service=service,
@@ -587,10 +637,7 @@ class IcingaDBWebServer(GenericServer):
 
         # Extract the relevant form element values
         formtag = pagesoup.select_one('form[action*="process-checkresult"]')
-        #print('-----------------')
-        #print(formtag.prettify())
-        #print('-----------------')
-        
+
         if conf.debug_mode:
             self.debug(server=self.get_name(), host=host, service=service,
                        debug='[Submit check result] Retrieve html form from {0}: \n{1}'.format(url,formtag.prettify()))
@@ -652,10 +699,7 @@ class IcingaDBWebServer(GenericServer):
 
         # Extract the relevant form element values
         formtag = pagesoup.select_one('form[action*="schedule-downtime"]')
-        #print('-----------------')
-        #print(formtag.prettify())
-        #print('-----------------')
-        
+
         if conf.debug_mode:
             self.debug(server=self.get_name(), host=host, service=service,
                        debug='[Set downtime] Retrieve html form from {0}: \n{1}'.format(url,formtag.prettify()))
@@ -725,10 +769,6 @@ class IcingaDBWebServer(GenericServer):
     
             pagesoup = BeautifulSoup(pageraw, 'html.parser')
 
-            #print('-----------------')
-            #print(pagesoup.prettify())
-            #print('-----------------')
-        
             # Super debug
             if conf.debug_mode:
                 self.debug(server=self.get_name(), host=host, service='',

@@ -201,7 +201,7 @@ class GenericServer:
         self.status_description = ''
         self.status_code = 0
         self.has_error = False
-        self.timeout = 10
+        self.timeout = 30
 
         # The events_* are recycled from GUI.py
         # history of events to track status changes for notifications
@@ -273,6 +273,9 @@ class GenericServer:
         # IcingaDBWebNotifications
         self.notification_filter = None
         self.notification_lookback = None
+
+        # IcingaDBWeb custom filter
+        self.custom_filter = ''
 
         # Thruk
         self.disabled_backends = None
@@ -1537,7 +1540,6 @@ class GenericServer:
                         form_data = dict()
                         for key in cgi_data:
                             form_data[key] = (None, cgi_data[key])
-
                         # get response with cgi_data encodes as files
                         response = self.session.post(url, files=form_data, timeout=self.timeout)
                 else:

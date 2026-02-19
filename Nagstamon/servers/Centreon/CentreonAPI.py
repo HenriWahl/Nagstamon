@@ -774,8 +774,8 @@ class CentreonServer(GenericServer):
                            debug='Check-session, the token expire if not been used for more than one hour. Current Token = ' + str(
                                self.token))
 
-            cgi_data = {'limit': '0'}
-            # Get en empty service list, to check the status of the current token
+            cgi_data = {'limit': '1'}
+            # Get en small service list, to check the status of the current token
             # This request must be done in a GET, so just encode the parameters and fetch
             result = self.fetch_url(self.urls_centreon['resources'] + '?' + urllib.parse.urlencode(cgi_data),
                                     giveback="raw")

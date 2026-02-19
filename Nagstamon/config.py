@@ -129,7 +129,7 @@ class AppInfo:
     contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '3.17-20260115'
+    VERSION = '3.17-20260209'
     WEBSITE = 'https://nagstamon.de'
     COPYRIGHT = '©2008-2026 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -1054,7 +1054,7 @@ class Server:
         self.proxy_password = 'proxypassword'
         # defaults to 'basic', other possible values are 'digest' and 'kerberos'
         self.authentication = 'basic'
-        self.timeout = 10
+        self.timeout = 30
         # just GUI-wise deciding if more options are shown in server dialog
         self.show_options = False
 
@@ -1121,6 +1121,9 @@ class Server:
         # IcingaDBWebNotificationsServer
         self.notification_filter = "user.name=*"
         self.notification_lookback = "30 minutes"
+
+        # IcingaDBWeb custom filter
+        self.custom_filter = ""
 
         # Thruk
         self.disabled_backends = ""
@@ -1233,7 +1236,6 @@ except Exception as err:
     for path in paths_to_check:
         if os.path.exists(path):
             RESOURCES = path
-            print('resources 3: ' + RESOURCES, paths_to_check)
             break
     else:
         RESOURCES = str(Path(__file__).parent.absolute().joinpath('resources'))

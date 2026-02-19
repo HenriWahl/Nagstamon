@@ -26,6 +26,7 @@ from Nagstamon.qui.qt import (Qt,
                               QApplication,
                               QFontDatabase,
                               QT_VERSION_MAJOR)
+from Nagstamon.qui.widgets.buttons import StandardDialogIconsProxyStyle
 
 # since Qt6 HighDPI-awareness is default behaviour
 if QT_VERSION_MAJOR < 6:
@@ -43,6 +44,9 @@ app = QApplication(argv)
 # set style for tooltips globally - to sad not all properties can be set here
 app.setStyleSheet('''QToolTip { margin: 3px;
                                 }''')
+
+# proxy style helps to remove ugly icons in Linux Fusion style
+app.setStyle(StandardDialogIconsProxyStyle())
 
 # as long as Windows 11 + Qt6 looks that ugly it's better to choose another app style
 # might be mitigated with sometimes, so commented out now

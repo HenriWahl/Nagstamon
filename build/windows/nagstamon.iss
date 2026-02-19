@@ -42,3 +42,24 @@ var
 begin
     Exec(ExpandConstant('taskkill.exe'), '/f /t /im nagstamon.exe', '', SW_HIDE, ewWaitUntilTerminated, ReturnCode);
 end;
+
+// PrepareToInstall already knows the desired target {app} directory
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  FindRec: TFindRec;
+  UninstPath: String;
+  ReturnCode: Integer;
+begin
+  KillRunningNagstamon();
+
+  if FindFirst(ExpandConstant('{app}\unins0*.exe'), FindRec) then
+  begin
+    try
+      UninstPath := ExpandConstant('{app}\') + FindRec.Name;
+      if FileExists(UninstPath) then
+        Exec(UninstPath, '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART', '', SW_HIDE, ewWaitUntilTerminated, ReturnCode);
+    finally
+      FindClose(FindRec);
+    end;
+  end;
+end;

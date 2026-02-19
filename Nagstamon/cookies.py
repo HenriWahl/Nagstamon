@@ -18,6 +18,7 @@
 from pathlib import Path
 import requests
 import sqlite3
+from time import time
 
 from cryptography.fernet import (Fernet,
                                  InvalidToken)
@@ -33,6 +34,7 @@ else:
 
 COOKIE_DB_FILE = 'cookies.db'
 COOKIE_DB_FILE_PATH = Path(conf.configdir) / COOKIE_DB_FILE
+
 
 def init_db():
     """
@@ -182,6 +184,9 @@ def load_cookies():
             except InvalidToken:
                 decrypted_value = b''
             cookies[cookey]['value'] = decrypted_value.decode()
+    if conf.debug_mode:
+        # no initialized server and thus no debug method available here - just print to console
+        print(f'Loaded cookies: {cookies}')
     return cookies
 
 
@@ -202,3 +207,69 @@ def cookie_data_to_jar(server_name, cookie_data):
                 rest={'HttpOnly': cookie['httponly']}
             )
     return jar
+
+
+def has_any_cookie(server_name: str, cookie_name: str) -> bool:
+    """
+    Return True if at least one cookie with given name exists.
+    """
+    cookies = load_cookies()
+    for c in cookies.values():
+        if c.get('server') == server_name and c.get('name') == cookie_name:
+            return True
+    return False
+
+
+def has_valid_cookie(server_name: str, cookie_name: str, now: int | None = None, skew_seconds: int = 30) -> bool:
+    """
+    Return True if at least one cookie with given name has an expiration in the future.
+    skew_seconds: small safety window to avoid edge cases at the boundary.
+    """
+    if now is None:
+        now = int(time())
+
+    cookies = load_cookies()
+    for c in cookies.values():
+        if c.get('server') != server_name:
+            continue
+        if c.get('name') != cookie_name:
+            continue
+        exp = c.get('expiration')
+        if exp is None:
+            continue
+        if int(exp) > (now + skew_seconds):
+            return True
+    return False
+
+
+def delete_cookie(server_name: str, cookie_name: str | None = None, domain: str | None = None, path: str | None = None) -> int:
+    """
+    Delete cookie rows from SQLite DB. Returns number of deleted rows.
+    Optional name/domain/path narrow down the deletion.
+    """
+    init_db()
+    connection = sqlite3.connect(COOKIE_DB_FILE_PATH)
+    cursor = connection.cursor()
+
+    # when no cookie name is given, delete all cookies for the server, otherwise only the cookie with the given name
+    if cookie_name:
+        sql = "DELETE FROM cookies WHERE server = ? AND name = ?"
+        params = [server_name, cookie_name]
+    else:
+        sql = "DELETE FROM cookies WHERE server = ?"
+        params = [server_name]
+
+    if domain is not None:
+        sql += " AND domain = ?"
+        params.append(domain)
+
+    if path is not None:
+        sql += " AND path = ?"
+        params.append(path)
+
+    cursor.execute(sql, tuple(params))
+    deleted = cursor.rowcount
+
+    connection.commit()
+    connection.close()
+    return deleted

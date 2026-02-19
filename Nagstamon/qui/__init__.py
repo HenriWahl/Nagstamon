@@ -204,10 +204,3 @@ else:
     statuswindow.systrayicon_disabled.emit()
 # tell the widgets that the menu is ready
 menu.menu_ready.emit(menu)
-
-from Nagstamon.servers import servers
-
-# # TODO: need to be connected after server creation or config changes too
-# for server in servers.values():
-#     server.bridge_to_qt.set_url.connect(dialogs.weblogin.set_url)
-#

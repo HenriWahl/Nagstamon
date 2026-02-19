@@ -46,8 +46,16 @@ UI_FILE_QT6_QT5_DOWNGRADES = {
 # Enough to handle with differences between PyQt5 + PyQt6, so PySide6 will be
 # ignored right now
 # by the little import the appropriate PyQt version will be loaded
+# Check for PyQt6 and all its required modules
 try:
     from PyQt6.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
+    # Check if all required PyQt6 modules are available
+    # This prevents crashes when PyQt6 is partially installed
+    from PyQt6.QtMultimedia import QAudioOutput
+    from PyQt6.QtWebEngineCore import QWebEnginePage
+    from PyQt6.QtWebEngineWidgets import QWebEngineView
+    from PyQt6.QtSvg import QSvgRenderer
+    from PyQt6.QtSvgWidgets import QSvgWidget
 
     # get int-ed version parts
     QT_VERSION_MAJOR, QT_VERSION_MINOR = [int(x) for x in QT_VERSION_STR.split('.')[0:2]]
@@ -68,10 +76,19 @@ except ImportError:
 if environ.get('NAGSTAMON_QT_FLAVOR'):
     QT_FLAVOR = environ.get('NAGSTAMON_QT_FLAVOR')
     if QT_FLAVOR == 'PyQt6':
-        from PyQt6.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
+        try:
+            from PyQt6.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
+            # Check if all required PyQt6 modules are available
+            from PyQt6.QtMultimedia import QAudioOutput
+            from PyQt6.QtWebEngineCore import QWebEnginePage
+            from PyQt6.QtWebEngineWidgets import QWebEngineView
+            from PyQt6.QtSvg import QSvgRenderer
+            from PyQt6.QtSvgWidgets import QSvgWidget
 
-        # get int-ed version parts
-        QT_VERSION_MAJOR, QT_VERSION_MINOR = [int(x) for x in QT_VERSION_STR.split('.')[0:2]]
+            # get int-ed version parts
+            QT_VERSION_MAJOR, QT_VERSION_MINOR = [int(x) for x in QT_VERSION_STR.split('.')[0:2]]
+        except ImportError as e:
+            sys.exit(f"NAGSTAMON_QT_FLAVOR set to PyQt6 but required modules are missing: {e}")
     elif QT_FLAVOR == 'PyQt5':
         from PyQt5.QtCore import PYQT_VERSION_STR as QT_VERSION_STR
 
@@ -108,7 +125,8 @@ if QT_FLAVOR == 'PyQt5':
         QKeySequence, \
         QPainter, \
         QPalette, \
-        QPixmap
+        QPixmap, \
+        QWindow
     from PyQt5.QtMultimedia import QMediaContent, \
         QMediaPlayer, \
         QMediaPlaylist
@@ -136,6 +154,7 @@ if QT_FLAVOR == 'PyQt5':
         QMenuBar, \
         QMessageBox, \
         QLabel, \
+        QProxyStyle, \
         QPushButton, \
         QScrollArea, \
         QSizePolicy, \
@@ -248,7 +267,8 @@ elif QT_FLAVOR == 'PyQt6':
                              QKeySequence,
                              QPainter,
                              QPalette,
-                             QPixmap)
+                             QPixmap, \
+                             QWindow)
     from PyQt6.QtMultimedia import (QAudioOutput,
                                     QMediaDevices,
                                     QMediaPlayer)
@@ -275,6 +295,7 @@ elif QT_FLAVOR == 'PyQt6':
                                  QMenuBar,
                                  QMessageBox,
                                  QLabel,
+                                 QProxyStyle,
                                  QPushButton,
                                  QScrollArea,
                                  QSizePolicy,
@@ -409,6 +430,7 @@ elif QT_FLAVOR == 'PyQt6':
 #         QMenuBar, \
 #         QMessageBox, \
 #         QLabel, \
+#
 #         QPushButton, \
 #         QScrollArea, \
 #         QSizePolicy, \

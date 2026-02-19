@@ -158,7 +158,11 @@ def create_server(server=None):
     new_server.proxy_username = server.proxy_username
     new_server.proxy_password = server.proxy_password
     new_server.authentication = server.authentication
-    new_server.timeout = server.timeout
+    # The default timeout setting was increased to 30 seconds, but the old value of 10 seconds
+    # will always be returned back coming from config file.
+    # To avoid this mess it is now hardcoded to 30 seconds and the old value is not used anymore.
+    #new_server.timeout = server.timeout
+    new_server.timeout = 30
 
     # SSL/TLS
     new_server.ignore_cert = server.ignore_cert
@@ -188,6 +192,9 @@ def create_server(server=None):
     # IcingaDBWebNotifications
     new_server.notification_filter = server.notification_filter
     new_server.notification_lookback = server.notification_lookback
+
+    # IcingaDBWeb custom filter
+    new_server.custom_filter = server.custom_filter
 
     # Checkmk Multisite
     new_server.force_authuser = server.force_authuser

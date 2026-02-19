@@ -1287,30 +1287,25 @@ class TreeView(QTreeView):
                 self.change_label_status.emit('Rechecking all...', '')
                 if conf.debug_mode:
                     self.server.debug(server=self.server.name, debug='Start rechecking all')
-                # special treatment for Checkmk Multisite because there is only one URL call necessary
-                if self.server.type != 'Checkmk Multisite':
-                    # make a copy to preserve hosts/service to recheck - just in case something changes meanwhile
-                    nagitems_filtered = deepcopy(self.server.nagitems_filtered)
-                    for status in nagitems_filtered['hosts'].items():
-                        for host in status[1]:
-                            if conf.debug_mode:
-                                self.server.debug(server=self.server.name,
-                                                  debug='Rechecking host {0}'.format(host.name))
-                            # call server recheck method
-                            self.server.set_recheck({'host': host.name, 'service': ''})
-                    for status in nagitems_filtered['services'].items():
-                        for service in status[1]:
-                            if conf.debug_mode:
-                                self.server.debug(server=self.server.name,
-                                                  debug='Rechecking service {0} on host {1}'.format(
-                                                      service.get_service_name(),
-                                                      service.host))
-                            # call server recheck method
-                            self.server.set_recheck({'host': service.host, 'service': service.name})
-                    del nagitems_filtered, status
-                else:
-                    # Checkmk Multisite does it its own way
-                    self.server.recheck_all()
+                # make a copy to preserve hosts/service to recheck - just in case something changes meanwhile
+                nagitems_filtered = deepcopy(self.server.nagitems_filtered)
+                for status in nagitems_filtered['hosts'].items():
+                    for host in status[1]:
+                        if conf.debug_mode:
+                            self.server.debug(server=self.server.name,
+                                              debug='Rechecking host {0}'.format(host.name))
+                        # call server recheck method
+                        self.server.set_recheck({'host': host.name, 'service': ''})
+                for status in nagitems_filtered['services'].items():
+                    for service in status[1]:
+                        if conf.debug_mode:
+                            self.server.debug(server=self.server.name,
+                                              debug='Rechecking service {0} on host {1}'.format(
+                                                  service.get_service_name(),
+                                                  service.host))
+                        # call server recheck method
+                        self.server.set_recheck({'host': service.host, 'service': service.name})
+                del nagitems_filtered, status
                 # release rechecking lock
                 self.rechecking_all = False
                 # restore server status label
