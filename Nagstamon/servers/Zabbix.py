@@ -489,7 +489,7 @@ class ZabbixServer(GenericServer):
         """
             next dirty workaround to get Zabbix events to look Nagios-esque
         """
-        if (" on " or " is ") in service:
+        if " on " in service or " is " in service:
             for separator in [" on ", " is "]:
                 service = service.split(separator)[0]
         return service
