@@ -45,14 +45,10 @@ class TestSyntaxGuiModules(unittest.TestCase):
 
 def _make_import_test(module_name: str):
     def test(self):
-        try:
-            importlib.import_module(module_name)
-        except Exception as exc:
-            self.fail(f'Failed to import {module_name!r}: {exc}')
+        # Let any import error propagate so unittest shows the full traceback.
+        importlib.import_module(module_name)
     test.__name__ = f'test_import_{module_name.replace(".", "_")}'
     return test
-
-
 def _make_syntax_test(py_file: Path):
     def test(self):
         try:
