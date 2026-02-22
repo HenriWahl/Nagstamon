@@ -13,11 +13,8 @@ class TestNagiosifyService(unittest.TestCase):
         self.assertEqual(self.server.nagiosify_service('CPU load on myhost'), 'CPU load')
 
     def test_splits_on_is(self):
-        # "is" separator - the current implementation only splits on " on " first
-        result = self.server.nagiosify_service('Service is running')
-        # Because of the short-circuit (" on " or " is ") being always truthy,
-        # the function splits on the first separator found (" on " if present)
-        self.assertIsInstance(result, str)
+        # When only the " is " separator is present, split on it and keep the left part
+        self.assertEqual(self.server.nagiosify_service('Service is running'), 'Service')
 
     def test_no_separator_unchanged(self):
         self.assertEqual(self.server.nagiosify_service('Disk usage'), 'Disk usage')
