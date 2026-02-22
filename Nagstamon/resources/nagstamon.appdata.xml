@@ -1,51 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-	<id>de.nagstamon.nagstamon</id>
-	<replaces>
-		<id>de.ifw_dresden.nagstamon</id>
-	</replaces>
-	<metadata_license>CC0-1.0</metadata_license>
-	<project_license>GPL-2.0</project_license>
-	<name>Nagstamon</name>
-	<summary>The status monitor for the desktop</summary>
-	<releases>
-		<release version="3.16.2" date="2024-10-25">
-			<description>
-				<ul>
-					<li>fix sound problem</li>
-					<li>fix IncingaDBWeb</li>
-				</ul>
-			</description>
-		</release>
-	</releases>
-	<description>
-		<p>
-			Nagstamon is a status monitor for the desktop. It connects to multiple Nagios, Icinga, Opsview, Centreon,
-			Op5 Monitor/Ninja, Check_MK Multisite and Thruk monitoring servers. It resides in systray, as a floating
-			statusbar or fullscreen at the desktop showing a brief summary of critical, warning, unknown, unreachable
-			and down hosts and services. It pops up a detailed status overview when being touched by the mouse pointer.
-			Connections to displayed hosts and services are easily established by context menu via SSH, RDP, VNC or
-			any self defined actions. Users can be notified by sound. Hosts and services can be filtered by category
-			and regular expressions.
-		</p>
-	</description>
-	<url type="homepage">https://nagstamon.de</url>
-	<url type="help">https://nagstamon.de/documentation</url>
-	<url type="bugtracker">https://github.com/HenriWahl/Nagstamon/issues</url>
-	<launchable type="desktop-id">de.nagstamon.nagstamon.desktop</launchable>
-	<branding>
-  		<color type="primary" scheme_preference="light">#c9facc</color>
-  		<color type="primary" scheme_preference="dark">#59b65f</color>
-	</branding>
-	<developer_name>Henri Wahl</developer_name>
-	<screenshots>
-		<screenshot type="default">
-			<image type="source">https://nagstamon.de/assets/images/teaser_1.png</image>
-		</screenshot>
-		<screenshot>
-			<image type="source">https://nagstamon.de/assets/images/teaser_2.png</image>
-		</screenshot>
-	</screenshots>
+    <id>de.nagstamon.nagstamon</id>
+    <replaces>
+        <id>de.ifw_dresden.nagstamon</id>
+    </replaces>
+    <metadata_license>CC0-1.0</metadata_license>
+    <project_license>GPL-2.0</project_license>
+    <name>Nagstamon</name>
+    <summary>The status monitor for the desktop</summary>
+    <releases>
+        <release version="3.18.0" date="2026-02-26">
+            <description>
+                <ul>
+                    <li>added experimental web login via cookies</li>
+                    <li>added LibreNMS support</li>
+                    <li>improved Alertmanager support for multiple alerts</li>
+                    <li>improved Centreon token validation</li>
+                    <li>improved Zabbix support in contect menu</li>
+                    <li>fixed sound files</li>
+                    <li>fixes for Checkmk</li>
+                    <li>fixes for Alertmanager</li>
+                    <li>fixes for IcingaDBWeb</li>
+                    <li>fixes for IcingaWeb2</li>
+                    <li>fixes for Zabbix</li>
+                    <li>updated Qt6</li>
+                    <li>code cleanup</li>
+                </ul>
+            </description>
+        </release>
+        <release version="3.16.2" date="2024-10-25">
+            <description>
+                <ul>
+                    <li>fix sound problem</li>
+                    <li>fix IncingaDBWeb</li>
+                </ul>
+            </description>
+        </release>
+    </releases>
+    <description>
+        <p>
+            Nagstamon is a status monitor for the desktop. It connects to multiple Nagios, Icinga, Opsview, Centreon,
+            Op5 Monitor/Ninja, Check_MK Multisite and Thruk monitoring servers. It resides in systray, as a floating
+            statusbar or fullscreen at the desktop showing a brief summary of critical, warning, unknown, unreachable
+            and down hosts and services. It pops up a detailed status overview when being touched by the mouse pointer.
+            Connections to displayed hosts and services are easily established by context menu via SSH, RDP, VNC or
+            any self defined actions. Users can be notified by sound. Hosts and services can be filtered by category
+            and regular expressions.
+        </p>
+    </description>
+    <url type="homepage">https://nagstamon.de</url>
+    <url type="help">https://nagstamon.de/documentation</url>
+    <url type="bugtracker">https://github.com/HenriWahl/Nagstamon/issues</url>
+    <launchable type="desktop-id">de.nagstamon.nagstamon.desktop</launchable>
+    <branding>
+        <color type="primary" scheme_preference="light">#c9facc</color>
+        <color type="primary" scheme_preference="dark">#59b65f</color>
+    </branding>
+    <developer_name>Henri Wahl</developer_name>
+    <screenshots>
+        <screenshot type="default">
+            <image type="source">https://nagstamon.de/assets/images/teaser_1.png</image>
+        </screenshot>
+        <screenshot>
+            <image type="source">https://nagstamon.de/assets/images/teaser_2.png</image>
+        </screenshot>
+    </screenshots>
     <update_contact>flathub@nagstamon.de</update_contact>
-    <content_rating type="oars-1.1" />
+    <content_rating type="oars-1.1"/>
 </component>

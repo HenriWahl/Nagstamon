@@ -4,32 +4,30 @@ on:
     tags: 'v*'
 
 env:
-  python_win_version: 3.12.7
+  python_win_version: 3.14.3
   repo_dir: nagstamon-jekyll/docs/repo
   cr_image: ghcr.io/henriwahl/build-nagstamon
-  # to be increased if new updates of build images are necessary
-  cr_image_version: 5
   # release type this file is used for
-  release: stable
+  release: latest
 
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.9, 3.11]
+        python-version: [3.10, 3.11, 3.12, 3.13, 3.14]
 
     steps:
     - uses: actions/checkout@v4
-    # somehow weird way to get the hash over the requirements to be aware if they changed
-    - id: requirements_hash
-      run: echo "HASH=$(md5sum build/requirements/linux.txt | cut -d\  -f1)" >> $GITHUB_OUTPUT
-      # docker login is needed for pushing the test image
+    # docker login is needed for pushing the test image
     - uses: docker/login-action@v3
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
+    # somehow weird way to get the hash over the requirements to be aware if they changed
+    - id: requirements_hash
+      run: echo "HASH=$(md5sum build/requirements/linux.txt | cut -d\  -f1)" >> $GITHUB_OUTPUT
     # if image defined by hash over requirements is not pullable aka does not exist it will be created and pushed
     - run: docker pull ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }} --build-arg VERSION=${{ matrix.python-version }} --build-arg REQUIREMENTS="$(cat build/requirements/linux.txt | base64 --wrap=0)" -f build/docker/Dockerfile-${{ github.job }} .
     - run: docker push ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }}
@@ -54,11 +52,14 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
-      - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
-      - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
+      # somehow weird way to get the hash over the Dockerfile to be aware if it changed
+      - id: dockerfile_hash
+        run: echo "HASH=$(md5sum build/docker/Dockerfile-${{ github.job }} | cut -d\  -f1)" >> $GITHUB_OUTPUT
+      # if image defined by variable steps.dockerfile_hash.outputs.HASH is not pullable aka does not exist it will be created and pushed
+      - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }} -f build/docker/Dockerfile-${{ github.job }} .
+      - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }}
       # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
-      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon -e DEB_BUILD_OPTIONS=nocheck ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
+      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon -e DEB_BUILD_OPTIONS=nocheck ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }}
       - uses: actions/upload-artifact@v4
         with:
           path: build/*.deb
@@ -66,9 +67,12 @@ jobs:
           if-no-files-found: error
           name: ${{ github.job }}
 
-  fedora-38:
+  fedora:
     runs-on: ubuntu-latest
     needs: test
+    strategy:
+      matrix:
+        version: [ 41, 42, 43, 44 ]
     steps:
       - uses: actions/checkout@v4
       # docker login is needed for pushing the build image
@@ -77,109 +81,20 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
-      - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
-      - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
+      # somehow weird way to get the hash over the Dockerfile to be aware if it changed
+      - id: dockerfile_hash
+        run: echo "HASH=$(md5sum build/docker/Dockerfile-${{ github.job }}-${{ matrix.version }} | cut -d\  -f1)" >> $GITHUB_OUTPUT
+      # if image defined by variable steps.dockerfile_hash.outputs.HASH is not pullable aka does not exist it will be created and pushed
+      - run: docker pull ${{ env.cr_image }}-${{ github.job }}-${{ matrix.version }}:${{ steps.dockerfile_hash.outputs.HASH }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}-${{ matrix.version }}:${{ steps.dockerfile_hash.outputs.HASH }} -f build/docker/Dockerfile-${{ github.job }}-${{ matrix.version }} .
+      - run: docker push ${{ env.cr_image }}-${{ github.job }}-${{ matrix.version }}:${{ steps.dockerfile_hash.outputs.HASH }}
       # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
-      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
+      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}-${{ matrix.version }}:${{ steps.dockerfile_hash.outputs.HASH }}
       - uses: actions/upload-artifact@v4
         with:
           path: build/*.rpm
           retention-days: 1
           if-no-files-found: error
-          name: ${{ github.job }}
-
-  fedora-39:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - uses: actions/checkout@v4
-      # docker login is needed for pushing the build image
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
-      - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
-      - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-      # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
-      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-      - uses: actions/upload-artifact@v4
-        with:
-          path: build/*.rpm
-          retention-days: 1
-          if-no-files-found: error
-          name: ${{ github.job }}
-
-  fedora-40:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - uses: actions/checkout@v4
-      # docker login is needed for pushing the build image
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
-      - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
-      - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-      # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
-      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-      - uses: actions/upload-artifact@v4
-        with:
-          path: build/*.rpm
-          retention-days: 1
-          if-no-files-found: error
-          name: ${{ github.job }}
-
-  fedora-41:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - uses: actions/checkout@v4
-      # docker login is needed for pushing the build image
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
-      - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
-      - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-      # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
-      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-      - uses: actions/upload-artifact@v4
-        with:
-          path: build/*.rpm
-          retention-days: 1
-          if-no-files-found: error
-          name: ${{ github.job }}
-
-  fedora-42:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - uses: actions/checkout@v4
-      # docker login is needed for pushing the build image
-      - uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
-      - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
-      - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-      # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
-      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
-      - uses: actions/upload-artifact@v4
-        with:
-          path: build/*.rpm
-          retention-days: 1
-          if-no-files-found: error
-          name: ${{ github.job }}
+          name: ${{ github.job }}-${{ matrix.version }}
 
   rhel-9:
     runs-on: ubuntu-latest
@@ -192,11 +107,14 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
-      - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
-      - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
+      # somehow weird way to get the hash over the Dockerfile to be aware if it changed
+      - id: dockerfile_hash
+        run: echo "HASH=$(md5sum build/docker/Dockerfile-${{ github.job }} | cut -d\  -f1)" >> $GITHUB_OUTPUT
+      # if image defined by variable steps.dockerfile_hash.outputs.HASH is not pullable aka does not exist it will be created and pushed
+      - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }} -f build/docker/Dockerfile-${{ github.job }} .
+      - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }}
       # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
-      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ env.cr_image_version }}
+      - run: /usr/bin/docker run -v ${{ github.workspace }}:/nagstamon ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }}
       - uses: actions/upload-artifact@v4
         with:
           path: build/*.rpm
@@ -204,18 +122,49 @@ jobs:
           if-no-files-found: error
           name: ${{ github.job }}
 
-  macos-intel:
-    runs-on: macos-12
+  # see https://github.com/HenriWahl/Nagstamon/issues/1090
+  linux-pyinstaller:
+    runs-on: ubuntu-latest
     needs: test
     steps:
       - uses: actions/checkout@v4
-      - run: pip3 install --no-warn-script-location -r build/requirements/macos.txt
+      # docker login is needed for pushing the build image
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # somehow weird way to get the hash over the Dockerfile to be aware if it changed
+      - id: dockerfile_hash
+        run: echo "HASH=$(md5sum build/docker/Dockerfile-${{ github.job }} | cut -d\  -f1)" >> $GITHUB_OUTPUT
+      - id: app_version
+        run: echo "VERSION=$(grep VERSION\ =\ \' Nagstamon/config.py | cut -d\' -f2)" >> $GITHUB_OUTPUT
+      # if image defined by variable steps.dockerfile_hash.outputs.HASH is not pullable aka does not exist it will be created and pushed
+      - run: docker pull ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }} -f build/docker/Dockerfile-${{ github.job }} .
+      - run: docker push ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }}
+      # building in precompiled image makes them way faster instead of creating the build environment every time from scratch
+      - run: /usr/bin/docker run --volume ${{ github.workspace }}:/nagstamon --env VERSION=${{ steps.app_version.outputs.VERSION }} ${{ env.cr_image }}-${{ github.job }}:${{ steps.dockerfile_hash.outputs.HASH }}
+      - uses: actions/upload-artifact@v4
+        with:
+          path: dist/*
+          retention-days: 1
+          if-no-files-found: error
+          name: ${{ github.job }}
+
+  macos-intel:
+    # according to https://github.blog/changelog/2025-09-19-github-actions-macos-13-runner-image-is-closing-down/
+    runs-on: macos-15-intel
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - run : brew install create-dmg
+      - run: pip3 install --no-warn-script-location --break-system-packages -r build/requirements/macos.txt
       - run: cd ${{ github.workspace }}/build; python3 build.py
         env:
           PYTHONPATH: ${{ github.workspace }}
       - uses: actions/upload-artifact@v4
         with:
-          path: build/*.dmg
+          path: build/dist/*.dmg
           retention-days: 1
           if-no-files-found: error
           name: ${{ github.job }}
@@ -225,13 +174,14 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v4
+      - run : brew install create-dmg
       - run: pip3 install --no-warn-script-location --break-system-packages -r build/requirements/macos.txt
       - run: cd ${{ github.workspace }}/build; python3 build.py
         env:
           PYTHONPATH: ${{ github.workspace }}
       - uses: actions/upload-artifact@v4
         with:
-          path: build/*.dmg
+          path: build/dist/*.dmg
           retention-days: 1
           if-no-files-found: error
           name: ${{ github.job }}
@@ -318,14 +268,15 @@ jobs:
           if-no-files-found: error
           name: ${{ github.job }}
 
-# borrowed from dhcpy6d
+  # borrowed from dhcpy6d
   repo-debian:
     runs-on: ubuntu-latest
     # try to avoid race condition and start uploading only after the last install package has been build
-    needs: [debian, fedora-38, fedora-39, fedora-40, fedora-41, fedora-42, rhel-9, macos-intel, macos-arm, windows-32, windows-64, windows-64-debug]
+    needs: [debian, fedora, linux-pyinstaller, macos-arm, macos-intel, rhel-9, windows-32, windows-64, windows-64-debug]
     env:
       family: debian
     steps:
+      # checkout to get Dockerfiles for steps.dockerfile_hash.outputs.HASH
       - uses: actions/checkout@v4
       # get binaries created by other jobs
       - uses: actions/download-artifact@v4
@@ -343,12 +294,15 @@ jobs:
       - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
       - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.dist }}/${{ env.release }}
       - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.dist }}/${{ env.release }}
+      # somehow weird way to get the hash over the Dockerfile to be aware if it changed
+      - id: dockerfile_hash
+        run: echo "HASH=$(md5sum build/docker/Dockerfile-${{ env.family }} | cut -d\  -f1)" >> $GITHUB_OUTPUT
       # create deb repo via Debian build container
       - run: |
           /usr/bin/docker run --rm \
           -v ${{ github.workspace }}:/workspace \
           -v $PWD/${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}:/repo \
-          ${{ env.cr_image }}-${{ env.family }}:${{ env.cr_image_version }} \
+          ${{ env.cr_image }}-${{ env.family }}:${{ steps.dockerfile_hash.outputs.HASH }} \
           /bin/sh -c "cd /workspace && \
                       gpg --import signing_key.asc && \
                       cp -r artifact/*.deb nagstamon-jekyll/docs/repo/${{ env.family }}/${{ env.release }} && \
@@ -371,8 +325,10 @@ jobs:
     env:
       family: fedora
       # which image to use for packaging
-      cr_image_latest: 40
+      version_latest: 41
     steps:
+      # checkout to get Dockerfiles for steps.dockerfile_hash.outputs.HASH
+      - uses: actions/checkout@v4
       # get binaries created by other jobs
       - uses: actions/download-artifact@v4
         with:
@@ -391,23 +347,25 @@ jobs:
       - run: chmod -R go-rwx ~/.ssh
       # get and prepare nagstamon-jekyll
       - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
-      - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/??
-      # if image defined by variable cr_image_version is not pullable aka does not exist it will be created and pushed
-      - run: docker pull ${{ env.cr_image }}-${{ env.family }}-${{ env.cr_image_latest }}:${{ env.cr_image_version }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ env.family }}-${{ env.cr_image_latest }}:${{ env.cr_image_version }} -f build/docker/Dockerfile-${{ github.job }} .
-      - run: docker push ${{ env.cr_image }}-${{ env.family }}-${{ env.cr_image_latest }}:${{ env.cr_image_version }}
+      - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
+      - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
+      # somehow weird way to get the hash over the Dockerfile to be aware if it changed
+      - id: dockerfile_hash
+        run: echo "HASH=$(md5sum build/docker/Dockerfile-${{ env.family }}-${{ env.version_latest }} | cut -d\  -f1)" >> $GITHUB_OUTPUT
+      # if image defined by variable steps.dockerfile_hash.outputs.HASH is not pullable aka does not exist it will be created and pushed
+      # only needed for fedora
+      - run: docker pull ${{ env.cr_image }}-${{ env.family }}-${{ env.version_latest }}:${{ steps.dockerfile_hash.outputs.HASH }} || /usr/bin/docker build -t ${{ env.cr_image }}-${{ env.family }}-${{ env.version_latest }}:${{ steps.dockerfile_hash.outputs.HASH }} -f build/docker/Dockerfile-${{ env.family }}-${{ env.version_latest }} .
+      - run: docker push ${{ env.cr_image }}-${{ env.family }}-${{ env.version_latest }}:${{ steps.dockerfile_hash.outputs.HASH }}
       # copy *.rpm files into nagstamon-jekyll and create repodata
       - run: |
-          for noarch_rpm in artifact/*${{ env.family }}*.noarch.rpm; \
-            do \
-              version=$(echo ${noarch_rpm} | python3 -c "file=input(); print(file.split('${{ env.family }}')[1].split('.')[0])") && \
-              mkdir -p mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${version} && \
-              cp -r artifact/*.${{ env.family }}${version}* ${{ env.repo_dir }}/${{ env.family }}/${version} && \
-              docker run --rm -v ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}:/repo \
-                ${{ env.cr_image }}-${{ env.family }}-${version}:${{ env.cr_image_version }} \
-                /bin/bash -c "createrepo --verbose --workers 1 /repo" && \
-              ls -laR ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}; \
-            done
-#       commit and push new binaries to nagstamon-repo
+            version=${{ env.release }} && \
+            mkdir -p mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${version} && \
+            cp -r artifact/*.${{ env.family }}* ${{ env.repo_dir }}/${{ env.family }}/${version} && \
+            docker run --rm -v ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}:/repo \
+              ${{ env.cr_image }}-${{ env.family }}-${{ env.version_latest }}:${{ steps.dockerfile_hash.outputs.HASH }} \
+              /bin/bash -c "createrepo --verbose --workers 1 /repo" && \
+            ls -laR ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}
+      # commit and push new binaries to nagstamon-repo
       - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
       - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ env.family }}" && git push
 
@@ -421,6 +379,8 @@ jobs:
       # currently just one version available
       version: 9
     steps:
+      # checkout to get Dockerfiles for steps.dockerfile_hash.outputs.HASH
+      - uses: actions/checkout@v4
       # get binaries created by other jobs
       - uses: actions/download-artifact@v4
         with:
@@ -433,22 +393,20 @@ jobs:
       - run: chmod -R go-rwx ~/.ssh
       # get and prepare nagstamon-jekyll
       - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
-      - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.version }}
-      - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.version }}
-      # copy *.rpm files into nagstamon-jekyll
-      - run: cp -r artifact/*.${{ env.family }}*.rpm ${{ env.repo_dir }}/${{ env.family }}/${{ env.version }}
+      - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
+      - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
+      # somehow weird way to get the hash over the Dockerfile to be aware if it changed
+      - id: dockerfile_hash
+        run: echo "HASH=$(md5sum build/docker/Dockerfile-${{ env.family }}-${{ env.version }} | cut -d\  -f1)" >> $GITHUB_OUTPUT
       # copy *.rpm files into nagstamon-jekyll and create repodata
       - run: |
-          for noarch_rpm in artifact/*${{ env.family }}*.noarch.rpm; \
-            do \
-              version=$(echo ${noarch_rpm} | python3 -c "file=input(); print(file.split('${{ env.family }}')[1].split('.')[0])") && \
-              mkdir -p mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${version} && \
-              cp -r artifact/*.${{ env.family }}${version}* ${{ env.repo_dir }}/${{ env.family }}/${version} && \
-              docker run --rm -v ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}:/repo \
-                ${{ env.cr_image }}-${{ env.family }}-${version}:${{ env.cr_image_version }} \
-                /bin/bash -c "createrepo --verbose --workers 1 /repo" && \
-              ls -laR ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}; \
-            done
+            version=${{ env.release }} && \
+            mkdir -p mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${version} && \
+            cp -r artifact/*.${{ env.family }}* ${{ env.repo_dir }}/${{ env.family }}/${version} && \
+            docker run --rm -v ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}:/repo \
+              ${{ env.cr_image }}-${{ env.family }}-${{ env.version }}:${{ steps.dockerfile_hash.outputs.HASH }} \
+              /bin/bash -c "createrepo --verbose --workers 1 /repo" && \
+            ls -laR ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}
       # commit and push new binaries to nagstamon-repo
       - run: git config --global user.email "repo@nagstamon.de" && git config --global user.name "Nagstamon Repository"
       - run: cd ${{ env.repo_dir }} && git pull && git add . && git commit -am "new latest repo ${{ env.family }}" && git push
@@ -464,12 +422,13 @@ jobs:
           merge-multiple: true
       - run: cd artifact && md5sum *agstamon* > md5sums.txt
       - run: cd artifact && sha256sum *agstamon* > sha256sums.txt
-      #- uses: marvinpinto/action-automatic-releases@latest
-      # the dciborow action is outdated as well :-(
-      - uses: dciborow/action-github-releases@v1.0.1
+      # finally some maintained solution for creating releases
+      # https://github.com/marketplace/actions/create-release
+      - uses: ncipollo/release-action@v1
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          prerelease: false
+          allowUpdates: false
+          prerelease: true
           draft: true
-          files: |
-            artifact/*
+          removeArtifacts: true
+          replacesArtifacts: true
+          artifacts: "artifact/*"

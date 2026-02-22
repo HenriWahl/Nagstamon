@@ -1,7 +1,7 @@
-nagstamon (3.17-20260219) unstable; urgency=low
+nagstamon (3.17-20260222) unstable; urgency=low
 
   * New upstream
-    - added web login via cookies
+    - added experimental web login via cookies
     - added LibreNMS support
     - improved Alertmanager support for multiple alerts
     - improved Centreon token validation
@@ -15,7 +15,7 @@ nagstamon (3.17-20260219) unstable; urgency=low
     - updated Qt6
     - code cleanup
 
- -- Henri Wahl <henri@nagstamon.de>  Mon, 09 Feb 2026 08:00:00 +0200
+ -- Henri Wahl <henri@nagstamon.de>  Sun, 22 Feb 2026 08:00:00 +0200
 
 nagstamon (3.16.2) stable; urgency=low
 

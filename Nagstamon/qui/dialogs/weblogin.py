@@ -37,7 +37,11 @@ from Nagstamon.qui.dialogs.dialog import Dialog
 from Nagstamon.servers import servers
 
 
-class WebEnginePage(WebEnginePage):
+class WebEnginePageImproved(WebEnginePage):
+    """
+    subclass of QWebEnginePage to handle TLS errors and potentially ignore them based on server configuration
+    additionaly behave differently in Qt 5 and Qt 6 due to API changes in the certificateError signal/slot mechanism
+    """
     def __init__(self, ignore_tls_errors=False, parent=None):
         super().__init__(parent)
         self.ignore_tls_errors = ignore_tls_errors
@@ -167,7 +171,7 @@ class DialogWebLogin(Dialog):
         self.window.vbox.addWidget(self.webengine_view)
 
         self.window.setWindowTitle('Nagstamon Web Login - ' + server_name)
-        self.page = WebEnginePage(ignore_tls_errors=self.server.ignore_cert)
+        self.page = WebEnginePageImproved(ignore_tls_errors=self.server.ignore_cert)
         self.webengine_view.setPage(self.page)
         self.page.setUrl(QUrl(self.server.monitor_url))
 
@@ -183,8 +187,6 @@ class DialogWebLogin(Dialog):
         self.check_macos_dock_icon_fix_hide.emit()
 
         self.webengine_view.show()
-        #self.page.triggerAction(WebEnginePage.WebAction.ReloadAndBypassCache)
-        #self.webengine_view.reload()
         self.window.update()
 
     @Slot(str)
