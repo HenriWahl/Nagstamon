@@ -40,7 +40,7 @@ jobs:
     #     flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with unittest
       # using the tests in precompiled image makes them way faster instead of creating the test environment every time from scratch
-      run: docker run --rm -v $PWD:/src --workdir /src ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }} python -m unittest tests/test_*.py
+      run: docker run --rm -v $PWD:/src --workdir /src ${{ env.cr_image }}-${{ github.job }}-${{ matrix.python-version }}-${{ steps.requirements_hash.outputs.HASH }} python -m unittest -v tests/test_*.py
 
   debian:
     runs-on: ubuntu-latest
