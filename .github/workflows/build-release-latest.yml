@@ -6,6 +6,7 @@ on:
       - '**'
       - '!master'
       - '!*.*.*'
+      - '!prepare_3.18_play_with_tests'
 
 env:
   python_win_version: 3.14.3
@@ -19,6 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        # without quotes the 3.10 will be interpreted as 3.1 which leads to fail
         python-version: ['3.10', 3.11, 3.12, 3.13, 3.14]
 
     steps:
