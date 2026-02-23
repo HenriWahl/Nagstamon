@@ -107,7 +107,7 @@ class Icinga2APIServer(GenericServer):
                     self.new_hosts[host_name].passiveonly = not(host['attrs']['enable_active_checks'])
                     self.new_hosts[host_name].notifications_disabled = not(host['attrs']['enable_notifications'])
                     self.new_hosts[host_name].flapping = host['attrs']['flapping']
-                    self.new_hosts[host_name].acknowledged = host['attrs']['acknowledgement']
+                    self.new_hosts[host_name].acknowledged = bool(host['attrs']['acknowledgement'])
                     self.new_hosts[host_name].scheduled_downtime = bool(host['attrs']['downtime_depth'])
                     self.new_hosts[host_name].status_type = {0: "soft", 1: "hard"}[host['attrs']['state_type']]
                 del host_name
@@ -148,7 +148,7 @@ class Icinga2APIServer(GenericServer):
                 new_service.passiveonly = not(service['attrs']['enable_active_checks'])
                 new_service.notifications_disabled = not(service['attrs']['enable_notifications'])
                 new_service.flapping = service['attrs']['flapping']
-                new_service.acknowledged = service['attrs']['acknowledgement']
+                new_service.acknowledged = bool(service['attrs']['acknowledgement'])
                 new_service.scheduled_downtime = bool(service['attrs']['downtime_depth'])
                 new_service.status_type = {0: "soft", 1: "hard"}[service['attrs']['state_type']]
                 self._insert_service_to_hosts(new_service)
