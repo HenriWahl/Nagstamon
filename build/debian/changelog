@@ -1,3 +1,9 @@
+nagstamon (3.19-20260226) unstable; urgency=low
+
+  * New upstream
+
+ -- Henri Wahl <henri@nagstamon.de>  Thu, 26 Feb 2026 02:26:00 +0200
+
 nagstamon (3.18.0) stable; urgency=low
 
   * New upstream
