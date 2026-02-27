@@ -61,8 +61,9 @@ class AlertmanagerServer(GenericServer):
         GenericServer.init_http(self)
 
         # prepare for JSON
-        self.session.headers.update({'Accept': 'application/json',
-                                     'Content-Type': 'application/json'})
+        if self.session is not None:
+            self.session.headers.update({'Accept': 'application/json',
+                                         'Content-Type': 'application/json'})
 
 
     def init_config(self):
@@ -87,7 +88,7 @@ class AlertmanagerServer(GenericServer):
 
         Args:
             the_severity (str): The severity that should be mapped
-            
+
         Returns:
             str: The matched Nagstamon severity
         """
