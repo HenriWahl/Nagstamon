@@ -16,6 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 from pathlib import Path
+from typing import Optional, Union
 import requests
 import sqlite3
 from time import time
@@ -220,7 +221,7 @@ def has_any_cookie(server_name: str, cookie_name: str) -> bool:
     return False
 
 
-def has_valid_cookie(server_name: str, cookie_name: str, now: int | None = None, skew_seconds: int = 30) -> bool:
+def has_valid_cookie(server_name: str, cookie_name: str, now: Union[int, None] = None, skew_seconds: int = 30) -> bool:
     """
     Return True if at least one cookie with given name has an expiration in the future.
     skew_seconds: small safety window to avoid edge cases at the boundary.
@@ -242,7 +243,7 @@ def has_valid_cookie(server_name: str, cookie_name: str, now: int | None = None,
     return False
 
 
-def delete_cookie(server_name: str, cookie_name: str | None = None, domain: str | None = None, path: str | None = None) -> int:
+def delete_cookie(server_name: str, cookie_name: Optional[str] = None, domain: Optional[str] = None, path: Optional[str] = None) -> int:
     """
     Delete cookie rows from SQLite DB. Returns number of deleted rows.
     Optional name/domain/path narrow down the deletion.
