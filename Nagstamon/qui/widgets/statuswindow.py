@@ -152,7 +152,6 @@ class StatusWindow(QWidget):
         # set shortcut for systray icon to be used for connecting signals/slots
         self.injected_systrayicon = systrayicon
 
-
         self.vbox = QVBoxLayout(self)  # global VBox
         self.vbox.setSpacing(0)  # no spacing
         self.vbox.setContentsMargins(0, 0, 0, 0)  # no margin
@@ -257,7 +256,8 @@ class StatusWindow(QWidget):
         self.toparea.combobox_servers.monitor_opened.connect(self.hide_window)
 
         # due to lack of a better place the 'Delete cookies' button action is defined here
-        self.injected_dialogs.weblogin.delete_web_cookies.connect(self.injected_dialogs.server.delete_web_cookies_action)
+        self.injected_dialogs.weblogin.delete_web_cookies.connect(
+            self.injected_dialogs.server.delete_web_cookies_action)
         self.injected_dialogs.server.delete_web_cookies.connect(self.injected_dialogs.server.delete_web_cookies_action)
 
         self.initialize()
@@ -596,7 +596,7 @@ class StatusWindow(QWidget):
             if not conf.servers[server.name].save_password and \
                     not conf.servers[server.name].use_autologin and \
                     conf.servers[server.name].password == '' and \
-                    not conf.servers[server.name].authentication == 'kerberos' and\
+                    not conf.servers[server.name].authentication == 'kerberos' and \
                     not conf.servers[server.name].authentication == 'web':
                 self.authenticate.emit(server.name)
 
@@ -719,6 +719,10 @@ class StatusWindow(QWidget):
             # best results achieved when doing .show() before .show_window()
             self.show()
             self.show_window()
+
+            # Wayland workaround: Force an immediate update to prevent a black rectangle
+            if DESKTOP_WAYLAND:
+                self.update()
         else:
             self.hide_window()
 
@@ -733,7 +737,6 @@ class StatusWindow(QWidget):
                 self.show_window_systrayicon()
             elif conf.statusbar_floating:
                 self.show_window()
-
 
     @Slot()
     def show_window(self, event=None):
@@ -989,6 +992,12 @@ class StatusWindow(QWidget):
             x = self.stored_x
 
         elif conf.icon_in_systray or conf.windowed:
+            # Wayland fallback for absolute coordinates
+            if DESKTOP_WAYLAND and statuswindow_properties.icon_x == 0:
+                statuswindow_properties.icon_x = available_x + available_width - 50
+                statuswindow_properties.icon_y = available_y + available_height
+
+            # Determine top/bottom placement AFTER retrieving/setting coordinates
             if statuswindow_properties.icon_y < self.get_screen().geometry().height() // 2 + available_y:
                 statuswindow_properties.top = True
             else:
@@ -1409,7 +1418,6 @@ class StatusWindow(QWidget):
 
         app.exit()
 
-
     class Worker(QObject):
         """
         run a thread, for example, for debugging
@@ -1493,7 +1501,7 @@ class StatusWindow(QWidget):
         # send signal if ready to stop
         finish = Signal()
 
-        def __init__(self, statuswindow_properties = None):
+        def __init__(self, statuswindow_properties=None):
             QObject.__init__(self)
             self.statuswindow_properties = statuswindow_properties
 
@@ -1505,7 +1513,8 @@ class StatusWindow(QWidget):
             if conf.notification:
                 # only if not notifying yet or the current state is worse than the prior AND
                 # only when the current state is configured to be honking about
-                if (STATES.index(worst_status_diff) > STATES.index(self.statuswindow_properties.worst_notification_status) or
+                if (STATES.index(worst_status_diff) > STATES.index(
+                        self.statuswindow_properties.worst_notification_status) or
                     self.statuswindow_properties.is_notifying is False) and \
                         conf.__dict__[f'notify_if_{worst_status_diff.lower()}'] is True:
                     # keep last worst state worth a notification for comparison 3 lines above
