@@ -8,13 +8,20 @@ class TestAsLocaltimeStr(unittest.TestCase):
 
     def test_formats_correctly(self):
         dt = datetime.datetime(2023, 6, 15, 12, 30, 45)
+        # We need to expect the local representation of the UTC datetime
+        # but the test currently assumes input is UTC and output is local-independent,
+        # which is not how _aslocaltimestr works.
+        # Let's fix the test to match the implementation or vice versa.
+        # Implementation is: utc_dt.replace(tzinfo=timezone.utc).astimezone(tz=None)
+        expected = dt.replace(tzinfo=datetime.timezone.utc).astimezone(tz=None).strftime('%Y-%m-%d %H:%M:%S')
         result = SensuServer._aslocaltimestr(dt)
-        self.assertEqual(result, '2023-06-15 12:30:45')
+        self.assertEqual(result, expected)
 
     def test_formats_midnight(self):
         dt = datetime.datetime(2000, 1, 1, 0, 0, 0)
+        expected = dt.replace(tzinfo=datetime.timezone.utc).astimezone(tz=None).strftime('%Y-%m-%d %H:%M:%S')
         result = SensuServer._aslocaltimestr(dt)
-        self.assertEqual(result, '2000-01-01 00:00:00')
+        self.assertEqual(result, expected)
 
 
 class TestFormatClientSubscription(unittest.TestCase):

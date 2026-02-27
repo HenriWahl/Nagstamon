@@ -1,7 +1,10 @@
+try:
+    from pylint import lint
+    HAS_PYLINT = True
+except ImportError:
+    HAS_PYLINT = False
+
 import json
-
-from pylint import lint
-
 import unittest
 from Nagstamon.servers.Alertmanager import AlertmanagerServer
 
@@ -10,6 +13,7 @@ conf['debug_mode'] = True
 
 class test_alertmanager(unittest.TestCase):
 
+    @unittest.skipUnless(HAS_PYLINT, "pylint not installed")
     def test_lint_with_pylint(self):
         with self.assertRaises(SystemExit) as cm:
             lint.Run(['Nagstamon/servers/Alertmanager'])

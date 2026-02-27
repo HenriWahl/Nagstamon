@@ -3,10 +3,6 @@ import unittest
 
 from Nagstamon.servers.Zabbix import ZabbixServer
 
-
-import unittest
-from Nagstamon.servers.Zabbix import ZabbixServer
-
 class TestNagiosifyService(unittest.TestCase):
     def setUp(self):
         self.server = ZabbixServer.__new__(ZabbixServer)
