@@ -1,11 +1,8 @@
 import sys
 import json
 import re
-import time
 
-from datetime import datetime, timedelta
-
-import requests
+from datetime import datetime, timedelta, timezone
 
 from Nagstamon.config import conf
 from Nagstamon.objects import (GenericHost, Result)
@@ -267,7 +264,7 @@ class AlertmanagerServer(GenericServer):
         """
         webbrowser_open('%s' % (self.monitor_url))
 
-    def open_monitor(self, host, service=''):
+    def open_monitor(self, host, service):
         """
         open monitor for alert
         """
@@ -278,7 +275,13 @@ class AlertmanagerServer(GenericServer):
     def _set_downtime(self, host, service, author, comment, fixed, start_time,
                       end_time, hours, minutes):
 
-        alert = self.hosts[host].services[service]
+        # Services are keyed by fingerprint internally, but the UI passes display_name.
+        # Look up the alert by display_name.
+        alert = next((s for s in self.hosts[host].services.values()
+                      if s.display_name == service), None)
+        if alert is None:
+            log.error(f'_set_downtime: service "{service}" not found on host "{host}"')
+            return
 
         # Convert local dates to UTC
         start_time_dt = convert_timestring_to_utc(start_time)
@@ -299,10 +302,8 @@ class AlertmanagerServer(GenericServer):
         silence_data["comment"] = comment or "Nagstamon downtime"
         silence_data["createdBy"] = author or "Nagstamon"
 
-
-        post = requests.post(self.monitor_url + self.API_PATH_SILENCES, json=silence_data)
-
-        #silence_id = post.json()["silenceID"]
+        self.fetch_url(self.monitor_url + self.API_PATH_SILENCES, giveback="raw",
+                       cgi_data=json.dumps(silence_data))
 
 
     # Overwrite function from generic server to add expire_time value
@@ -330,25 +331,41 @@ class AlertmanagerServer(GenericServer):
                               info_dict['expire_time'])
 
 
+    def _post_silence(self, alert, author, comment, starts_at, ends_at):
+        """Build and POST a silence payload for the given alert object."""
+        silence_data = {
+            "matchers": [
+                {"name": name, "value": value, "isRegex": False}
+                for name, value in alert.labels.items()
+            ],
+            "startsAt": starts_at,
+            "endsAt": ends_at,
+            "comment": comment or "Nagstamon silence",
+            "createdBy": author or "Nagstamon",
+        }
+        return self.fetch_url(self.monitor_url + self.API_PATH_SILENCES, giveback="raw",
+                              cgi_data=json.dumps(silence_data))
+
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent,
                          all_services=None, expire_time=None):
-        alert = self.hosts[host].services[service]
-        ends_at = convert_timestring_to_utc(expire_time)
+        # Services are keyed by fingerprint internally, but the UI passes display_name.
+        # Look up the alert by display_name.
+        alert = next((s for s in self.hosts[host].services.values()
+                      if s.display_name == service), None)
+        if alert is None:
+            log.error(f'_set_acknowledge: service "{service}" not found on host "{host}"')
+            return
 
-        cgi_data = {}
-        cgi_data["matchers"] = []
-        for name, value in alert.labels.items():
-            cgi_data["matchers"].append({
-                "name": name,
-                "value": value,
-                "isRegex": False
-            })
-        cgi_data["startsAt"] = datetime.utcfromtimestamp(time.time()).isoformat()
-        cgi_data["endsAt"] = ends_at or cgi_data["startAt"]
-        cgi_data["comment"] = comment or "Nagstamon silence"
-        cgi_data["createdBy"] = author or "Nagstamon"
-        cgi_data = json.dumps(cgi_data)
+        starts_at = datetime.now(timezone.utc).isoformat()
+        ends_at = convert_timestring_to_utc(expire_time) if expire_time else starts_at
 
-        result = self.fetch_url(self.monitor_url + self.API_PATH_SILENCES, giveback="raw",
-                                cgi_data=cgi_data)
-        return result
+        self._post_silence(alert, author, comment, starts_at, ends_at)
+
+        if all_services:
+            for svc_name in all_services:
+                svc_alert = next((s for s in self.hosts[host].services.values()
+                                  if s.display_name == svc_name), None)
+                if svc_alert is None:
+                    log.error(f'_set_acknowledge: service "{svc_name}" not found on host "{host}"')
+                    continue
+                self._post_silence(svc_alert, author, comment, starts_at, ends_at)
