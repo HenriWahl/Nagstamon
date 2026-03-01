@@ -18,7 +18,6 @@ VersionInfoVersion={#version_is}
 VersionInfoCopyright=Henri Wahl
 VersionInfoProductName=Nagstamon
 VersionInfoProductVersion={#version_is}
-InternalCompressLevel=max
 Compression=lzma
 SourceDir={#source}
 ArchitecturesAllowed={#archs_allowed}
