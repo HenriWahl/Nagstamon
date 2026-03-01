@@ -62,13 +62,13 @@ if len(sys.argv) > 1 and sys.argv[1] == 'debug':
     # create console window with pyinstaller to get some output
     GUI_MODE = '--console'
     # add '_debug' to name of zip file
-    FILENAME_SUFFIX = '_debug'
+    DIR_NAME_SUFFIX = '_debug'
 else:
     DEBUG = False
     # no console window via pyinstaller
     GUI_MODE = '--windowed'
     # also no need for filename suffix
-    FILENAME_SUFFIX = ''
+    DIR_NAME_SUFFIX = ''
 
 # when run by GitHub Actions with PFX and password as environment variables
 # signing will be done
@@ -109,12 +109,10 @@ def package_windows():
     else:
         VERSION_IS = VERSION
 
-    # old-school formatstrings needed for old Debian build base distro jessie and its old python
-    ISCC = r'{0}{1}Inno Setup 6{1}iscc.exe'.format(os.environ['PROGRAMFILES{0}'.format(ARCH_WINDOWS_OPTS[ARCH_WINDOWS][2])], os.sep)
-    DIR_BUILD_EXE = '{0}{1}dist{1}Nagstamon'.format(CURRENT_DIR, os.sep, ARCH_WINDOWS_OPTS[ARCH_WINDOWS][0], PYTHON_VERSION)
-    DIR_BUILD_NAGSTAMON = '{0}{1}dist{1}Nagstamon-{2}-win{3}{4}'.format(CURRENT_DIR, os.sep, VERSION, ARCH_WINDOWS,
-                                                                        FILENAME_SUFFIX)
-    FILE_ZIP = '{0}.zip'.format(DIR_BUILD_NAGSTAMON)
+    ISCC = r'{0}{1}Inno Setup 6{1}iscc.exe'.format(os.environ[f'PROGRAMFILES{ARCH_WINDOWS_OPTS[ARCH_WINDOWS][2]}'], os.sep)
+    DIR_BUILD_EXE = f'{CURRENT_DIR}{os.sep}dist{os.sep}Nagstamon'
+    DIR_BUILD_NAGSTAMON = f'{CURRENT_DIR}{os.sep}dist{os.sep}Nagstamon-{VERSION}-win{ARCH_WINDOWS}{DIR_NAME_SUFFIX}'
+    FILE_ZIP = f'{DIR_BUILD_NAGSTAMON}.zip'
 
     # clean older binaries
     for file in (DIR_BUILD_EXE, DIR_BUILD_NAGSTAMON, FILE_ZIP):
@@ -141,7 +139,7 @@ def package_windows():
 
     if SIGNING:
         # environment variables will be used by powershell script for signing
-        subprocess.run(['pwsh.exe', './windows/code_signing.ps1', 'build/Nagstamon/*.exe'])
+        subprocess.run(['pwsh.exe', './windows/code_signing.ps1', 'dist/Nagstamon/*.exe'])
 
     # rename output
     os.rename(DIR_BUILD_EXE, DIR_BUILD_NAGSTAMON)
