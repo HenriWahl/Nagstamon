@@ -68,7 +68,10 @@ class PrometheusService(GenericService):
     add Prometheus specific service property to generic service class
     """
     service_object_id = ""
-    labels = {}
+
+    def __init__(self):
+        super().__init__()
+        self.labels = {}
 
 
 class PrometheusServer(GenericServer):
@@ -95,8 +98,9 @@ class PrometheusServer(GenericServer):
         GenericServer.init_http(self)
 
         # prepare for JSON
-        self.session.headers.update({'Accept': 'application/json',
-                                     'Content-Type': 'application/json'})
+        if self.session is not None:
+            self.session.headers.update({'Accept': 'application/json',
+                                         'Content-Type': 'application/json'})
 
     def init_config(self):
         """
@@ -149,7 +153,10 @@ class PrometheusServer(GenericServer):
         try:
             result = self.fetch_url(self.monitor_url + self.API_PATH_ALERTS,
                                     giveback="raw")
-            data = json.loads(result.result)
+            try:
+                data = json.loads(result.result)
+            except json.decoder.JSONDecodeError:
+                data = {}
             error = result.error
             status_code = result.status_code
 
@@ -194,7 +201,7 @@ class PrometheusServer(GenericServer):
                 service.server = self.name
                 service.status = severity
                 service.last_check = "n/a"
-                service.attempt = alert.get("state", "firirng")
+                service.attempt = alert.get("state", "firing")
                 service.duration = str(self._get_duration(alert["activeAt"]))
 
                 annotations = alert.get("annotations", {})
@@ -211,7 +218,7 @@ class PrometheusServer(GenericServer):
                     self.new_hosts[hostname].server = self.name
                 self.new_hosts[hostname].services[servicename] = service
 
-        except:
+        except Exception:
             # set checking flag back to False
             self.isChecking = False
             result, error = self.error(sys.exc_info())
