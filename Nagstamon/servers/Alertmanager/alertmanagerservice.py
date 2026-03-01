@@ -5,7 +5,10 @@ class AlertmanagerService(GenericService):
     add alertmanager specific service property to generic service class
     """
     fingerprint = ""
-    labels = {}
+
+    def __init__(self):
+        super().__init__()
+        self.labels = {}
 
     def get_service_name(self):
         return self.display_name
