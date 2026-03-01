@@ -20,7 +20,6 @@ VersionInfoProductName=Nagstamon
 VersionInfoProductVersion={#version_is}
 InternalCompressLevel=max
 Compression=lzma
-SolidCompression=true
 SourceDir={#source}
 ArchitecturesAllowed={#archs_allowed}
 ArchitecturesInstallIn64BitMode=x64compatible
