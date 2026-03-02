@@ -294,7 +294,7 @@ jobs:
 #      - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
 #      - run: chmod -R go-rwx ~/.ssh
 #      # get and prepare nagstamon-jekyll
-#      - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
+#      - run: git clone --depth 1 git@github.com:HenriWahl/nagstamon-jekyll.git
 #      - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.dist }}/${{ env.release }}
 #      - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.dist }}/${{ env.release }}
 #      # somehow weird way to get the hash over the Dockerfile to be aware if it changed
@@ -350,7 +350,7 @@ jobs:
       - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
       - run: chmod -R go-rwx ~/.ssh
       # get and prepare nagstamon-jekyll
-      - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
+      - run: git clone --depth 1 git@github.com:HenriWahl/nagstamon-jekyll.git
       - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
       - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
       # somehow weird way to get the hash over the Dockerfile to be aware if it changed
@@ -399,7 +399,7 @@ jobs:
       - run: echo "${{ secrets.NAGSTAMON_REPO_KEY_WEB }}" >  ~/.ssh/id_ed25519
       - run: chmod -R go-rwx ~/.ssh
       # get and prepare nagstamon-jekyll
-      - run: git clone git@github.com:HenriWahl/nagstamon-jekyll.git
+      - run: git clone --depth 1 git@github.com:HenriWahl/nagstamon-jekyll.git
       - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
       - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
       # somehow weird way to get the hash over the Dockerfile to be aware if it changed
