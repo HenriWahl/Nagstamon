@@ -400,8 +400,8 @@ jobs:
       - run: chmod -R go-rwx ~/.ssh
       # get and prepare nagstamon-jekyll
       - run: git clone --depth 1 git@github.com:HenriWahl/nagstamon-jekyll.git
-      - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
-      - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.release }}
+      - run: rm -rf ${{ env.repo_dir }}/${{ env.family }}/${{ env.version }}
+      - run: mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${{ env.version }}
       # somehow weird way to get the hash over the Dockerfile to be aware if it changed
       - id: dockerfile_hash
         run: echo "HASH=$(md5sum build/docker/Dockerfile-${{ env.family }}-${{ env.version }} | cut -d\  -f1)" >> $GITHUB_OUTPUT
