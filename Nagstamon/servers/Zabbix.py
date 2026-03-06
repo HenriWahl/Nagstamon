@@ -52,7 +52,7 @@ class ZabbixServer(GenericServer):
             '5': 'DISASTER'}
 
         # Entries for monitor default actions in context menu
-        self.MENU_ACTIONS = ["Monitor", "Acknowledge", "Downtime"]
+        self.MENU_ACTIONS = ['Monitor', 'Acknowledge', 'Downtime']
         # URLs for browser shortlinks/buttons on popup window
         self.BROWSER_URLS = {'monitor': '$MONITOR$',
                              'hosts': '$MONITOR$/zabbix.php?action=host.view',
@@ -96,6 +96,8 @@ class ZabbixServer(GenericServer):
                                      'Content-Type': 'application/json-rpc'})
         try:
             self.set_zabbix_version()
+            if not self.api_version:
+                raise RuntimeError('Failed to determine Zabbix API version. Please verify the server URL and API endpoint are correct. Also check your network connectivity and authentication credentials.')
             self.check_authentication()
             if self.refresh_authentication:
                 self.login()
@@ -276,21 +278,22 @@ class ZabbixServer(GenericServer):
                 service_obj.triggerid = service['triggerid']
                 service_obj.eventid = service['lastEvent']['eventid']
                 service_obj.allow_manual_close = False if str(service['manual_close']) == '0' else True
-
+                scheduled_downtime = False
                 if service['hosts']:
-                    # Get the first host only, because we only support one host per service
                     for host in service['hosts']:
-                        # Only create host if it does not exist yet
+                        if host['maintenance_status'] == '1':
+                            scheduled_downtime = True
                         if host['name'] not in self.new_hosts:
                             self.new_hosts[host['name']] = GenericHost()
                             self.new_hosts[host['name']].name = host['name']
                             self.new_hosts[host['name']].server = self.name
                             self.new_hosts[host['name']].status = 'UP'
-                            self.new_hosts[host['name']].scheduled_downtime = True if host["maintenance_status"] == '1' else False
+                            self.new_hosts[host['name']].scheduled_downtime = host['maintenance_status'] == '1'
                         # Map Stuff from Service to Host
-                        self.new_hosts[host['name']].services[service["triggerid"]] = service_obj
-                        self.new_hosts[host['name']].services[service["triggerid"]].host = host['name']
-                        self.new_hosts[host['name']].services[service["triggerid"]].hostid = host['hostid']
+                        self.new_hosts[host['name']].services[service['triggerid']] = service_obj
+                        self.new_hosts[host['name']].services[service['triggerid']].host = host['name']
+                        self.new_hosts[host['name']].services[service['triggerid']].hostid = host['hostid']
+                service_obj.scheduled_downtime = scheduled_downtime
         except ZabbixError as e:
             return Result(result=e.result, error=e.result.error)
         except Exception:
@@ -306,14 +309,11 @@ class ZabbixServer(GenericServer):
         try:
             host = self.hosts.get(host, None)
             triggerid = None
-            # host.services ist ein Dict {triggerid: service_obj} – über Werte iterieren
             for service_obj in host.services.values():
                 if service_obj.name == service_str:
                     triggerid = service_obj.triggerid
                     break
-
-            url = f"{self.monitor_url}/zabbix.php?action=problem.view&triggerids%5B%5D={triggerid}&filter_set=1&show_suppressed=1"
-
+            url = f'{self.monitor_url}/zabbix.php?action=problem.view&triggerids%5B%5D={triggerid}&filter_set=1&show_suppressed=1'
             webbrowser_open(url)
         except Exception as e:
             if conf.debug_mode is True:
@@ -327,9 +327,7 @@ class ZabbixServer(GenericServer):
 
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent, all_services=None):
         if conf.debug_mode is True:
-            self.debug(server=self.get_name(),
-                       debug="Set Acknowledge Host: " + host + " Service: " + service + " Sticky: " + str(
-                           sticky) + " persistent:" + str(persistent) + " All services: " + str(all_services))
+            self.debug(server=self.get_name(), debug=f'Set Acknowledge Host: {host} Service: {service} Sticky: {sticky} persistent: {persistent} All services: {all_services}')
         eventids = set()
         unclosable_events = set()
         if all_services is None:
@@ -430,9 +428,7 @@ class ZabbixServer(GenericServer):
         etime = int(time.mktime(end_date.timetuple()))
 
         if conf.debug_mode is True:
-            self.debug(server=self.get_name(),
-                       debug="Downtime for " + hostname + "[" + str(hostids) + "] stime:" + str(
-                           stime) + " etime:" + str(etime))
+            self.debug(server=self.get_name(), debug=f'Downtime for {hostname}[{hostids}] stime: {stime} etime: {etime}')
         body = {'hostids': hostids, 'name': comment, 'description': author, 'active_since': stime, 'active_till': etime,
                 'maintenance_type': 0, "timeperiods": [
                         {"timeperiod_type": 0, "start_date": stime, "period": etime - stime}
@@ -440,7 +436,7 @@ class ZabbixServer(GenericServer):
                 }
         if triggerid:
             body['tags'] = [{'tag': 'triggerid', 'operator': 0, 'value': triggerid}]
-            body['description'] = body['description'] + '(Nagstamon): ' + comment
+            body['description'] = f"{body['description']}(Nagstamon): {comment}"
             body['name'] = f'{hostname}: {service}'
         try:
             self.api_request(
@@ -472,7 +468,7 @@ class ZabbixServer(GenericServer):
             if host in self.hosts:
                 ip = self.hosts[host].address
             if conf.debug_mode is True:
-                self.debug(server=self.get_name(), host=host, debug="IP of %s:" % host + " " + ip)
+                self.debug(server=self.get_name(), host=host, debug=f'IP of {host}: {ip}')
 
             if conf.connect_by_dns is True:
                 try:
@@ -491,7 +487,7 @@ class ZabbixServer(GenericServer):
         """
             next dirty workaround to get Zabbix events to look Nagios-esque
         """
-        if (" on " or " is ") in service:
-            for separator in [" on ", " is "]:
+        if ' on ' in service or ' is ' in service:
+            for separator in [' on ', ' is ']:
                 service = service.split(separator)[0]
         return service
