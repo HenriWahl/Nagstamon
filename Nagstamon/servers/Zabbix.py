@@ -278,13 +278,14 @@ class ZabbixServer(GenericServer):
                 service_obj.allow_manual_close = False if str(service['manual_close']) == '0' else True
 
                 if service['hosts']:
-                    # Get the first host only, because we only support one host per service
                     for host in service['hosts']:
-                        self.new_hosts[host['name']] = GenericHost()
-                        self.new_hosts[host['name']].name = host['name']
-                        self.new_hosts[host['name']].server = self.name
-                        self.new_hosts[host['name']].status = 'UP'
-                        self.new_hosts[host['name']].scheduled_downtime = True if host["maintenance_status"] == '1' else False
+                        # Only create host if it does not exist yet
+                        if host['name'] not in self.new_hosts:
+                            self.new_hosts[host['name']] = GenericHost()
+                            self.new_hosts[host['name']].name = host['name']
+                            self.new_hosts[host['name']].server = self.name
+                            self.new_hosts[host['name']].status = 'UP'
+                            self.new_hosts[host['name']].scheduled_downtime = True if host["maintenance_status"] == '1' else False
                         # Map Stuff from Service to Host
                         self.new_hosts[host['name']].services[service["triggerid"]] = service_obj
                         self.new_hosts[host['name']].services[service["triggerid"]].host = host['name']
