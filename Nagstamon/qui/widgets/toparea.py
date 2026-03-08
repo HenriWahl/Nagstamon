@@ -70,6 +70,8 @@ class TopArea(QWidget):
         self.button_recheck_all = Button("Recheck all", parent=self)
         self.button_refresh = Button("Refresh", parent=self)
         self.button_settings = Button("Settings", parent=self)
+        self.button_fps_mode = Button("3D", parent=self)
+        self.button_fps_mode.setToolTip("Open FPS Mode – shoot monitoring problems to acknowledge them")
 
         # fill default order fields combobox with server names
         self.combobox_servers.fill()
@@ -95,6 +97,7 @@ class TopArea(QWidget):
         self.hbox.addWidget(self.button_recheck_all)
         self.hbox.addWidget(self.button_refresh)
         self.hbox.addWidget(self.button_settings)
+        self.hbox.addWidget(self.button_fps_mode)
         self.hbox.addWidget(self.button_hamburger_menu)
         self.hbox.addWidget(self.button_close)
 
