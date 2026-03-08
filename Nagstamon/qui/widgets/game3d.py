@@ -15,17 +15,22 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-"""Nagstamon FPS Mode – inspired by psdoom.
+"""Nagstamon FPS Mode – inspired by psDoom.
 
-Monitoring problems retrieved from all enabled servers are rendered as
-coloured targets in a shooting-gallery scene powered by pygame.
-Click on a target to acknowledge the corresponding monitoring problem.
+Monitoring problems are rendered as 3-D billboard targets in a first-person
+perspective arena powered by pygame.  Move through the arena with the keyboard,
+look around with the mouse, and **left-click** to fire at the problem centred in
+your crosshair to acknowledge it.
 
 Controls
 --------
-* **Click** on a target        – acknowledge (kill) the problem
-* **Mouse wheel / Arrow keys** – scroll through targets when there are many
-* **Escape** or close window   – exit FPS mode
+* **Mouse**            – look around (pointer captured on click)
+* **W / Arrow-Up**     – walk forward
+* **S / Arrow-Down**   – walk backward
+* **A / Arrow-Left**   – strafe left
+* **D / Arrow-Right**  – strafe right
+* **Left click**       – shoot / acknowledge the target in the crosshair
+* **Escape**           – release mouse; press again to exit
 
 Requires the ``pygame`` package::
 
@@ -33,6 +38,7 @@ Requires the ``pygame`` package::
 """
 
 import math
+import random
 from dataclasses import dataclass, field
 from threading import Thread
 from typing import List, Optional, Tuple
@@ -67,19 +73,46 @@ _STATUS_COLORS: dict = {
 _DEFAULT_COLOR: Tuple[int, int, int] = (140, 140, 140)
 
 # ---------------------------------------------------------------------------
-# Layout constants
+# Window
 # ---------------------------------------------------------------------------
-_WIN_W:      int = 1280
-_WIN_H:      int = 720
-_FPS:        int = 60
-_BG_COLOR        = (10, 14, 40)
-_HEADER_H:   int = 44
-_FOOTER_H:   int = 28
-_COLS:       int = 4
-_TARGET_W:   int = 300
-_TARGET_H:   int = 84
-_TARGET_PAD: int = 12
-_SCROLL_SPEED: int = 30
+_WIN_W: int = 1280
+_WIN_H: int = 720
+_FPS:   int = 60
+
+# ---------------------------------------------------------------------------
+# 3-D camera & projection
+# ---------------------------------------------------------------------------
+_FOV_H:   float = math.radians(75)   # horizontal field-of-view
+_NEAR:    float = 0.3                 # near-clip distance (world units)
+_FAR:     float = 60.0               # fog end / far clip (world units)
+_FOCAL:   float = _WIN_W / (2.0 * math.tan(_FOV_H / 2.0))
+_CX:      int   = _WIN_W // 2        # screen horizontal centre
+_CY:      int   = _WIN_H // 2        # screen vertical centre
+_EYE_H:   float = 1.7                # camera eye height above ground plane
+_ARENA_R: float = 20.0               # soft arena wall radius
+
+# ---------------------------------------------------------------------------
+# Player input
+# ---------------------------------------------------------------------------
+_MOVE_SPEED:  float = 5.5            # world units / second
+_MOUSE_SENS:  float = 0.0025         # radians / pixel
+_PITCH_LIMIT: float = math.radians(65)
+
+# ---------------------------------------------------------------------------
+# Billboard (enemy target) dimensions
+# ---------------------------------------------------------------------------
+_BILL_W:  float = 1.4                # billboard width in world units
+_BILL_H:  float = 2.0                # billboard height in world units
+_BILL_CY: float = _BILL_H / 2.0     # billboard vertical centre above ground
+
+# ---------------------------------------------------------------------------
+# Scene palette
+# ---------------------------------------------------------------------------
+_SKY_TOP:   Tuple = ( 6,   8,  28)
+_SKY_BOT:   Tuple = (18,  24,  62)
+_FLOOR_TOP: Tuple = (28,  24,  18)
+_FLOOR_BOT: Tuple = (10,   8,   5)
+_GRID_COL:  Tuple = (38,  46,  78)
 
 
 def _color_for_status(status: str) -> Tuple[int, int, int]:
@@ -131,29 +164,35 @@ class _FontWrapper:
 
 @dataclass
 class _Enemy:
-    """One monitoring problem rendered as a clickable target."""
-    server: object       # GenericServer instance
-    host_name: str
-    service_name: str    # empty string → host-level problem
-    status: str
+    """One monitoring problem rendered as a 3-D billboard."""
+    server:       object
+    host_name:    str
+    service_name: str       # empty string → host-level problem
+    status:       str
     display_name: str
-    color: Tuple[int, int, int]
-    rect: object = field(default=None)  # pygame.Rect; assigned during layout
-    alpha: int = 255                    # 255 = fully visible; decrements on death
+    color:        Tuple[int, int, int]
+    # 3-D world position (assigned by _load_enemies)
+    wx: float = 0.0
+    wy: float = 0.0         # always 0 (ground plane)
+    wz: float = 0.0
+    # animation
+    alpha: int  = 255       # 255 = fully visible; decrements on death
     dying: bool = False
+    # per-frame rendering cache (excluded from equality / repr)
+    _cam_dist: float = field(default=0.0, compare=False, repr=False)
 
 
 class NagstamonFPSWindow(QObject):
-    """Manages the pygame FPS window running in a daemon thread.
+    """Manages the pygame 3-D FPS window running in a daemon thread.
 
     Provides the same public interface as the former QMainWindow-based
     implementation so that callers (Nagstamon/qui/__init__.py) need no changes:
 
-        * ``show()``          – start the game
-        * ``isVisible()``     – True while the game thread is alive
-        * ``raise_()``        – no-op (pygame manages its own window)
-        * ``activateWindow()``– no-op
-        * ``closed`` signal   – emitted when the game window is closed
+        * ``show()``           – start the game
+        * ``isVisible()``      – True while the game thread is alive
+        * ``raise_()``         – no-op (pygame manages its own window)
+        * ``activateWindow()`` – no-op
+        * ``closed`` signal    – emitted when the game window is closed
     """
 
     closed = pyqtSignal()
@@ -163,14 +202,14 @@ class NagstamonFPSWindow(QObject):
         self._thread: Optional[Thread] = None
 
     # ------------------------------------------------------------------
-    # QWidget-compatible interface (used by Nagstamon/qui/__init__.py)
+    # QWidget-compatible interface
     # ------------------------------------------------------------------
 
     def isVisible(self) -> bool:
         return self._thread is not None and self._thread.is_alive()
 
     def raise_(self):
-        pass  # pygame window focus is managed by the OS
+        pass
 
     def activateWindow(self):
         pass
@@ -190,234 +229,200 @@ class NagstamonFPSWindow(QObject):
         finally:
             self.closed.emit()
 
-    def _game_loop(self):  # noqa: C901 – intentionally self-contained
+    def _game_loop(self):  # noqa: C901 – intentionally self-contained 3-D engine
         pygame.init()
         try:
             screen = pygame.display.set_mode((_WIN_W, _WIN_H))
             pygame.display.set_caption(
-                'Nagstamon FPS Mode – Click to Acknowledge!'
+                'Nagstamon FPS Mode – Acknowledge or Die!'
             )
-            pygame.mouse.set_visible(False)
             clock = pygame.time.Clock()
 
-            font_status = _FontWrapper(30)
-            font_name   = _FontWrapper(20)
+            font_large  = _FontWrapper(28)
+            font_medium = _FontWrapper(20)
             font_hud    = _FontWrapper(22)
-            font_hint   = _FontWrapper(18)
+            font_small  = _FontWrapper(16)
+
+            # Pre-bake sky and floor gradient surfaces (height = _WIN_H each)
+            sky_surf   = _make_gradient(_WIN_W, _WIN_H, _SKY_TOP,   _SKY_BOT)
+            floor_surf = _make_gradient(_WIN_W, _WIN_H, _FLOOR_TOP, _FLOOR_BOT)
 
             enemies = self._load_enemies()
-            killed    = 0
-            scroll_y  = 0
-            message   = ''
-            msg_timer = 0
+            killed  = 0
 
-            viewport_h = _WIN_H - _HEADER_H - _FOOTER_H
+            # ── Camera state ──────────────────────────────────────────
+            cam_x:     float = 0.0
+            cam_y:     float = _EYE_H
+            cam_z:     float = 0.0
+            cam_yaw:   float = 0.0    # horizontal look (radians)
+            cam_pitch: float = 0.0    # vertical look (radians, clamped)
 
-            def _content_height() -> int:
-                rows = math.ceil(len(enemies) / _COLS) if enemies else 0
-                return rows * (_TARGET_H + _TARGET_PAD) + _TARGET_PAD
+            # ── Input / UI state ─────────────────────────────────────
+            keys_held     = set()
+            mouse_grabbed = False
+            muzzle_flash  = 0         # ms remaining for muzzle-flash overlay
+            message       = ''
+            msg_timer     = 0         # ms
+
+            def _grab(state: bool):
+                nonlocal mouse_grabbed
+                pygame.event.set_grab(state)
+                pygame.mouse.set_visible(not state)
+                mouse_grabbed = state
+
+            _grab(True)
 
             running = True
             while running:
-                dt = clock.tick(_FPS)
+                dt_ms = clock.tick(_FPS)
+                dt    = dt_ms / 1000.0
+
+                cos_y = math.cos(cam_yaw)
+                sin_y = math.sin(cam_yaw)
 
                 # ── Events ───────────────────────────────────────────
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         running = False
+
                     elif event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_ESCAPE:
-                            running = False
-                        elif event.key in (pygame.K_DOWN, pygame.K_s):
-                            scroll_y = min(
-                                max(0, _content_height() - viewport_h),
-                                scroll_y + _SCROLL_SPEED,
-                            )
-                        elif event.key in (pygame.K_UP, pygame.K_w):
-                            scroll_y = max(0, scroll_y - _SCROLL_SPEED)
-                    elif event.type == pygame.MOUSEWHEEL:
-                        max_scroll = max(0, _content_height() - viewport_h)
-                        scroll_y = max(
-                            0,
-                            min(max_scroll, scroll_y - event.y * _SCROLL_SPEED),
+                            if mouse_grabbed:
+                                _grab(False)
+                            else:
+                                running = False
+                        else:
+                            keys_held.add(event.key)
+
+                    elif event.type == pygame.KEYUP:
+                        keys_held.discard(event.key)
+
+                    elif event.type == pygame.MOUSEMOTION and mouse_grabbed:
+                        dx_px, dy_px = event.rel
+                        cam_yaw   += dx_px * _MOUSE_SENS
+                        cam_pitch -= dy_px * _MOUSE_SENS
+                        cam_pitch  = max(
+                            -_PITCH_LIMIT, min(_PITCH_LIMIT, cam_pitch)
                         )
-                    elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                        mx, my = event.pos
-                        if _HEADER_H <= my < _WIN_H - _FOOTER_H:
-                            # Translate screen → content coordinates
-                            cx = mx
-                            cy = my - _HEADER_H + scroll_y
-                            for enemy in enemies:
-                                if (not enemy.dying
-                                        and enemy.rect.collidepoint(cx, cy)):
-                                    enemy.dying = True
-                                    killed += 1
+
+                    elif event.type == pygame.MOUSEBUTTONDOWN:
+                        if event.button == 1:
+                            if not mouse_grabbed:
+                                _grab(True)
+                            else:
+                                # Fire – find closest enemy overlapping crosshair
+                                hit = _find_crosshair_hit(
+                                    enemies, cam_x, cam_y, cam_z,
+                                    cam_yaw, cam_pitch,
+                                )
+                                if hit is not None:
+                                    hit.dying  = True
+                                    killed    += 1
+                                    muzzle_flash = 90
                                     message = (
-                                        f'** {enemy.display_name}'
-                                        f' - acknowledged! **'
+                                        f'** {hit.display_name}'
+                                        f' \u2013 acknowledged! **'
                                     )
                                     msg_timer = 3000
-                                    self._do_acknowledge(enemy)
-                                    break
+                                    self._do_acknowledge(hit)
+                                else:
+                                    muzzle_flash = 50   # miss flash
+
+                # ── Movement ─────────────────────────────────────────
+                fwd = stf = 0.0
+                if pygame.K_w in keys_held or pygame.K_UP    in keys_held:
+                    fwd += _MOVE_SPEED * dt
+                if pygame.K_s in keys_held or pygame.K_DOWN  in keys_held:
+                    fwd -= _MOVE_SPEED * dt
+                if pygame.K_a in keys_held or pygame.K_LEFT  in keys_held:
+                    stf -= _MOVE_SPEED * dt
+                if pygame.K_d in keys_held or pygame.K_RIGHT in keys_held:
+                    stf += _MOVE_SPEED * dt
+
+                # Recompute after possible mouse yaw change
+                cos_y = math.cos(cam_yaw)
+                sin_y = math.sin(cam_yaw)
+
+                new_x = cam_x + sin_y * fwd + cos_y * stf
+                new_z = cam_z + cos_y * fwd - sin_y * stf
+                # Soft arena wall – keep player inside the ring
+                if new_x * new_x + new_z * new_z < _ARENA_R * _ARENA_R:
+                    cam_x, cam_z = new_x, new_z
 
                 # ── Animations ───────────────────────────────────────
-                for enemy in enemies:
-                    if enemy.dying:
-                        enemy.alpha = max(0, enemy.alpha - 10)
+                for e in enemies:
+                    if e.dying:
+                        e.alpha = max(0, e.alpha - int(255 * dt * 3.5))
                 enemies = [e for e in enemies if e.alpha > 0]
 
+                if muzzle_flash > 0:
+                    muzzle_flash -= dt_ms
                 if msg_timer > 0:
-                    msg_timer -= dt
+                    msg_timer -= dt_ms
                     if msg_timer <= 0:
                         message = ''
 
-                # Clamp scroll after enemies are removed
-                max_scroll = max(0, _content_height() - viewport_h)
-                scroll_y = min(scroll_y, max_scroll)
+                # ── Per-enemy depth (camera-space Z) ─────────────────
+                for e in enemies:
+                    dx = e.wx - cam_x
+                    dz = e.wz - cam_z
+                    e._cam_dist = dx * sin_y + dz * cos_y
+
+                # Sort back-to-front (painter's algorithm)
+                visible = sorted(
+                    [e for e in enemies if e._cam_dist > _NEAR],
+                    key=lambda e: -e._cam_dist,
+                )
+
+                pitch_offset = _FOCAL * math.tan(cam_pitch)
 
                 # ── Draw ─────────────────────────────────────────────
-                screen.fill(_BG_COLOR)
-                mx_cur, my_cur = pygame.mouse.get_pos()
+                _draw_sky_floor(screen, sky_surf, floor_surf, pitch_offset)
+                _draw_floor_grid(screen, pitch_offset)
 
-                # Clip drawing to the content viewport
-                screen.set_clip(pygame.Rect(0, _HEADER_H, _WIN_W, viewport_h))
+                for e in visible:
+                    dx     = e.wx - cam_x
+                    dz     = e.wz - cam_z
+                    cam_rx = dx * cos_y - dz * sin_y
+                    rz     = e._cam_dist            # camera-space depth
+                    ry     = (e.wy + _BILL_CY) - cam_y
 
-                for enemy in enemies:
-                    sx = enemy.rect.x
-                    sy = enemy.rect.y - scroll_y + _HEADER_H
-                    # Skip if fully outside the viewport
-                    if sy + _TARGET_H <= _HEADER_H or sy >= _WIN_H - _FOOTER_H:
-                        continue
+                    sx = int(_CX + _FOCAL * cam_rx / rz)
+                    sy = int(_CY - _FOCAL * ry / rz + pitch_offset)
+                    hw = max(1, int(_FOCAL * _BILL_W / (2.0 * rz)))
+                    hh = max(1, int(_FOCAL * _BILL_H / (2.0 * rz)))
 
-                    surf = pygame.Surface(
-                        (_TARGET_W, _TARGET_H), pygame.SRCALPHA
-                    )
-                    a = enemy.alpha
-                    r, g, b = enemy.color
-
-                    # Background fill (semi-transparent)
-                    pygame.draw.rect(
-                        surf, (r, g, b, max(30, a // 3)),
-                        (0, 0, _TARGET_W, _TARGET_H), border_radius=8,
-                    )
-                    # Coloured border
-                    pygame.draw.rect(
-                        surf, (r, g, b, a),
-                        (0, 0, _TARGET_W, _TARGET_H), 2, border_radius=8,
+                    fog = max(0.0, 1.0 - rz / _FAR)
+                    _draw_billboard(
+                        screen, e, sx, sy, hw, hh, fog,
+                        font_large, font_medium,
                     )
 
-                    # Status label
-                    st_surf = font_status.render(enemy.status, True, (255, 255, 255))
-                    st_surf.set_alpha(a)
-                    surf.blit(st_surf, (10, 8))
-
-                    # Problem name (truncated)
-                    name = enemy.display_name
-                    if len(name) > 44:
-                        name = name[:41] + '...'
-                    nm_surf = font_name.render(name, True, (210, 210, 210))
-                    nm_surf.set_alpha(a)
-                    surf.blit(nm_surf, (10, 46))
-
-                    # Hover highlight
-                    scr_rect = pygame.Rect(sx, sy, _TARGET_W, _TARGET_H)
-                    if scr_rect.collidepoint(mx_cur, my_cur) and not enemy.dying:
-                        pygame.draw.rect(
-                            surf, (255, 255, 255, 40),
-                            (0, 0, _TARGET_W, _TARGET_H), border_radius=8,
-                        )
-
-                    screen.blit(surf, (sx, sy))
-
-                screen.set_clip(None)
-
-                # ── Header ───────────────────────────────────────────
-                remaining = sum(1 for e in enemies if not e.dying)
-                hud_text = (
-                    f'Problems: {remaining} remaining  \xb7  '
-                    f'{killed} acknowledged'
-                )
-                hud_surf = font_hud.render(hud_text, True, (200, 200, 200))
-                screen.blit(
-                    hud_surf,
-                    (12, (_HEADER_H - hud_surf.get_height()) // 2),
-                )
-                pygame.draw.line(
-                    screen, (50, 60, 90),
-                    (0, _HEADER_H - 1), (_WIN_W, _HEADER_H - 1),
+                # ── HUD overlay ───────────────────────────────────────
+                _draw_hud(
+                    screen, font_hud, font_small,
+                    enemies, killed, message, msg_timer, mouse_grabbed,
                 )
 
-                # Scroll indicator bar
-                if max_scroll > 0:
-                    bar_h = max(
-                        20, int(viewport_h * viewport_h / _content_height())
-                    )
-                    bar_y = _HEADER_H + int(
-                        scroll_y * (viewport_h - bar_h) / max_scroll
-                    )
-                    pygame.draw.rect(
-                        screen, (80, 90, 130),
-                        (_WIN_W - 6, bar_y, 5, bar_h), border_radius=2,
-                    )
+                # ── Muzzle flash ─────────────────────────────────────
+                if muzzle_flash > 0:
+                    flash = pygame.Surface((_WIN_W, _WIN_H), pygame.SRCALPHA)
+                    a_flash = int(130 * max(0, muzzle_flash) / 90)
+                    flash.fill((255, 220, 100, min(255, a_flash)))
+                    screen.blit(flash, (0, 0))
 
-                # ── Kill / status message ─────────────────────────────
-                if message:
-                    fade = min(1.0, msg_timer / 500.0)
-                    msg_surf = font_hud.render(
-                        message, True, (255, 200, 100)
-                    )
-                    msg_surf.set_alpha(int(255 * fade))
-                    screen.blit(
-                        msg_surf,
-                        (
-                            _WIN_W // 2 - msg_surf.get_width() // 2,
-                            _WIN_H // 3,
-                        ),
-                    )
-
-                if not any(not e.dying for e in enemies):
-                    clear_surf = font_status.render(
-                        'All systems go!  No problems to fight.',
-                        True, (100, 220, 100),
-                    )
-                    screen.blit(
-                        clear_surf,
-                        (
-                            _WIN_W // 2 - clear_surf.get_width() // 2,
-                            _WIN_H // 2,
-                        ),
-                    )
-
-                # ── Footer ───────────────────────────────────────────
-                pygame.draw.line(
-                    screen, (50, 60, 90),
-                    (0, _WIN_H - _FOOTER_H), (_WIN_W, _WIN_H - _FOOTER_H),
-                )
-                hint = (
-                    'Click on a target to acknowledge it'
-                    '   |   Scroll: mouse wheel / arrow keys'
-                    '   |   ESC: exit'
-                )
-                hint_surf = font_hint.render(hint, True, (120, 120, 140))
-                screen.blit(
-                    hint_surf,
-                    (
-                        12,
-                        _WIN_H - _FOOTER_H
-                        + (_FOOTER_H - hint_surf.get_height()) // 2,
-                    ),
-                )
-
-                # ── Crosshair cursor ─────────────────────────────────
-                _draw_crosshair(screen, mx_cur, my_cur)
+                # ── Crosshair at screen centre ────────────────────────
+                _draw_crosshair(screen, _CX, _CY)
 
                 pygame.display.flip()
         finally:
+            pygame.event.set_grab(False)
+            pygame.mouse.set_visible(True)
             pygame.quit()
 
     @staticmethod
     def _load_enemies() -> 'List[_Enemy]':
-        """Collect all active monitoring problems and arrange them in a grid."""
+        """Collect monitoring problems and place them in 3-D space."""
         from Nagstamon.servers import get_enabled_servers  # avoids circular import
 
         raw: List[_Enemy] = []
@@ -437,7 +442,7 @@ class NagstamonFPSWindow(QObject):
                 for svc_name, svc in list(host.services.items()):
                     if svc.status not in ('UP', 'OK', ''):
                         label = (
-                            f'{server.name} \xb7 {host_name} / {svc_name}'
+                            f'{server.name} \xb7 {host_name}/{svc_name}'
                             f' [{svc.status}]'
                         )
                         raw.append(_Enemy(
@@ -449,13 +454,26 @@ class NagstamonFPSWindow(QObject):
                             color=_color_for_status(svc.status),
                         ))
 
-        # Assign grid positions (content-area coordinates)
-        for i, enemy in enumerate(raw):
-            col = i % _COLS
-            row = i // _COLS
-            x = _TARGET_PAD + col * (_TARGET_W + _TARGET_PAD)
-            y = _TARGET_PAD + row * (_TARGET_H + _TARGET_PAD)
-            enemy.rect = pygame.Rect(x, y, _TARGET_W, _TARGET_H)
+        # Place enemies in concentric rings around the origin so the player
+        # starts surrounded from all sides.
+        ring_radius   = 5.0
+        ring_gap      = 3.5
+        base_per_ring = 8       # enemies on the first ring
+        rng = random.Random(42) # fixed seed for reproducible layout
+        placed = ring = 0
+        while placed < len(raw):
+            count  = base_per_ring + ring * 4
+            radius = ring_radius + ring * ring_gap
+            start  = rng.uniform(0.0, 2.0 * math.pi)
+            for k in range(count):
+                if placed >= len(raw):
+                    break
+                ang = start + 2.0 * math.pi * k / count
+                raw[placed].wx = radius * math.sin(ang)
+                raw[placed].wz = radius * math.cos(ang)
+                raw[placed].wy = 0.0
+                placed += 1
+            ring += 1
 
         return raw
 
@@ -491,18 +509,271 @@ class NagstamonFPSWindow(QObject):
         Thread(target=_do, daemon=True).start()
 
 
-def _draw_crosshair(surface, x: int, y: int) -> None:
-    """Draw a simple crosshair cursor at *(x, y)*."""
-    color = (255, 255, 100)
-    gap, arm, thickness = 5, 14, 2
-    # Horizontal arms
-    pygame.draw.line(surface, color, (x - arm - gap, y), (x - gap, y), thickness)
-    pygame.draw.line(surface, color, (x + gap, y), (x + arm + gap, y), thickness)
-    # Vertical arms
-    pygame.draw.line(surface, color, (x, y - arm - gap), (x, y - gap), thickness)
-    pygame.draw.line(surface, color, (x, y + gap), (x, y + arm + gap), thickness)
-    # Centre dot
-    pygame.draw.circle(surface, color, (x, y), 3)
+# ---------------------------------------------------------------------------
+# Module-level rendering helpers
+# ---------------------------------------------------------------------------
+
+def _make_gradient(
+    w: int, h: int,
+    top_col: Tuple, bot_col: Tuple,
+) -> 'pygame.Surface':
+    """Return a *w* × *h* Surface filled with a vertical colour gradient."""
+    surf = pygame.Surface((w, h))
+    for y in range(h):
+        t = y / max(1, h - 1)
+        r = int(top_col[0] + t * (bot_col[0] - top_col[0]))
+        g = int(top_col[1] + t * (bot_col[1] - top_col[1]))
+        b = int(top_col[2] + t * (bot_col[2] - top_col[2]))
+        pygame.draw.line(surf, (r, g, b), (0, y), (w, y))
+    return surf
+
+
+def _draw_sky_floor(
+    screen: 'pygame.Surface',
+    sky_surf: 'pygame.Surface',
+    floor_surf: 'pygame.Surface',
+    pitch_offset: float,
+) -> None:
+    """Blit sky and floor gradient halves split at the pitch-adjusted horizon."""
+    horizon_y = int(_CY + pitch_offset)
+
+    # Sky (top portion of screen, up to the horizon)
+    sky_h = max(0, min(_WIN_H, horizon_y))
+    if sky_h > 0:
+        screen.blit(sky_surf, (0, 0), (0, 0, _WIN_W, sky_h))
+
+    # Floor (from horizon to screen bottom)
+    floor_y = max(0, horizon_y)
+    floor_h = _WIN_H - floor_y
+    if floor_h > 0:
+        screen.blit(floor_surf, (0, floor_y), (0, 0, _WIN_W, floor_h))
+
+
+def _draw_floor_grid(
+    screen: 'pygame.Surface',
+    pitch_offset: float,
+) -> None:
+    """Draw a perspective floor grid: depth stripes + converging lines."""
+    horizon_y = int(_CY + pitch_offset)
+    horizon_clamped = max(0, min(_WIN_H - 1, horizon_y))
+
+    # ── Converging lines from the vanishing point to the screen bottom ──
+    # These radiate out evenly in screen-X giving a perspective-corridor feel.
+    n_conv = 14
+    for i in range(n_conv + 1):
+        sx_bot = int(i * _WIN_W / n_conv)
+        bot_y  = _WIN_H - 1
+        if horizon_clamped < bot_y:
+            pygame.draw.line(
+                screen, _GRID_COL,
+                (_CX, horizon_clamped),
+                (sx_bot, bot_y),
+            )
+
+    # ── Horizontal depth stripes ─────────────────────────────────────────
+    # Each stripe is the floor at a fixed distance directly ahead of the
+    # camera; they converge toward the horizon with increasing distance.
+    for dist in (4.0, 6.0, 9.0, 13.0, 18.0, 25.0, 36.0, 52.0):
+        sy = int(_CY + _FOCAL * _EYE_H / dist + pitch_offset)
+        if horizon_clamped < sy < _WIN_H:
+            pygame.draw.line(screen, _GRID_COL, (0, sy), (_WIN_W - 1, sy))
+
+
+def _draw_billboard(
+    screen: 'pygame.Surface',
+    enemy: '_Enemy',
+    sx: int, sy: int,
+    hw: int, hh: int,
+    fog: float,
+    font_large:  '_FontWrapper',
+    font_medium: '_FontWrapper',
+) -> None:
+    """Render one 3-D enemy billboard onto *screen*."""
+    if fog < 0.02:
+        return
+    # Cull fully off-screen billboards
+    if sx + hw < 0 or sx - hw > _WIN_W:
+        return
+    if sy + hh < 0 or sy - hh > _WIN_H:
+        return
+
+    a   = int(enemy.alpha * fog)
+    r, g, b = enemy.color
+    w, h    = hw * 2, hh * 2
+
+    surf = pygame.Surface((w, h), pygame.SRCALPHA)
+
+    # Dark background panel
+    bg_a = min(200, int(a * 0.65))
+    pygame.draw.rect(
+        surf, (r // 6, g // 6, b // 6, bg_a),
+        (0, 0, w, h), border_radius=6,
+    )
+    # Coloured border
+    pygame.draw.rect(
+        surf, (r, g, b, a),
+        (0, 0, w, h), 2, border_radius=6,
+    )
+    # Severity glow strip at top
+    glow_h = max(4, h // 6)
+    pygame.draw.rect(
+        surf, (r, g, b, min(a, 170)),
+        (2, 2, w - 4, glow_h), border_radius=4,
+    )
+
+    # Status text (only when billboard is large enough to be readable)
+    text_y = glow_h + 4
+    if hw > 28:
+        st = font_large.render(enemy.status, True, (255, 255, 255))
+        st.set_alpha(a)
+        surf.blit(st, (6, text_y))
+        text_y += st.get_height() + 2
+
+    if hw > 48:
+        max_chars = max(4, w // 7)
+        name = enemy.display_name
+        if len(name) > max_chars:
+            name = name[:max_chars - 2] + '\u2026'
+        nm = font_medium.render(name, True, (200, 200, 200))
+        nm.set_alpha(a)
+        surf.blit(nm, (6, text_y))
+
+    screen.blit(surf, (sx - hw, sy - hh))
+
+
+def _find_crosshair_hit(
+    enemies: 'List[_Enemy]',
+    cam_x: float, cam_y: float, cam_z: float,
+    cam_yaw: float, cam_pitch: float,
+) -> 'Optional[_Enemy]':
+    """Return the closest alive enemy whose billboard overlaps the crosshair."""
+    cos_y = math.cos(cam_yaw)
+    sin_y = math.sin(cam_yaw)
+    pitch_offset = _FOCAL * math.tan(cam_pitch)
+
+    best_dist: float = _FAR
+    best_e: Optional[_Enemy] = None
+
+    for e in enemies:
+        if e.dying:
+            continue
+        dx = e.wx - cam_x
+        dz = e.wz - cam_z
+        cam_rx = dx * cos_y - dz * sin_y
+        rz     = dx * sin_y + dz * cos_y
+        if rz <= _NEAR:
+            continue
+        ry = (e.wy + _BILL_CY) - cam_y
+
+        sx = int(_CX + _FOCAL * cam_rx / rz)
+        sy = int(_CY - _FOCAL * ry / rz + pitch_offset)
+        hw = max(1, int(_FOCAL * _BILL_W / (2.0 * rz)))
+        hh = max(1, int(_FOCAL * _BILL_H / (2.0 * rz)))
+
+        if (sx - hw <= _CX <= sx + hw
+                and sy - hh <= _CY <= sy + hh
+                and rz < best_dist):
+            best_dist = rz
+            best_e    = e
+
+    return best_e
+
+
+def _draw_hud(
+    screen: 'pygame.Surface',
+    font_hud:   '_FontWrapper',
+    font_small: '_FontWrapper',
+    enemies:    'List[_Enemy]',
+    killed:     int,
+    message:    str,
+    msg_timer:  int,
+    mouse_grabbed: bool,
+) -> None:
+    """Draw the HUD: top stat bar, bottom hint bar, and optional messages."""
+    remaining = sum(1 for e in enemies if not e.dying)
+
+    # Top bar
+    bar = pygame.Surface((_WIN_W, 40), pygame.SRCALPHA)
+    bar.fill((0, 0, 0, 150))
+    screen.blit(bar, (0, 0))
+    pygame.draw.line(screen, (50, 65, 120), (0, 39), (_WIN_W, 39))
+
+    hud_text = (
+        f'Targets: {remaining} remaining  \xb7  {killed} acknowledged'
+    )
+    h_surf = font_hud.render(hud_text, True, (190, 205, 255))
+    screen.blit(h_surf, (14, (40 - h_surf.get_height()) // 2))
+
+    # Bottom hint bar
+    bot = pygame.Surface((_WIN_W, 26), pygame.SRCALPHA)
+    bot.fill((0, 0, 0, 130))
+    screen.blit(bot, (0, _WIN_H - 26))
+    pygame.draw.line(screen, (50, 65, 120), (0, _WIN_H - 26), (_WIN_W, _WIN_H - 26))
+
+    action = 'exit' if mouse_grabbed else 'resume (click to re-grab mouse)'
+    hint = (
+        'WASD / \u2191\u2193\u2190\u2192 : move   '
+        'Mouse : look   '
+        'LMB : fire / acknowledge   '
+        f'ESC : {action}'
+    )
+    hint_surf = font_small.render(hint, True, (115, 120, 160))
+    screen.blit(
+        hint_surf,
+        (14, _WIN_H - 26 + (26 - hint_surf.get_height()) // 2),
+    )
+
+    # Kill / acknowledge message (fades out)
+    if message:
+        fade = min(1.0, msg_timer / 400.0)
+        msg_surf = font_hud.render(message, True, (255, 210, 60))
+        msg_surf.set_alpha(int(255 * fade))
+        screen.blit(
+            msg_surf,
+            (_CX - msg_surf.get_width() // 2, _WIN_H // 3),
+        )
+
+    # All-clear message
+    if not any(not e.dying for e in enemies):
+        clr = font_hud.render(
+            'All systems go!  No problems to fight.',
+            True, (80, 220, 80),
+        )
+        screen.blit(clr, (_CX - clr.get_width() // 2, _CY - clr.get_height() // 2))
+
+    # Mouse-ungrabbed dim overlay
+    if not mouse_grabbed:
+        ov = pygame.Surface((_WIN_W, _WIN_H), pygame.SRCALPHA)
+        ov.fill((0, 0, 0, 110))
+        screen.blit(ov, (0, 0))
+        click = font_hud.render('Click to resume', True, (255, 255, 255))
+        screen.blit(click, (_CX - click.get_width() // 2, _CY - click.get_height() // 2))
+
+
+def _draw_crosshair(surface: 'pygame.Surface', x: int, y: int) -> None:
+    """Draw a first-person crosshair fixed at screen centre *(x, y)*."""
+    col_fg = (255, 255,  80)
+    col_bg = (  0,   0,   0)
+    gap, arm, thick = 6, 13, 2
+
+    # Shadow (black, slightly offset)
+    for x0, y0, x1, y1 in [
+        (x - arm - gap - 1, y, x - gap - 1, y),
+        (x + gap + 1,       y, x + arm + gap + 1, y),
+        (x, y - arm - gap - 1, x, y - gap - 1),
+        (x, y + gap + 1,       x, y + arm + gap + 1),
+    ]:
+        pygame.draw.line(surface, col_bg, (x0, y0), (x1, y1), thick + 2)
+
+    # Foreground arms
+    pygame.draw.line(surface, col_fg, (x - arm - gap, y), (x - gap, y), thick)
+    pygame.draw.line(surface, col_fg, (x + gap,       y), (x + arm + gap, y), thick)
+    pygame.draw.line(surface, col_fg, (x, y - arm - gap), (x, y - gap), thick)
+    pygame.draw.line(surface, col_fg, (x, y + gap),       (x, y + arm + gap), thick)
+
+    # Centre dot (shadow then fill)
+    pygame.draw.circle(surface, col_bg, (x, y), 4)
+    pygame.draw.circle(surface, col_fg, (x, y), 3)
 
 
 # ---------------------------------------------------------------------------
