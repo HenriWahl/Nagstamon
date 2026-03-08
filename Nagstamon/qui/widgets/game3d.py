@@ -18,462 +18,425 @@
 """Nagstamon FPS Mode – inspired by psdoom.
 
 Monitoring problems retrieved from all enabled servers are rendered as
-coloured 3-D enemies in a first-person-shooter scene powered by Qt3D.
-Clicking an enemy acknowledges the corresponding monitoring problem and
-removes it from the scene.
+coloured targets in a shooting-gallery scene powered by pygame.
+Click on a target to acknowledge the corresponding monitoring problem.
 
 Controls
 --------
-* **W / A / S / D** or **Arrow keys** – move the camera
-* **Left-button drag** – look around
-* **Click on an enemy** – acknowledge (kill) the problem
+* **Click** on a target        – acknowledge (kill) the problem
+* **Mouse wheel / Arrow keys** – scroll through targets when there are many
+* **Escape** or close window   – exit FPS mode
 
-Requires the ``PyQt6-3D`` package::
+Requires the ``pygame`` package::
 
-    pip install PyQt6-3D
+    pip install pygame
 """
 
-import hashlib
-import random
-from dataclasses import dataclass
+import math
+from dataclasses import dataclass, field
 from threading import Thread
-from typing import Dict, Optional
+from typing import List, Optional, Tuple
 
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal
-from PyQt6.QtGui import QColor, QVector3D
-from PyQt6.QtWidgets import QLabel, QMainWindow, QWidget, QVBoxLayout
+from PyQt6.QtCore import QObject, pyqtSignal
 
-_QT3D_IMPORT_ERROR: str = ''
+# ---------------------------------------------------------------------------
+# pygame – optional import; graceful degradation when not installed
+# ---------------------------------------------------------------------------
+_PYGAME_IMPORT_ERROR: str = ''
 try:
-    from PyQt6.Qt3DCore import QEntity
-    from PyQt6.Qt3DCore import QTransform as Qt3DTransform
-    from PyQt6.Qt3DExtras import (
-        QConeMesh,
-        QCuboidMesh,
-        QCylinderMesh,
-        QFirstPersonCameraController,
-        QPhongMaterial,
-        QPlaneMesh,
-        QSphereMesh,
-        Qt3DWindow,
-    )
-    from PyQt6.Qt3DRender import QObjectPicker, QPickingSettings, QPointLight
-    QT3D_AVAILABLE = True
+    import pygame
+    PYGAME_AVAILABLE = True
 except Exception as _exc:
-    # Catch *any* failure – not just ImportError.
-    # On Python 3.14+ and certain linkers, an ABI mismatch (e.g.
-    # "undefined symbol: ..., version Qt_6_PRIVATE_API") surfaces as
-    # OSError from dlopen() rather than ImportError, so a bare
-    # "except ImportError" would miss it and crash Nagstamon at startup.
-    QT3D_AVAILABLE = False
-    _QT3D_IMPORT_ERROR = str(_exc)
+    PYGAME_AVAILABLE = False
+    _PYGAME_IMPORT_ERROR = str(_exc)
 
 # ---------------------------------------------------------------------------
-# Appearance mapping:  monitoring status  →  (mesh_type, QColor, scale)
+# Appearance: monitoring status → RGB colour
 # ---------------------------------------------------------------------------
-_STATUS_APPEARANCE = {
-    'DOWN':        ('sphere',   QColor(220,  30,  30), 1.4),
-    'UNREACHABLE': ('sphere',   QColor(160,  20,  20), 1.2),
-    'DISASTER':    ('sphere',   QColor(255,   0,   0), 1.6),
-    'CRITICAL':    ('cube',     QColor(200,  20,  20), 1.2),
-    'HIGH':        ('cube',     QColor(220, 100,   0), 1.1),
-    'WARNING':     ('cone',     QColor(220, 180,   0), 1.2),
-    'AVERAGE':     ('cone',     QColor(200, 140,   0), 1.0),
-    'UNKNOWN':     ('cylinder', QColor(180,  60, 180), 1.0),
-    'PENDING':     ('cylinder', QColor(100, 100, 200), 0.8),
+_STATUS_COLORS: dict = {
+    'DOWN':        (220,  30,  30),
+    'UNREACHABLE': (160,  20,  20),
+    'DISASTER':    (255,   0,   0),
+    'CRITICAL':    (200,  20,  20),
+    'HIGH':        (220, 100,   0),
+    'WARNING':     (220, 180,   0),
+    'AVERAGE':     (200, 140,   0),
+    'UNKNOWN':     (180,  60, 180),
+    'PENDING':     (100, 100, 200),
 }
-_DEFAULT_APPEARANCE = ('cube', QColor(140, 140, 140), 1.0)
+_DEFAULT_COLOR: Tuple[int, int, int] = (140, 140, 140)
+
+# ---------------------------------------------------------------------------
+# Layout constants
+# ---------------------------------------------------------------------------
+_WIN_W:      int = 1280
+_WIN_H:      int = 720
+_FPS:        int = 60
+_BG_COLOR        = (10, 14, 40)
+_HEADER_H:   int = 44
+_FOOTER_H:   int = 28
+_COLS:       int = 4
+_TARGET_W:   int = 300
+_TARGET_H:   int = 84
+_TARGET_PAD: int = 12
+_SCROLL_SPEED: int = 30
 
 
-def _appearance(status: str):
-    """Return ``(mesh_type, color, scale)`` for the given monitoring status."""
-    return _STATUS_APPEARANCE.get(status.upper(), _DEFAULT_APPEARANCE)
-
-
-def _deterministic_pos(seed: str, used: set, spread: float = 38.0) -> 'QVector3D':
-    """Return a deterministic, collision-free XZ position for an enemy.
-
-    The position is derived from a hash of *seed* so that the same problem
-    always spawns at the same location on every game launch.
-    """
-    digest = hashlib.md5(seed.encode(), usedforsecurity=False).hexdigest()[:8]
-    rng = random.Random(int(digest, 16))
-    last_x, last_z = 0.0, -10.0
-    for _ in range(300):
-        last_x = rng.uniform(-spread, spread)
-        last_z = rng.uniform(-6.0, -spread * 2.2)
-        if all(
-            abs(last_x - px) > 3.0 or abs(last_z - pz) > 3.0
-            for px, pz in used
-        ):
-            used.add((round(last_x, 2), round(last_z, 2)))
-            return QVector3D(last_x, 1.0, last_z)
-    # Exhausted attempts – use the last computed position without checking
-    return QVector3D(last_x, 1.0, last_z)
+def _color_for_status(status: str) -> Tuple[int, int, int]:
+    return _STATUS_COLORS.get(status.upper(), _DEFAULT_COLOR)
 
 
 @dataclass
-class EnemyInfo:
-    """Links a Qt3D entity to a monitoring problem."""
-    server: object      # GenericServer instance
+class _Enemy:
+    """One monitoring problem rendered as a clickable target."""
+    server: object       # GenericServer instance
     host_name: str
-    service_name: str   # empty string  →  host-level problem
+    service_name: str    # empty string → host-level problem
     status: str
-    display_name: str   # human-readable label shown in the HUD on kill
+    display_name: str
+    color: Tuple[int, int, int]
+    rect: object = field(default=None)  # pygame.Rect; assigned during layout
+    alpha: int = 255                    # 255 = fully visible; decrements on death
+    dying: bool = False
 
 
-class NagstamonFPSWindow(QMainWindow):
-    """FPS window where monitoring problems appear as coloured 3-D enemies.
+class NagstamonFPSWindow(QObject):
+    """Manages the pygame FPS window running in a daemon thread.
 
-    Click on an enemy to acknowledge (kill) the corresponding monitoring
-    problem on the server.  The entity is then removed from the scene.
+    Provides the same public interface as the former QMainWindow-based
+    implementation so that callers (Nagstamon/qui/__init__.py) need no changes:
+
+        * ``show()``          – start the game
+        * ``isVisible()``     – True while the game thread is alive
+        * ``raise_()``        – no-op (pygame manages its own window)
+        * ``activateWindow()``– no-op
+        * ``closed`` signal   – emitted when the game window is closed
     """
 
     closed = pyqtSignal()
 
-    # --- HUD stylesheet constants ---
-    _SCORE_STYLE = (
-        'color:#ffffff; font-size:13px; background:rgba(0,0,0,160);'
-        ' padding:4px 10px; border-radius:4px;'
-    )
-    _MSG_STYLE = (
-        'color:#ff4444; font-size:17px; font-weight:bold;'
-        ' background:transparent;'
-    )
-    _HELP_STYLE = (
-        'color:rgba(220,220,220,180); font-size:11px;'
-        ' background:rgba(0,0,0,110); padding:4px 8px;'
-    )
-
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle('Nagstamon FPS Mode – Shoot to Acknowledge!')
-        self.resize(1280, 720)
-
-        self._enemies: Dict[object, EnemyInfo] = {}
-        self._killed: int = 0
-
-        self._msg_timer = QTimer(self)
-        self._msg_timer.setSingleShot(True)
-        self._msg_timer.timeout.connect(self._clear_message)
-
-        self._setup_ui()
-        self._setup_scene()
-        self._load_problems()
+        self._thread: Optional[Thread] = None
 
     # ------------------------------------------------------------------
-    # UI construction
+    # QWidget-compatible interface (used by Nagstamon/qui/__init__.py)
     # ------------------------------------------------------------------
 
-    def _setup_ui(self):
-        """Create the Qt3D container and transparent HUD overlay labels."""
-        central = QWidget(self)
-        self.setCentralWidget(central)
+    def isVisible(self) -> bool:
+        return self._thread is not None and self._thread.is_alive()
 
-        # Qt3D window embedded in a QWidget container
-        self._view = Qt3DWindow()
-        self._view.defaultFrameGraph().setClearColor(QColor(10, 14, 40))
+    def raise_(self):
+        pass  # pygame window focus is managed by the OS
 
-        container = QWidget.createWindowContainer(self._view, central)
-        container.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-        container.setMinimumSize(640, 400)
+    def activateWindow(self):
+        pass
 
-        layout = QVBoxLayout(central)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        layout.addWidget(container)
-
-        wattr = Qt.WidgetAttribute.WA_TransparentForMouseEvents
-
-        # Crosshair — centre of the viewport
-        self._crosshair = QLabel('⊕', central)
-        self._crosshair.setStyleSheet(
-            'color:rgba(255,255,128,220); font-size:26px; background:transparent;'
-        )
-        self._crosshair.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._crosshair.setAttribute(wattr)
-
-        # Score / problem counter — top-left
-        self._score_label = QLabel('', central)
-        self._score_label.setStyleSheet(self._SCORE_STYLE)
-        self._score_label.setAttribute(wattr)
-
-        # Feedback message — centre
-        self._msg_label = QLabel('', central)
-        self._msg_label.setStyleSheet(self._MSG_STYLE)
-        self._msg_label.setAttribute(wattr)
-
-        # Controls hint — bottom-left
-        self._help_label = QLabel(
-            'WASD / Arrows: Move  ·  Left-drag: Look  ·  Click enemy: Acknowledge',
-            central,
-        )
-        self._help_label.setStyleSheet(self._HELP_STYLE)
-        self._help_label.setAttribute(wattr)
-
-        # Position overlays once the window event loop is running
-        QTimer.singleShot(0, self._reposition_overlays)
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        self._reposition_overlays()
-
-    def _reposition_overlays(self):
-        """Place all HUD labels relative to the current window dimensions."""
-        cw = self.centralWidget()
-        if not cw:
-            return
-        w, h = cw.width(), cw.height()
-        if w < 1 or h < 1:
-            return
-
-        # Crosshair centred
-        self._crosshair.adjustSize()
-        cxw, cxh = self._crosshair.width(), self._crosshair.height()
-        self._crosshair.setGeometry(
-            (w - cxw) // 2, (h - cxh) // 2, cxw, cxh
-        )
-        self._crosshair.raise_()
-
-        # Score top-left
-        self._score_label.adjustSize()
-        self._score_label.move(12, 12)
-        self._score_label.raise_()
-
-        # Message centred, upper-third
-        self._msg_label.adjustSize()
-        self._msg_label.move(
-            max(0, (w - self._msg_label.width()) // 2), h // 3
-        )
-        self._msg_label.raise_()
-
-        # Help hint bottom-left
-        self._help_label.adjustSize()
-        self._help_label.move(12, h - self._help_label.height() - 12)
-        self._help_label.raise_()
-
-    def closeEvent(self, event):
-        self.closed.emit()
-        super().closeEvent(event)
+    def show(self):
+        """Start the pygame game loop in a daemon thread."""
+        self._thread = Thread(target=self._run, daemon=True)
+        self._thread.start()
 
     # ------------------------------------------------------------------
-    # 3-D scene
+    # Game thread
     # ------------------------------------------------------------------
 
-    def _setup_scene(self):
-        """Initialise the Qt3D root entity, camera, camera controller, lights, and floor."""
-        self._root = QEntity()
+    def _run(self):
+        try:
+            self._game_loop()
+        finally:
+            self.closed.emit()
 
-        # Camera
-        camera = self._view.camera()
-        camera.lens().setPerspectiveProjection(65.0, 16.0 / 9.0, 0.1, 1000.0)
-        camera.setPosition(QVector3D(0.0, 2.0, 5.0))
-        camera.setUpVector(QVector3D(0.0, 1.0, 0.0))
-        camera.setViewCenter(QVector3D(0.0, 1.5, -1.0))
+    def _game_loop(self):  # noqa: C901 – intentionally self-contained
+        pygame.init()
+        try:
+            screen = pygame.display.set_mode((_WIN_W, _WIN_H))
+            pygame.display.set_caption(
+                'Nagstamon FPS Mode – Click to Acknowledge!'
+            )
+            pygame.mouse.set_visible(False)
+            clock = pygame.time.Clock()
 
-        # First-person camera controller (WASD + left-drag)
-        ctrl = QFirstPersonCameraController(self._root)
-        ctrl.setLinearSpeed(14.0)
-        ctrl.setLookSpeed(130.0)
-        ctrl.setCamera(camera)
+            font_status = pygame.font.SysFont(None, 30)
+            font_name   = pygame.font.SysFont(None, 20)
+            font_hud    = pygame.font.SysFont(None, 22)
+            font_hint   = pygame.font.SysFont(None, 18)
 
-        # Enable object picking so QObjectPicker components fire on click
-        rs = self._view.renderSettings()
-        ps = rs.pickingSettings()
-        ps.setPickMethod(QPickingSettings.PickMethod.BoundingVolumePicking)
-        ps.setPickResultMode(QPickingSettings.PickResultMode.NearestPick)
+            enemies = self._load_enemies()
+            killed    = 0
+            scroll_y  = 0
+            message   = ''
+            msg_timer = 0
 
-        # Lights
-        self._add_point_light(QVector3D(0.0, 30.0,  15.0), QColor(255, 245, 220), 1.0)
-        self._add_point_light(QVector3D(0.0,  5.0,  20.0), QColor(100, 120, 200), 0.4)
+            viewport_h = _WIN_H - _HEADER_H - _FOOTER_H
 
-        # Ground plane
-        self._create_floor()
+            def _content_height() -> int:
+                rows = math.ceil(len(enemies) / _COLS) if enemies else 0
+                return rows * (_TARGET_H + _TARGET_PAD) + _TARGET_PAD
 
-        self._view.setRootEntity(self._root)
+            running = True
+            while running:
+                dt = clock.tick(_FPS)
 
-    def _add_point_light(
-        self,
-        position: 'QVector3D',
-        color: 'QColor',
-        intensity: float,
-    ):
-        """Add a positioned point light to the root entity."""
-        entity = QEntity(self._root)
-        light = QPointLight(entity)
-        light.setColor(color)
-        light.setIntensity(intensity)
-        t = Qt3DTransform(entity)
-        t.setTranslation(position)
-        entity.addComponent(light)
-        entity.addComponent(t)
+                # ── Events ───────────────────────────────────────────
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        running = False
+                    elif event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_ESCAPE:
+                            running = False
+                        elif event.key in (pygame.K_DOWN, pygame.K_s):
+                            scroll_y = min(
+                                max(0, _content_height() - viewport_h),
+                                scroll_y + _SCROLL_SPEED,
+                            )
+                        elif event.key in (pygame.K_UP, pygame.K_w):
+                            scroll_y = max(0, scroll_y - _SCROLL_SPEED)
+                    elif event.type == pygame.MOUSEWHEEL:
+                        max_scroll = max(0, _content_height() - viewport_h)
+                        scroll_y = max(
+                            0,
+                            min(max_scroll, scroll_y - event.y * _SCROLL_SPEED),
+                        )
+                    elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                        mx, my = event.pos
+                        if _HEADER_H <= my < _WIN_H - _FOOTER_H:
+                            # Translate screen → content coordinates
+                            cx = mx
+                            cy = my - _HEADER_H + scroll_y
+                            for enemy in enemies:
+                                if (not enemy.dying
+                                        and enemy.rect.collidepoint(cx, cy)):
+                                    enemy.dying = True
+                                    killed += 1
+                                    message = (
+                                        f'** {enemy.display_name}'
+                                        f' - acknowledged! **'
+                                    )
+                                    msg_timer = 3000
+                                    self._do_acknowledge(enemy)
+                                    break
 
-    def _create_floor(self):
-        """Create a large, dark-green horizontal ground plane."""
-        floor = QEntity(self._root)
-        mesh = QPlaneMesh()
-        mesh.setWidth(300.0)
-        mesh.setHeight(300.0)
-        mat = QPhongMaterial(floor)
-        mat.setDiffuse(QColor(28, 65, 28))
-        mat.setAmbient(QColor(12, 30, 12))
-        mat.setSpecular(QColor(8, 16, 8))
-        mat.setShininess(5.0)
-        t = Qt3DTransform(floor)
-        t.setTranslation(QVector3D(0.0, 0.0, 0.0))
-        floor.addComponent(mesh)
-        floor.addComponent(mat)
-        floor.addComponent(t)
+                # ── Animations ───────────────────────────────────────
+                for enemy in enemies:
+                    if enemy.dying:
+                        enemy.alpha = max(0, enemy.alpha - 10)
+                enemies = [e for e in enemies if e.alpha > 0]
 
-    # ------------------------------------------------------------------
-    # Enemy loading
-    # ------------------------------------------------------------------
+                if msg_timer > 0:
+                    msg_timer -= dt
+                    if msg_timer <= 0:
+                        message = ''
 
-    def _load_problems(self):
-        """Iterate over all enabled servers and spawn an enemy for each active problem."""
-        from Nagstamon.servers import get_enabled_servers  # local import avoids circular deps
+                # Clamp scroll after enemies are removed
+                max_scroll = max(0, _content_height() - viewport_h)
+                scroll_y = min(scroll_y, max_scroll)
 
-        used_positions: set = set()
+                # ── Draw ─────────────────────────────────────────────
+                screen.fill(_BG_COLOR)
+                mx_cur, my_cur = pygame.mouse.get_pos()
+
+                # Clip drawing to the content viewport
+                screen.set_clip(pygame.Rect(0, _HEADER_H, _WIN_W, viewport_h))
+
+                for enemy in enemies:
+                    sx = enemy.rect.x
+                    sy = enemy.rect.y - scroll_y + _HEADER_H
+                    # Skip if fully outside the viewport
+                    if sy + _TARGET_H <= _HEADER_H or sy >= _WIN_H - _FOOTER_H:
+                        continue
+
+                    surf = pygame.Surface(
+                        (_TARGET_W, _TARGET_H), pygame.SRCALPHA
+                    )
+                    a = enemy.alpha
+                    r, g, b = enemy.color
+
+                    # Background fill (semi-transparent)
+                    pygame.draw.rect(
+                        surf, (r, g, b, max(30, a // 3)),
+                        (0, 0, _TARGET_W, _TARGET_H), border_radius=8,
+                    )
+                    # Coloured border
+                    pygame.draw.rect(
+                        surf, (r, g, b, a),
+                        (0, 0, _TARGET_W, _TARGET_H), 2, border_radius=8,
+                    )
+
+                    # Status label
+                    st_surf = font_status.render(enemy.status, True, (255, 255, 255))
+                    st_surf.set_alpha(a)
+                    surf.blit(st_surf, (10, 8))
+
+                    # Problem name (truncated)
+                    name = enemy.display_name
+                    if len(name) > 44:
+                        name = name[:41] + '...'
+                    nm_surf = font_name.render(name, True, (210, 210, 210))
+                    nm_surf.set_alpha(a)
+                    surf.blit(nm_surf, (10, 46))
+
+                    # Hover highlight
+                    scr_rect = pygame.Rect(sx, sy, _TARGET_W, _TARGET_H)
+                    if scr_rect.collidepoint(mx_cur, my_cur) and not enemy.dying:
+                        pygame.draw.rect(
+                            surf, (255, 255, 255, 40),
+                            (0, 0, _TARGET_W, _TARGET_H), border_radius=8,
+                        )
+
+                    screen.blit(surf, (sx, sy))
+
+                screen.set_clip(None)
+
+                # ── Header ───────────────────────────────────────────
+                remaining = sum(1 for e in enemies if not e.dying)
+                hud_text = (
+                    f'Problems: {remaining} remaining  \xb7  '
+                    f'{killed} acknowledged'
+                )
+                hud_surf = font_hud.render(hud_text, True, (200, 200, 200))
+                screen.blit(
+                    hud_surf,
+                    (12, (_HEADER_H - hud_surf.get_height()) // 2),
+                )
+                pygame.draw.line(
+                    screen, (50, 60, 90),
+                    (0, _HEADER_H - 1), (_WIN_W, _HEADER_H - 1),
+                )
+
+                # Scroll indicator bar
+                if max_scroll > 0:
+                    bar_h = max(
+                        20, int(viewport_h * viewport_h / _content_height())
+                    )
+                    bar_y = _HEADER_H + int(
+                        scroll_y * (viewport_h - bar_h) / max_scroll
+                    )
+                    pygame.draw.rect(
+                        screen, (80, 90, 130),
+                        (_WIN_W - 6, bar_y, 5, bar_h), border_radius=2,
+                    )
+
+                # ── Kill / status message ─────────────────────────────
+                if message:
+                    fade = min(1.0, msg_timer / 500.0)
+                    msg_surf = font_hud.render(
+                        message, True, (255, 200, 100)
+                    )
+                    msg_surf.set_alpha(int(255 * fade))
+                    screen.blit(
+                        msg_surf,
+                        (
+                            _WIN_W // 2 - msg_surf.get_width() // 2,
+                            _WIN_H // 3,
+                        ),
+                    )
+
+                if not any(not e.dying for e in enemies):
+                    clear_surf = font_status.render(
+                        'All systems go!  No problems to fight.',
+                        True, (100, 220, 100),
+                    )
+                    screen.blit(
+                        clear_surf,
+                        (
+                            _WIN_W // 2 - clear_surf.get_width() // 2,
+                            _WIN_H // 2,
+                        ),
+                    )
+
+                # ── Footer ───────────────────────────────────────────
+                pygame.draw.line(
+                    screen, (50, 60, 90),
+                    (0, _WIN_H - _FOOTER_H), (_WIN_W, _WIN_H - _FOOTER_H),
+                )
+                hint = (
+                    'Click on a target to acknowledge it'
+                    '   |   Scroll: mouse wheel / arrow keys'
+                    '   |   ESC: exit'
+                )
+                hint_surf = font_hint.render(hint, True, (120, 120, 140))
+                screen.blit(
+                    hint_surf,
+                    (
+                        12,
+                        _WIN_H - _FOOTER_H
+                        + (_FOOTER_H - hint_surf.get_height()) // 2,
+                    ),
+                )
+
+                # ── Crosshair cursor ─────────────────────────────────
+                _draw_crosshair(screen, mx_cur, my_cur)
+
+                pygame.display.flip()
+        finally:
+            pygame.quit()
+
+    @staticmethod
+    def _load_enemies() -> 'List[_Enemy]':
+        """Collect all active monitoring problems and arrange them in a grid."""
+        from Nagstamon.servers import get_enabled_servers  # avoids circular import
+
+        raw: List[_Enemy] = []
 
         for server in get_enabled_servers():
             for host_name, host in list(server.hosts.items()):
-                # Host-level problem (down / unreachable / disaster …)
                 if host.status not in ('UP', 'OK', ''):
-                    pos = _deterministic_pos(
-                        f'{server.name}:{host_name}', used_positions
-                    )
-                    label = f'{server.name} · {host_name} [{host.status}]'
-                    self._spawn_enemy(
-                        server, host_name, '', host.status, label, pos
-                    )
-
-                # Service-level problems
+                    label = f'{server.name} \xb7 {host_name} [{host.status}]'
+                    raw.append(_Enemy(
+                        server=server,
+                        host_name=host_name,
+                        service_name='',
+                        status=host.status,
+                        display_name=label,
+                        color=_color_for_status(host.status),
+                    ))
                 for svc_name, svc in list(host.services.items()):
                     if svc.status not in ('UP', 'OK', ''):
-                        pos = _deterministic_pos(
-                            f'{server.name}:{host_name}/{svc_name}',
-                            used_positions,
-                        )
                         label = (
-                            f'{server.name} · {host_name} / {svc_name}'
+                            f'{server.name} \xb7 {host_name} / {svc_name}'
                             f' [{svc.status}]'
                         )
-                        self._spawn_enemy(
-                            server, host_name, svc_name, svc.status, label, pos
-                        )
+                        raw.append(_Enemy(
+                            server=server,
+                            host_name=host_name,
+                            service_name=svc_name,
+                            status=svc.status,
+                            display_name=label,
+                            color=_color_for_status(svc.status),
+                        ))
 
-        self._update_score()
-        if not self._enemies:
-            self._show_message('All systems go! No problems to fight.')
+        # Assign grid positions (content-area coordinates)
+        for i, enemy in enumerate(raw):
+            col = i % _COLS
+            row = i // _COLS
+            x = _TARGET_PAD + col * (_TARGET_W + _TARGET_PAD)
+            y = _TARGET_PAD + row * (_TARGET_H + _TARGET_PAD)
+            enemy.rect = pygame.Rect(x, y, _TARGET_W, _TARGET_H)
 
-    def _spawn_enemy(
-        self,
-        server,
-        host_name: str,
-        service_name: str,
-        status: str,
-        display_name: str,
-        position: 'QVector3D',
-    ):
-        """Create a single enemy entity in the scene and register it."""
-        entity = QEntity(self._root)
-        mesh_type, color, scale = _appearance(status)
+        return raw
 
-        # --- mesh ---
-        if mesh_type == 'sphere':
-            mesh = QSphereMesh()
-            mesh.setRadius(0.85 * scale)
-        elif mesh_type == 'cone':
-            mesh = QConeMesh()
-            mesh.setLength(1.8 * scale)
-            mesh.setBottomRadius(0.7 * scale)
-            mesh.setTopRadius(0.0)
-        elif mesh_type == 'cylinder':
-            mesh = QCylinderMesh()
-            mesh.setRadius(0.55 * scale)
-            mesh.setLength(1.8 * scale)
-        else:  # cube (default)
-            mesh = QCuboidMesh()
-            side = 1.4 * scale
-            mesh.setXExtent(side)
-            mesh.setYExtent(side)
-            mesh.setZExtent(side)
-        entity.addComponent(mesh)
-
-        # --- material ---
-        mat = QPhongMaterial(entity)
-        mat.setDiffuse(color)
-        mat.setAmbient(
-            QColor(
-                max(0, color.red() // 4),
-                max(0, color.green() // 4),
-                max(0, color.blue() // 4),
-            )
-        )
-        mat.setSpecular(QColor(200, 200, 200))
-        mat.setShininess(60.0)
-        entity.addComponent(mat)
-
-        # --- transform ---
-        t = Qt3DTransform(entity)
-        t.setTranslation(position)
-        entity.addComponent(t)
-
-        # --- picker: fires clicked() when the player clicks on the entity ---
-        picker = QObjectPicker(entity)
-        picker.setHoverEnabled(False)
-        picker.setDragEnabled(False)
-        picker.clicked.connect(
-            lambda _event, e=entity: self._on_enemy_clicked(e)
-        )
-        entity.addComponent(picker)
-
-        self._enemies[entity] = EnemyInfo(
-            server=server,
-            host_name=host_name,
-            service_name=service_name,
-            status=status,
-            display_name=display_name,
-        )
-
-    # ------------------------------------------------------------------
-    # Game events
-    # ------------------------------------------------------------------
-
-    def _on_enemy_clicked(self, entity: 'QEntity'):
-        """Handle a player click on an enemy entity."""
-        info = self._enemies.pop(entity, None)
-        if info is None:
-            return  # already killed
-
-        # Hide the entity immediately (acknowledgement happens in background)
-        entity.setEnabled(False)
-
-        self._acknowledge(info)
-        self._killed += 1
-        self._update_score()
-        self._show_message(f'💥  {info.display_name}  – acknowledged!')
-
-    def _acknowledge(self, info: 'EnemyInfo'):
+    @staticmethod
+    def _do_acknowledge(enemy: '_Enemy'):
         """Send an acknowledgement to the monitoring server in a daemon thread."""
         from Nagstamon.config import conf
 
-        server = info.server
+        server = enemy.server
         try:
             username = conf.servers[server.name].username or 'nagstamon-fps'
         except (AttributeError, KeyError):
             username = 'nagstamon-fps'
 
         info_dict = {
-            'host': info.host_name,
-            'service': info.service_name,
-            'author': username,
-            'comment': 'Acknowledged via Nagstamon FPS Mode',
-            'sticky': True,
-            'notify': True,
-            'persistent': True,
+            'host':                     enemy.host_name,
+            'service':                  enemy.service_name,
+            'author':                   username,
+            'comment':                  'Acknowledged via Nagstamon FPS Mode',
+            'sticky':                   True,
+            'notify':                   True,
+            'persistent':               True,
             'acknowledge_all_services': False,
-            'all_services': [],
+            'all_services':             [],
         }
 
         def _do():
@@ -484,54 +447,44 @@ class NagstamonFPSWindow(QMainWindow):
 
         Thread(target=_do, daemon=True).start()
 
-    # ------------------------------------------------------------------
-    # HUD helpers
-    # ------------------------------------------------------------------
 
-    def _update_score(self):
-        remaining = len(self._enemies)
-        self._score_label.setText(
-            f'Problems: {remaining} remaining  ·  {self._killed} acknowledged'
-        )
-        self._score_label.adjustSize()
-
-    def _show_message(self, text: str, duration_ms: int = 3500):
-        self._msg_label.setText(text)
-        self._reposition_overlays()
-        self._msg_timer.start(duration_ms)
-
-    def _clear_message(self):
-        self._msg_label.setText('')
+def _draw_crosshair(surface, x: int, y: int) -> None:
+    """Draw a simple crosshair cursor at *(x, y)*."""
+    color = (255, 255, 100)
+    gap, arm, thickness = 5, 14, 2
+    # Horizontal arms
+    pygame.draw.line(surface, color, (x - arm - gap, y), (x - gap, y), thickness)
+    pygame.draw.line(surface, color, (x + gap, y), (x + arm + gap, y), thickness)
+    # Vertical arms
+    pygame.draw.line(surface, color, (x, y - arm - gap), (x, y - gap), thickness)
+    pygame.draw.line(surface, color, (x, y + gap), (x, y + arm + gap), thickness)
+    # Centre dot
+    pygame.draw.circle(surface, color, (x, y), 3)
 
 
 # ---------------------------------------------------------------------------
-# Public helper
+# Public entry point
 # ---------------------------------------------------------------------------
 
 def show_fps_window(parent=None) -> Optional[NagstamonFPSWindow]:
-    """Create and show the FPS window, or display an install hint if Qt3D is missing.
+    """Create and show the FPS window, or display an install hint if pygame is missing.
 
-    Returns the :class:`NagstamonFPSWindow` instance, or ``None`` when Qt3D is
-    not available.
+    Returns the :class:`NagstamonFPSWindow` instance, or ``None`` when pygame
+    is not available.
     """
-    if not QT3D_AVAILABLE:
+    if not PYGAME_AVAILABLE:
         from PyQt6.QtWidgets import QMessageBox
-        if _QT3D_IMPORT_ERROR:
+        if _PYGAME_IMPORT_ERROR:
             detail = (
-                f'Error:\n    {_QT3D_IMPORT_ERROR}\n\n'
-                'This usually means PyQt6 and PyQt6-3D are built against\n'
-                'different Qt versions.  Install matching versions, e.g.:\n'
-                '    pip install --upgrade PyQt6 PyQt6-3D'
+                f'Error:\n    {_PYGAME_IMPORT_ERROR}\n\n'
+                'Install with:\n    pip install pygame'
             )
         else:
-            detail = (
-                'Please install the PyQt6-3D package:\n'
-                '    pip install PyQt6-3D'
-            )
+            detail = 'Please install the pygame package:\n    pip install pygame'
         QMessageBox.warning(
             parent,
             'Nagstamon FPS Mode',
-            f'Qt3D is not available.\n\n{detail}',
+            f'pygame is not available.\n\n{detail}',
         )
         return None
 
