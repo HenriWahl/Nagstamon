@@ -162,6 +162,35 @@ class _FontWrapper:
         return pygame.Surface((1, 1), pygame.SRCALPHA)
 
 
+def _blit_text(
+    dest:  'pygame.Surface',
+    src:   'pygame.Surface',
+    pos:   Tuple[int, int],
+    alpha: int = 255,
+) -> None:
+    """Blit a text surface onto *dest* applying *alpha* correctly.
+
+    ``pygame.font`` returns whole-surface-alpha surfaces; ``pygame.freetype``
+    returns per-pixel-alpha (SRCALPHA) surfaces.  Calling ``set_alpha()`` on a
+    SRCALPHA surface is a no-op in pygame, so we must modulate per-pixel alpha
+    separately.  This helper handles both cases.
+    """
+    if src.get_width() <= 1:
+        return  # stub surface from _FontWrapper fallback — nothing to draw
+    if alpha >= 254:
+        dest.blit(src, pos)
+        return
+    tmp = src.copy()
+    if tmp.get_flags() & pygame.SRCALPHA:
+        # Per-pixel alpha: multiply each pixel's alpha channel by alpha/255
+        mod = pygame.Surface(tmp.get_size(), pygame.SRCALPHA)
+        mod.fill((255, 255, 255, alpha))
+        tmp.blit(mod, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+    else:
+        tmp.set_alpha(alpha)
+    dest.blit(tmp, pos)
+
+
 @dataclass
 class _Enemy:
     """One monitoring problem rendered as a 3-D billboard."""
@@ -395,7 +424,7 @@ class NagstamonFPSWindow(QObject):
                     fog = max(0.0, 1.0 - rz / _FAR)
                     _draw_billboard(
                         screen, e, sx, sy, hw, hh, fog,
-                        font_large, font_medium,
+                        font_large, font_medium, font_small,
                     )
 
                 # ── HUD overlay ───────────────────────────────────────
@@ -579,66 +608,214 @@ def _draw_floor_grid(
             pygame.draw.line(screen, _GRID_COL, (0, sy), (_WIN_W - 1, sy))
 
 
-def _draw_billboard(
+def _draw_name_tag(
     screen: 'pygame.Surface',
-    enemy: '_Enemy',
-    sx: int, sy: int,
-    hw: int, hh: int,
-    fog: float,
-    font_large:  '_FontWrapper',
-    font_medium: '_FontWrapper',
+    enemy:  '_Enemy',
+    sx:     int,
+    top_y:  int,
+    a:      int,
+    font:   '_FontWrapper',
 ) -> None:
-    """Render one 3-D enemy billboard onto *screen*."""
+    """Draw a floating pill-shaped name tag just above the billboard.
+
+    *sx* is the billboard screen-x centre; *top_y* is the billboard's
+    topmost screen-y coordinate.  The tag is always rendered (no size
+    threshold) so every problem is labelled even when far away.
+    """
+    if a < 15:
+        return
+
+    name = enemy.display_name
+    if len(name) > 44:
+        name = name[:43] + '\u2026'
+
+    r, g, b = enemy.color
+    tag_surf = font.render(name, True, (255, 255, 210))
+    tw, th = tag_surf.get_size()
+    if tw <= 1:
+        return
+
+    pad_x, pad_y = 6, 3
+    bw = tw + pad_x * 2
+    bh = th + pad_y * 2
+
+    bg = pygame.Surface((bw, bh), pygame.SRCALPHA)
+    bg_a = min(215, int(a * 0.88))
+    # Dark translucent pill
+    pygame.draw.rect(bg, (6, 6, 22, bg_a), (0, 0, bw, bh), border_radius=5)
+    # Coloured border using status colour
+    pygame.draw.rect(bg, (r, g, b, min(a, 200)), (0, 0, bw, bh), 1, border_radius=5)
+    # Inner highlight line along top for a glassy look
+    if bh > 6:
+        pygame.draw.line(bg, (255, 255, 255, min(60, a // 3)),
+                         (5, 1), (bw - 6, 1))
+    _blit_text(bg, tag_surf, (pad_x, pad_y), a)
+
+    tag_x = sx - bw // 2
+    tag_y = top_y - bh - 6
+    screen.blit(bg, (tag_x, tag_y))
+
+    # Thin connector from the bottom of the tag down to the billboard top
+    line_top = tag_y + bh
+    if top_y > line_top + 2:
+        pygame.draw.line(
+            screen, (r, g, b, max(20, a // 3)),
+            (sx, line_top), (sx, top_y - 1),
+        )
+
+
+def _draw_billboard(
+    screen:      'pygame.Surface',
+    enemy:       '_Enemy',
+    sx:          int, sy: int,
+    hw:          int, hh: int,
+    fog:         float,
+    font_status: '_FontWrapper',
+    font_name:   '_FontWrapper',
+    font_tag:    '_FontWrapper',
+) -> None:
+    """Render a plastic 3-D enemy billboard with a floating name tag.
+
+    The billboard face is drawn with:
+
+    * A dark body whose tint is derived from the status colour
+    * A solid status-colour band across the top
+    * A specular shine strip (horizontal gradient) just below the band
+    * A left-edge rim highlight (vertical gradient) simulating a convex edge
+    * A right-edge shadow for the complementary concave illusion
+    * A small specular-sheen ellipse in the upper-right area
+    * A bright, slightly-raised outline
+
+    Text (status + problem name) is drawn at any billboard size, with
+    ``_blit_text`` ensuring correct alpha regardless of the surface type
+    returned by the font backend.  A floating name-tag pill above every
+    billboard provides a label that is always readable.
+    """
     if fog < 0.02:
         return
-    # Cull fully off-screen billboards
+    # Horizontal cull
     if sx + hw < 0 or sx - hw > _WIN_W:
         return
+    # Vertical cull
     if sy + hh < 0 or sy - hh > _WIN_H:
         return
 
-    a   = int(enemy.alpha * fog)
+    a = int(enemy.alpha * fog)
+    if a <= 0:
+        return
+
     r, g, b = enemy.color
     w, h    = hw * 2, hh * 2
+    rad     = max(3, min(14, w // 8))
 
     surf = pygame.Surface((w, h), pygame.SRCALPHA)
 
-    # Dark background panel
-    bg_a = min(200, int(a * 0.65))
+    # ── 1. Dark tinted plastic body ──────────────────────────────────────
+    # Derive a mid-range body colour from the status hue so the panel still
+    # reads as the right severity even without the bright band.
+    bdy_r = min(255, r // 4 + 18)
+    bdy_g = min(255, g // 4 + 12)
+    bdy_b = min(255, b // 4 + 48)
     pygame.draw.rect(
-        surf, (r // 6, g // 6, b // 6, bg_a),
-        (0, 0, w, h), border_radius=6,
-    )
-    # Coloured border
-    pygame.draw.rect(
-        surf, (r, g, b, a),
-        (0, 0, w, h), 2, border_radius=6,
-    )
-    # Severity glow strip at top
-    glow_h = max(4, h // 6)
-    pygame.draw.rect(
-        surf, (r, g, b, min(a, 170)),
-        (2, 2, w - 4, glow_h), border_radius=4,
+        surf,
+        (bdy_r, bdy_g, bdy_b, min(235, int(a * 0.92))),
+        (0, 0, w, h),
+        border_radius=rad,
     )
 
-    # Status text (only when billboard is large enough to be readable)
-    text_y = glow_h + 4
-    if hw > 28:
-        st = font_large.render(enemy.status, True, (255, 255, 255))
-        st.set_alpha(a)
-        surf.blit(st, (6, text_y))
-        text_y += st.get_height() + 2
+    # ── 2. Status-colour top band ─────────────────────────────────────────
+    band_h = max(5, h * 2 // 9)
+    pygame.draw.rect(
+        surf, (r, g, b, min(a, 218)),
+        (0, 0, w, band_h), border_radius=rad,
+    )
+    # Flatten the bottom corners of the band so it reads as a straight bar
+    if band_h < h - 1 and band_h > rad:
+        pygame.draw.rect(
+            surf, (r, g, b, min(a, 218)),
+            (0, rad, w, max(1, band_h - rad)),
+        )
+    # Inner top-edge shine on the band (glassy)
+    if band_h > 3:
+        pygame.draw.line(
+            surf,
+            (min(255, r + 90), min(255, g + 90), min(255, b + 90), min(a, 130)),
+            (rad + 1, 1), (w - rad - 2, 1),
+        )
 
-    if hw > 48:
-        max_chars = max(4, w // 7)
+    # ── 3. Plastic specular shine below the band ──────────────────────────
+    n_shine = min(8, max(2, h // 12))
+    for i in range(n_shine):
+        t  = 1.0 - i / n_shine
+        sa = int(a * 0.42 * t)
+        if sa > 1 and band_h + i < h - 1:
+            pygame.draw.line(
+                surf, (255, 255, 255, sa),
+                (rad + 1, band_h + i), (w - rad - 2, band_h + i),
+            )
+
+    # ── 4. Left rim highlight (convex moulding edge) ──────────────────────
+    n_rim = min(4, max(1, w // 20))
+    for i in range(n_rim):
+        t  = 1.0 - i / n_rim
+        ra = int(a * 0.36 * t)
+        if ra > 1 and 1 + i < w - 1:
+            pygame.draw.line(
+                surf, (255, 255, 255, ra),
+                (1 + i, rad + 2), (1 + i, h - rad - 3),
+            )
+
+    # ── 5. Right-edge shadow (recessed right side) ────────────────────────
+    n_shad = min(4, max(1, w // 20))
+    for i in range(n_shad):
+        t   = 1.0 - i / n_shad
+        sha = int(a * 0.32 * t)
+        if sha > 1 and w - 2 - i > 0:
+            pygame.draw.line(
+                surf, (0, 0, 0, sha),
+                (w - 2 - i, rad + 2), (w - 2 - i, h - rad - 3),
+            )
+
+    # ── 6. Bright raised outline ──────────────────────────────────────────
+    bord_r = min(255, r + 72)
+    bord_g = min(255, g + 72)
+    bord_b = min(255, b + 72)
+    border_w = max(1, w // 50 + 1)
+    pygame.draw.rect(
+        surf, (bord_r, bord_g, bord_b, a),
+        (0, 0, w, h), border_w, border_radius=rad,
+    )
+
+    # ── 7. Specular highlight ellipse (upper-right sheen dot) ─────────────
+    if w >= 20 and h >= 14:
+        ex = w * 3 // 4
+        ey = band_h + max(2, (h - band_h) // 8)
+        er = max(2, min(w // 7, (h - band_h) // 6))
+        pygame.draw.ellipse(
+            surf, (255, 255, 255, min(a // 2, 88)),
+            (ex - er, ey - er // 2, er * 2, max(1, er)),
+        )
+
+    # ── 8. Status text (always rendered, no size gate) ────────────────────
+    text_y = band_h + 2
+    if h > 16:
+        st = font_status.render(enemy.status, True, (255, 255, 255))
+        _blit_text(surf, st, (4, text_y), a)
+        text_y += max(st.get_height(), 1) + 1
+
+    # ── 9. Problem name on billboard face ─────────────────────────────────
+    if h > 10:
+        max_chars = max(3, (w - 8) // 7)
         name = enemy.display_name
         if len(name) > max_chars:
-            name = name[:max_chars - 2] + '\u2026'
-        nm = font_medium.render(name, True, (200, 200, 200))
-        nm.set_alpha(a)
-        surf.blit(nm, (6, text_y))
+            name = name[:max_chars - 1] + '\u2026'
+        nm = font_name.render(name, True, (215, 232, 255))
+        _blit_text(surf, nm, (4, text_y), a)
 
     screen.blit(surf, (sx - hw, sy - hh))
+
+    # ── 10. Floating name-tag above the billboard ─────────────────────────
+    _draw_name_tag(screen, enemy, sx, sy - hh, a, font_tag)
 
 
 def _find_crosshair_hit(
