@@ -86,6 +86,49 @@ def _color_for_status(status: str) -> Tuple[int, int, int]:
     return _STATUS_COLORS.get(status.upper(), _DEFAULT_COLOR)
 
 
+class _FontWrapper:
+    """Thin abstraction over pygame.font / pygame.freetype.
+
+    Some Linux distributions (e.g. Fedora, RHEL) package ``pygame.font`` as a
+    separate sub-package that requires FreeType.  When it is absent the game
+    loop would crash with ``NotImplementedError: font module not available``.
+
+    This class tries ``pygame.font`` first, then ``pygame.freetype``, and
+    finally falls back to a no-op stub so the game still runs (without text)
+    rather than crashing.
+    """
+
+    def __init__(self, size: int) -> None:
+        self._font = None   # pygame.font.Font instance
+        self._ft = None     # pygame.freetype.Font instance
+        self._size = size
+
+        # Attempt 1: legacy pygame.font
+        try:
+            pygame.font.init()
+            self._font = pygame.font.SysFont(None, size)
+            return
+        except Exception:
+            pass
+
+        # Attempt 2: modern pygame.freetype
+        try:
+            import pygame.freetype as _pft  # noqa: PLC0415
+            _pft.init()
+            self._ft = _pft.SysFont(None, size)
+        except Exception:
+            pass  # no font at all — render() will return a 1×1 blank surface
+
+    def render(self, text: str, antialias: bool, color) -> 'pygame.Surface':
+        """Return a Surface containing *text* drawn in *color*."""
+        if self._font is not None:
+            return self._font.render(text, antialias, color)
+        if self._ft is not None:
+            surf, _ = self._ft.render(text, color, size=self._size)
+            return surf
+        return pygame.Surface((1, 1), pygame.SRCALPHA)
+
+
 @dataclass
 class _Enemy:
     """One monitoring problem rendered as a clickable target."""
@@ -157,10 +200,10 @@ class NagstamonFPSWindow(QObject):
             pygame.mouse.set_visible(False)
             clock = pygame.time.Clock()
 
-            font_status = pygame.font.SysFont(None, 30)
-            font_name   = pygame.font.SysFont(None, 20)
-            font_hud    = pygame.font.SysFont(None, 22)
-            font_hint   = pygame.font.SysFont(None, 18)
+            font_status = _FontWrapper(30)
+            font_name   = _FontWrapper(20)
+            font_hud    = _FontWrapper(22)
+            font_hint   = _FontWrapper(18)
 
             enemies = self._load_enemies()
             killed    = 0
