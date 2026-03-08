@@ -43,6 +43,7 @@ from PyQt6.QtCore import Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QColor, QVector3D
 from PyQt6.QtWidgets import QLabel, QMainWindow, QWidget, QVBoxLayout
 
+_QT3D_IMPORT_ERROR: str = ''
 try:
     from PyQt6.Qt3DCore import QEntity
     from PyQt6.Qt3DCore import QTransform as Qt3DTransform
@@ -58,8 +59,14 @@ try:
     )
     from PyQt6.Qt3DRender import QObjectPicker, QPickingSettings, QPointLight
     QT3D_AVAILABLE = True
-except ImportError:
+except Exception as _exc:
+    # Catch *any* failure – not just ImportError.
+    # On Python 3.14+ and certain linkers, an ABI mismatch (e.g.
+    # "undefined symbol: ..., version Qt_6_PRIVATE_API") surfaces as
+    # OSError from dlopen() rather than ImportError, so a bare
+    # "except ImportError" would miss it and crash Nagstamon at startup.
     QT3D_AVAILABLE = False
+    _QT3D_IMPORT_ERROR = str(_exc)
 
 # ---------------------------------------------------------------------------
 # Appearance mapping:  monitoring status  →  (mesh_type, QColor, scale)
@@ -509,12 +516,22 @@ def show_fps_window(parent=None) -> Optional[NagstamonFPSWindow]:
     """
     if not QT3D_AVAILABLE:
         from PyQt6.QtWidgets import QMessageBox
+        if _QT3D_IMPORT_ERROR:
+            detail = (
+                f'Error:\n    {_QT3D_IMPORT_ERROR}\n\n'
+                'This usually means PyQt6 and PyQt6-3D are built against\n'
+                'different Qt versions.  Install matching versions, e.g.:\n'
+                '    pip install --upgrade PyQt6 PyQt6-3D'
+            )
+        else:
+            detail = (
+                'Please install the PyQt6-3D package:\n'
+                '    pip install PyQt6-3D'
+            )
         QMessageBox.warning(
             parent,
             'Nagstamon FPS Mode',
-            'Qt3D is not installed.\n\n'
-            'Please install the PyQt6-3D package:\n'
-            '    pip install PyQt6-3D',
+            f'Qt3D is not available.\n\n{detail}',
         )
         return None
 
