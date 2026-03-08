@@ -48,6 +48,7 @@ from Nagstamon.qui.qt import (MediaPlayer,
                               Slot)
 from Nagstamon.qui.widgets.combobox_servers import ComboBoxServers
 from Nagstamon.qui.widgets.buttons import PushButtonBrowserURL
+from Nagstamon.qui.widgets.game3d import show_fps_window
 from Nagstamon.qui.widgets.draggables import (DraggableLabel,
                                               DraggableWidget)
 from Nagstamon.qui.widgets.icon import QIconWithFilename
@@ -136,6 +137,22 @@ dialogs.settings.changed.connect(menu.initialize)
 statuswindow.toparea.button_filters.clicked.connect(dialogs.settings.show_filters)
 statuswindow.toparea.button_settings.clicked.connect(dialogs.settings.show)
 statuswindow.toparea.action_exit.triggered.connect(statuswindow.exit)
+
+# FPS mode: keep a module-level reference so the window is not garbage-collected
+_fps_window = None
+
+
+def _launch_fps_mode():
+    """Open (or focus) the Nagstamon FPS window."""
+    global _fps_window
+    if _fps_window is not None and _fps_window.isVisible():
+        _fps_window.raise_()
+        _fps_window.activateWindow()
+        return
+    _fps_window = show_fps_window(parent=statuswindow)
+
+
+statuswindow.toparea.button_fps_mode.clicked.connect(_launch_fps_mode)
 # hide if settings dialog pops up
 dialogs.settings.show_dialog.connect(statuswindow.hide_window)
 # workaround for the timestamp trick to avoid flickering
