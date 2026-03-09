@@ -18,8 +18,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+import importlib
 import sys
 import socket
+
+if importlib.util.find_spec('truststore') is not None:
+    import truststore
+    truststore.inject_into_ssl()
 
 # fix/patch for https://bugs.launchpad.net/ubuntu/+source/nagstamon/+bug/732544
 socket.setdefaulttimeout(30)
@@ -29,10 +34,6 @@ try:
         from Nagstamon.config import (conf,
                                       OS,
                                       OS_WINDOWS)
-
-        # according to https://gitlab.com/alelec/pip-system-certs/-/issues/7#note_1066992053
-        if OS == OS_WINDOWS:
-            import pip_system_certs.wrapt_requests
 
         from Nagstamon.helpers import lock_config_folder
 
