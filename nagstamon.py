@@ -22,6 +22,7 @@ import importlib
 import sys
 import socket
 
+# make sure to inject truststore into ssl very early
 if importlib.util.find_spec('truststore') is not None:
     import truststore
     truststore.inject_into_ssl()
