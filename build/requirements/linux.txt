@@ -20,4 +20,5 @@ requests
 requests-kerberos
 requests-ecp
 setuptools
+truststore
 tzlocal
