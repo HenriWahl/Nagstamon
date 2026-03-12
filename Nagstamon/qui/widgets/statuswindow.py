@@ -597,6 +597,7 @@ class StatusWindow(QWidget):
                     not conf.servers[server.name].use_autologin and \
                     conf.servers[server.name].password == '' and \
                     not conf.servers[server.name].authentication == 'kerberos' and \
+                    not conf.servers[server.name].authentication == 'oidc' and \
                     not conf.servers[server.name].authentication == 'web':
                 self.authenticate.emit(server.name)
 
@@ -784,6 +785,12 @@ class StatusWindow(QWidget):
                         vbox.button_authenticate.show()
                     else:
                         vbox.button_authenticate.hide()
+
+                    # always show OIDC Auth button for OIDC servers
+                    if vbox.server.authentication == 'oidc':
+                        vbox.button_oidc_auth.show()
+                    else:
+                        vbox.button_oidc_auth.hide()
 
                     # depending on TLS error show fix-TLS-button
                     if vbox.server.tls_error:

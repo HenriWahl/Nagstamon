@@ -120,7 +120,8 @@ CONFIG_STRINGS = ['custom_browser',
                   'autologin_key',
                   'custom_cert_ca_file',
                   'idp_ecp_endpoint',
-                  'monitor_site'
+                  'monitor_site',
+                  'oidc_client_id'
                   ]
 
 
@@ -1064,6 +1065,10 @@ class Server:
         self.custom_cert_ca_file = ''
 
         self.idp_ecp_endpoint = 'https://idp/idp/profile/SAML2/SOAP/ECP'
+
+        # OIDC authentication (auto-discovered via server's OIDC discovery endpoint)
+        self.oidc_client_id = 'nagstamon'
+        self.oidc_redirect_port = 12345
 
         # special FX
         # Centreon autologin
