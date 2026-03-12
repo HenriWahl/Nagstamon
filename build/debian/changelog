@@ -1,8 +1,12 @@
-nagstamon (3.19-20260309) unstable; urgency=low
+nagstamon (3.18.1) stable; urgency=low
 
   * New upstream
+   - fixed truststore support on Windows
+   - fixed Alertmanager and Prometheus support
+   - fixed signing of Windows binaries
+   - fixed Wayland issue
 
- -- Henri Wahl <henri@nagstamon.de>  Mon, 09 Mar 2026 08:00:00 +0200
+ -- Henri Wahl <henri@nagstamon.de>  Fri, 13 Mar 2026 08:00:00 +0200
 
 nagstamon (3.18.0) stable; urgency=low
 
