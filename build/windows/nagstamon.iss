@@ -18,7 +18,7 @@ VersionInfoVersion={#version_is}
 VersionInfoCopyright=Henri Wahl
 VersionInfoProductName=Nagstamon
 VersionInfoProductVersion={#version_is}
-Compression=lzma2/ultra64
+Compression=lzma2
 SourceDir={#source}
 ArchitecturesAllowed={#archs_allowed}
 ArchitecturesInstallIn64BitMode=x64compatible
@@ -28,7 +28,7 @@ WizardStyle=modern
 Name: {group}\Nagstamon; Filename: {app}\nagstamon.exe; WorkingDir: {app}; IconFilename: {app}\_internal\resources\nagstamon.ico; IconIndex: 0
 Name: {commonstartup}\Nagstamon; Filename: {app}\nagstamon.exe; WorkingDir: {app}; IconFilename: {app}\_internal\resources\nagstamon.ico; IconIndex: 0
 [Files]
-Source: "*"; DestDir: {app}; Flags: recursesubdirs createallsubdirs ignoreversion; BeforeInstall: KillRunningNagstamon()
+Source: "*"; DestDir: {app}; Flags: recursesubdirs createallsubdirs ignoreversion
 [Tasks]
 Name: RunAfterInstall; Description: Run Nagstamon after installation
 [Run]
