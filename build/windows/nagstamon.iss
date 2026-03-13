@@ -28,7 +28,7 @@ WizardStyle=modern
 Name: {group}\Nagstamon; Filename: {app}\nagstamon.exe; WorkingDir: {app}; IconFilename: {app}\_internal\resources\nagstamon.ico; IconIndex: 0
 Name: {commonstartup}\Nagstamon; Filename: {app}\nagstamon.exe; WorkingDir: {app}; IconFilename: {app}\_internal\resources\nagstamon.ico; IconIndex: 0
 [Files]
-Source: "*"; DestDir: {app}; Flags: recursesubdirs createallsubdirs ignoreversion; BeforeInstall: KillRunningNagstamon()
+Source: "*"; DestDir: {app}; Flags: recursesubdirs createallsubdirs ignoreversion
 [Tasks]
 Name: RunAfterInstall; Description: Run Nagstamon after installation
 [Run]
