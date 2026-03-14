@@ -9,6 +9,13 @@
     <name>Nagstamon</name>
     <summary>The status monitor for the desktop</summary>
     <releases>
+        <release version="3.18.2" date="2026-03-14">
+            <description>
+                <ul>
+                    <li>fixed Windows installer laziness</li>
+                </ul>
+            </description>
+        </release>
         <release version="3.18.1" date="2026-03-13">
             <description>
                 <ul>
