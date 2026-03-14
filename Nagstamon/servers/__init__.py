@@ -173,8 +173,9 @@ def create_server(server=None):
     new_server.idp_ecp_endpoint = server.idp_ecp_endpoint
 
     # if password is not to be saved ask for it at startup
+    # OIDC uses persisted tokens, not passwords, don't trigger refresh_authentication
     if (server.enabled is True and server.save_password is False and
-            server.use_autologin is False):
+            server.use_autologin is False and server.authentication != 'oidc'):
         new_server.refresh_authentication = True
 
     # Special FX

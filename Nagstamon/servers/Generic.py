@@ -33,7 +33,10 @@ from bs4 import BeautifulSoup
 import requests
 
 from Nagstamon.cookies import (cookie_data_to_jar,
-                               load_cookies)
+                               load_cookies,
+                               load_oidc_tokens,
+                               save_oidc_tokens)
+from Nagstamon.thirdparty.oidc_auth import OIDCBearerAuth, OIDC_USER_AGENT
 
 # check ECP authentication support availability
 try:
@@ -322,8 +325,17 @@ class GenericServer:
                 self.session = None
                 return False
             elif self.session is None:
+                if conf.debug_mode:
+                    self.debug(server=self.get_name(), debug=f'init_http: session is None, calling create_session() (auth={self.authentication})')
                 self.session = self.create_session()
+                if conf.debug_mode:
+                    auth_type = type(self.session.auth).__name__ if self.session and self.session.auth else 'None'
+                    self.debug(server=self.get_name(), debug=f'init_http: session created, auth handler={auth_type}')
                 return True
+            else:
+                if conf.debug_mode:
+                    auth_type = type(self.session.auth).__name__ if self.session.auth else 'None'
+                    self.debug(server=self.get_name(), debug=f'init_http: session already exists, auth handler={auth_type}')
         elif not self.session:
             self.session = self.create_session()
             return True
@@ -352,6 +364,40 @@ class GenericServer:
             session.auth = HTTPSKerberos()
         elif self.authentication == 'bearer':
             session.auth = BearerAuth(self.password)
+        elif self.authentication == 'oidc':
+            session.headers['User-Agent'] = OIDC_USER_AGENT
+            if hasattr(self, '_oidc_bearer_auth') and self._oidc_bearer_auth is not None:
+                if conf.debug_mode:
+                    self.debug(server=self.get_name(), debug='[OIDC] Reusing existing OIDCBearerAuth for session')
+                session.auth = self._oidc_bearer_auth
+            else:
+                # Try to load persisted tokens
+                if conf.debug_mode:
+                    self.debug(server=self.get_name(), debug='[OIDC] Loading persisted tokens...')
+                token_data = load_oidc_tokens(self.name)
+                if token_data and token_data.get('access_token'):
+                    if conf.debug_mode:
+                        import time as _time
+                        remaining = token_data.get('expires_at', 0) - _time.time()
+                        self.debug(server=self.get_name(),
+                                   debug=f'[OIDC] Loaded tokens: has_refresh={bool(token_data.get("refresh_token"))}, '
+                                         f'expires_in={remaining:.0f}s, '
+                                         f'token_endpoint={token_data.get("token_endpoint", "?")}')
+                    def _on_token_refreshed(new_data):
+                        save_oidc_tokens(self.name, new_data)
+                    self._oidc_bearer_auth = OIDCBearerAuth(
+                        access_token=token_data['access_token'],
+                        refresh_token=token_data.get('refresh_token', ''),
+                        token_endpoint=token_data.get('token_endpoint', ''),
+                        client_id=token_data.get('client_id', getattr(self, 'oidc_client_id', 'nagstamon')),
+                        expires_at=token_data.get('expires_at', 0),
+                        on_token_refreshed=_on_token_refreshed,
+                    )
+                    session.auth = self._oidc_bearer_auth
+                else:
+                    if conf.debug_mode:
+                        self.debug(server=self.get_name(), debug='[OIDC] No persisted tokens found, session will have no auth')
+                    session.auth = None
         elif self.authentication == 'web':
             session.auth = None
             cookies = load_cookies()
@@ -985,6 +1031,12 @@ class GenericServer:
                'bad session id' in self.status_description.lower() or \
                'login failed' in self.status_description.lower() or \
                self.status_code in self.STATUS_CODES_NO_AUTH:
+                # OIDC can't re-authenticate automatically, tell user to re-auth in settings
+                if self.authentication == 'oidc':
+                    self.isChecking = False
+                    return Result(result='ERROR',
+                                  error='OIDC authentication failed, click the Authenticate button to re-authenticate',
+                                  status_code=self.status_code)
                 if conf.servers[self.name].enabled is True:
                     # needed to get valid credentials
                     self.refresh_authentication = True
@@ -1584,6 +1636,18 @@ class GenericServer:
                 else:
                     self.tls_error = False
                 return Result(result=result, error=error, status_code=-1)
+
+            # Log details for 401 responses to diagnose auth failures
+            if conf.debug_mode and response.status_code == 401:
+                www_auth = response.headers.get('WWW-Authenticate', '(none)')
+                req_auth = response.request.headers.get('Authorization', '(none)')[:80]
+                req_ua = response.request.headers.get('User-Agent', '(none)')
+                req_xoauth = response.request.headers.get('X-OAuth2', '(none)')
+                self.debug(server=self.get_name(),
+                           debug=f'fetch_url 401: WWW-Authenticate={www_auth}, '
+                                 f'req Authorization={req_auth}, '
+                                 f'req User-Agent={req_ua}, '
+                                 f'req X-OAuth2={req_xoauth}')
 
             # store encoding in case it is not the server side encoding
             if self.encoding != response.encoding:

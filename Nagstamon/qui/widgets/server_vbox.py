@@ -14,9 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
+import threading
+
 from Nagstamon.config import (conf,
                               OS,
                               OS_MACOS)
+from Nagstamon.cookies import save_oidc_tokens
 from Nagstamon.qui.constants import (HEADERS,
                                      HEADERS_KEYS_COLUMNS,
                                      HEADERS_HEADERS_COLUMNS,
@@ -34,6 +37,11 @@ from Nagstamon.qui.widgets.labels import (ClosingLabel,
                                           ServerStatusLabel)
 from Nagstamon.qui.widgets.layout import HBoxLayout
 from Nagstamon.qui.widgets.treeview import TreeView
+from Nagstamon.thirdparty.oidc_auth import (
+    discover_oidc_from_icingaweb2,
+    OIDCAuthenticator,
+    OIDCError,
+)
 
 
 class ServerVBox(QVBoxLayout):
@@ -59,6 +67,10 @@ class ServerVBox(QVBoxLayout):
 
     # open dialog - may need closing the statuswindow
     open_dialog = Signal()
+
+    # signals for thread-safe OIDC UI updates from background thread
+    _oidc_status_update = Signal(str)
+    _oidc_auth_finished = Signal()
 
     def __init__(self, server, parent=None):
         QVBoxLayout.__init__(self, parent)
@@ -114,6 +126,8 @@ class ServerVBox(QVBoxLayout):
 
         self.button_authenticate = QPushButton('Authenticate', parent=parent)
 
+        self.button_oidc_auth = QPushButton('Authenticate', parent=parent)
+
         self.button_fix_tls_error = QPushButton('Fix error', parent=parent)
 
         # avoid useless spaces in macOS when server has nothing to show
@@ -124,6 +138,7 @@ class ServerVBox(QVBoxLayout):
         self.button_hosts.setAttribute(Qt.WidgetAttribute.WA_LayoutUsesWidgetRect)
         self.button_edit.setAttribute(Qt.WidgetAttribute.WA_LayoutUsesWidgetRect)
         self.button_authenticate.setAttribute(Qt.WidgetAttribute.WA_LayoutUsesWidgetRect)
+        self.button_oidc_auth.setAttribute(Qt.WidgetAttribute.WA_LayoutUsesWidgetRect)
         self.button_fix_tls_error.setAttribute(Qt.WidgetAttribute.WA_LayoutUsesWidgetRect)
 
         self.button_monitor.clicked.connect(self.button_monitor.open_url)
@@ -142,6 +157,7 @@ class ServerVBox(QVBoxLayout):
         self.header.addWidget(self.label_stretcher)
 
         self.header.addWidget(self.label_status)
+        self.header.addWidget(self.button_oidc_auth)
         self.header.addWidget(self.button_authenticate)
         self.header.addWidget(self.button_fix_tls_error)
 
@@ -170,6 +186,10 @@ class ServerVBox(QVBoxLayout):
 
         # care about authentications
         self.button_authenticate.clicked.connect(self.authenticate_server)
+        self.button_oidc_auth.clicked.connect(self.oidc_auth_server)
+        # thread-safe OIDC UI updates
+        self._oidc_status_update.connect(self.label_status.setText)
+        self._oidc_auth_finished.connect(self._on_oidc_auth_finished)
         # somehow a long way to connect the signal with the slot but works
         self.authenticate_credentials.connect(self.parent_statuswindow.injected_dialogs.authentication.show_auth_dialog)
         self.authenticate_weblogin.connect(self.parent_statuswindow.injected_dialogs.weblogin.show_browser)
@@ -206,6 +226,7 @@ class ServerVBox(QVBoxLayout):
         show all items in server vbox
         """
         self.button_authenticate.hide()
+        self.button_oidc_auth.hide()
         self.button_edit.show()
         self.button_fix_tls_error.hide()
         self.button_history.show()
@@ -225,6 +246,7 @@ class ServerVBox(QVBoxLayout):
         show all items in server vbox except the table - not needed if empty or major connection problem
         """
         self.button_authenticate.hide()
+        self.button_oidc_auth.hide()
         self.button_edit.show()
         self.button_history.show()
         self.button_hosts.show()
@@ -243,6 +265,7 @@ class ServerVBox(QVBoxLayout):
         hide all items in server vbox
         """
         self.button_authenticate.hide()
+        self.button_oidc_auth.hide()
         self.button_edit.hide()
         self.button_fix_tls_error.hide()
         self.button_history.hide()
@@ -269,6 +292,7 @@ class ServerVBox(QVBoxLayout):
                        self.label_status,
                        self.label_stretcher,
                        self.button_authenticate,
+                       self.button_oidc_auth,
                        self.button_fix_tls_error):
             widget.hide()
             widget.deleteLater()
@@ -290,10 +314,105 @@ class ServerVBox(QVBoxLayout):
         """
         send signal to open authentication dialog with self.server.name
         """
-        if self.server.authentication != 'web':
+        if self.server.authentication == 'oidc':
+            # OIDC needs the server settings dialog (with its Authenticate button), not a password prompt
+            self.button_edit_pressed.emit(self.server.name)
+        elif self.server.authentication != 'web':
             self.authenticate_credentials.emit(self.server.name)
         else:
             self.authenticate_weblogin.emit(self.server.name)
+
+    def _iter_sibling_vboxes(self):
+        """Yield all ServerVBox siblings from the status window."""
+        for child in self.parent_statuswindow.servers_vbox.children():
+            if isinstance(child, ServerVBox):
+                yield child
+
+    def _on_oidc_auth_finished(self):
+        """Re-enable all OIDC Auth buttons after auth completes."""
+        for vbox in self._iter_sibling_vboxes():
+            if vbox.server.authentication == 'oidc':
+                vbox.button_oidc_auth.setEnabled(True)
+
+    def oidc_auth_server(self):
+        """
+        Directly trigger OIDC authentication flow from the status window
+        """
+        monitor_url = self.server.monitor_url
+        if not monitor_url:
+            return
+
+        server_name = self.server.name
+        server_conf = conf.servers.get(server_name)
+        client_id = getattr(server_conf, 'oidc_client_id', 'nagstamon') if server_conf else 'nagstamon'
+        redirect_port = getattr(server_conf, 'oidc_redirect_port', 12345) if server_conf else 12345
+
+        self.button_oidc_auth.setEnabled(False)
+        self._oidc_status_update.emit('Discovering OIDC endpoints...')
+
+        # Disable all other OIDC Auth buttons to prevent concurrent auth flows
+        # (concurrent flows would fail because the callback port is already in use)
+        for vbox in self._iter_sibling_vboxes():
+            if vbox is not self and vbox.server.authentication == 'oidc':
+                vbox.button_oidc_auth.setEnabled(False)
+
+        def _run():
+            try:
+                import requests
+                if conf.debug_mode:
+                    print(f'[OIDC] StatusWindow: Starting OIDC discovery for {monitor_url}')
+                session = requests.Session()
+                session.verify = not self.server.ignore_cert
+                oidc_config = discover_oidc_from_icingaweb2(monitor_url, session, timeout=15)
+
+                if conf.debug_mode:
+                    print(f'[OIDC] StatusWindow: Discovery OK: token_endpoint={oidc_config["token_endpoint"]}')
+
+                self._oidc_status_update.emit('Waiting for browser login...')
+
+                authenticator = OIDCAuthenticator(
+                    authorization_endpoint=oidc_config['authorization_endpoint'],
+                    token_endpoint=oidc_config['token_endpoint'],
+                    client_id=client_id,
+                    redirect_port=redirect_port,
+                )
+                token_result = authenticator.authenticate(timeout=120)
+
+                # Persist tokens so the server picks them up on next session creation
+                save_oidc_tokens(server_name, {
+                    'access_token': token_result.access_token,
+                    'refresh_token': token_result.refresh_token or '',
+                    'id_token': token_result.id_token or '',
+                    'expires_at': token_result.expires_at,
+                    'token_endpoint': oidc_config.get('token_endpoint', ''),
+                    'authorization_endpoint': oidc_config.get('authorization_endpoint', ''),
+                    'client_id': client_id,
+                })
+
+                # Reset the server's HTTP session so it reloads fresh tokens
+                self.server.reset_http()
+
+                if conf.debug_mode:
+                    import time as _time
+                    remaining = token_result.expires_at - _time.time()
+                    print(f'[OIDC] StatusWindow: Authentication successful! '
+                          f'expires_in={remaining:.0f}s, has_refresh={bool(token_result.refresh_token)}')
+                self._oidc_status_update.emit('Authenticated successfully!')
+            except OIDCError as e:
+                if conf.debug_mode:
+                    print(f'[OIDC] StatusWindow: OIDCError: {e}')
+                self._oidc_status_update.emit(f'Error: {e}')
+            except Exception as e:
+                if conf.debug_mode:
+                    import traceback
+                    print(f'[OIDC] StatusWindow: Unexpected error: {e}')
+                    traceback.print_exc()
+                self._oidc_status_update.emit(f'Error: {e}')
+            finally:
+                self._oidc_auth_finished.emit()
+
+        thread = threading.Thread(target=_run, daemon=True)
+        thread.start()
 
     @Slot()
     def update_label(self):

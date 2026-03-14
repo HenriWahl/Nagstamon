@@ -18,10 +18,11 @@
 from copy import deepcopy
 from functools import wraps
 import os
+import threading
 from urllib.parse import quote
 
 from Nagstamon.config import conf, CONFIG_STRINGS, BOOLPOOL, Server
-from Nagstamon.cookies import delete_cookie
+from Nagstamon.cookies import delete_cookie, save_oidc_tokens
 from Nagstamon.qui.globals import (ecp_available,
                                    kerberos_available)
 from Nagstamon.qui.qt import (QFileDialog,
@@ -34,6 +35,11 @@ from Nagstamon.qui.dialogs.dialog import Dialog
 from Nagstamon.servers import (create_server,
                                servers,
                                SERVER_TYPES)
+from Nagstamon.thirdparty.oidc_auth import (
+    discover_oidc_from_icingaweb2,
+    OIDCAuthenticator,
+    OIDCError,
+)
 
 
 class DialogServer(Dialog):
@@ -55,6 +61,10 @@ class DialogServer(Dialog):
 
     # signal to emit when web cookies should be deleted for a server
     delete_web_cookies = Signal(str, QWidget)
+
+    # signals for thread-safe OIDC UI updates from background thread
+    _oidc_status_update = Signal(str)
+    _oidc_auth_finished = Signal()
 
     def __init__(self):
         Dialog.__init__(self, 'settings_server')
@@ -151,6 +161,16 @@ class DialogServer(Dialog):
             self.window.label_idp_ecp_endpoint,
             self.window.input_lineedit_idp_ecp_endpoint]
 
+        self.AUTHENTICATION_OIDC_WIDGETS = [
+            self.window.button_oidc_authenticate,
+            self.window.label_oidc_status]
+
+        self.AUTHENTICATION_OIDC_ADVANCED_WIDGETS = [
+            self.window.label_oidc_client_id,
+            self.window.input_lineedit_oidc_client_id,
+            self.window.label_oidc_redirect_port,
+            self.window.input_spinbox_oidc_redirect_port]
+
         # custom CA is not possible with authentification method Web due to the underlying Qt WebEngine aka Chromium
         self.CUSTOM_CERT_CA_WIDGETS = [ self.window.input_checkbox_custom_cert_use ]
 
@@ -176,6 +196,7 @@ class DialogServer(Dialog):
         # because otherwise encryption key cannot be stored securely
         if conf.is_keyring_available():
             combobox_authentication_items.append('Web')
+        combobox_authentication_items.append('OIDC')
         # sort items
         self.window.input_combobox_authentication.addItems(sorted(combobox_authentication_items))
 
@@ -190,6 +211,11 @@ class DialogServer(Dialog):
         self.window.button_checkmk_view_services_reset.clicked.connect(self.checkmk_view_services_reset)
 
         self.window.button_delete_web_cookies.clicked.connect(self.on_delete_web_cookies)
+
+        # OIDC authenticate button
+        self.window.button_oidc_authenticate.clicked.connect(self.on_oidc_authenticate)
+        self._oidc_status_update.connect(self.window.label_oidc_status.setText)
+        self._oidc_auth_finished.connect(lambda: self.window.button_oidc_authenticate.setEnabled(True))
 
         # mode needed for evaluate dialog after ok button pressed - defaults to 'new'
         self.mode = 'new'
@@ -209,14 +235,17 @@ class DialogServer(Dialog):
         """
         when authentication is changed to Kerberos then disable username/password as they are now useless
         """
-        if self.window.input_combobox_authentication.currentText() == 'Kerberos':
+        auth_type = self.window.input_combobox_authentication.currentText()
+
+        # Hide username/password for auth types that don't need them
+        if auth_type in ('Kerberos', 'Web', 'OIDC'):
             for widget in self.AUTHENTICATION_WIDGETS:
                 widget.hide()
         else:
             for widget in self.AUTHENTICATION_WIDGETS:
                 widget.show()
 
-        if self.window.input_combobox_authentication.currentText() == 'ECP':
+        if auth_type == 'ECP':
             for widget in self.AUTHENTICATION_ECP_WIDGETS:
                 widget.show()
         else:
@@ -224,7 +253,7 @@ class DialogServer(Dialog):
                 widget.hide()
 
         # change credential input for bearer auth
-        if self.window.input_combobox_authentication.currentText() == 'Bearer':
+        if auth_type == 'Bearer':
             for widget in self.AUTHENTICATION_BEARER_WIDGETS:
                 widget.hide()
                 self.window.label_password.setText('Token')
@@ -233,15 +262,27 @@ class DialogServer(Dialog):
                 widget.show()
                 self.window.label_password.setText('Password')
 
-        # no need for username + password when using Web authentication
-        if self.window.input_combobox_authentication.currentText() == 'Web':
-            for widget in self.AUTHENTICATION_WIDGETS + self.CUSTOM_CERT_CA_WIDGETS:
+        # Web authentication: hide custom cert, show delete cookies button
+        if auth_type == 'Web':
+            for widget in self.CUSTOM_CERT_CA_WIDGETS:
                 widget.hide()
             self.window.button_delete_web_cookies.show()
-        else:
-            for widget in self.AUTHENTICATION_WIDGETS + self.CUSTOM_CERT_CA_WIDGETS:
+        elif auth_type == 'OIDC':
+            for widget in self.CUSTOM_CERT_CA_WIDGETS:
                 widget.show()
             self.window.button_delete_web_cookies.hide()
+        else:
+            for widget in self.CUSTOM_CERT_CA_WIDGETS:
+                widget.show()
+            self.window.button_delete_web_cookies.hide()
+
+        # OIDC widgets visibility
+        if auth_type == 'OIDC':
+            for widget in self.AUTHENTICATION_OIDC_WIDGETS + self.AUTHENTICATION_OIDC_ADVANCED_WIDGETS:
+                widget.show()
+        else:
+            for widget in self.AUTHENTICATION_OIDC_WIDGETS + self.AUTHENTICATION_OIDC_ADVANCED_WIDGETS:
+                widget.hide()
 
         # after hiding authentication widgets dialog might shrink
         self.window.adjustSize()
@@ -285,7 +326,11 @@ class DialogServer(Dialog):
                         self.window.__dict__[widget].setValue(self.server_conf.__dict__[setting])
 
             # set the current authentication type by using capitalized first letter via .title()
-            self.window.input_combobox_authentication.setCurrentText(self.server_conf.authentication.title())
+            # special case for all-caps types like OIDC and ECP
+            auth_display = self.server_conf.authentication.title()
+            if auth_display.lower() in ('oidc', 'ecp'):
+                auth_display = auth_display.upper()
+            self.window.input_combobox_authentication.setCurrentText(auth_display)
 
             # initially hide unnecessary widgets
             self.toggle_type()
@@ -370,6 +415,13 @@ class DialogServer(Dialog):
         """
         evaluate the state of widgets to get new configuration
         """
+        # Block OK if OIDC token exchange is still in progress
+        if getattr(self, '_oidc_authenticating', False):
+            QMessageBox.information(self.window, 'Nagstamon',
+                                    'OIDC authentication is still in progress.\n'
+                                    'Please wait for "Authenticated successfully!" to appear.')
+            return
+
         # strip name to avoid whitespace
         server_name = self.window.input_lineedit_name.text().strip()
 
@@ -439,6 +491,20 @@ class DialogServer(Dialog):
             self.server_conf.name = server_name
             conf.servers[server_name] = self.server_conf
 
+            # save OIDC tokens BEFORE create_server so the new server instance can load them
+            if self.server_conf.authentication == 'oidc' and hasattr(self, '_oidc_token_result'):
+                token_result = self._oidc_token_result
+                oidc_config = getattr(self, '_oidc_config', {})
+                save_oidc_tokens(server_name, {
+                    'access_token': token_result.access_token,
+                    'refresh_token': token_result.refresh_token or '',
+                    'id_token': token_result.id_token or '',
+                    'expires_at': token_result.expires_at,
+                    'token_endpoint': oidc_config.get('token_endpoint', ''),
+                    'authorization_endpoint': oidc_config.get('authorization_endpoint', ''),
+                    'client_id': self.server_conf.oidc_client_id or 'nagstamon',
+                })
+
             # add new server instance to global servers dict
             servers[server_name] = create_server(self.server_conf)
             if self.server_conf.enabled:
@@ -490,6 +556,77 @@ class DialogServer(Dialog):
     @Slot()
     def checkmk_view_services_reset(self):
         self.window.input_lineedit_checkmk_view_services.setText('nagstamon_svc')
+
+    def on_oidc_authenticate(self):
+        """
+        Start OIDC authentication flow in system browser
+        """
+        monitor_url = self.window.input_lineedit_monitor_url.text().strip().rstrip('/')
+        if not monitor_url:
+            QMessageBox.warning(self.window, 'Nagstamon',
+                                'Please enter the Monitor URL first.')
+            return
+
+        client_id = self.window.input_lineedit_oidc_client_id.text().strip() or 'nagstamon'
+        redirect_port = self.window.input_spinbox_oidc_redirect_port.value()
+
+        self.window.button_oidc_authenticate.setEnabled(False)
+        self._oidc_status_update.emit('Discovering OIDC endpoints...')
+        self._oidc_authenticating = True
+
+        def _run():
+            try:
+                import requests
+                if conf.debug_mode:
+                    print(f'[OIDC] Dialog: Starting OIDC discovery for {monitor_url}')
+                    print(f'[OIDC] Dialog: client_id={client_id}, redirect_port={redirect_port}')
+                session = requests.Session()
+                session.verify = not self.window.input_checkbox_ignore_cert.isChecked()
+                oidc_config = discover_oidc_from_icingaweb2(monitor_url, session, timeout=15)
+
+                if conf.debug_mode:
+                    print(f'[OIDC] Dialog: Discovery OK: auth_endpoint={oidc_config["authorization_endpoint"]}')
+                    print(f'[OIDC] Dialog: Discovery OK: token_endpoint={oidc_config["token_endpoint"]}')
+                    if oidc_config.get('server_client_id'):
+                        print(f'[OIDC] Dialog: Server-side OIDC client_id={oidc_config["server_client_id"]}')
+                        print(f'[OIDC] Dialog: If you get 401s, ensure the token for client "{client_id}" '
+                              f'includes "{oidc_config["server_client_id"]}" in the aud claim')
+
+                self._oidc_status_update.emit('Waiting for browser login...')
+
+                authenticator = OIDCAuthenticator(
+                    authorization_endpoint=oidc_config['authorization_endpoint'],
+                    token_endpoint=oidc_config['token_endpoint'],
+                    client_id=client_id,
+                    redirect_port=redirect_port,
+                )
+                token_result = authenticator.authenticate(timeout=120)
+
+                # Store tokens temporarily on the dialog for ok() to pick up
+                self._oidc_token_result = token_result
+                self._oidc_config = oidc_config
+                if conf.debug_mode:
+                    import time as _time
+                    remaining = token_result.expires_at - _time.time()
+                    print(f'[OIDC] Dialog: Authentication successful! '
+                          f'expires_in={remaining:.0f}s, has_refresh={bool(token_result.refresh_token)}')
+                self._oidc_status_update.emit('Authenticated successfully!')
+            except OIDCError as e:
+                if conf.debug_mode:
+                    print(f'[OIDC] Dialog: OIDCError: {e}')
+                self._oidc_status_update.emit(f'Error: {e}')
+            except Exception as e:
+                if conf.debug_mode:
+                    import traceback
+                    print(f'[OIDC] Dialog: Unexpected error: {e}')
+                    traceback.print_exc()
+                self._oidc_status_update.emit(f'Error: {e}')
+            finally:
+                self._oidc_authenticating = False
+                self._oidc_auth_finished.emit()
+
+        thread = threading.Thread(target=_run, daemon=True)
+        thread.start()
 
     def on_delete_web_cookies(self):
         """

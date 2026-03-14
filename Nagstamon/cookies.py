@@ -274,3 +274,119 @@ def delete_cookie(server_name: str, cookie_name: Optional[str] = None, domain: O
     connection.commit()
     connection.close()
     return deleted
+
+
+def _init_oidc_table():
+    """
+    initialize OIDC tokens table in the same SQLite database
+    """
+    init_db()
+    connection = sqlite3.connect(COOKIE_DB_FILE_PATH)
+    cursor = connection.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS oidc_tokens
+        (
+            server TEXT PRIMARY KEY,
+            access_token TEXT,
+            refresh_token TEXT,
+            id_token TEXT,
+            expires_at REAL,
+            token_endpoint TEXT,
+            authorization_endpoint TEXT,
+            client_id TEXT,
+            encrypted INTEGER
+        )
+    ''')
+    connection.commit()
+    connection.close()
+
+
+def save_oidc_tokens(server_name, token_data):
+    """
+    Save OIDC tokens for a server.
+    token_data: dict with keys access_token, refresh_token, id_token, expires_at,
+                token_endpoint, authorization_endpoint, client_id
+    """
+    _init_oidc_table()
+    connection = sqlite3.connect(COOKIE_DB_FILE_PATH)
+    cursor = connection.cursor()
+
+    refresh_token = token_data.get('refresh_token', '')
+    encrypted = 0
+
+    if encrypt_cookie and refresh_token:
+        encryption_key = get_encryption_key()
+        fernet = Fernet(encryption_key)
+        refresh_token = fernet.encrypt(refresh_token.encode()).decode()
+        encrypted = 1
+
+    cursor.execute('''
+        INSERT OR REPLACE INTO oidc_tokens
+        (server, access_token, refresh_token, id_token, expires_at,
+         token_endpoint, authorization_endpoint, client_id, encrypted)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        server_name,
+        token_data.get('access_token', ''),
+        refresh_token,
+        token_data.get('id_token', ''),
+        token_data.get('expires_at', 0),
+        token_data.get('token_endpoint', ''),
+        token_data.get('authorization_endpoint', ''),
+        token_data.get('client_id', ''),
+        encrypted,
+    ))
+    connection.commit()
+    connection.close()
+
+
+def load_oidc_tokens(server_name):
+    """
+    Load OIDC tokens for a server.
+    Returns dict or None if not found.
+    """
+    _init_oidc_table()
+    connection = sqlite3.connect(COOKIE_DB_FILE_PATH)
+    cursor = connection.cursor()
+    cursor.execute('''
+        SELECT access_token, refresh_token, id_token, expires_at,
+               token_endpoint, authorization_endpoint, client_id, encrypted
+        FROM oidc_tokens WHERE server = ?
+    ''', (server_name,))
+    row = cursor.fetchone()
+    connection.close()
+
+    if row is None:
+        return None
+
+    refresh_token = row[1]
+    encrypted = bool(row[7])
+    if encrypted and refresh_token:
+        encryption_key = get_encryption_key()
+        fernet = Fernet(encryption_key)
+        try:
+            refresh_token = fernet.decrypt(refresh_token.encode()).decode()
+        except InvalidToken:
+            refresh_token = ''
+
+    return {
+        'access_token': row[0],
+        'refresh_token': refresh_token,
+        'id_token': row[2],
+        'expires_at': row[3],
+        'token_endpoint': row[4],
+        'authorization_endpoint': row[5],
+        'client_id': row[6],
+    }
+
+
+def delete_oidc_tokens(server_name):
+    """
+    Delete OIDC tokens for a server.
+    """
+    _init_oidc_table()
+    connection = sqlite3.connect(COOKIE_DB_FILE_PATH)
+    cursor = connection.cursor()
+    cursor.execute('DELETE FROM oidc_tokens WHERE server = ?', (server_name,))
+    connection.commit()
+    connection.close()

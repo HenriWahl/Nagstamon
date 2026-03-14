@@ -120,6 +120,16 @@ class IcingaDBWebServer(GenericServer):
         if self.session and not 'Referer' in self.session.headers:
             self.session.headers['Referer'] = self.monitor_cgi_url
 
+        # OIDC authentication uses Bearer token - skip form-based login
+        if self.authentication == 'oidc':
+            if conf.debug_mode:
+                self.debug(server=self.get_name(), debug='[OIDC] Skipping form-based login (Bearer token auth), setting timezone cookie')
+            if self.session:
+                # Add icingaweb2-tzo cookie to ensure Icinga to correctly handle provide date time string
+                utc_offset = int(get_localzone().utcoffset(datetime.datetime.now()).total_seconds())
+                self.session.cookies.update(cookiejar_from_dict({'icingaweb2-tzo': f'{utc_offset}-0'}))
+            return
+
         # normally cookie auth will be used
         if not self.no_cookie_auth:
             if 'cookies' not in dir(self.session) or len(self.session.cookies) == 0:
@@ -192,10 +202,20 @@ class IcingaDBWebServer(GenericServer):
             for status_type in 'hard', 'soft':
                 # first attempt
                 result = self.fetch_url(self.cgiurl_hosts[status_type], giveback='raw')
+                if conf.debug_mode:
+                    self.debug(server=self.get_name(),
+                              debug=f'hosts {status_type} response: status={result.status_code}, '
+                                    f'error="{result.error}", '
+                                    f'body_start={repr(result.result[:300]) if result.result else "(empty)"}')
                 # authentication errors get a status code 200 too back because its
                 # HTML works fine :-(
                 if result.status_code < 400 and\
                    result.result.startswith('<'):
+                    # OIDC can't re-authenticate automatically — tell user to re-auth in settings
+                    if self.authentication == 'oidc':
+                        return Result(result=result.result,
+                                      error='OIDC token missing or expired \u2014 click the Authenticate button to re-authenticate',
+                                      status_code=result.status_code)
                     # in case of auth error reset HTTP session and try again
                     self.reset_http()
                     result = self.fetch_url(self.cgiurl_hosts[status_type], giveback='raw')
@@ -235,6 +255,9 @@ class IcingaDBWebServer(GenericServer):
                     #     self.cgiurl_monitoring_health = None
 
                 hosts = json.loads(jsonraw)
+                if conf.debug_mode:
+                    self.debug(server=self.get_name(),
+                              debug=f'hosts {status_type} parsed: {len(hosts)} host(s), type={type(hosts).__name__}')
 
                 for host in hosts:
                     # make dict of tuples for better reading
@@ -318,6 +341,11 @@ class IcingaDBWebServer(GenericServer):
         try:
             for status_type in 'hard', 'soft':
                 result = self.fetch_url(self.cgiurl_services[status_type], giveback='raw')
+                if conf.debug_mode:
+                    self.debug(server=self.get_name(),
+                              debug=f'services {status_type} response: status={result.status_code}, '
+                                    f'error="{result.error}", '
+                                    f'body_start={repr(result.result[:300]) if result.result else "(empty)"}')
                 # purify JSON result of unnecessary control sequence \n
                 jsonraw, error, status_code = copy.deepcopy(result.result.replace('\n', '')),\
                                               copy.deepcopy(result.error),\
@@ -332,6 +360,9 @@ class IcingaDBWebServer(GenericServer):
                 self.check_for_error(jsonraw, error, status_code)
 
                 services = copy.deepcopy(json.loads(jsonraw))
+                if conf.debug_mode:
+                    self.debug(server=self.get_name(),
+                              debug=f'services {status_type} parsed: {len(services)} service(s), type={type(services).__name__}')
 
                 for service in services:
                     # make dict of tuples for better reading
@@ -429,6 +460,12 @@ class IcingaDBWebServer(GenericServer):
 
         # some cleanup
         del jsonraw, error, hosts, services
+
+        if conf.debug_mode:
+            total_hosts = len(self.new_hosts)
+            total_services = sum(len(h.services) for h in self.new_hosts.values())
+            self.debug(server=self.get_name(),
+                       debug=f'_get_status complete: {total_hosts} host(s), {total_services} service(s) in new_hosts')
 
         # dummy return in case all is OK
         return Result()
