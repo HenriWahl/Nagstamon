@@ -182,7 +182,7 @@ class GenericServer:
         self.nagitems_filtered_list = list()
         self.nagitems_filtered = {'services': {'DISASTER': [], 'CRITICAL': [], 'HIGH': [],
             'AVERAGE': [], 'WARNING': [], 'INFORMATION': [], 'UNKNOWN': []},
-            'hosts': {'DOWN': [], 'UNREACHABLE': []}}
+            'hosts': {'DOWN': [], 'UNREACHABLE': [], 'UNKNOWN': []}}
         # number of filtered items
         self.nagitems_filtered_count = 0
         self.down = 0
@@ -1011,7 +1011,7 @@ class GenericServer:
         # this part has been before in GUI.RefreshDisplay() - wrong place, here it needs to be reset
         self.nagitems_filtered = {'services': {'DISASTER': [], 'CRITICAL': [], 'HIGH': [],
             'AVERAGE': [], 'WARNING': [], 'INFORMATION': [], 'UNKNOWN': []},
-            'hosts': {'DOWN': [], 'UNREACHABLE': []}}
+            'hosts': {'DOWN': [], 'UNREACHABLE': [], 'UNKNOWN': []}}
 
         # initialize counts for various service/hosts states
         # count them with every miserable host/service respective to their meaning
@@ -1102,6 +1102,16 @@ class GenericServer:
                     if host.visible:
                         self.nagitems_filtered['hosts']['UNREACHABLE'].append(host)
                         self.unreachable += 1
+
+                if host.status == 'UNKNOWN':
+                    if conf.filter_all_unknown_hosts is True:
+                        if conf.debug_mode:
+                            self.debug(server=self.get_name(), debug='Filter: UNKNOWN ' + str(host.name))
+                        host.visible = False
+    
+                    if host.visible:
+                        self.nagitems_filtered['hosts']['UNKNOWN'].append(host)
+                        self.unknown += 1
 
                 # Add host flags for status icons in treeview
                 if host.acknowledged:
