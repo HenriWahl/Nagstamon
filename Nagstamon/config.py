@@ -120,7 +120,9 @@ CONFIG_STRINGS = ['custom_browser',
                   'autologin_key',
                   'custom_cert_ca_file',
                   'idp_ecp_endpoint',
-                  'monitor_site'
+                  'monitor_site',
+                  'auth_helper_command',
+                  'auth_helper_extra_args'
                   ]
 
 
@@ -694,35 +696,24 @@ class Config:
                                 value = ''
                             elif self.keyring_available and self.use_system_keyring:
                                 if self.__dict__[settingsdir][s].password != '':
-                                    # provoke crash if password saving does not work - this is the case
-                                    # on newer Ubuntu releases
-                                    try:
-                                        keyring.set_password('Nagstamon',
-                                                             '@'.join((self.__dict__[settingsdir][s].username,
-                                                                       self.__dict__[settingsdir][s].monitor_url)),
-                                                             self.__dict__[settingsdir][s].password)
-                                    except Exception:
-                                        import traceback
-                                        traceback.print_exc(file=sys.stdout)
-                                        sys.exit(1)
-                                value = ''
+                                    keyring_account = '@'.join((self.__dict__[settingsdir][s].username,
+                                                                self.__dict__[settingsdir][s].monitor_url))
+                                    if self._keyring_set('Nagstamon', keyring_account,
+                                                         self.__dict__[settingsdir][s].password):
+                                        value = ''
+                                else:
+                                    value = ''
                         if option == 'proxy_password':
                             if self.keyring_available and self.use_system_keyring:
                                 if self.__dict__[settingsdir][s].proxy_password != '':
-                                    # provoke crash if password saving does not work - this is the case
-                                    # on newer Ubuntu releases
-                                    try:
-                                        keyring.set_password('Nagstamon',
-                                                             '@'.join(('proxy',
-                                                                       self.__dict__[settingsdir][s].proxy_username,
-                                                                       self.__dict__[settingsdir][s].proxy_address)),
-                                                             self.__dict__[settingsdir][s].proxy_password)
-                                    except Exception:
-                                        import traceback
-                                        traceback.print_exc(file=sys.stdout)
-                                        sys.exit(1)
-
-                                value = ''
+                                    keyring_account = '@'.join(('proxy',
+                                                                self.__dict__[settingsdir][s].proxy_username,
+                                                                self.__dict__[settingsdir][s].proxy_address))
+                                    if self._keyring_set('Nagstamon', keyring_account,
+                                                         self.__dict__[settingsdir][s].proxy_password):
+                                        value = ''
+                                else:
+                                    value = ''
                         config.set(setting + '_' + s, option, str(value))
                     else:
                         config.set(setting + '_' + s, option, str(self.__dict__[settingsdir][s].__dict__[option]))
@@ -748,6 +739,40 @@ class Config:
             # ##    for f in os.listdir(self.configdir + os.sep + settingsdir):
             # ##        if not f.split(setting + "_")[1].split(".conf")[0] in self.__dict__[settingsdir]:
             # ##            os.unlink(self.configdir + os.sep + settingsdir + os.sep + f)
+
+    def _keyring_set(self, service, account, password):
+        """
+        Store a password in the system keyring.
+
+        On macOS, handles errSecDuplicateItem (-25299) by deleting the old
+        entry and retrying once.
+
+        Crashes the application if keyring storage ultimately fails, to prevent
+        insecure fallback to obfuscated config file storage (e.g. on newer
+        Ubuntu releases where keyring backends may be broken).
+        """
+        import keyring
+        try:
+            keyring.set_password(service, account, password)
+            return True
+        except Exception:
+            # On macOS, Keychain may return errSecDuplicateItem (-25299).
+            # Delete the existing entry and retry once.
+            if OS == OS_MACOS:
+                try:
+                    keyring.delete_password(service, account)
+                except Exception:
+                    pass
+                try:
+                    keyring.set_password(service, account, password)
+                    return True
+                except Exception:
+                    pass
+            # provoke crash if password saving does not work, this is the case
+            # on newer Ubuntu releases
+            import traceback
+            traceback.print_exc(file=sys.stdout)
+            sys.exit(1)
 
     def is_keyring_available(self):
         """
@@ -1130,6 +1155,11 @@ class Server:
 
         # LibreNMS
         self.treat_services_as_alerts = False
+
+        # Auth helper - external command for authentication (OIDC, cookies, etc.)
+        self.use_auth_helper = False
+        self.auth_helper_command = ''
+        self.auth_helper_extra_args = ''
 
 
 class Action:

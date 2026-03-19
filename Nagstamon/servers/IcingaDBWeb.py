@@ -101,6 +101,10 @@ class IcingaDBWebServer(GenericServer):
         """
         GenericServer.init_http(self)
 
+        # If session was not created (e.g. refresh_authentication is pending), bail out
+        if not self.session:
+            return
+
         # Run cookie cleanup only once per application run / server instance (https://github.com/HenriWahl/Nagstamon/issues/1163)
         if not getattr(self, '_cookie_cleanup_done', False):
             self._cookie_cleanup_done = True

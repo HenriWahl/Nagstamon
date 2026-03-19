@@ -22,7 +22,9 @@ import datetime
 import json
 from pathlib import Path
 import platform
+import shlex
 import socket
+import subprocess
 import sys
 import traceback
 import urllib.parse
@@ -357,6 +359,10 @@ class GenericServer:
             cookies = load_cookies()
             session.cookies = cookie_data_to_jar(self.name, cookies)
 
+        # Auth helper provides its own credentials, skip built-in auth
+        if getattr(self, 'use_auth_helper', False) and getattr(self, 'auth_helper_command', ''):
+            session.auth = None
+
         # default to check TLS validity
         if self.ignore_cert:
             session.verify = False
@@ -412,6 +418,124 @@ class GenericServer:
         """
         if self.authentication != 'web':
             self.session = None
+
+    def _run_auth_helper(self, args):
+        """
+        Run the auth helper command with given arguments.
+        Returns (stdout, stderr, returncode) tuple.
+        """
+        cmd = shlex.split(self.auth_helper_command) + args
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
+            if conf.debug_mode and result.stderr:
+                self.debug(server=self.get_name(), debug=f'[Auth helper stderr] {result.stderr.strip()}')
+            return result.stdout, result.stderr, result.returncode
+        except FileNotFoundError:
+            return '', f'Auth helper command not found: {self.auth_helper_command}', -1
+        except subprocess.TimeoutExpired:
+            return '', 'Auth helper command timed out', -1
+        except Exception as e:
+            return '', f'Auth helper error: {e}', -1
+
+    def _get_auth_helper_credentials(self):
+        """
+        Call the external auth helper to get HTTP credentials (headers and/or cookies).
+        Returns a dict with 'headers' and optionally 'cookies' on success,
+        or None on failure (sets status_description).
+        Automatically triggers re-authentication if the helper signals exit code 1.
+        """
+        stdout, stderr, rc = self._run_auth_helper([
+            'get-headers', '--server-name', self.name
+        ])
+
+        if rc == 0:
+            try:
+                data = json.loads(stdout)
+                return self._normalize_auth_helper_response(data)
+            except (json.JSONDecodeError, ValueError) as e:
+                self.status_description = f'Auth helper returned invalid JSON: {e}'
+                return None
+
+        # Exit code 1 means re-authentication required, run 'authenticate' automatically
+        if rc == 1:
+            if conf.debug_mode:
+                self.debug(server=self.get_name(),
+                           debug='[Auth helper] get-headers requires re-authentication, launching authenticate...')
+
+            auth_args = [
+                'authenticate',
+                '--server-name', self.name,
+                '--monitor-url', self.monitor_url,
+            ]
+            # Append user-configured extra arguments (e.g. --client-id, --redirect-port)
+            extra = getattr(self, 'auth_helper_extra_args', '')
+            if extra:
+                auth_args.extend(shlex.split(extra))
+            if getattr(self, 'ignore_cert', False):
+                auth_args.append('--insecure')
+
+            auth_stdout, auth_stderr, auth_rc = self._run_auth_helper(auth_args)
+
+            if auth_rc == 0:
+                # Retry get-headers after successful authentication
+                stdout, stderr, rc = self._run_auth_helper([
+                    'get-headers', '--server-name', self.name
+                ])
+                if rc == 0:
+                    try:
+                        data = json.loads(stdout)
+                        return self._normalize_auth_helper_response(data)
+                    except (json.JSONDecodeError, ValueError) as e:
+                        self.status_description = f'Auth helper returned invalid JSON: {e}'
+                        return None
+
+            # Authentication failed or retry failed
+            error_detail = ''
+            try:
+                error_data = json.loads(auth_stdout or stdout)
+                error_detail = error_data.get('error', '')
+            except (json.JSONDecodeError, ValueError):
+                error_detail = auth_stderr or stderr
+            self.status_description = f'Auth helper authentication failed: {error_detail}'
+            return None
+
+        # Any other exit code
+        error_detail = ''
+        try:
+            error_data = json.loads(stdout)
+            error_detail = error_data.get('error', stdout)
+        except (json.JSONDecodeError, ValueError):
+            error_detail = stderr or stdout
+        self.status_description = f'Auth helper error (exit {rc}): {error_detail}'
+        return None
+
+    @staticmethod
+    def _normalize_auth_helper_response(data):
+        """
+        Normalize the auth helper JSON response into {'headers': {...}, 'cookies': {...}}.
+        Accepts either the structured format or a flat dict (treated as headers-only).
+        """
+        if 'headers' in data:
+            return {'headers': data['headers'], 'cookies': data.get('cookies', {})}
+        # Flat dict, treat entire response as headers
+        return {'headers': data, 'cookies': {}}
+
+    def _apply_auth_helper_credentials(self):
+        """
+        Apply auth helper credentials (headers and cookies) to the session.
+        Returns None on success, or a Result on failure (caller should return it).
+        """
+        credentials = self._get_auth_helper_credentials()
+        if credentials is None:
+            return Result(result='ERROR',
+                          error=self.status_description,
+                          status_code=-1)
+        if self.session:
+            if credentials.get('headers'):
+                self.session.headers.update(credentials['headers'])
+            if credentials.get('cookies'):
+                self.session.cookies.update(credentials['cookies'])
+        return None
 
     def get_name(self):
         """
@@ -950,6 +1074,13 @@ class GenericServer:
         # initialize HTTP first
         self.init_http()
 
+        # apply auth helper credentials if configured
+        if getattr(self, 'use_auth_helper', False) and getattr(self, 'auth_helper_command', ''):
+            auth_result = self._apply_auth_helper_credentials()
+            if auth_result is not None:
+                self.isChecking = False
+                return auth_result
+
         # get all trouble hosts/services from server specific _get_status()
         status = self._get_status()
 
@@ -986,6 +1117,12 @@ class GenericServer:
                'login failed' in self.status_description.lower() or \
                self.status_code in self.STATUS_CODES_NO_AUTH:
                 if conf.servers[self.name].enabled is True:
+                    # Auth helper handles its own re-authentication, don't prompt for credentials
+                    if getattr(self, 'use_auth_helper', False) and getattr(self, 'auth_helper_command', ''):
+                        self.isChecking = False
+                        return Result(result='ERROR',
+                                      error=self.status_description,
+                                      status_code=self.status_code)
                     # needed to get valid credentials
                     self.refresh_authentication = True
                     # clean existent authentication

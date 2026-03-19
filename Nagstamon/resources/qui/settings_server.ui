@@ -788,6 +788,53 @@
         </property>
        </widget>
       </item>
+      <item row="38" column="1" colspan="4">
+       <widget class="QCheckBox" name="input_checkbox_use_auth_helper">
+        <property name="text">
+         <string>Use auth helper for authentication</string>
+        </property>
+       </widget>
+      </item>
+      <item row="39" column="1">
+       <widget class="QLabel" name="label_auth_helper_command">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Helper command:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="39" column="2" colspan="3">
+       <widget class="QLineEdit" name="input_lineedit_auth_helper_command">
+        <property name="placeholderText">
+         <string>e.g., uvx nagstamon-auth-helper</string>
+        </property>
+       </widget>
+      </item>
+      <item row="40" column="1">
+       <widget class="QLabel" name="label_auth_helper_extra_args">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Extra arguments:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="40" column="2" colspan="3">
+       <widget class="QLineEdit" name="input_lineedit_auth_helper_extra_args">
+        <property name="placeholderText">
+         <string>e.g., --client-id nagstamon --redirect-port 12345</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -875,6 +922,9 @@
   <tabstop>button_checkmk_view_services_reset</tabstop>
   <tabstop>input_lineedit_idp_ecp_endpoint</tabstop>
   <tabstop>input_lineedit_disabled_backends</tabstop>
+  <tabstop>input_checkbox_use_auth_helper</tabstop>
+  <tabstop>input_lineedit_auth_helper_command</tabstop>
+  <tabstop>input_lineedit_auth_helper_extra_args</tabstop>
  </tabstops>
  <resources/>
  <connections/>

@@ -595,6 +595,7 @@ class StatusWindow(QWidget):
             # display authentication dialog if password is not known
             if not conf.servers[server.name].save_password and \
                     not conf.servers[server.name].use_autologin and \
+                    not getattr(conf.servers[server.name], 'use_auth_helper', False) and \
                     conf.servers[server.name].password == '' and \
                     not conf.servers[server.name].authentication == 'kerberos' and \
                     not conf.servers[server.name].authentication == 'web':
