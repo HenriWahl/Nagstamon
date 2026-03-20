@@ -171,6 +171,7 @@ class Config:
         self.filter_all_down_hosts = False
         self.filter_all_unreachable_hosts = False
         self.filter_all_unreachable_services = False
+        self.filter_all_unknown_hosts = False
         self.filter_all_flapping_hosts = False
         self.filter_all_unknown_services = False
         self.filter_all_information_services = False
