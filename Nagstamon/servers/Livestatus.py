@@ -16,7 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
-
+import ssl
+from contextlib import contextmanager
 from Nagstamon.objects import Result
 from Nagstamon.objects import GenericHost
 from Nagstamon.objects import GenericService
@@ -59,6 +60,24 @@ def service_to_host(data):
     return result
 
 
+@contextmanager
+def get_socket(address: 'tuple(str, str)', protocol: str, ignore_cert: bool, custom_cert_use: bool, custom_cert_ca_file: str):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as sock:
+        if protocol.endswith('s'):
+            context = ssl.create_default_context()
+            context.check_hostname = not ignore_cert
+            context.verify_mode = ssl.VerifyMode.CERT_NONE if ignore_cert else ssl.VerifyMode.CERT_REQUIRED
+        
+            if custom_cert_ca_file and custom_cert_use:
+                context.load_verify_locations(custom_cert_ca_file)
+            sock.connect(address)
+            with context.wrap_socket(sock, server_hostname=address[0]) as ssl_sock:
+                yield ssl_sock
+        else:
+            sock.connect(address)
+            yield sock
+
+
 class LivestatusServer(GenericServer):
     """A server running MK Livestatus plugin. Tested with icinga2"""
 
@@ -67,15 +86,15 @@ class LivestatusServer(GenericServer):
     def init_config(self):
         log.info(self.monitor_url)
         # we abuse the monitor_url for the connection information
-        self.address = ('localhost', 6558)
-        m = re.match(r'.*?://([^:/]+?)(?::(\d+))?(?:/|$)', self.monitor_url)
+        self.address = ('http', 'localhost', 6558)
+        m = re.match(r'(.*?)://([^:/]+?)(?::(\d+))?(?:/|$)', self.monitor_url)
         if m:
-            host, port = m.groups()
+            protocol, host, port = m.groups()
             if not port:
                 port = 6558
             else:
                 port = int(port)
-            self.address = (host, port)
+            self.address = (protocol, host, port)
         else:
             log.error('unable to parse monitor_url %s', self.monitor_url)
             self.enable = False
@@ -87,24 +106,26 @@ class LivestatusServer(GenericServer):
         buffersize = 2**20
         data.append('')
         data.append('')
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        
+        protocol, *address_and_port = self.address
+        address_and_port = tuple(address_and_port)
+        
         log.debug('connecting')
-        s.connect(self.address)
-        s.send('\n'.join(data).encode('utf8'))
-        if not response:
-            log.debug('no response required, disconnect')
-            s.close()
-            return ''
-        result = bytes()
-        line = s.recv(buffersize)
-        while len(line) > 0:
-            result += line
-            line = s.recv(buffersize)
-        log.debug('disconnect')
-        s.close()
-        log.debug('received %d bytes', len(result))
-        result = result.decode('utf8')
-        return result
+        
+        with get_socket(address_and_port, protocol, self.ignore_cert, self.custom_cert_use, self.custom_cert_ca_file) as sock:
+            sock.send('\n'.join(data).encode('utf8'))
+            if not response:
+                log.debug('no response required, disconnect')
+                return ''
+            result = bytes()
+            line = sock.recv(buffersize)
+            while len(line) > 0:
+                result += line
+                line = sock.recv(buffersize)
+            log.debug('received %d bytes', len(result))
+            result = result.decode('utf8')
+            return result
+
 
     def get(self, table, raw=[], headers={}):
         """send data to livestatus socket, receive result, format as json"""
