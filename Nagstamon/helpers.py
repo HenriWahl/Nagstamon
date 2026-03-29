@@ -477,7 +477,7 @@ def get_distro():
         return dist_name.lower(), dist_version, dist_id
 
 
-def urlify(self, string):
+def urlify(string):
     """
     return a string that fulfills requirements for URLs
     exclude several chars
