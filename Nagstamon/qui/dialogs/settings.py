@@ -30,6 +30,9 @@ from Nagstamon.config import (AppInfo,
 from Nagstamon.qui.constants import (COLORS,
                                      HEADERS_HEADERS,
                                      HEADERS_KEYS_HEADERS, HEADERS_HEADERS_KEYS)
+from Nagstamon.qui.dialogs import DialogServerMissing
+from Nagstamon.qui.dialogs.check_version import check_version
+from Nagstamon.qui.dialogs.dialog import Dialog
 from Nagstamon.qui.globals import (dbus_connection,
                                    font,
                                    font_icons,
@@ -39,7 +42,6 @@ from Nagstamon.qui.qt import (Signal,
                               QColor,
                               QColorDialog,
                               QFileDialog,
-                              QFont,
                               QFontDialog,
                               QMessageBox,
                               QPalette,
@@ -49,8 +51,6 @@ from Nagstamon.qui.qt import (Signal,
                               QWidget)
 from Nagstamon.qui.widgets.app import app
 from Nagstamon.qui.widgets.mediaplayer import mediaplayer
-from Nagstamon.qui.dialogs.check_version import check_version
-from Nagstamon.qui.dialogs.dialog import Dialog
 from Nagstamon.servers import servers
 
 
@@ -628,7 +628,12 @@ class DialogSettings(Dialog):
                     # go down one row
                     row = row + 1
                 # refresh list and mark new current row
-                self.update_list.emit('list_servers', 'servers', self.window.list_servers.item(row).text())
+                if self.window.list_servers.item(row) is None:
+                    dialog_server = DialogServerMissing()
+                    dialog_server.initialize()
+                    self.update_list.emit('list_servers', 'servers', '')
+                else:
+                    self.update_list.emit('list_servers', 'servers', self.window.list_servers.item(row).text())
                 del row, count
 
             # delete server config file from disk
@@ -649,9 +654,12 @@ class DialogSettings(Dialog):
         list_widget.clear()
         # fill servers listwidget with servers
         self.fill_list(list_widget, list_conf)
-        # select current edited item
-        # activate currently created/edited server monitor item by first searching it in the list
-        list_widget.setCurrentItem(list_widget.findItems(current, Qt.MatchFlag.MatchExactly)[0])
+
+        matched_items = list_widget.findItems(current, Qt.MatchFlag.MatchExactly)
+        if matched_items:
+            # select current edited item
+            # activate currently created/edited server monitor item by first searching it in the list
+            list_widget.setCurrentItem(matched_items[0])
 
     @Slot()
     def new_action(self):
