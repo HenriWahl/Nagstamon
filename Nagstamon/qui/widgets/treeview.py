@@ -583,7 +583,7 @@ class TreeView(QTreeView):
 
     @Slot(str)
     def action_menu_custom_response(self, action):
-        # How many rows do we have
+        # How many rows do we have?
         list_rows = []
         for index in self.selectedIndexes():
             if index.row() not in list_rows:
