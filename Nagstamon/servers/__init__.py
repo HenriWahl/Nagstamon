@@ -173,8 +173,10 @@ def create_server(server=None):
     new_server.idp_ecp_endpoint = server.idp_ecp_endpoint
 
     # if password is not to be saved ask for it at startup
+    # skip if auth helper is used, it provides its own authentication
     if (server.enabled is True and server.save_password is False and
-            server.use_autologin is False):
+            server.use_autologin is False and
+            server.use_auth_helper is False):
         new_server.refresh_authentication = True
 
     # Special FX
@@ -228,6 +230,11 @@ def create_server(server=None):
 
     # Thruk
     new_server.disabled_backends = server.disabled_backends
+
+    # Auth helper
+    new_server.use_auth_helper = server.use_auth_helper
+    new_server.auth_helper_command = server.auth_helper_command
+    new_server.auth_helper_extra_args = server.auth_helper_extra_args
 
     # server's individual preparations for HTTP connections (for example cookie creation)
     # is done in GetStatus() method of monitor
