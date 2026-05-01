@@ -144,12 +144,12 @@ class TreeView(QTreeView):
         # set overall margin and hover colors - to be refined
         self.setStyleSheet('''QTreeView {outline: 0;}
                               QTreeView::item {padding: 3px;}
-                              QTreeView::item:hover {padding: 3px;
-                                                     color: white;
-                                                     background-color: dimgrey;}
-                              QTreeView::item:selected {padding: 3px;
-                                                        color: white;
-                                                        background-color: grey;}
+                              QTreeView::item:hover {padding: 2px 3px;
+                                                     border-top: 1px solid palette(highlight);
+                                                     border-bottom: 1px solid palette(highlight);}
+                              QTreeView::item:selected {padding: 2px 3px;
+                                                        border-top: 2px solid palette(highlight);
+                                                        border-bottom: 2px solid palette(highlight);}
                             ''')
 
         # set application font
