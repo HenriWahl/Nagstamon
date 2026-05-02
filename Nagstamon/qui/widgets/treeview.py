@@ -39,23 +39,80 @@ from Nagstamon.qui.globals import (clipboard,
 from Nagstamon.qui.qt import (get_sort_order_value,
                               QAbstractItemView,
                               QAction,
+                              QBrush,
                               QColor,
                               QHeaderView,
                               QKeySequence,
                               QMenu,
                               QObject,
+                              QPalette,
                               QSignalMapper,
                               QSizePolicy,
+                              QStyle,
+                              QStyledItemDelegate,
                               Qt,
                               QThread,
                               QTimer,
                               QTreeView,
                               Signal,
                               Slot)
+
+try:
+    _STATE_HOVER = QStyle.StateFlag.State_MouseOver
+    _STATE_SELECTED = QStyle.StateFlag.State_Selected
+except AttributeError:
+    _STATE_HOVER = QStyle.State_MouseOver
+    _STATE_SELECTED = QStyle.State_Selected
 from Nagstamon.qui.widgets.app import app
 from Nagstamon.qui.widgets.menu import MenuAtCursor
 from Nagstamon.qui.widgets.model import Model
 from Nagstamon.servers import SERVER_TYPES, servers
+
+
+class StatusAwareDelegate(QStyledItemDelegate):
+    """
+    Renders hover and selection as reverse video using each row's own
+    status colours, so the alert context is always visible.
+    """
+
+    def initStyleOption(self, option, index):
+        super().initStyleOption(option, index)
+
+        is_hovered = bool(option.state & _STATE_HOVER)
+        is_selected = bool(option.state & _STATE_SELECTED)
+
+        if not (is_hovered or is_selected):
+            return
+
+        # BackgroundRole and ForegroundRole both return QColor (qbrushes naming is misleading)
+        bg_color = index.data(Qt.ItemDataRole.BackgroundRole)
+        fg_color = index.data(Qt.ItemDataRole.ForegroundRole)
+
+        if bg_color is None or fg_color is None:
+            return
+
+        # Reverse video: foreground becomes background and vice versa
+        option.backgroundBrush = QBrush(fg_color)
+        option.palette.setColor(QPalette.ColorRole.Text, bg_color)
+        option.palette.setColor(QPalette.ColorRole.WindowText, bg_color)
+        option.palette.setColor(QPalette.ColorRole.HighlightedText, bg_color)
+        option.palette.setColor(QPalette.ColorRole.Highlight, fg_color)
+
+        # Strip flags so the style uses backgroundBrush/Text, not system Highlight/HighlightedText
+        option.state &= ~_STATE_SELECTED
+        option.state &= ~_STATE_HOVER
+
+    def paint(self, painter, option, index):
+        is_hovered = bool(option.state & _STATE_HOVER)
+        is_selected = bool(option.state & _STATE_SELECTED)
+
+        if is_hovered or is_selected:
+            fg_color = index.data(Qt.ItemDataRole.ForegroundRole)
+            if fg_color is not None:
+                # Pre-fill to prevent native Windows style from overriding the background
+                painter.fillRect(option.rect, fg_color)
+
+        super().paint(painter, option, index)
 
 
 class TreeView(QTreeView):
@@ -142,19 +199,15 @@ class TreeView(QTreeView):
         self.header().sortIndicatorChanged.connect(self.sort_columns)
 
         # set overall margin and hover colors - to be refined
+        # The :hover and :selected rules here contain no visual changes — their sole purpose
+        # is to make Qt enable per-item hover tracking so State_MouseOver is set in the delegate.
         self.setStyleSheet('''QTreeView {outline: 0;}
                               QTreeView::item {padding: 3px;}
-                              QTreeView::item:hover {padding: 2px 3px;
-                                                     background-color: palette(highlight);
-                                                     color: palette(highlighted-text);
-                                                     border-top: 1px solid palette(highlight);
-                                                     border-bottom: 1px solid palette(highlight);}
-                              QTreeView::item:selected {padding: 2px 3px;
-                                                        background-color: palette(highlight);
-                                                        color: palette(highlighted-text);
-                                                        border-top: 2px solid palette(highlighted-text);
-                                                        border-bottom: 2px solid palette(highlighted-text);}
+                              QTreeView::item:hover {padding: 3px;}
+                              QTreeView::item:selected {padding: 3px;}
                             ''')
+
+        self.setItemDelegate(StatusAwareDelegate(self))
 
         # set application font
         self.set_font()
