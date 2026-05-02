@@ -74,9 +74,11 @@ class StatusAwareDelegate(QStyledItemDelegate):
     Renders hover and selection as reverse video using each row's own
     status colours, so the alert context is always visible.
 
-    Drawing order: super().paint() first (handles icons, decorations, font),
-    then we overdraw background and text. This wins over native OS styles
-    (Windows/macOS) that ignore option.backgroundBrush inside drawControl.
+    Colours are swapped in initStyleOption and the hover/selected state flags
+    are stripped there too, so super().paint() draws the item as a plain
+    (non-selected) item. Native OS styles (Windows, macOS) respect
+    backgroundBrush and palette.Text for normal items, so no manual
+    text drawing or post-paint overdraw is needed.
     """
 
     # QPalette colour role access differs between PyQt5 (<5.15) and PyQt6
@@ -87,12 +89,11 @@ class StatusAwareDelegate(QStyledItemDelegate):
         _ROLE_TEXT = QPalette.Text
         _ROLE_WINDOW_TEXT = QPalette.WindowText
 
-    def paint(self, painter, option, index):
+    def initStyleOption(self, option, index):
+        super().initStyleOption(option, index)
+
         is_hovered = bool(option.state & _STATE_HOVER)
         is_selected = bool(option.state & _STATE_SELECTED)
-
-        # Let the base delegate paint everything normally first
-        super().paint(painter, option, index)
 
         if not (is_hovered or is_selected):
             return
@@ -104,25 +105,16 @@ class StatusAwareDelegate(QStyledItemDelegate):
         if bg_color is None or fg_color is None:
             return
 
-        # Overdraw background with the row's foreground colour (reverse video).
-        # Doing this after super().paint() ensures we always win over native OS styles.
-        painter.fillRect(option.rect, fg_color)
+        # Reverse video: swap foreground and background
+        option.backgroundBrush = QBrush(fg_color)
+        option.palette.setColor(self._ROLE_TEXT, bg_color)
+        option.palette.setColor(self._ROLE_WINDOW_TEXT, bg_color)
 
-        # Redraw text on top using the row's background colour
-        text = index.data(Qt.ItemDataRole.DisplayRole)
-        if text:
-            painter.save()
-            painter.setPen(bg_color)
-            font = index.data(Qt.ItemDataRole.FontRole)
-            if font and not isinstance(font, type):
-                painter.setFont(font)
-            text_rect = option.rect.adjusted(4, 0, -4, 0)
-            try:
-                align = Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft
-            except AttributeError:
-                align = Qt.AlignVCenter | Qt.AlignLeft
-            painter.drawText(text_rect, align, str(text))
-            painter.restore()
+        # Strip hover/selected so the style engine treats this as a plain item
+        # and uses our backgroundBrush and Text palette colour rather than
+        # the system selection highlight
+        option.state &= ~_STATE_SELECTED
+        option.state &= ~_STATE_HOVER
 
 
 class TreeView(QTreeView):
