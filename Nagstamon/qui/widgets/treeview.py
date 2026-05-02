@@ -145,11 +145,15 @@ class TreeView(QTreeView):
         self.setStyleSheet('''QTreeView {outline: 0;}
                               QTreeView::item {padding: 3px;}
                               QTreeView::item:hover {padding: 2px 3px;
+                                                     background-color: palette(highlight);
+                                                     color: palette(highlighted-text);
                                                      border-top: 1px solid palette(highlight);
                                                      border-bottom: 1px solid palette(highlight);}
                               QTreeView::item:selected {padding: 2px 3px;
-                                                        border-top: 2px solid palette(highlight);
-                                                        border-bottom: 2px solid palette(highlight);}
+                                                        background-color: palette(highlight);
+                                                        color: palette(highlighted-text);
+                                                        border-top: 2px solid palette(highlighted-text);
+                                                        border-bottom: 2px solid palette(highlighted-text);}
                             ''')
 
         # set application font
