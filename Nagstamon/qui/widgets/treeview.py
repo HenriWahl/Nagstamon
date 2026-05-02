@@ -73,13 +73,26 @@ class StatusAwareDelegate(QStyledItemDelegate):
     """
     Renders hover and selection as reverse video using each row's own
     status colours, so the alert context is always visible.
+
+    Drawing order: super().paint() first (handles icons, decorations, font),
+    then we overdraw background and text. This wins over native OS styles
+    (Windows/macOS) that ignore option.backgroundBrush inside drawControl.
     """
 
-    def initStyleOption(self, option, index):
-        super().initStyleOption(option, index)
+    # QPalette colour role access differs between PyQt5 (<5.15) and PyQt6
+    try:
+        _ROLE_TEXT = QPalette.ColorRole.Text
+        _ROLE_WINDOW_TEXT = QPalette.ColorRole.WindowText
+    except AttributeError:
+        _ROLE_TEXT = QPalette.Text
+        _ROLE_WINDOW_TEXT = QPalette.WindowText
 
+    def paint(self, painter, option, index):
         is_hovered = bool(option.state & _STATE_HOVER)
         is_selected = bool(option.state & _STATE_SELECTED)
+
+        # Let the base delegate paint everything normally first
+        super().paint(painter, option, index)
 
         if not (is_hovered or is_selected):
             return
@@ -91,28 +104,25 @@ class StatusAwareDelegate(QStyledItemDelegate):
         if bg_color is None or fg_color is None:
             return
 
-        # Reverse video: foreground becomes background and vice versa
-        option.backgroundBrush = QBrush(fg_color)
-        option.palette.setColor(QPalette.ColorRole.Text, bg_color)
-        option.palette.setColor(QPalette.ColorRole.WindowText, bg_color)
-        option.palette.setColor(QPalette.ColorRole.HighlightedText, bg_color)
-        option.palette.setColor(QPalette.ColorRole.Highlight, fg_color)
+        # Overdraw background with the row's foreground colour (reverse video).
+        # Doing this after super().paint() ensures we always win over native OS styles.
+        painter.fillRect(option.rect, fg_color)
 
-        # Strip flags so the style uses backgroundBrush/Text, not system Highlight/HighlightedText
-        option.state &= ~_STATE_SELECTED
-        option.state &= ~_STATE_HOVER
-
-    def paint(self, painter, option, index):
-        is_hovered = bool(option.state & _STATE_HOVER)
-        is_selected = bool(option.state & _STATE_SELECTED)
-
-        if is_hovered or is_selected:
-            fg_color = index.data(Qt.ItemDataRole.ForegroundRole)
-            if fg_color is not None:
-                # Pre-fill to prevent native Windows style from overriding the background
-                painter.fillRect(option.rect, fg_color)
-
-        super().paint(painter, option, index)
+        # Redraw text on top using the row's background colour
+        text = index.data(Qt.ItemDataRole.DisplayRole)
+        if text:
+            painter.save()
+            painter.setPen(bg_color)
+            font = index.data(Qt.ItemDataRole.FontRole)
+            if font and not isinstance(font, type):
+                painter.setFont(font)
+            text_rect = option.rect.adjusted(4, 0, -4, 0)
+            try:
+                align = Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft
+            except AttributeError:
+                align = Qt.AlignVCenter | Qt.AlignLeft
+            painter.drawText(text_rect, align, str(text))
+            painter.restore()
 
 
 class TreeView(QTreeView):
