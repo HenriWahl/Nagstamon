@@ -449,7 +449,12 @@ class GenericServer:
             # get start time from Nagios as HTML to use same timezone setting like the locally installed Nagios
             result = self.fetch_url(
                 self.monitor_cgi_url + '/cmd.cgi?' + urllib.parse.urlencode({'cmd_typ': '96', 'host': host}))
-            self.start_time = dict(result.result.find(attrs={'name': 'start_time'}).attrs)['value']
+            start_time_element = result.result.find(attrs={'name': 'start_time'})
+            if start_time_element is None:
+                # element missing usually means the user lacks permission to schedule rechecks
+                return Result(result='Recheck not permitted: missing start_time element (insufficient role permissions?)',
+                              error='start_time element not found')
+            self.start_time = dict(start_time_element.attrs)['value']
             # decision about host or service - they have different URLs
             if service == '':
                 # host
