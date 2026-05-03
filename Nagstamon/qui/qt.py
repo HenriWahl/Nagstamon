@@ -106,6 +106,7 @@ if QT_FLAVOR == 'PyQt5':
         QAbstractTableModel, \
         QByteArray, \
         QDateTime, \
+        QEvent, \
         QModelIndex, \
         QObject, \
         QPoint, \
@@ -248,6 +249,7 @@ elif QT_FLAVOR == 'PyQt6':
                               QAbstractTableModel,
                               QByteArray,
                               QDateTime,
+                              QEvent,
                               QModelIndex,
                               QObject,
                               QPoint,
