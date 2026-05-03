@@ -65,6 +65,10 @@ def get_socket(address: 'tuple(str, str)', protocol: str, ignore_cert: bool, cus
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as sock:
         if protocol.endswith('s'):
             context = ssl.create_default_context()
+            if hasattr(context, 'minimum_version') and hasattr(ssl, 'TLSVersion'):
+                context.minimum_version = ssl.TLSVersion.TLSv1_2
+            else:
+                context.options |= ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1
             context.check_hostname = not ignore_cert
             context.verify_mode = ssl.VerifyMode.CERT_NONE if ignore_cert else ssl.VerifyMode.CERT_REQUIRED
         
