@@ -6,6 +6,7 @@ on:
       - '**'
       - '!master'
       - '!*.*.*'
+      - 'qtreeview_improvements'
 
 env:
   python_win_version: 3.14.3
