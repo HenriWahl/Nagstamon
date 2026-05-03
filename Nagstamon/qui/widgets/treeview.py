@@ -39,23 +39,82 @@ from Nagstamon.qui.globals import (clipboard,
 from Nagstamon.qui.qt import (get_sort_order_value,
                               QAbstractItemView,
                               QAction,
+                              QBrush,
                               QColor,
                               QHeaderView,
                               QKeySequence,
                               QMenu,
                               QObject,
+                              QPalette,
                               QSignalMapper,
                               QSizePolicy,
+                              QStyle,
+                              QStyledItemDelegate,
                               Qt,
                               QThread,
                               QTimer,
                               QTreeView,
                               Signal,
                               Slot)
+
+try:
+    _STATE_HOVER = QStyle.StateFlag.State_MouseOver
+    _STATE_SELECTED = QStyle.StateFlag.State_Selected
+except AttributeError:
+    _STATE_HOVER = QStyle.State_MouseOver
+    _STATE_SELECTED = QStyle.State_Selected
 from Nagstamon.qui.widgets.app import app
 from Nagstamon.qui.widgets.menu import MenuAtCursor
 from Nagstamon.qui.widgets.model import Model
 from Nagstamon.servers import SERVER_TYPES, servers
+
+
+class StatusAwareDelegate(QStyledItemDelegate):
+    """
+    Renders hover and selection as reverse video using each row's own
+    status colours, so the alert context is always visible.
+
+    Colours are swapped in initStyleOption and the hover/selected state flags
+    are stripped there too, so super().paint() draws the item as a plain
+    (non-selected) item. Native OS styles (Windows, macOS) respect
+    backgroundBrush and palette.Text for normal items, so no manual
+    text drawing or post-paint overdraw is needed.
+    """
+
+    # QPalette colour role access differs between PyQt5 (<5.15) and PyQt6
+    try:
+        _ROLE_TEXT = QPalette.ColorRole.Text
+        _ROLE_WINDOW_TEXT = QPalette.ColorRole.WindowText
+    except AttributeError:
+        _ROLE_TEXT = QPalette.Text
+        _ROLE_WINDOW_TEXT = QPalette.WindowText
+
+    def initStyleOption(self, option, index):
+        super().initStyleOption(option, index)
+
+        is_hovered = bool(option.state & _STATE_HOVER)
+        is_selected = bool(option.state & _STATE_SELECTED)
+
+        if not (is_hovered or is_selected):
+            return
+
+        # BackgroundRole and ForegroundRole both return QColor (qbrushes naming is misleading)
+        bg_color = index.data(Qt.ItemDataRole.BackgroundRole)
+        fg_color = index.data(Qt.ItemDataRole.ForegroundRole)
+
+        if bg_color is None or fg_color is None:
+            return
+
+        # Reverse video: swap foreground and background
+        option.backgroundBrush = QBrush(fg_color)
+        option.palette.setColor(self._ROLE_TEXT, bg_color)
+        option.palette.setColor(self._ROLE_WINDOW_TEXT, bg_color)
+
+        # Strip hover/selected so the style engine treats this as a plain item
+        # and uses our backgroundBrush and Text palette colour rather than
+        # the system selection highlight
+        option.state &= ~_STATE_SELECTED
+        option.state &= ~_STATE_HOVER
 
 
 class TreeView(QTreeView):
@@ -142,16 +201,15 @@ class TreeView(QTreeView):
         self.header().sortIndicatorChanged.connect(self.sort_columns)
 
         # set overall margin and hover colors - to be refined
-        self.setStyleSheet('''QTreeView::item {margin: 5px;}
-                              QTreeView::item:hover {margin: 0px;
-                                                     padding: 5px;
-                                                     color: white;
-                                                     background-color: dimgrey;}
-                              QTreeView::item:selected {margin: 0px;
-                                                        padding: 5px;
-                                                        color: white;
-                                                        background-color: grey;}
+        # The :hover and :selected rules here contain no visual changes — their sole purpose
+        # is to make Qt enable per-item hover tracking so State_MouseOver is set in the delegate.
+        self.setStyleSheet('''QTreeView {outline: 0;}
+                              QTreeView::item {padding: 3px;}
+                              QTreeView::item:hover {padding: 3px;}
+                              QTreeView::item:selected {padding: 3px;}
                             ''')
+
+        self.setItemDelegate(StatusAwareDelegate(self))
 
         # set application font
         self.set_font()
