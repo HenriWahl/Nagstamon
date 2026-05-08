@@ -41,6 +41,7 @@ from Nagstamon.qui.qt import (get_sort_order_value,
                               QAction,
                               QBrush,
                               QColor,
+                              QEvent,
                               QHeaderView,
                               QKeySequence,
                               QMenu,
@@ -63,6 +64,11 @@ try:
 except AttributeError:
     _STATE_HOVER = QStyle.State_MouseOver
     _STATE_SELECTED = QStyle.State_Selected
+
+try:
+    _EVENT_LEAVE = QEvent.Type.Leave
+except AttributeError:
+    _EVENT_LEAVE = QEvent.Leave
 from Nagstamon.qui.widgets.app import app
 from Nagstamon.qui.widgets.menu import MenuAtCursor
 from Nagstamon.qui.widgets.model import Model
@@ -89,11 +95,35 @@ class StatusAwareDelegate(QStyledItemDelegate):
         _ROLE_TEXT = QPalette.Text
         _ROLE_WINDOW_TEXT = QPalette.WindowText
 
+    def __init__(self, view):
+        super().__init__(view)
+        self._hover_row = -1
+        self._view = view
+        # Track hovered row via signal so initStyleOption has a stable value
+        # during model-reset repaints (when State_MouseOver is transiently absent)
+        view.entered.connect(lambda idx: setattr(self, '_hover_row', idx.row() if idx.isValid() else -1))
+        view.viewport().installEventFilter(self)
+
+    def eventFilter(self, obj, event):
+        try:
+            if obj is self._view.viewport() and event.type() == _EVENT_LEAVE:
+                self._hover_row = -1
+                self._view.viewport().update()
+        except RuntimeError:
+            # View has been destroyed during shutdown; nothing to do
+            pass
+        return False
+
     def initStyleOption(self, option, index):
         super().initStyleOption(option, index)
 
         is_hovered = bool(option.state & _STATE_HOVER)
         is_selected = bool(option.state & _STATE_SELECTED)
+
+        # State_MouseOver is absent during model-reset repaints; fall back to
+        # the last row entered, tracked via the view's entered signal.
+        if not is_hovered and self._hover_row == index.row() and index.row() >= 0:
+            is_hovered = True
 
         if not (is_hovered or is_selected):
             return
