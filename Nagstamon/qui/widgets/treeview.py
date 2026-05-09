@@ -220,8 +220,6 @@ class TreeView(QTreeView):
 
         # get status if started
         self.worker_thread.started.connect(self.worker.get_status)
-        # start with priority 0 = lowest
-        self.worker_thread.start()
 
         # connect signal for acknowledge
         self.parent_statuswindow.injected_dialogs.acknowledge.acknowledge.connect(self.worker.acknowledge)
@@ -938,6 +936,15 @@ class TreeView(QTreeView):
         # intransmissible
         # get_sort_order_value() cures the differences between Qt5 and Qt6
         self.sort_data_array_for_columns.emit(int(sort_column), int(get_sort_order_value(sort_order)), True)
+
+    @Slot()
+    def start_worker_thread(self):
+        """
+        start worker thread when surrounding UI finished its initialization
+        """
+        if not self.worker_thread.isRunning():
+            # start with priority 0 = lowest
+            self.worker_thread.start()
 
     @Slot()
     def finish_worker_thread(self):

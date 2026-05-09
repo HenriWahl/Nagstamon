@@ -346,6 +346,8 @@ class StatusWindow(QWidget):
 
         # finally show up
         self.set_mode()
+        # start server worker threads only after startup mode has been applied
+        self.timer.singleShot(0, self.start_server_vboxes_workers)
 
     @Slot()
     def reinitialize(self):
@@ -659,6 +661,15 @@ class StatusWindow(QWidget):
                 server_vbox = self.create_server_vbox(server.name)
                 self.servers_vbox.addLayout(server_vbox)
         self.sort_server_vboxes()
+
+    @Slot()
+    def start_server_vboxes_workers(self):
+        """
+        start all server table workers after status window startup settled
+        """
+        for server_vbox in self.servers_vbox.children():
+            if hasattr(server_vbox, 'table'):
+                server_vbox.table.start_worker_thread()
 
     @Slot(str)
     def delete_server_vbox(self, name):
