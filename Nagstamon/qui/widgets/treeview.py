@@ -944,10 +944,11 @@ class TreeView(QTreeView):
         """
         attempt to shut down thread cleanly
         """
-        # tell thread to quit
-        self.worker_thread.quit()
-        # wait until thread is really stopped
-        self.worker_thread.wait()
+        if self.worker_thread.isRunning():
+            # tell thread to quit
+            self.worker_thread.quit()
+            # wait until thread is really stopped
+            self.worker_thread.wait()
 
     class Worker(QObject):
         """

@@ -355,15 +355,15 @@ class StatusWindow(QWidget):
         # stop both workers
         if hasattr(self, 'worker'):
             self.worker.running = False
-            self.worker.finish.emit()
+            self.finish_worker_thread()
         if hasattr(self, 'worker_notification'):
             self.worker_notification.running = False
-            self.worker_notification.finish.emit()
+            self.finish_worker_notification_thread()
         # remove all server vboxes
         if hasattr(self, 'servers_vbox'):
             for vbox in self.servers_vbox.children():
                 if hasattr(vbox, 'table') and hasattr(vbox.table, 'worker'):
-                    vbox.table.worker.finish.emit()
+                    vbox.table.finish_worker_thread()
                 vbox.deleteLater()
         # initialize all volatile widgets
         self.initialize()
@@ -669,7 +669,7 @@ class StatusWindow(QWidget):
             if vbox.server.name == name:
                 # stop thread by falsificate running flag
                 vbox.table.worker.running = False
-                vbox.table.worker.finish.emit()
+                vbox.table.finish_worker_thread()
                 break
 
     @Slot()
@@ -1204,7 +1204,7 @@ class StatusWindow(QWidget):
         """
         # check first if popup has to be shown by hovering or clicking
         if conf.windowed:
-            exit()
+            self.exit()
 
     def get_real_width(self):
         """
@@ -1352,20 +1352,22 @@ class StatusWindow(QWidget):
         """
         # stop debugging
         statuswindow_properties.worker_debug_loop_looping = False
-        # tell thread to quit
-        self.worker_thread.quit()
-        # wait until thread is really stopped
-        self.worker_thread.wait()
+        if hasattr(self, 'worker_thread') and self.worker_thread.isRunning():
+            # tell thread to quit
+            self.worker_thread.quit()
+            # wait until thread is really stopped
+            self.worker_thread.wait()
 
     @Slot()
     def finish_worker_notification_thread(self):
         """
         attempt to shut down thread cleanly
         """
-        # tell thread to quit
-        self.worker_notification_thread.quit()
-        # wait until thread is really stopped
-        self.worker_notification_thread.wait()
+        if hasattr(self, 'worker_notification_thread') and self.worker_notification_thread.isRunning():
+            # tell thread to quit
+            self.worker_notification_thread.quit()
+            # wait until thread is really stopped
+            self.worker_notification_thread.wait()
 
     @Slot(str)
     def remove_previous_server_vbox(self, previous_server_name):
@@ -1376,7 +1378,7 @@ class StatusWindow(QWidget):
                 vbox.server.enabled = False
                 # stop thread by falsificate running flag
                 vbox.table.worker.running = False
-                vbox.table.worker.finish.emit()
+                vbox.table.finish_worker_thread()
                 # nothing more to do
                 break
 
@@ -1405,12 +1407,18 @@ class StatusWindow(QWidget):
         self.hide()
 
         # stop statuswindow workers
-        self.worker.finish.emit()
-        self.worker_notification.finish.emit()
+        if hasattr(self, 'worker'):
+            self.worker.running = False
+            self.finish_worker_thread()
+        if hasattr(self, 'worker_notification'):
+            self.worker_notification.running = False
+            self.finish_worker_notification_thread()
 
         # tell all treeview threads to stop
         for server_vbox in self.servers_vbox.children():
-            server_vbox.table.worker.finish.emit()
+            if hasattr(server_vbox, 'table'):
+                server_vbox.table.worker.running = False
+                server_vbox.table.finish_worker_thread()
 
         app.exit()
 
