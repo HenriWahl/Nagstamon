@@ -660,9 +660,7 @@ class StatusWindow(QWidget):
         """
         for server in servers.values():
             if server.enabled:
-                server_vbox = self.create_server_vbox(server.name)
-                self.servers_vbox.addLayout(server_vbox)
-        self.sort_server_vboxes()
+                self.create_server_vbox(server.name)
 
     @Slot(str)
     def delete_server_vbox(self, name):
