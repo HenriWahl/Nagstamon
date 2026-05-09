@@ -61,7 +61,7 @@ class ServerVBox(QVBoxLayout):
     open_dialog = Signal()
 
     def __init__(self, server, parent=None):
-        QVBoxLayout.__init__(self, parent)
+        QVBoxLayout.__init__(self)
 
         self.parent_statuswindow = parent
 
