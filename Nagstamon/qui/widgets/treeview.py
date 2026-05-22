@@ -731,6 +731,9 @@ class TreeView(QTreeView):
                     not method.__name__ == 'action_recheck' and \
                     not method.__name__ == 'action_archive_event':
                 self.action_menu_clicked.emit()
+            # clear the right-click selection so the row doesn't remain
+            # visually highlighted after the action completes
+            self.clearSelection()
 
         return decoration_function
 
