@@ -1599,6 +1599,10 @@ class GenericServer:
             if self.encoding != response.encoding:
                 self.encoding = response.encoding
 
+            # Microsoft Authentication required - Required since mslogin returns 200
+            if response.status_code == 200 and "<!DOCTYPE html>" in response.text and "https://login.microsoftonline.com/" in response.text and self.authentication == 'web':
+                response.status_code = 401
+
             # give back pure HTML or XML in case giveback is 'raw'
             if giveback == 'raw':
                 # .text gives content in unicode
