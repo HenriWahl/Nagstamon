@@ -88,6 +88,7 @@ BOOLPOOL = {'False': False,
 
 # config settings which should always be strings, never converted to integer or bool
 CONFIG_STRINGS = ['custom_browser',
+                  'ui_backend',
                   'debug_file',
                   'notification_custom_sound_warning',
                   'notification_custom_sound_critical',
@@ -200,6 +201,7 @@ class Config:
         self.close_details_hover = True
         self.close_details_clicking = False
         self.close_details_clicking_somewhere = False
+        self.ui_backend = os.environ.get('NAGSTAMON_UI', 'classic').lower()
         self.connect_by_host = True
         self.connect_by_dns = False
         self.connect_by_ip = False

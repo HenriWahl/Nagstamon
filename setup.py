@@ -73,6 +73,9 @@ CLASSIFIERS = ['Intended Audience :: System Administrators',
 # Dependencies are automatically detected, but it might need
 # fine tuning.
 build_exe_options = dict(packages=['PyQt6.QtNetwork',
+                                   'PyQt6.QtQml',
+                                   'PyQt6.QtQuick',
+                                   'PyQt6.QtQuickControls2',
                                    'keyring.backends.kwallet',
                                    'keyring.backends.OS_X',
                                    'keyring.backends.SecretService',

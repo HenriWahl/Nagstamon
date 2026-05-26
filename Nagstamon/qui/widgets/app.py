@@ -39,7 +39,7 @@ if QT_VERSION_MAJOR < 6:
 
 
 # global application instance
-app = QApplication(argv)
+app = QApplication.instance() or QApplication(argv)
 
 # set style for tooltips globally - to sad not all properties can be set here
 app.setStyleSheet('''QToolTip { margin: 3px;
