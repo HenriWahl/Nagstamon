@@ -633,6 +633,9 @@ class StatusWindow(QWidget):
             # because apparently the new events have been seen now
             self.hiding.connect(server_vbox.table.worker.unfresh_event_history)
 
+            # avoid still selected columns when window is hiding
+            self.hiding.connect(server_vbox.table.clearSelection)
+
             # stop notification if statuswindow pops up
             self.showing.connect(self.worker_notification.stop)
 
@@ -918,9 +921,6 @@ class StatusWindow(QWidget):
                     # reset icon x y
                     statuswindow_properties.icon_x = 0
                     statuswindow_properties.icon_y = 0
-
-                    if conf.windowed:
-                        self.hide()
 
                     # store time of hiding
                     statuswindow_properties.is_hiding_timestamp = time()
