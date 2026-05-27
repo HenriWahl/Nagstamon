@@ -255,6 +255,10 @@ class TreeView(QTreeView):
 
         # action context menu
         self.action_menu = MenuAtCursor(parent=self)
+
+        # avoid remaining selected row after menu being closed
+        self.action_menu.aboutToHide.connect(self.clearSelection)
+
         # signalmapper for getting triggered actions
         self.signalmapper_action_menu = QSignalMapper()
         # connect menu to responder
