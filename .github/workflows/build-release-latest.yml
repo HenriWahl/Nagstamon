@@ -284,7 +284,7 @@ jobs:
       # checkout to get Dockerfiles for steps.dockerfile_hash.outputs.HASH
       - uses: actions/checkout@v6
       # get binaries created by other jobs
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: 'debian*'
           path: artifact
@@ -335,7 +335,7 @@ jobs:
       # checkout to get Dockerfiles for steps.dockerfile_hash.outputs.HASH
       - uses: actions/checkout@v6
       # get binaries created by other jobs
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: 'fedora*'
           path: artifact
@@ -387,7 +387,7 @@ jobs:
       # checkout to get Dockerfiles for steps.dockerfile_hash.outputs.HASH
       - uses: actions/checkout@v6
       # get binaries created by other jobs
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: 'rhel*'
           path: artifact
@@ -420,7 +420,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [repo-rpm-rhel]
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: '*'
           path: artifact
