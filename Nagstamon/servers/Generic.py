@@ -1108,7 +1108,7 @@ class GenericServer:
                         if conf.debug_mode:
                             self.debug(server=self.get_name(), debug='Filter: UNKNOWN ' + str(host.name))
                         host.visible = False
-    
+
                     if host.visible:
                         self.nagitems_filtered['hosts']['UNKNOWN'].append(host)
                         self.unknown += 1
@@ -1600,7 +1600,12 @@ class GenericServer:
                 self.encoding = response.encoding
 
             # Microsoft Authentication required - Required since mslogin returns 200
-            if response.status_code == 200 and "<!DOCTYPE html>" in response.text and "https://login.microsoftonline.com/" in response.text and self.authentication == 'web':
+            if (
+                self.authentication == "web"
+                and response.status_code == 200
+                and "<!-- Copyright (C) Microsoft Corporation" in response.text[0:100]
+                and "https://login.microsoftonline.com/" in response.text[0:2048]
+            ):
                 response.status_code = 401
 
             # give back pure HTML or XML in case giveback is 'raw'
