@@ -197,7 +197,7 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '${{ env.python_win_version }}'
           architecture: x86
@@ -226,7 +226,7 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '${{ env.python_win_version }}'
           architecture: x64
@@ -253,7 +253,7 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '${{ env.python_win_version }}'
           architecture: x64
