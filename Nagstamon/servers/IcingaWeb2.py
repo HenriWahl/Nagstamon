@@ -346,9 +346,69 @@ class IcingaWeb2Server(GenericServer):
         # some cleanup
         del jsonraw, error, hosts, services
 
+        # fetch host groups after all hosts and services are known
+        self._fetch_host_groups()
+
         # dummy return in case all is OK
         return Result()
 
+    def _fetch_host_groups(self):
+        """Populate host.groups and service.groups by querying per hostgroup.
+
+        Strategy: 1 request for the group list, then 1 request per group to get its
+        members. Scales with number of groups (typically 20-50), not number of hosts.
+        Only runs when the groups regex filter is enabled.
+        """
+        from Nagstamon.config import conf
+        if not conf.re_groups_enabled or not self.new_hosts:
+            return
+        try:
+            real_to_key = {}
+            for key, obj in self.new_hosts.items():
+                real_to_key[key] = key
+                real_name = getattr(obj, 'real_name', None)
+                if real_name:
+                    real_to_key[real_name] = key
+
+            # fetch list of all hostgroups
+            url = self.monitor_cgi_url + '/monitoring/list/hostgroups?format=json'
+            result = self.fetch_url(url, giveback='raw')
+            jsonraw = result.result.replace('\n', '')
+            if not jsonraw.strip() or jsonraw.lstrip().startswith('<'):
+                return
+            all_groups = []
+            for item in json.loads(jsonraw):
+                h = dict(item.items())
+                g = h.get('hostgroup_name') or h.get('hostgroup_alias') or h.get('hostgroup', '')
+                if g:
+                    all_groups.append(g)
+
+            # for each group fetch its member hosts
+            for group in all_groups:
+                url = (self.monitor_cgi_url + '/monitoring/list/hosts?' +
+                       urllib.parse.urlencode([('hostgroup', group), ('format', 'json')]))
+                result = self.fetch_url(url, giveback='raw')
+                jsonraw = result.result.replace('\n', '')
+                if not jsonraw.strip() or jsonraw.lstrip().startswith('<'):
+                    continue
+                for host in json.loads(jsonraw):
+                    h = dict(host.items())
+                    host_name = h.get('host_name') or h.get('host', '')
+                    matched = real_to_key.get(host_name)
+                    if not matched:
+                        continue
+                    host_obj = self.new_hosts[matched]
+                    if group not in host_obj.groups:
+                        host_obj.groups = (host_obj.groups + ', ' + group) if host_obj.groups else group
+
+            # propagate host groups to services so service-level filter works
+            for host_obj in self.new_hosts.values():
+                if host_obj.groups:
+                    for service in host_obj.services.values():
+                        service.groups = host_obj.groups
+        except Exception:
+            import traceback
+            traceback.print_exc(file=sys.stdout)
 
     def _set_recheck(self, host, service):
         # First retrieve the info page for this host/service
