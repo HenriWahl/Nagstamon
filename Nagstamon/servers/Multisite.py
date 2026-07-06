@@ -126,6 +126,19 @@ class MultisiteServer(GenericServer):
                 'PEND':    'PENDING',
             }
 
+        # Establish a real interactive session cookie before any Basic Auth
+        # request is sent. On some Checkmk setups a Basic-Auth-authenticated
+        # request is answered in a context that returns *no* view rows (empty
+        # result) while the interactive session returns all rows. This made
+        # Nagstamon show "OK" although host/service problems existed
+        # (see https://github.com/HenriWahl/Nagstamon/issues/1077).
+        # Logging in via login.py with the Basic Auth header suppressed yields
+        # a proper interactive session that returns the complete data.
+        if self.authentication != 'web' and \
+                self.session is not None and \
+                not self._is_auth_in_cookies():
+            self._get_cookie_login()
+
         # Function overrides for Checkmk 2.3+
         version = self._get_version()
         if version >= [2, 3]:
@@ -232,8 +245,21 @@ class MultisiteServer(GenericServer):
                      'filled_in' :' login'}
         # get cookie from login page via url retrieving as with other urls
         try:
-            # login and get cookie
-            self.fetch_url(self.monitor_url + '/login.py', cgi_data=login_data, multipart=True)
+            # Temporarily suppress the Basic Auth header for the login request.
+            # If Basic Auth is sent along, some Checkmk setups short-circuit the
+            # login and keep the session in a Basic-Auth context that returns no
+            # view rows (see issue #1077). Without it, login.py establishes a
+            # proper interactive session cookie that returns the full data.
+            saved_auth = None
+            if self.session is not None:
+                saved_auth = self.session.auth
+                self.session.auth = None
+            try:
+                # login and get cookie
+                self.fetch_url(self.monitor_url + '/login.py', cgi_data=login_data, multipart=True)
+            finally:
+                if self.session is not None:
+                    self.session.auth = saved_auth
         except:
             self.error(sys.exc_info())
 
