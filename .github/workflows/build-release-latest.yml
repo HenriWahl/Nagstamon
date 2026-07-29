@@ -191,35 +191,35 @@ jobs:
           if-no-files-found: error
           name: ${{ github.job }}
 
-  windows-32:
-    # better depend on stable build image
-    runs-on: windows-2022
-    needs: test
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '${{ env.python_win_version }}'
-          architecture: x86
-      #  no PyQt6 for win32 available on pypi.org
-      - run: ((Get-Content -path build/requirements/windows.txt -Raw) -replace 'pyqt6.*','pyqt5') | Set-Content -Path build/requirements/windows.txt
-      - run: python -m pip install --no-warn-script-location -r build/requirements/windows.txt
-      # pretty hacky but no other idea to avoid gssapi being installed which breaks requests-kerberos
-      - run: python -m pip uninstall -y gssapi requests-gssapi
-      - run: cd ${{ github.workspace }}/build; python build.py
-        env:
-          PYTHONPATH: ${{ github.workspace }}
-          # signing key is expired
-          #WIN_SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
-          #WIN_SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
-      - uses: actions/upload-artifact@v7
-        with:
-          path: |
-            build/dist/*.zip
-            build/dist/*.exe
-          retention-days: 1
-          if-no-files-found: error
-          name: ${{ github.job }}
+#  windows-32:
+#    # better depend on stable build image
+#    runs-on: windows-2022
+#    needs: test
+#    steps:
+#      - uses: actions/checkout@v6
+#      - uses: actions/setup-python@v6
+#        with:
+#          python-version: '${{ env.python_win_version }}'
+#          architecture: x86
+#      #  no PyQt6 for win32 available on pypi.org
+#      - run: ((Get-Content -path build/requirements/windows.txt -Raw) -replace 'pyqt6.*','pyqt5') | Set-Content -Path build/requirements/windows.txt
+#      - run: python -m pip install --no-warn-script-location -r build/requirements/windows.txt
+#      # pretty hacky but no other idea to avoid gssapi being installed which breaks requests-kerberos
+#      - run: python -m pip uninstall -y gssapi requests-gssapi
+#      - run: cd ${{ github.workspace }}/build; python build.py
+#        env:
+#          PYTHONPATH: ${{ github.workspace }}
+#          # signing key is expired
+#          #WIN_SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
+#          #WIN_SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+#      - uses: actions/upload-artifact@v7
+#        with:
+#          path: |
+#            build/dist/*.zip
+#            build/dist/*.exe
+#          retention-days: 1
+#          if-no-files-found: error
+#          name: ${{ github.job }}
 
   windows-64:
     # better depend on stable build image
@@ -279,7 +279,8 @@ jobs:
   repo-debian:
     runs-on: ubuntu-latest
     # try to avoid race condition and start uploading only after the last install package has been build
-    needs: [debian, fedora, linux-pyinstaller, macos-arm, macos-intel, rhel-9, windows-32, windows-64, windows-64-debug]
+    #needs: [debian, fedora, linux-pyinstaller, macos-arm, macos-intel, rhel-9, windows-32, windows-64, windows-64-debug]
+    needs: [debian, fedora, linux-pyinstaller, macos-arm, macos-intel, rhel-9, windows-64, windows-64-debug]
     env:
       family: debian
     steps:
