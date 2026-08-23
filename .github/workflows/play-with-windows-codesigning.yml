@@ -13,3 +13,4 @@ jobs:
     runs-on: codesigning
     steps:
       - run: pwd
+      - run: Get-ChildItem -Recurse
