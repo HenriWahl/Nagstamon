@@ -63,7 +63,7 @@ class StatusBarLabel(DraggableLabel):
         self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
 
         # hidden per default
-        self.hide()
+        #######self.hide()
 
         # default text - only useful in case of OK Label
         self.setText(state)
