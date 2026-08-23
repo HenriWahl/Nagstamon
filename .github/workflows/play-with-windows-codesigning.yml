@@ -12,4 +12,4 @@ jobs:
     # better depend on stable build image
     runs-on: codesigning
     steps:
-      - run: ls
+      - run: pwd
