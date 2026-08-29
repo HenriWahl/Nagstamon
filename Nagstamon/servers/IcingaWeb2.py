@@ -103,11 +103,13 @@ class IcingaWeb2Server(GenericServer):
                 if login.error == '' and login.status_code == 200:
                     form = login.result.find('form')
                     form_inputs = {}
-                    for form_input in ('redirect', 'formUID', 'CSRFToken', 'btn_submit'):
-                        if form is not None and not form.find('input', {'name': form_input}) is None:
-                            form_inputs[form_input] = form.find('input', {'name': form_input})['value']
-                        else:
-                            form_inputs[form_input] = ''
+                    for form_input in ('redirect', 'formUID', 'CSRFToken', 'btn_submit', 'uid', 'submit_login'):
+                        form_field_value = ''
+                        if form is not None:
+                            form_field = form.find('input', {'name': form_input})
+                            if form_field is not None and form_field.has_attr('value'):
+                                form_field_value = form_field['value']
+                        form_inputs[form_input] = form_field_value
                     form_inputs['username'] = self.username
                     form_inputs['password'] = self.password
     
