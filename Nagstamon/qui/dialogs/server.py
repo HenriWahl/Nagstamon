@@ -79,7 +79,11 @@ class DialogServer(Dialog):
             self.window.input_checkbox_show_options: [self.window.groupbox_options],
             self.window.input_checkbox_custom_cert_use: [self.window.label_custom_ca_file,
                                                          self.window.input_lineedit_custom_cert_ca_file,
-                                                         self.window.button_choose_custom_cert_ca_file]}
+                                                         self.window.button_choose_custom_cert_ca_file],
+            self.window.input_checkbox_use_auth_helper: [self.window.label_auth_helper_command,
+                                                         self.window.input_lineedit_auth_helper_command,
+                                                         self.window.label_auth_helper_extra_args,
+                                                         self.window.input_lineedit_auth_helper_extra_args]}
 
         self.TOGGLE_DEPS_INVERTED = [self.window.input_checkbox_use_proxy_from_os]
 
@@ -185,6 +189,9 @@ class DialogServer(Dialog):
         # when authentication is changed to Kerberos then disable username/password as they are now useless
         self.window.input_combobox_authentication.activated.connect(self.toggle_authentication)
 
+        # when auth helper is toggled, hide/show username/password accordingly
+        self.window.input_checkbox_use_auth_helper.toggled.connect(self.toggle_authentication)
+
         # reset Checkmk views
         self.window.button_checkmk_view_hosts_reset.clicked.connect(self.checkmk_view_hosts_reset)
         self.window.button_checkmk_view_services_reset.clicked.connect(self.checkmk_view_services_reset)
@@ -242,6 +249,16 @@ class DialogServer(Dialog):
             for widget in self.AUTHENTICATION_WIDGETS + self.CUSTOM_CERT_CA_WIDGETS:
                 widget.show()
             self.window.button_delete_web_cookies.hide()
+
+        # no need for username + password or authentication type when using auth helper
+        if self.window.input_checkbox_use_auth_helper.isChecked():
+            for widget in self.AUTHENTICATION_WIDGETS:
+                widget.hide()
+            self.window.label_auth_type.hide()
+            self.window.input_combobox_authentication.hide()
+        else:
+            self.window.label_auth_type.show()
+            self.window.input_combobox_authentication.show()
 
         # after hiding authentication widgets dialog might shrink
         self.window.adjustSize()
