@@ -5,7 +5,6 @@ import re
 from datetime import datetime, timedelta, timezone
 from urllib.parse import quote, urlencode
 
-from Nagstamon.config import conf
 from Nagstamon.objects import (GenericHost, Result)
 from Nagstamon.servers.Generic import GenericServer
 from Nagstamon.helpers import webbrowser_open
@@ -19,8 +18,7 @@ from .helpers import (start_logging,
 
 from .alertmanagerservice import AlertmanagerService
 
-# TODO: support debug level switching while running
-log = start_logging('alertmanager', conf.debug_mode)
+log = start_logging('alertmanager')
 
 class AlertmanagerServer(GenericServer):
     """

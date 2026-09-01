@@ -3,19 +3,55 @@ import logging
 import dateutil.parser
 from datetime import datetime, timedelta, timezone
 
-def start_logging(log_name, debug_mode):
+from Nagstamon.config import conf, debug_queue
+
+class DebugQueueHandler(logging.Handler):
+    """
+    Hands the log records over to the debug queue of Nagstamon so they show up in the
+    debug window and the debug file like the output of every other server
+    """
+
+    def emit(self, record):
+        debug_queue.append(self.format(record))
+
+
+def debug_mode_filter(record):
+    """Lets debug records pass only while the debug mode is switched on
+
+    Evaluating it per record instead of once at import time is what makes switching the
+    debug mode while Nagstamon is running work at all.
+
+    Args:
+        record (logging.LogRecord): The record about to be emitted
+
+    Returns:
+        bool: True if the record should be emitted
+    """
+    return record.levelno > logging.DEBUG or conf.debug_mode
+
+
+def start_logging(log_name):
+    """Sets up the logger of this module
+
+    Args:
+        log_name (str): Name of the logger
+
+    Returns:
+        logging.Logger: The ready to use logger
+    """
     logger = logging.getLogger(log_name)
-    handler = logging.StreamHandler(sys.stdout)
-    if debug_mode is True:
-        LOG_LEVEL = logging.DEBUG
-        handler.setLevel(logging.DEBUG)
-    else:
-        LOG_LEVEL = logging.INFO
-        handler.setLevel(logging.INFO)
-    logger.setLevel(LOG_LEVEL)
+    # a second call must not add the handlers again
+    if logger.handlers:
+        return logger
+
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
+    for handler in (logging.StreamHandler(sys.stdout), DebugQueueHandler()):
+        handler.setFormatter(formatter)
+        handler.addFilter(debug_mode_filter)
+        logger.addHandler(handler)
+
+    # the level is decided per record by debug_mode_filter()
+    logger.setLevel(logging.DEBUG)
     return logger
 
 
