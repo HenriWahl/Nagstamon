@@ -52,15 +52,16 @@ import urllib.error
 import pprint
 import json
 
-from datetime import datetime, timedelta, timezone
-import dateutil.parser
+from datetime import datetime, timedelta
 
 from Nagstamon.config import conf
 from Nagstamon.objects import (GenericHost,
                                GenericService,
                                Result)
 from Nagstamon.servers.Generic import GenericServer
-from Nagstamon.helpers import webbrowser_open
+from Nagstamon.helpers import (detect_from_labels,
+                               get_duration,
+                               webbrowser_open)
 
 
 class PrometheusService(GenericService):
@@ -119,25 +120,6 @@ class PrometheusServer(GenericServer):
         return (str(start.strftime("%Y-%m-%d %H:%M:%S")),
                 str(end.strftime("%Y-%m-%d %H:%M:%S")))
 
-    def _get_duration(self, timestring):
-        """
-        calculates the duration (delta) from Prometheus' activeAt (ISO8601
-        format) until now an returns a human friendly string
-        """
-        time_object = dateutil.parser.parse(timestring)
-        duration = datetime.now(timezone.utc) - time_object
-        h = int(duration.seconds / 3600)
-        m = int(duration.seconds % 3600 / 60)
-        s = int(duration.seconds % 60)
-        if duration.days > 0:
-            return "%sd %sh %02dm %02ds" % (duration.days, h, m, s)
-        elif h > 0:
-            return "%sh %02dm %02ds" % (h, m, s)
-        elif m > 0:
-            return "%02dm %02ds" % (m, s)
-        else:
-            return "%02ds" % (s)
-
     def _set_downtime(self, host, service, author, comment, fixed, start_time,
                       end_time, hours, minutes):
         """
@@ -183,17 +165,8 @@ class PrometheusServer(GenericServer):
                 if severity == "NONE":
                     continue
 
-                hostname = "unknown"
-                for host_label in self.map_to_hostname.split(','):
-                    if host_label in labels:
-                        hostname = labels.get(host_label)
-                        break
-
-                servicename = "unknown"
-                for service_label in self.map_to_servicename.split(','):
-                    if service_label in labels:
-                        servicename = labels.get(service_label)
-                        break
+                hostname = detect_from_labels(labels, self.map_to_hostname, "unknown")
+                servicename = detect_from_labels(labels, self.map_to_servicename, "unknown")
 
                 service = PrometheusService()
                 service.host = str(hostname)
@@ -202,15 +175,12 @@ class PrometheusServer(GenericServer):
                 service.status = severity
                 service.last_check = "n/a"
                 service.attempt = alert.get("state", "firing")
-                service.duration = str(self._get_duration(alert["activeAt"]))
+                service.duration = get_duration(alert.get("activeAt"))
 
                 annotations = alert.get("annotations", {})
-                status_information = ""
-                for status_information_label in self.map_to_status_information.split(','):
-                    if status_information_label in annotations:
-                        status_information = annotations.get(status_information_label)
-                        break
-                service.status_information = status_information
+                service.status_information = detect_from_labels(annotations,
+                                                                self.map_to_status_information,
+                                                                "")
 
                 if hostname not in self.new_hosts:
                     self.new_hosts[hostname] = GenericHost()
