@@ -65,6 +65,35 @@ def get_minimum_os_version(path):
     return max(versions) if versions else None
 
 
+def get_declared_version(bundle):
+    """
+        return the minimum macOS version the bundle declares in its Info.plist as tuple
+        of ints
+
+        the ways this can go wrong end in a message instead of a traceback, because both
+        of them are plausible: a shell glob which did not match any staging directory is
+        passed on as a literal path, and a bundle might be built without the key
+    """
+    plist_path = bundle / 'Contents' / 'Info.plist'
+    try:
+        with plist_path.open('rb') as file:
+            plist = plistlib.load(file)
+    except OSError as error:
+        sys.exit(f'cannot read {plist_path}: {error}')
+    except plistlib.InvalidFileException as error:
+        sys.exit(f'cannot parse {plist_path}: {error}')
+
+    if 'LSMinimumSystemVersion' not in plist:
+        sys.exit(f'{plist_path} does not contain LSMinimumSystemVersion - the bundle does '
+                 f'not declare a minimum macOS version at all')
+
+    declared = plist['LSMinimumSystemVersion']
+    try:
+        return tuple(int(x) for x in str(declared).split('.'))
+    except ValueError:
+        sys.exit(f'{plist_path} declares an unusable LSMinimumSystemVersion {declared!r}')
+
+
 def collect_versions(bundle):
     """
         return a dict of bundle-relative path to required minimum macOS version for every
@@ -88,8 +117,7 @@ def main():
         sys.exit(f'usage: {sys.argv[0]} <path to Nagstamon.app>')
 
     bundle = Path(sys.argv[1])
-    with (bundle / 'Contents' / 'Info.plist').open('rb') as file:
-        declared = tuple(int(x) for x in plistlib.load(file)['LSMinimumSystemVersion'].split('.'))
+    declared = get_declared_version(bundle)
 
     print(f'{bundle.name} declares LSMinimumSystemVersion {version_string(declared)}')
 
