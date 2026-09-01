@@ -172,11 +172,6 @@ def create_server(server=None):
     # ECP authentication
     new_server.idp_ecp_endpoint = server.idp_ecp_endpoint
 
-    # if password is not to be saved ask for it at startup
-    if (server.enabled is True and server.save_password is False and
-            server.use_autologin is False):
-        new_server.refresh_authentication = True
-
     # Special FX
     # Centreon
     new_server.use_autologin = server.use_autologin
@@ -277,7 +272,5 @@ for server in conf.servers.values():
     created_server = create_server(server)
     if created_server is not None:
         servers[server.name] = created_server
-        # for the next time no auth needed
-        servers[server.name].refresh_authentication = False
 
 
