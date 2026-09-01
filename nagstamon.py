@@ -34,15 +34,25 @@ socket.setdefaulttimeout(30)
 try:
     if __name__ == '__main__':
         from Nagstamon.config import (conf,
+                                      debug_queue,
                                       OS,
                                       OS_WINDOWS)
 
-        from Nagstamon.helpers import lock_config_folder
+        from Nagstamon.helpers import (is_translated_by_rosetta,
+                                       lock_config_folder)
 
         # Acquire the lock
         if not lock_config_folder(conf.configdir):
             print('An instance is already running this config ({})'.format(conf.configdir))
             sys.exit(1)
+
+        # an Intel build started on Apple Silicon works, but slower and with subtle Qt
+        # differences - saying so saves everybody from debugging the wrong download
+        if is_translated_by_rosetta():
+            message = 'Running the Intel build translated by Rosetta - ' \
+                      'please use the ARM build for Apple Silicon Macs.'
+            print(message)
+            debug_queue.append(message)
 
         # get GUI
         from Nagstamon.qui import (app,
