@@ -49,6 +49,30 @@ class AlertmanagerServer(GenericServer):
     SILENCE_COMMENT_ACKNOWLEDGE = 'Nagstamon acknowledgement'
     SILENCE_COMMENT_DOWNTIME = 'Nagstamon downtime'
 
+    # states an alert severity can be mapped to, worst first
+    # these are the states GenericServer.get_status() counts for services, plus OK, which
+    # makes an alert disappear, and the deprecated DOWN, which only hosts can be in
+    SEVERITY_MAP_OPTIONS = ('disaster',
+                            'critical',
+                            'down',
+                            'high',
+                            'average',
+                            'warning',
+                            'information',
+                            'unknown',
+                            'ok')
+
+    # states a service can really be in - anything else is never counted and would make an
+    # alert vanish without a trace
+    SERVICE_STATES = ('DISASTER',
+                      'CRITICAL',
+                      'HIGH',
+                      'AVERAGE',
+                      'WARNING',
+                      'INFORMATION',
+                      'UNKNOWN',
+                      'OK')
+
     # vars specific to alertmanager class
     map_to_hostname = ''
     map_to_servicename = ''
@@ -58,6 +82,10 @@ class AlertmanagerServer(GenericServer):
     map_to_down = ''
     map_to_unknown = ''
     map_to_ok = ''
+    map_to_disaster = ''
+    map_to_high = ''
+    map_to_average = ''
+    map_to_information = ''
     name = ''
     alertmanager_filter = ''
     silence_matcher_labels = ''
@@ -93,7 +121,10 @@ class AlertmanagerServer(GenericServer):
                 str(end.strftime("%Y-%m-%d %H:%M:%S")))
 
     def map_severity(self, the_severity):
-        """Maps a severity
+        """Maps a severity onto a state Nagstamon knows
+
+        The configured mappings are checked worst state first, so a severity listed in
+        more than one of them ends up in the worse one.
 
         Args:
             the_severity (str): The severity that should be mapped
@@ -101,17 +132,33 @@ class AlertmanagerServer(GenericServer):
         Returns:
             str: The matched Nagstamon severity
         """
-        if the_severity in self.map_to_unknown.split(','):
-            return "UNKNOWN"
-        if the_severity in self.map_to_critical.split(','):
-            return "CRITICAL"
-        if the_severity in self.map_to_warning.split(','):
-            return "WARNING"
-        if the_severity in self.map_to_down.split(','):
-            return "DOWN"
-        if the_severity in self.map_to_ok.split(','):
-            return "OK"
-        return the_severity.upper()
+        for state in self.SEVERITY_MAP_OPTIONS:
+            configured = getattr(self, f'map_to_{state}', '')
+            if the_severity in [x.strip() for x in configured.split(',')]:
+                if state == 'down':
+                    # only hosts can be DOWN in Nagstamon, and an alert always becomes a
+                    # service - the option is kept working for existing configurations
+                    log.debug("severity '%s' is mapped to the deprecated DOWN, "
+                              "treating it as CRITICAL", the_severity)
+                    return "CRITICAL"
+                return state.upper()
+
+        severity = the_severity.upper()
+
+        # a severity of 'none' means the alert is to be ignored, like the Watchdog alert
+        # of a Prometheus stack
+        if severity == "NONE":
+            return severity
+
+        if severity in self.SERVICE_STATES:
+            return severity
+
+        # an unmapped severity used to be handed through in upper case and was then
+        # silently dropped, because get_status() only counts the states it knows -
+        # see https://github.com/HenriWahl/Nagstamon/issues/797
+        log.debug("severity '%s' is not mapped to any state, falling back to UNKNOWN",
+                  the_severity)
+        return "UNKNOWN"
 
     def _process_alert(self, alert):
         result = {}

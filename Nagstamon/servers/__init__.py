@@ -223,6 +223,10 @@ def create_server(server=None):
     new_server.map_to_warning = server.map_to_warning
     new_server.map_to_critical = server.map_to_critical
     new_server.map_to_down = server.map_to_down
+    new_server.map_to_disaster = server.map_to_disaster
+    new_server.map_to_high = server.map_to_high
+    new_server.map_to_average = server.map_to_average
+    new_server.map_to_information = server.map_to_information
 
     # LibreNMS
     new_server.treat_services_as_alerts = server.treat_services_as_alerts

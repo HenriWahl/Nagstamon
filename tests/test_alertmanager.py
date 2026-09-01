@@ -111,7 +111,9 @@ class test_alertmanager(unittest.TestCase):
         self.assertEqual(test_result['host'], '127.0.0.1')
         self.assertEqual(test_result['name'], 'Error')
         self.assertEqual(test_result['server'], '')
-        self.assertEqual(test_result['status'], 'ERROR')
+        # 'error' is mapped nowhere here, so it falls back to UNKNOWN instead of being
+        # handed through as 'ERROR' and never counted - see issue #797
+        self.assertEqual(test_result['status'], 'UNKNOWN')
         self.assertEqual(test_result['labels'], {"alertname":"Error","device":"murpel","endpoint":"metrics","instance":"127.0.0.1:9100","job":"node-exporter","namespace":"monitoring","pod":"monitoring-prometheus-node-exporter-4711","prometheus":"monitoring/monitoring-prometheus-oper-prometheus","service":"monitoring-prometheus-node-exporter","severity":"error"})
         self.assertEqual(test_result['generatorURL'], 'http://localhost')
         self.assertEqual(test_result['fingerprint'], '0ef7c4bd7a504b8d')
@@ -139,7 +141,7 @@ class test_alertmanager(unittest.TestCase):
         self.assertEqual(test_result['host'], 'unknown')
         self.assertEqual(test_result['name'], 'unknown')
         self.assertEqual(test_result['server'], '')
-        self.assertEqual(test_result['status'], 'ERROR')
+        self.assertEqual(test_result['status'], 'UNKNOWN')
         self.assertEqual(test_result['labels'], {"alertname":"Error","device":"murpel","endpoint":"metrics","instance":"127.0.0.1:9100","job":"node-exporter","namespace":"monitoring","pod":"monitoring-prometheus-node-exporter-4711","prometheus":"monitoring/monitoring-prometheus-oper-prometheus","service":"monitoring-prometheus-node-exporter","severity":"error"})
         self.assertEqual(test_result['generatorURL'], 'http://localhost')
         self.assertEqual(test_result['fingerprint'], '0ef7c4bd7a504b8d')
@@ -434,3 +436,52 @@ class test_alertmanager_silence_removal(unittest.TestCase):
 
         self.assertTrue(self.alert.acknowledged)
         self.assertTrue(self.alert.scheduled_downtime)
+
+
+class test_alertmanager_severity_mapping(unittest.TestCase):
+    """an alert whose severity is not mapped used to disappear - see issue #797"""
+
+    def setUp(self):
+        self.server = AlertmanagerServer()
+        self.server.map_to_critical = 'critical,error'
+        self.server.map_to_warning = 'warning,warn'
+        self.server.map_to_unknown = 'unknown'
+        self.server.map_to_ok = 'ok'
+        self.server.map_to_down = 'down'
+        self.server.map_to_disaster = 'disaster'
+        self.server.map_to_high = 'high'
+        self.server.map_to_average = 'average'
+        self.server.map_to_information = 'info'
+
+    def test_configured_mappings(self):
+        self.assertEqual(self.server.map_severity('critical'), 'CRITICAL')
+        self.assertEqual(self.server.map_severity('error'), 'CRITICAL')
+        self.assertEqual(self.server.map_severity('warn'), 'WARNING')
+        self.assertEqual(self.server.map_severity('unknown'), 'UNKNOWN')
+        self.assertEqual(self.server.map_severity('ok'), 'OK')
+        self.assertEqual(self.server.map_severity('disaster'), 'DISASTER')
+        self.assertEqual(self.server.map_severity('high'), 'HIGH')
+        self.assertEqual(self.server.map_severity('average'), 'AVERAGE')
+        self.assertEqual(self.server.map_severity('info'), 'INFORMATION')
+
+    def test_map_to_down_becomes_critical(self):
+        """only hosts can be DOWN, an alert always becomes a service"""
+        self.assertEqual(self.server.map_severity('down'), 'CRITICAL')
+
+    def test_unmapped_severity_falls_back_to_unknown(self):
+        """'unreachable' is exactly the severity from issue #797"""
+        self.assertEqual(self.server.map_severity('unreachable'), 'UNKNOWN')
+        self.assertEqual(self.server.map_severity('rocketchat'), 'UNKNOWN')
+
+    def test_severity_named_like_a_state_still_works(self):
+        self.server.map_to_critical = ''
+        self.assertEqual(self.server.map_severity('critical'), 'CRITICAL')
+        self.assertEqual(self.server.map_severity('WARNING'), 'WARNING')
+
+    def test_none_is_kept_for_skipping(self):
+        self.assertEqual(self.server.map_severity('none'), 'NONE')
+
+    def test_worse_state_wins(self):
+        self.server.map_to_warning = 'ambiguous'
+        self.server.map_to_critical = 'ambiguous'
+        self.assertEqual(self.server.map_severity('ambiguous'), 'CRITICAL')

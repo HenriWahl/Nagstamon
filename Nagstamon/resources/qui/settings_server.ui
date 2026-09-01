@@ -314,6 +314,46 @@
       <item row="38" column="2" colspan="3">
        <widget class="QLineEdit" name="input_lineedit_silence_matcher_labels"/>
       </item>
+      <item row="39" column="1">
+       <widget class="QLabel" name="label_map_to_disaster">
+        <property name="text">
+         <string>Map to DISASTER:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="39" column="2" colspan="3">
+       <widget class="QLineEdit" name="input_lineedit_map_to_disaster"/>
+      </item>
+      <item row="40" column="1">
+       <widget class="QLabel" name="label_map_to_high">
+        <property name="text">
+         <string>Map to HIGH:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="40" column="2" colspan="3">
+       <widget class="QLineEdit" name="input_lineedit_map_to_high"/>
+      </item>
+      <item row="41" column="1">
+       <widget class="QLabel" name="label_map_to_average">
+        <property name="text">
+         <string>Map to AVERAGE:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="41" column="2" colspan="3">
+       <widget class="QLineEdit" name="input_lineedit_map_to_average"/>
+      </item>
+      <item row="42" column="1">
+       <widget class="QLabel" name="label_map_to_information">
+        <property name="text">
+         <string>Map to INFORMATION:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="42" column="2" colspan="3">
+       <widget class="QLineEdit" name="input_lineedit_map_to_information"/>
+      </item>
       <item row="36" column="2" colspan="3">
        <widget class="QLineEdit" name="input_lineedit_idp_ecp_endpoint"/>
       </item>
@@ -865,6 +905,10 @@
   <tabstop>input_lineedit_custom_filter</tabstop>
   <tabstop>input_lineedit_alertmanager_filter</tabstop>
   <tabstop>input_lineedit_silence_matcher_labels</tabstop>
+  <tabstop>input_lineedit_map_to_disaster</tabstop>
+  <tabstop>input_lineedit_map_to_high</tabstop>
+  <tabstop>input_lineedit_map_to_average</tabstop>
+  <tabstop>input_lineedit_map_to_information</tabstop>
   <tabstop>input_lineedit_map_to_hostname</tabstop>
   <tabstop>input_lineedit_map_to_servicename</tabstop>
   <tabstop>input_lineedit_map_to_status_information</tabstop>
