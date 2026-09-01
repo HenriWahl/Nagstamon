@@ -292,6 +292,8 @@ class Config:
         self.systray_offset_use = False
         self.systray_offset = 10
         self.hide_macos_dock_icon = False
+        # macOS only - creates a LaunchAgent to start Nagstamon at login
+        self.start_at_login = False
         # as default enable on Linux Desktops like Cinnamon and Gnome Flashback
         if DESKTOP_NEEDS_FIX:
             self.enable_position_fix = True

@@ -19,6 +19,7 @@ from copy import copy
 from os import environ
 from urllib.parse import quote
 
+from Nagstamon import autostart
 from Nagstamon.config import (AppInfo,
                               BOOLPOOL,
                               conf,
@@ -440,6 +441,14 @@ class DialogSettings(Dialog):
         if OS != OS_MACOS:
             self.window.input_checkbox_hide_macos_dock_icon.hide()
 
+        # 'Start at login' needs an application bundle to point the login item at
+        if autostart.is_available():
+            self.window.input_checkbox_start_at_login.show()
+            # the LaunchAgent is the truth - it might have been removed in the system settings
+            self.window.input_checkbox_start_at_login.setChecked(autostart.is_enabled())
+        else:
+            self.window.input_checkbox_start_at_login.hide()
+
         # avoid showing offset setting if not icon in systray is configured
         if not OS in OS_NON_LINUX and not conf.icon_in_systray:
             self.toggle_systray_icon_offset()
@@ -537,6 +546,9 @@ class DialogSettings(Dialog):
         # update global font and icon font
         font.fromString(conf.font)
         font_icons.setPointSize(font.pointSize() + 2)
+
+        # create or remove the macOS login item
+        autostart.apply(conf.start_at_login)
 
         # save configuration
         conf.save_config()
