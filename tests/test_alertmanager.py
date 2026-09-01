@@ -176,8 +176,6 @@ class test_alertmanager(unittest.TestCase):
         self.assertEqual(test_result['status_information'], 'Network interface "murpel" showing errors on node-exporter monitoring/monitoring-prometheus-node-exporter-4711')
 
 
-if __name__ == '__main__':
-    unittest.main()
 
 
     def test_unit_alert_without_timestamps(self):
@@ -209,25 +207,32 @@ if __name__ == '__main__':
 
         test_class.alertmanager_filter = ''
         self.assertEqual(test_class.get_alerts_url(),
-                         'http://localhost:9093/api/v2/alerts?inhibited=false')
+                         'http://localhost:9093/api/v2/alerts?silenced=true&inhibited=false')
 
         # a single filter has to be encoded, it contains " and =
         test_class.alertmanager_filter = 'severity="critical"'
         self.assertEqual(test_class.get_alerts_url(),
-                         'http://localhost:9093/api/v2/alerts?'
+                         'http://localhost:9093/api/v2/alerts?silenced=true&'
                          'inhibited=false&filter=severity%3D%22critical%22')
 
         # several matchers become several filter parameters
         test_class.alertmanager_filter = 'severity="critical", job="node"'
         self.assertEqual(test_class.get_alerts_url(),
-                         'http://localhost:9093/api/v2/alerts?inhibited=false'
+                         'http://localhost:9093/api/v2/alerts?silenced=true&inhibited=false'
                          '&filter=severity%3D%22critical%22&filter=job%3D%22node%22')
 
         # a comma inside a quoted value does not split the matcher
         test_class.alertmanager_filter = 'severity=~"warning,critical"'
         self.assertEqual(test_class.get_alerts_url(),
-                         'http://localhost:9093/api/v2/alerts?inhibited=false'
+                         'http://localhost:9093/api/v2/alerts?silenced=true&inhibited=false'
                          '&filter=severity%3D~%22warning%2Ccritical%22')
+
+        # silenced and inhibited alerts can be switched on and off
+        test_class.alertmanager_filter = ''
+        test_class.alertmanager_show_silenced = False
+        test_class.alertmanager_show_inhibited = True
+        self.assertEqual(test_class.get_alerts_url(),
+                         'http://localhost:9093/api/v2/alerts?silenced=false&inhibited=true')
 
 
     def test_unit_silence_matchers(self):
@@ -372,6 +377,17 @@ class test_alertmanager_silence_removal(unittest.TestCase):
         self.status_codes = {}
         self.server.expire_silence = expire_silence
 
+    def test_alert_webpage_url(self):
+        """the Monitor action used to open the plain Alertmanager start page"""
+        self.server.silence_matcher_labels = 'alertname,instance'
+        self.assertEqual(
+            self.server.get_alert_webpage_url('127.0.0.1', 'Error'),
+            'http://localhost:9093/#/alerts?filter=%7Balertname%3D%22Error%22%7D')
+
+    def test_alert_webpage_url_of_unknown_alert(self):
+        self.assertEqual(self.server.get_alert_webpage_url('127.0.0.1', 'Nope'),
+                         'http://localhost:9093/#/alerts')
+
     def test_build_silence_comment(self):
         self.assertEqual(
             AlertmanagerServer.build_silence_comment('Nagstamon downtime', 'because'),
@@ -485,3 +501,7 @@ class test_alertmanager_severity_mapping(unittest.TestCase):
         self.server.map_to_warning = 'ambiguous'
         self.server.map_to_critical = 'ambiguous'
         self.assertEqual(self.server.map_severity('ambiguous'), 'CRITICAL')
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -314,6 +314,20 @@
       <item row="38" column="2" colspan="3">
        <widget class="QLineEdit" name="input_lineedit_silence_matcher_labels"/>
       </item>
+      <item row="43" column="2" colspan="3">
+       <widget class="QCheckBox" name="input_checkbox_alertmanager_show_silenced">
+        <property name="text">
+         <string>Show silenced alerts</string>
+        </property>
+       </widget>
+      </item>
+      <item row="44" column="2" colspan="3">
+       <widget class="QCheckBox" name="input_checkbox_alertmanager_show_inhibited">
+        <property name="text">
+         <string>Show inhibited alerts</string>
+        </property>
+       </widget>
+      </item>
       <item row="39" column="1">
        <widget class="QLabel" name="label_map_to_disaster">
         <property name="text">
@@ -905,6 +919,8 @@
   <tabstop>input_lineedit_custom_filter</tabstop>
   <tabstop>input_lineedit_alertmanager_filter</tabstop>
   <tabstop>input_lineedit_silence_matcher_labels</tabstop>
+  <tabstop>input_checkbox_alertmanager_show_silenced</tabstop>
+  <tabstop>input_checkbox_alertmanager_show_inhibited</tabstop>
   <tabstop>input_lineedit_map_to_disaster</tabstop>
   <tabstop>input_lineedit_map_to_high</tabstop>
   <tabstop>input_lineedit_map_to_average</tabstop>

@@ -1116,6 +1116,10 @@ class Server:
         # labels a silence created by Nagstamon matches on - all labels of an alert make
         # the silence so specific that it breaks as soon as one volatile label changes
         self.silence_matcher_labels = 'alertname,instance'
+        # silenced alerts have to be shown, otherwise an acknowledgement or a downtime
+        # would make the alert disappear instead of marking it
+        self.alertmanager_show_silenced = True
+        self.alertmanager_show_inhibited = False
         self.map_to_critical = 'critical,error'
         self.map_to_disaster = ''
         self.map_to_high = ''

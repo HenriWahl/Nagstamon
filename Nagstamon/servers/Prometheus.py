@@ -227,9 +227,12 @@ class PrometheusServer(GenericServer):
         # dummy return in case all is OK
         return Result()
 
-    def open_monitor_webpage(self, host, service):
+    def open_monitor_webpage(self):
         """
-        open monitor from tablewidget context menu
+        open monitor from systray/toparea context menu
+
+        the signature has to match the one of GenericServer, the systray menu connects it
+        as a slot without arguments
         """
         webbrowser_open('%s' % (self.monitor_url))
 

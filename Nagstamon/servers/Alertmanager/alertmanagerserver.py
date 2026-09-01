@@ -3,7 +3,7 @@ import json
 import re
 
 from datetime import datetime, timedelta, timezone
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode
 
 from Nagstamon.config import conf
 from Nagstamon.objects import (GenericHost, Result)
@@ -89,6 +89,10 @@ class AlertmanagerServer(GenericServer):
     name = ''
     alertmanager_filter = ''
     silence_matcher_labels = ''
+    # silenced alerts are shown by default because that is how an acknowledgement or a
+    # downtime becomes visible, inhibited ones are not
+    alertmanager_show_silenced = True
+    alertmanager_show_inhibited = False
 
 
     def init_http(self):
@@ -234,7 +238,8 @@ class AlertmanagerServer(GenericServer):
         Returns:
             str: The URL to fetch the alerts from
         """
-        parameters = [('inhibited', 'false')]
+        parameters = [('silenced', str(bool(self.alertmanager_show_silenced)).lower()),
+                      ('inhibited', str(bool(self.alertmanager_show_inhibited)).lower())]
         parameters += [('filter', matcher)
                        for matcher in split_matchers(self.alertmanager_filter)]
         return f'{self.monitor_url}{self.API_PATH_ALERTS}?{urlencode(parameters)}'
@@ -373,18 +378,34 @@ class AlertmanagerServer(GenericServer):
                 service.acknowledged = acknowledged
                 service.scheduled_downtime = downtime
 
-    def open_monitor_webpage(self, host, service):
+    def open_monitor_webpage(self):
         """
-        open monitor from tablewidget context menu
+        open monitor from systray/toparea context menu
         """
-        webbrowser_open('%s' % (self.monitor_url))
+        webbrowser_open(f'{self.monitor_url}/#/alerts')
 
-    def open_monitor(self, host, service):
+    def get_alert_webpage_url(self, host, service):
+        """Builds the URL of the Alertmanager web interface filtered down to one alert
+
+        Args:
+            host (str): The host the alert belongs to
+            service (str): The display name of the alert
+
+        Returns:
+            str: The URL to open
         """
-        open monitor for alert
+        alert = self.get_alert(host, service)
+        if alert is None:
+            return f'{self.monitor_url}/#/alerts'
+        matchers = ', '.join(f'{matcher["name"]}="{matcher["value"]}"'
+                             for matcher in self.get_silence_matchers(alert))
+        return f'{self.monitor_url}/#/alerts?filter={quote("{" + matchers + "}")}'
+
+    def open_monitor(self, host, service=''):
         """
-        url = self.monitor_url
-        webbrowser_open(url)
+        open the alert in the Alertmanager web interface
+        """
+        webbrowser_open(self.get_alert_webpage_url(host, service))
 
 
     def get_alert(self, host, service):
