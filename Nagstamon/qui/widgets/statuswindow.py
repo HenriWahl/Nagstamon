@@ -40,10 +40,8 @@ from Nagstamon.qui.globals import (dbus_connection,
 from Nagstamon.qui.helpers import (get_screen_geometry,
                                    get_screen_name,
                                    hide_macos_dock_icon)
-from Nagstamon.qui.qt import (QAction,
-                              QCursor,
+from Nagstamon.qui.qt import (QCursor,
                               QIcon,
-                              QMenuBar,
                               QMessageBox,
                               QObject,
                               QVBoxLayout,
@@ -185,14 +183,6 @@ class StatusWindow(QWidget):
         self.label_all_ok = LabelAllOK(parent=self)
         self.label_all_ok.hide()
         self.servers_vbox.addWidget(self.label_all_ok)
-
-        # test with OSX top menubar
-        if OS == OS_MACOS:
-            self.menubar = QMenuBar()
-            action_exit = QAction('exit', self.menubar)
-            action_settings = QAction('settings', self.menubar)
-            self.menubar.addAction(action_settings)
-            self.menubar.addAction(action_exit)
 
         # stored x y values for systemtray icon
         statuswindow_properties.icon_x = 0

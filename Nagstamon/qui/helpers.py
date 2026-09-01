@@ -25,11 +25,11 @@ from Nagstamon.qui.qt import (QObject,
 from Nagstamon.qui.widgets.app import app
 from Nagstamon.servers import servers
 
-# make icon status in macOS dock accessible via NSApp, used by set_macos_dock_icon_visible()
+# make icon status in macOS dock accessible via NSApp, used by hide_macos_dock_icon()
 if OS == OS_MACOS:
     from AppKit import (NSApp,
-                        NSApplicationPresentationDefault,
-                        NSApplicationPresentationHideDock)
+                        NSApplicationActivationPolicyAccessory,
+                        NSApplicationActivationPolicyRegular)
 
 
 class CheckServers(QObject):
@@ -58,11 +58,14 @@ def hide_macos_dock_icon(hide=False):
     """
     small helper to make dock icon visible or not in macOS
     inspired by https://stackoverflow.com/questions/6796028/start-a-gui-process-in-mac-os-x-without-dock-icon
+    Accessory hides the dock icon but still allows the application to be activated and to
+    receive keyboard input - Prohibited, which the previously used and wrongly named
+    NSApplicationPresentationHideDock happens to be equal to, does not
     """
     if hide:
-        NSApp.setActivationPolicy_(NSApplicationPresentationHideDock)
+        NSApp.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
     else:
-        NSApp.setActivationPolicy_(NSApplicationPresentationDefault)
+        NSApp.setActivationPolicy_(NSApplicationActivationPolicyRegular)
 
 
 def get_screen_name(x, y):

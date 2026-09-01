@@ -68,14 +68,7 @@ from Nagstamon.qui.widgets.treeview import TreeView
 
 from Nagstamon.config import (conf,
                               OS_NON_LINUX,
-                              OS,
-                              OS_MACOS)
-
-# make icon status in macOS dock accessible via NSApp, used by set_macos_dock_icon_visible()
-if OS == OS_MACOS:
-    from AppKit import (NSApp,
-                        NSApplicationPresentationDefault,
-                        NSApplicationPresentationHideDock)
+                              OS)
 
 
 # check for updates
