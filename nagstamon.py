@@ -19,6 +19,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 import importlib.util
+import os
 import sys
 import socket
 
@@ -60,7 +61,15 @@ try:
         if conf.check_for_new_version is True:
             check_version.check(start_mode=True, parent=statuswindow)
 
-        sys.exit(app.exec())
+        exit_code = app.exec()
+
+        # leave without the Python and Qt teardown: a worker thread which is stuck in a
+        # request running into the socket timeout cannot be stopped in time, and destroying
+        # its QThread while it is still running makes Qt call qFatal() - see
+        # https://github.com/HenriWahl/Nagstamon/issues/1055
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os._exit(exit_code)
 
 except Exception as err:
     import traceback

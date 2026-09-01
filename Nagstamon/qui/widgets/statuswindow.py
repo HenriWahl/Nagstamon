@@ -61,8 +61,8 @@ from Nagstamon.qui.widgets.labels import LabelAllOK
 from Nagstamon.qui.widgets.server_vbox import ServerVBox
 from Nagstamon.qui.widgets.statusbar import StatusBar
 from Nagstamon.qui.widgets.toparea import TopArea
-from Nagstamon.qui.widgets.treeview import (treeviews,
-                                            WORKER_THREAD_WAIT_TIMEOUT)
+from Nagstamon.qui.widgets.treeview import (stop_worker_thread,
+                                            treeviews)
 from Nagstamon.servers import (get_enabled_servers,
                                get_status_count,
                                servers)
@@ -1352,28 +1352,14 @@ class StatusWindow(QWidget):
         """
         # stop debugging
         statuswindow_properties.worker_debug_loop_looping = False
-        # make sure the worker does not keep looping
-        self.worker.running = False
-        # tell thread to quit
-        self.worker_thread.quit()
-        # wait until thread is really stopped - but not forever
-        if not self.worker_thread.wait(WORKER_THREAD_WAIT_TIMEOUT):
-            self.worker_thread.terminate()
-            self.worker_thread.wait()
+        stop_worker_thread(self.worker, self.worker_thread)
 
     @Slot()
     def finish_worker_notification_thread(self):
         """
         attempt to shut down thread cleanly
         """
-        # make sure the worker does not keep looping
-        self.worker_notification.running = False
-        # tell thread to quit
-        self.worker_notification_thread.quit()
-        # wait until thread is really stopped - but not forever
-        if not self.worker_notification_thread.wait(WORKER_THREAD_WAIT_TIMEOUT):
-            self.worker_notification_thread.terminate()
-            self.worker_notification_thread.wait()
+        stop_worker_thread(self.worker_notification, self.worker_notification_thread)
 
     @Slot(str)
     def remove_previous_server_vbox(self, previous_server_name):
@@ -1545,6 +1531,10 @@ class StatusWindow(QWidget):
             """
             start notification
             """
+            # while shutting down no notification should be started anymore - a sound or a
+            # notification action would only delay the quit
+            if not self.running:
+                return
             if conf.notification:
                 # only if not notifying yet or the current state is worse than the prior AND
                 # only when the current state is configured to be honking about
