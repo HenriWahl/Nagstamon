@@ -328,6 +328,13 @@
         </property>
        </widget>
       </item>
+      <item row="45" column="2" colspan="3">
+       <widget class="QCheckBox" name="input_checkbox_alertmanager_use_alert_groups">
+        <property name="text">
+         <string>Group alerts like the Alertmanager does</string>
+        </property>
+       </widget>
+      </item>
       <item row="39" column="1">
        <widget class="QLabel" name="label_map_to_disaster">
         <property name="text">
@@ -921,6 +928,7 @@
   <tabstop>input_lineedit_silence_matcher_labels</tabstop>
   <tabstop>input_checkbox_alertmanager_show_silenced</tabstop>
   <tabstop>input_checkbox_alertmanager_show_inhibited</tabstop>
+  <tabstop>input_checkbox_alertmanager_use_alert_groups</tabstop>
   <tabstop>input_lineedit_map_to_disaster</tabstop>
   <tabstop>input_lineedit_map_to_high</tabstop>
   <tabstop>input_lineedit_map_to_average</tabstop>

@@ -503,5 +503,57 @@ class test_alertmanager_severity_mapping(unittest.TestCase):
         self.assertEqual(self.server.map_severity('ambiguous'), 'CRITICAL')
 
 
+class test_alertmanager_alert_groups(unittest.TestCase):
+    """honouring the grouping of the Alertmanager - see issue #746"""
+
+    def setUp(self):
+        self.server = AlertmanagerServer()
+        self.server.monitor_url = 'http://localhost:9093'
+        self.server.map_to_hostname = 'instance'
+        self.server.alertmanager_use_alert_groups = True
+
+    def test_groups_endpoint_is_used(self):
+        self.assertEqual(self.server.get_alerts_url(),
+                         'http://localhost:9093/api/v2/alerts/groups?'
+                         'silenced=true&inhibited=false')
+        self.server.alertmanager_use_alert_groups = False
+        self.assertEqual(self.server.get_alerts_url(),
+                         'http://localhost:9093/api/v2/alerts?'
+                         'silenced=true&inhibited=false')
+
+    def test_hostname_from_mapped_label(self):
+        group = {'labels': {'instance': 'host1:9100'}}
+        self.assertEqual(self.server.get_group_hostname(group), 'host1')
+
+    def test_hostname_falls_back_to_the_group_key(self):
+        """group_by may well use a label which is not the host"""
+        group = {'labels': {'job': 'node', 'severity': 'critical'}}
+        self.assertEqual(self.server.get_group_hostname(group),
+                         'job=node, severity=critical')
+
+    def test_hostname_of_a_nameless_group(self):
+        group = {'labels': {}, 'receiver': {'name': 'devnull'}}
+        self.assertEqual(self.server.get_group_hostname(group), 'devnull')
+
+    def test_alerts_of_a_group_land_under_the_group(self):
+        group_alert = {'labels': {'alertname': 'DiskFull', 'severity': 'critical',
+                                  'instance': 'host2:9100'},
+                       'annotations': {'summary': 'full'},
+                       'status': {'state': 'active'},
+                       'fingerprint': 'abc',
+                       'startsAt': '2026-09-01T10:00:00Z'}
+        self.server.map_to_servicename = 'alertname'
+        self.server.map_to_status_information = 'summary'
+        self.server.map_to_critical = 'critical'
+        self.server.new_hosts = {}
+
+        self.server.add_alert(group_alert, [], hostname='the-group')
+
+        self.assertEqual(list(self.server.new_hosts), ['the-group'])
+        service = self.server.new_hosts['the-group'].services['abc']
+        self.assertEqual(service.display_name, 'DiskFull')
+        self.assertEqual(service.status, 'CRITICAL')
+
+
 if __name__ == '__main__':
     unittest.main()

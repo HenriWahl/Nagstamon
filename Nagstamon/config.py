@@ -1120,6 +1120,9 @@ class Server:
         # would make the alert disappear instead of marking it
         self.alertmanager_show_silenced = True
         self.alertmanager_show_inhibited = False
+        # honour the grouping of the Alertmanager instead of guessing the host from the
+        # labels of every single alert
+        self.alertmanager_use_alert_groups = False
         self.map_to_critical = 'critical,error'
         self.map_to_disaster = ''
         self.map_to_high = ''

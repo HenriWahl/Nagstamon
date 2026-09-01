@@ -217,6 +217,7 @@ def create_server(server=None):
     new_server.silence_matcher_labels = server.silence_matcher_labels
     new_server.alertmanager_show_silenced = server.alertmanager_show_silenced
     new_server.alertmanager_show_inhibited = server.alertmanager_show_inhibited
+    new_server.alertmanager_use_alert_groups = server.alertmanager_use_alert_groups
     new_server.map_to_hostname = server.map_to_hostname
     new_server.map_to_servicename = server.map_to_servicename
     new_server.map_to_status_information = server.map_to_status_information

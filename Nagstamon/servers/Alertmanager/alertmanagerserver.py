@@ -38,6 +38,7 @@ class AlertmanagerServer(GenericServer):
     }
 
     API_PATH_ALERTS = "/api/v2/alerts"
+    API_PATH_ALERT_GROUPS = "/api/v2/alerts/groups"
     API_PATH_SILENCES = "/api/v2/silences"
     API_PATH_SILENCE = "/api/v2/silence"
 
@@ -93,6 +94,7 @@ class AlertmanagerServer(GenericServer):
     # downtime becomes visible, inhibited ones are not
     alertmanager_show_silenced = True
     alertmanager_show_inhibited = False
+    alertmanager_use_alert_groups = False
 
 
     def init_http(self):
@@ -238,11 +240,13 @@ class AlertmanagerServer(GenericServer):
         Returns:
             str: The URL to fetch the alerts from
         """
+        path = self.API_PATH_ALERT_GROUPS if self.alertmanager_use_alert_groups \
+            else self.API_PATH_ALERTS
         parameters = [('silenced', str(bool(self.alertmanager_show_silenced)).lower()),
                       ('inhibited', str(bool(self.alertmanager_show_inhibited)).lower())]
         parameters += [('filter', matcher)
                        for matcher in split_matchers(self.alertmanager_filter)]
-        return f'{self.monitor_url}{self.API_PATH_ALERTS}?{urlencode(parameters)}'
+        return f'{self.monitor_url}{path}?{urlencode(parameters)}'
 
     def _get_status(self):
         """
@@ -304,38 +308,14 @@ class AlertmanagerServer(GenericServer):
             # alerts suppressed by a silence get a second look further down
             suppressed_services = []
 
-            for alert in data:
-                alert_data = self._process_alert(alert)
-                if not alert_data:
-                    continue
-
-                service = AlertmanagerService()
-                service.host = alert_data['host']
-                service.name = alert_data['fingerprint']
-                service.display_name = alert_data['name']
-                service.server = alert_data['server']
-                service.status = alert_data['status']
-                service.labels = alert_data['labels']
-                service.scheduled_downtime = alert_data['scheduled_downtime']
-                service.acknowledged = alert_data['acknowledged']
-                service.last_check = alert_data['last_check']
-                service.attempt = alert_data['attempt']
-                service.duration = alert_data['duration']
-
-                service.generator_url = alert_data['generatorURL']
-                service.fingerprint = alert_data['fingerprint']
-                service.silenced_by = alert_data['silenced_by']
-
-                service.status_information = alert_data['status_information']
-
-                if service.silenced_by:
-                    suppressed_services.append(service)
-
-                if service.host not in self.new_hosts:
-                    self.new_hosts[service.host] = GenericHost()
-                    self.new_hosts[service.host].name = str(service.host)
-                    self.new_hosts[service.host].server = self.name
-                self.new_hosts[service.host].services[service.name] = service
+            if self.alertmanager_use_alert_groups:
+                for group in data:
+                    hostname = self.get_group_hostname(group)
+                    for alert in group.get('alerts', []):
+                        self.add_alert(alert, suppressed_services, hostname)
+            else:
+                for alert in data:
+                    self.add_alert(alert, suppressed_services)
 
             self.apply_silence_kind(suppressed_services)
 
@@ -348,6 +328,70 @@ class AlertmanagerServer(GenericServer):
 
         # dummy return in case all is OK
         return Result()
+
+    def get_group_hostname(self, group):
+        """Determines the host name for an alert group
+
+        With the grouping of the Alertmanager honoured the host is not guessed from the
+        labels of a single alert any more but taken from the labels the Alertmanager
+        grouped by - see https://github.com/HenriWahl/Nagstamon/issues/746
+
+        Args:
+            group (dict): One entry of the alert groups the API delivers
+
+        Returns:
+            str: The host name to show the alerts of this group under
+        """
+        labels = group.get('labels', {}) or {}
+        hostname = detect_from_labels(labels, self.map_to_hostname, '')
+        if not hostname:
+            # no configured label matched, so the whole group key is the best description
+            hostname = ', '.join(f'{name}={value}' for name, value in sorted(labels.items()))
+        if not hostname:
+            # group_by was empty, leaving one nameless group of everything
+            hostname = group.get('receiver', {}).get('name', 'unknown')
+        return re.sub(':[0-9]+', '', hostname)
+
+    def add_alert(self, alert, suppressed_services, hostname=None):
+        """Turns one alert of the API response into a service of a host
+
+        Args:
+            alert (dict): The alert as delivered by the API
+            suppressed_services (list): Collects the silenced alerts for apply_silence_kind()
+            hostname (str, optional): Overrides the host detected from the alert labels,
+                                      used when the grouping of the Alertmanager is honoured
+        """
+        alert_data = self._process_alert(alert)
+        if not alert_data:
+            return
+
+        service = AlertmanagerService()
+        service.host = hostname if hostname else alert_data['host']
+        service.name = alert_data['fingerprint']
+        service.display_name = alert_data['name']
+        service.server = alert_data['server']
+        service.status = alert_data['status']
+        service.labels = alert_data['labels']
+        service.scheduled_downtime = alert_data['scheduled_downtime']
+        service.acknowledged = alert_data['acknowledged']
+        service.last_check = alert_data['last_check']
+        service.attempt = alert_data['attempt']
+        service.duration = alert_data['duration']
+
+        service.generator_url = alert_data['generatorURL']
+        service.fingerprint = alert_data['fingerprint']
+        service.silenced_by = alert_data['silenced_by']
+
+        service.status_information = alert_data['status_information']
+
+        if service.silenced_by:
+            suppressed_services.append(service)
+
+        if service.host not in self.new_hosts:
+            self.new_hosts[service.host] = GenericHost()
+            self.new_hosts[service.host].name = str(service.host)
+            self.new_hosts[service.host].server = self.name
+        self.new_hosts[service.host].services[service.name] = service
 
     def apply_silence_kind(self, services):
         """Tells acknowledgements and downtimes apart for the given silenced alerts
