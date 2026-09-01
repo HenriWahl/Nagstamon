@@ -1,11 +1,14 @@
 import json
+import logging
 from datetime import datetime, timedelta
 
 import dateutil.parser
 from pylint import lint
 
 import unittest
+from Nagstamon import config
 from Nagstamon.objects import GenericHost, Result
+from Nagstamon.servers.Alertmanager.helpers import DebugQueueHandler
 from Nagstamon.servers.Alertmanager import (AlertmanagerServer,
                                             AlertmanagerService)
 
@@ -502,6 +505,13 @@ class test_alertmanager_severity_mapping(unittest.TestCase):
         self.server.map_to_critical = 'ambiguous'
         self.assertEqual(self.server.map_severity('ambiguous'), 'CRITICAL')
 
+    def test_empty_severity_does_not_match_an_empty_option(self):
+        """an alert can carry an empty severity label, and map_to_disaster is unset by
+        default - which used to make such an alert a DISASTER"""
+        self.server.map_to_disaster = ''
+        self.server.map_to_critical = ''
+        self.assertEqual(self.server.map_severity(''), 'UNKNOWN')
+
 
 class test_alertmanager_alert_groups(unittest.TestCase):
     """honouring the grouping of the Alertmanager - see issue #746"""
@@ -553,6 +563,34 @@ class test_alertmanager_alert_groups(unittest.TestCase):
         service = self.server.new_hosts['the-group'].services['abc']
         self.assertEqual(service.display_name, 'DiskFull')
         self.assertEqual(service.status, 'CRITICAL')
+
+
+class test_alertmanager_debug_queue(unittest.TestCase):
+    """the log of the Alertmanager ends up in the debug queue of Nagstamon"""
+
+    def setUp(self):
+        self.debug_mode = config.conf.debug_mode
+        config.debug_queue.clear()
+
+    def tearDown(self):
+        config.conf.debug_mode = self.debug_mode
+        config.debug_queue.clear()
+
+    @staticmethod
+    def make_record():
+        return logging.LogRecord('alertmanager', logging.ERROR, __file__, 1,
+                                 'something went wrong', None, None)
+
+    def test_records_are_queued_in_debug_mode(self):
+        config.conf.debug_mode = True
+        DebugQueueHandler().emit(self.make_record())
+        self.assertEqual(len(config.debug_queue), 1)
+
+    def test_nothing_is_queued_without_debug_mode(self):
+        """nobody drains the queue then, so the records would only pile up"""
+        config.conf.debug_mode = False
+        DebugQueueHandler().emit(self.make_record())
+        self.assertEqual(config.debug_queue, [])
 
 
 if __name__ == '__main__':

@@ -16,6 +16,12 @@ class DebugQueueHandler(logging.Handler):
     """
 
     def emit(self, record):
+        # the queue is only drained by the debug loop of the status window, which loops
+        # only while the debug mode is on - records appended in the meantime would pile up
+        # forever and be dumped all at once as soon as the debug mode is switched on, so
+        # every other producer in Nagstamon fills the queue only then as well
+        if not conf.debug_mode:
+            return
         debug_queue.append(self.format(record))
 
 

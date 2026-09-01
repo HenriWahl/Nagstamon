@@ -138,7 +138,9 @@ class AlertmanagerServer(GenericServer):
         """
         for state in self.SEVERITY_MAP_OPTIONS:
             configured = getattr(self, f'map_to_{state}', '')
-            if the_severity in [x.strip() for x in configured.split(',')]:
+            # the empty entries of an unset option would match an alert whose severity
+            # label is present but empty - and DISASTER is checked first of all
+            if the_severity in [x.strip() for x in configured.split(',') if x.strip()]:
                 if state == 'down':
                     # only hosts can be DOWN in Nagstamon, and an alert always becomes a
                     # service - the option is kept working for existing configurations
