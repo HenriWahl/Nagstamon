@@ -74,6 +74,14 @@ from Nagstamon.qui.widgets.menu import MenuAtCursor
 from Nagstamon.qui.widgets.model import Model
 from Nagstamon.servers import SERVER_TYPES, servers
 
+# milliseconds to wait for a worker thread to end before it gets terminated
+WORKER_THREAD_WAIT_TIMEOUT = 3000
+
+# registry of all living TreeViews to be able to stop their worker threads at shutdown
+# the layout hierarchy alone is not sufficient because sort_server_vboxes() may drop
+# ServerVBoxes which keep their still running worker thread
+treeviews = list()
+
 
 class StatusAwareDelegate(QStyledItemDelegate):
     """
@@ -290,6 +298,9 @@ class TreeView(QTreeView):
         self.worker_thread = QThread(parent=self)
         self.worker = self.Worker(server=server, sort_column=self.sort_column, sort_order=self.sort_order, status_window=self.parent_statuswindow)
         self.worker.moveToThread(self.worker_thread)
+
+        # make this treeview findable at shutdown, no matter where it ends up in the layout
+        treeviews.append(self)
 
         # if worker got new status data from monitor server get_status
         # the treeview model has to be updated
@@ -1035,10 +1046,18 @@ class TreeView(QTreeView):
         """
         attempt to shut down thread cleanly
         """
+        # make sure the worker does not schedule itself again via singleShot
+        self.worker.running = False
         # tell thread to quit
         self.worker_thread.quit()
-        # wait until thread is really stopped
-        self.worker_thread.wait()
+        # wait until thread is really stopped - but not forever, because the worker might
+        # be stuck in a request running into the socket timeout
+        if not self.worker_thread.wait(WORKER_THREAD_WAIT_TIMEOUT):
+            self.worker_thread.terminate()
+            self.worker_thread.wait()
+        # no need to be stopped again at shutdown
+        if self in treeviews:
+            treeviews.remove(self)
 
     class Worker(QObject):
         """
