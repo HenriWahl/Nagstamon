@@ -7,6 +7,9 @@ on:
       - '!master'
       - '!*.*.*'
 
+env:
+  python_win_version: 3.14.7
+
 jobs:
   windows-64:
     # better depend on stable build image
@@ -14,3 +17,8 @@ jobs:
     steps:
       - run: pwd
       - run: Get-ChildItem -Recurse
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '${{ env.python_win_version }}'
+          architecture: x64
