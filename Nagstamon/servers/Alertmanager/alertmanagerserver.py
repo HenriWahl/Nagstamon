@@ -39,9 +39,15 @@ class AlertmanagerServer(GenericServer):
 
     API_PATH_ALERTS = "/api/v2/alerts"
     API_PATH_SILENCES = "/api/v2/silences"
+    API_PATH_SILENCE = "/api/v2/silence"
 
     # how long a silence lasts which was created by an acknowledgement without expiry time
     DEFAULT_SILENCE_HOURS = 24
+
+    # Alertmanager only knows silences, so the comment tells afterwards whether a silence
+    # was meant as an acknowledgement or as a downtime
+    SILENCE_COMMENT_ACKNOWLEDGE = 'Nagstamon acknowledgement'
+    SILENCE_COMMENT_DOWNTIME = 'Nagstamon downtime'
 
     # vars specific to alertmanager class
     map_to_hostname = ''
@@ -134,16 +140,15 @@ class AlertmanagerServer(GenericServer):
         servicename = detect_from_labels(labels,self.map_to_servicename,"unknown")
         log.debug("[%s]: detected servicename from labels: '%s'", fingerprint, servicename)
 
-        if "status" in alert:
-            attempt = alert["status"].get("state", "unknown")
-        else:
-            attempt = "unknown"
+        alert_status = alert.get("status", {})
+        attempt = alert_status.get("state", "unknown")
+        silenced_by = alert_status.get("silencedBy", []) or []
 
         if attempt == "suppressed":
             scheduled_downtime = True
             acknowledged = True
-            log.debug("[%s]: detected status: '%s' -> interpreting as silenced",
-                      fingerprint, attempt)
+            log.debug("[%s]: detected status: '%s' -> interpreting as silenced by %s",
+                      fingerprint, attempt, silenced_by)
         else:
             scheduled_downtime = False
             acknowledged = False
@@ -167,6 +172,7 @@ class AlertmanagerServer(GenericServer):
         result['generatorURL'] = generator_url
         result['fingerprint'] = fingerprint
         result['status_information'] = status_information
+        result['silenced_by'] = silenced_by
 
         return result
 
@@ -243,6 +249,9 @@ class AlertmanagerServer(GenericServer):
                               error='Unexpected response from Alertmanager API',
                               status_code=status_code)
 
+            # alerts suppressed by a silence get a second look further down
+            suppressed_services = []
+
             for alert in data:
                 alert_data = self._process_alert(alert)
                 if not alert_data:
@@ -263,14 +272,20 @@ class AlertmanagerServer(GenericServer):
 
                 service.generator_url = alert_data['generatorURL']
                 service.fingerprint = alert_data['fingerprint']
+                service.silenced_by = alert_data['silenced_by']
 
                 service.status_information = alert_data['status_information']
+
+                if service.silenced_by:
+                    suppressed_services.append(service)
 
                 if service.host not in self.new_hosts:
                     self.new_hosts[service.host] = GenericHost()
                     self.new_hosts[service.host].name = str(service.host)
                     self.new_hosts[service.host].server = self.name
                 self.new_hosts[service.host].services[service.name] = service
+
+            self.apply_silence_kind(suppressed_services)
 
         except Exception as the_exception:
             # set checking flag back to False
@@ -281,6 +296,35 @@ class AlertmanagerServer(GenericServer):
 
         # dummy return in case all is OK
         return Result()
+
+    def apply_silence_kind(self, services):
+        """Tells acknowledgements and downtimes apart for the given silenced alerts
+
+        Alertmanager only knows silences, so a suppressed alert used to be marked as
+        acknowledged and in downtime at the same time, which makes the according filters
+        useless. The comment of the silence tells which of the two it was meant to be.
+        Silences created elsewhere keep counting as both.
+
+        Args:
+            services (list(AlertmanagerService)): The suppressed alerts
+        """
+        if not services:
+            return
+
+        silences = {silence.get('id'): silence for silence in self.get_silences()}
+        if not silences:
+            return
+
+        for service in services:
+            comments = [silences[silence_id].get('comment', '')
+                        for silence_id in service.silenced_by
+                        if silence_id in silences]
+            acknowledged = any(x.startswith(self.SILENCE_COMMENT_ACKNOWLEDGE) for x in comments)
+            downtime = any(x.startswith(self.SILENCE_COMMENT_DOWNTIME) for x in comments)
+            # only decide if at least one silence was created by Nagstamon
+            if acknowledged or downtime:
+                service.acknowledged = acknowledged
+                service.scheduled_downtime = downtime
 
     def open_monitor_webpage(self, host, service):
         """
@@ -375,6 +419,76 @@ class AlertmanagerServer(GenericServer):
                               cgi_data=json.dumps(silence_data),
                               headers={'Content-Type': 'application/json'})
 
+    @staticmethod
+    def build_silence_comment(marker, comment):
+        """Prefixes the user comment with the marker telling what the silence stands for
+
+        Args:
+            marker (str): One of SILENCE_COMMENT_ACKNOWLEDGE or SILENCE_COMMENT_DOWNTIME
+            comment (str): The comment the user entered, may be empty
+
+        Returns:
+            str: The comment to send along with the silence
+        """
+        if comment:
+            return f'{marker}: {comment}'
+        return marker
+
+    def get_silences(self):
+        """Gets all silences known to the Alertmanager
+
+        Returns:
+            list(dict): The silences, empty if they could not be retrieved
+        """
+        result = self.fetch_url(self.monitor_url + self.API_PATH_SILENCES, giveback="raw")
+        try:
+            silences = json.loads(result.result)
+        except json.decoder.JSONDecodeError:
+            log.error("could not decode the silences: %s", result.result)
+            return []
+        if not isinstance(silences, list):
+            log.error("expected a list of silences but got '%s'", type(silences).__name__)
+            return []
+        return silences
+
+    def expire_silence(self, silence_id):
+        """Expires a single silence
+
+        Args:
+            silence_id (str): ID of the silence to expire
+
+        Returns:
+            Result: The result of the API call
+        """
+        log.debug("expiring silence '%s'", silence_id)
+        return self.fetch_url(f'{self.monitor_url}{self.API_PATH_SILENCE}/{silence_id}',
+                              giveback="raw",
+                              method="DELETE")
+
+    def remove_silences(self, host, service):
+        """Expires all silences which suppress the given alert
+
+        This is the counterpart of the acknowledgement and the downtime, both of which
+        create a silence. Without it a silence could only be removed in the Alertmanager
+        web interface.
+
+        Args:
+            host (str): The host the alert belongs to
+            service (str): The display name of the alert
+
+        Returns:
+            int: How many silences were expired
+        """
+        alert = self.get_alert(host, service)
+        if alert is None:
+            return 0
+        if not alert.silenced_by:
+            log.info('no silence to remove for "%s" on "%s"', service, host)
+            return 0
+        for silence_id in alert.silenced_by:
+            self.expire_silence(silence_id)
+        return len(alert.silenced_by)
+
     def _set_downtime(self, host, service, author, comment, fixed, start_time,
                       end_time, hours, minutes):
 
@@ -390,7 +504,8 @@ class AlertmanagerServer(GenericServer):
             # a flexible downtime has no end time in the dialog, just a duration
             ends_at = add_duration_to_timestring(start_time, hours, minutes)
 
-        self.post_silence(alert, author, comment or 'Nagstamon downtime',
+        self.post_silence(alert, author,
+                          self.build_silence_comment(self.SILENCE_COMMENT_DOWNTIME, comment),
                           starts_at, ends_at)
 
 
@@ -434,7 +549,7 @@ class AlertmanagerServer(GenericServer):
             # moment, which silenced exactly nothing
             ends_at = (now + timedelta(hours=self.DEFAULT_SILENCE_HOURS)).isoformat()
 
-        comment = comment or 'Nagstamon acknowledgement'
+        comment = self.build_silence_comment(self.SILENCE_COMMENT_ACKNOWLEDGE, comment)
 
         self.post_silence(alert, author, comment, starts_at, ends_at)
 

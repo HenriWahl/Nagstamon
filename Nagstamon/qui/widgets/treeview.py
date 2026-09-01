@@ -161,6 +161,9 @@ class TreeView(QTreeView):
     # tell worker to get status after a recheck has been solicited
     recheck = Signal(dict)
 
+    # tell worker to remove the silences suppressing an alert - Alertmanager only
+    remove_silence = Signal(dict)
+
     # tell notification that status of server has changed
     status_changed = Signal(str, str, str)
 
@@ -327,6 +330,9 @@ class TreeView(QTreeView):
 
         # connect signal for recheck action
         self.recheck.connect(self.worker.recheck)
+
+        # connect signal for removing silences - only Alertmanager knows them
+        self.remove_silence.connect(self.worker.remove_silence)
 
         # execute action by worker
         self.request_action.connect(self.worker.execute_action)
@@ -651,6 +657,13 @@ class TreeView(QTreeView):
             action_downtime.triggered.connect(self.action_downtime)
             self.action_menu.addAction(action_downtime)
 
+        # special menu entry for Alertmanager - acknowledgement and downtime both create
+        # a silence, so there has to be a way to get rid of one again
+        if self.server.type == 'Alertmanager':
+            action_remove_silence = QAction('Remove silence', self)
+            action_remove_silence.triggered.connect(self.action_remove_silence)
+            self.action_menu.addAction(action_remove_silence)
+
         # special menu entry for Checkmk Multisite for archiving events
         if self.server.type == 'Checkmk Multisite' and len(list_rows) == 1:
             if miserable_service == 'Events':
@@ -730,6 +743,7 @@ class TreeView(QTreeView):
             # default actions need closed statuswindow to display own dialogs
             if not conf.fullscreen and not conf.windowed and \
                     not method.__name__ == 'action_recheck' and \
+                    not method.__name__ == 'action_remove_silence' and \
                     not method.__name__ == 'action_archive_event':
                 self.action_menu_clicked.emit()
             # clear the right-click selection so the row doesn't remain
@@ -772,6 +786,22 @@ class TreeView(QTreeView):
             # send signal to worker recheck slot
             self.recheck.emit({'host': miserable_host,
                                'service': miserable_service})
+
+    @action_response_decorator
+    def action_remove_silence(self):
+        # How many rows we have
+        list_rows = []
+        for index in self.selectedIndexes():
+            if index.row() not in list_rows:
+                list_rows.append(index.row())
+
+        for lrow in list_rows:
+            miserable_host = self.model().data(self.model().createIndex(lrow, 0), Qt.ItemDataRole.DisplayRole)
+            miserable_service = self.model().data(self.model().createIndex(lrow, 2), Qt.ItemDataRole.DisplayRole)
+
+            # send signal to worker remove_silence slot
+            self.remove_silence.emit({'host': miserable_host,
+                                      'service': miserable_service})
 
     @action_response_decorator
     def action_acknowledge(self):
@@ -1364,6 +1394,19 @@ class TreeView(QTreeView):
 
             # call server recheck method
             self.server.set_recheck(info_dict)
+
+        @Slot(dict)
+        def remove_silence(self, info_dict):
+            """
+            Slot to expire the silences of an alert, getting signal from the context menu
+            """
+            if conf.debug_mode:
+                self.server.debug(server=self.server.name,
+                                  debug='Removing silences of {0} on {1}'.format(info_dict['service'],
+                                                                                 info_dict['host']))
+            # only Alertmanager knows silences at all
+            if hasattr(self.server, 'remove_silences'):
+                self.server.remove_silences(info_dict['host'], info_dict['service'])
 
         @Slot()
         def recheck_all(self):

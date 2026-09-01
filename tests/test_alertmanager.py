@@ -44,6 +44,7 @@ class test_alertmanager(unittest.TestCase):
         self.assertEqual(test_result['labels'], {"alertname":"Error","device":"murpel","endpoint":"metrics","instance":"127.0.0.1:9100","job":"node-exporter","namespace":"monitoring","pod":"monitoring-prometheus-node-exporter-4711","prometheus":"monitoring/monitoring-prometheus-oper-prometheus","service":"monitoring-prometheus-node-exporter","severity":"warning"})
         self.assertEqual(test_result['generatorURL'], 'http://localhost')
         self.assertEqual(test_result['fingerprint'], '0ef7c4bd7a504b8d')
+        self.assertEqual(test_result['silenced_by'], ['bb043288-42a0-4315-8bae-15cde1d7e239'])
         self.assertEqual(test_result['status_information'], 'Network interface "murpel" showing errors on node-exporter monitoring/monitoring-prometheus-node-exporter-4711')
 
 
@@ -281,7 +282,8 @@ class test_alertmanager_silences(unittest.TestCase):
         silence = self.requests[0]['cgi_data']
         self.assertEqual(self.requests[0]['url'], 'http://localhost:9093/api/v2/silences')
         self.assertEqual(silence['createdBy'], 'someone')
-        self.assertEqual(silence['comment'], 'because')
+        # the marker tells an acknowledgement from a downtime when reading it back
+        self.assertEqual(silence['comment'], 'Nagstamon acknowledgement: because')
 
         duration = (dateutil.parser.parse(silence['endsAt'])
                     - dateutil.parser.parse(silence['startsAt']))
@@ -339,3 +341,84 @@ class test_alertmanager_silences(unittest.TestCase):
         self.server._set_downtime('nosuchhost', 'Error', 'someone', 'maintenance', True,
                                   '2026-09-01 10:00:00', '2026-09-01 12:00:00', 0, 0)
         self.assertEqual(self.requests, [])
+
+
+class test_alertmanager_silence_removal(unittest.TestCase):
+    """acknowledgement, downtime and their removal all end up as silences"""
+
+    def setUp(self):
+        self.expired = []
+
+        self.server = AlertmanagerServer()
+        self.server.monitor_url = 'http://localhost:9093'
+
+        self.alert = AlertmanagerService()
+        self.alert.display_name = 'Error'
+        self.alert.labels = {'alertname': 'Error'}
+        self.alert.silenced_by = ['silence-1', 'silence-2']
+
+        host = GenericHost()
+        host.name = '127.0.0.1'
+        host.services = {'0ef7c4bd7a504b8d': self.alert}
+        self.server.hosts = {'127.0.0.1': host}
+
+        self.server.expire_silence = self.expired.append
+
+    def test_build_silence_comment(self):
+        self.assertEqual(
+            AlertmanagerServer.build_silence_comment('Nagstamon downtime', 'because'),
+            'Nagstamon downtime: because')
+        self.assertEqual(
+            AlertmanagerServer.build_silence_comment('Nagstamon downtime', ''),
+            'Nagstamon downtime')
+
+    def test_remove_silences_expires_all_of_them(self):
+        self.assertEqual(self.server.remove_silences('127.0.0.1', 'Error'), 2)
+        self.assertEqual(self.expired, ['silence-1', 'silence-2'])
+
+    def test_remove_silences_without_silence(self):
+        self.alert.silenced_by = []
+        self.assertEqual(self.server.remove_silences('127.0.0.1', 'Error'), 0)
+        self.assertEqual(self.expired, [])
+
+    def test_remove_silences_of_unknown_alert(self):
+        self.assertEqual(self.server.remove_silences('127.0.0.1', 'Nope'), 0)
+        self.assertEqual(self.expired, [])
+
+    def test_acknowledgement_and_downtime_are_told_apart(self):
+        """a suppressed alert used to be acknowledged and in downtime at the same time"""
+        self.server.get_silences = lambda: [
+            {'id': 'silence-1', 'comment': 'Nagstamon downtime: maintenance'}]
+        self.alert.silenced_by = ['silence-1']
+        self.alert.acknowledged = True
+        self.alert.scheduled_downtime = True
+
+        self.server.apply_silence_kind([self.alert])
+
+        self.assertFalse(self.alert.acknowledged)
+        self.assertTrue(self.alert.scheduled_downtime)
+
+    def test_acknowledgement_marker(self):
+        self.server.get_silences = lambda: [
+            {'id': 'silence-1', 'comment': 'Nagstamon acknowledgement: because'}]
+        self.alert.silenced_by = ['silence-1']
+        self.alert.acknowledged = True
+        self.alert.scheduled_downtime = True
+
+        self.server.apply_silence_kind([self.alert])
+
+        self.assertTrue(self.alert.acknowledged)
+        self.assertFalse(self.alert.scheduled_downtime)
+
+    def test_foreign_silence_stays_both(self):
+        """silences created outside of Nagstamon cannot be told apart"""
+        self.server.get_silences = lambda: [
+            {'id': 'silence-1', 'comment': 'silenced via the web interface'}]
+        self.alert.silenced_by = ['silence-1']
+        self.alert.acknowledged = True
+        self.alert.scheduled_downtime = True
+
+        self.server.apply_silence_kind([self.alert])
+
+        self.assertTrue(self.alert.acknowledged)
+        self.assertTrue(self.alert.scheduled_downtime)

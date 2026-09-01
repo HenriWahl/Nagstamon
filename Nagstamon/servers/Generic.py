@@ -1481,7 +1481,8 @@ class GenericServer:
         # return True if all worked well
         return Result()
 
-    def fetch_url(self, url, giveback='obj', cgi_data=None, no_auth=False, multipart=False, headers=None):
+    def fetch_url(self, url, giveback='obj', cgi_data=None, no_auth=False, multipart=False, headers=None,
+                  method=None):
         """
         get content of given url, cgi_data only used if present
         'obj' fetch_url() gives back a dict full of miserable hosts/services,
@@ -1489,6 +1490,7 @@ class GenericServer:
         'raw' it gives back pure HTML - useful for finding out IP or new version
         'json' gives back JSON data
         existence of cgi_data forces urllib to use POST instead of GET requests
+        method allows any other HTTP method, for example DELETE
         NEW: gives back a list containing result and, if necessary, a more clear error description
         """
 
@@ -1547,7 +1549,10 @@ class GenericServer:
                         self.init_http()
                     # most requests come without multipart/form-data
                     if multipart is False:
-                        if cgi_data is None:
+                        if method:
+                            response = self.session.request(method, url, data=cgi_data, timeout=self.timeout,
+                                                            headers=headers)
+                        elif cgi_data is None:
                             response = self.session.get(url, timeout=self.timeout, headers=headers)
                         else:
                             response = self.session.post(url, data=cgi_data, timeout=self.timeout, headers=headers)
@@ -1576,7 +1581,10 @@ class GenericServer:
 
                     # most requests come without multipart/form-data
                     if not multipart:
-                        if cgi_data is None:
+                        if method:
+                            response = temporary_session.request(method, url, data=cgi_data, timeout=self.timeout,
+                                                                 verify=False, headers=headers)
+                        elif cgi_data is None:
                             response = temporary_session.get(url, timeout=self.timeout, verify=False, headers=headers)
                         else:
                             response = temporary_session.post(url, data=cgi_data, timeout=self.timeout, verify=False, headers=headers)
