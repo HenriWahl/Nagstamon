@@ -52,7 +52,6 @@ NAGSTAMON_SCRIPT = 'nagstamon.py'
 
 from setuptools import setup
 
-os_dependent_include_files = ['Nagstamon/resources']
 if os.path.exists('nagstamon'):
     NAGSTAMON_SCRIPT = 'nagstamon'
 
@@ -70,22 +69,8 @@ CLASSIFIERS = ['Intended Audience :: System Administrators',
                'Topic :: System :: Monitoring',
                'Topic :: System :: Networking :: Monitoring']
 
-# Dependencies are automatically detected, but it might need
-# fine tuning.
-build_exe_options = dict(packages=['PyQt6.QtNetwork',
-                                   'keyring.backends.kwallet',
-                                   'keyring.backends.OS_X',
-                                   'keyring.backends.SecretService',
-                                   'keyring.backends.Windows'],
-                         include_files=os_dependent_include_files,
-                         include_msvcr=True,
-                         excludes=[])
-
-bdist_mac_options = dict(iconfile='Nagstamon/resources/nagstamon.icns',
-                         custom_info_plist='Nagstamon/resources/Info.plist')
-
-bdist_dmg_options = dict(volume_label='{0} {1}'.format(NAME, VERSION),
-                         applications_shortcut=False)
+# only used when building RPMs - stays empty on platforms which do not build any
+bdist_rpm_options = dict()
 
 # get paths of modules aka packages dynamically
 current_directory = Path().cwd()
@@ -158,8 +143,5 @@ setup(name=NAME,
       data_files=[(f'{sys.prefix}/share/man/man1', ['Nagstamon/resources/nagstamon.1.gz']),
                   (f'{sys.prefix}/share/pixmaps', ['Nagstamon/resources/nagstamon.svg']),
                   (f'{sys.prefix}/share/applications', ['Nagstamon/resources/nagstamon.desktop'])],
-      options=dict(build_exe=build_exe_options,
-                   bdist_mac=bdist_mac_options,
-                   bdist_dmg=bdist_dmg_options,
-                   bdist_rpm=bdist_rpm_options)
+      options=dict(bdist_rpm=bdist_rpm_options)
       )
