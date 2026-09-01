@@ -1525,14 +1525,16 @@ class GenericServer:
                         file.write(self.cacert_content)
 
                 # in case we know the server's encoding use it
-                if self.encoding:
-                    if cgi_data is not None:
-                        try:
-                            for k in cgi_data:
-                                cgi_data[k] = cgi_data[k].encode(self.encoding)
-                        except:
-                            # set to false to mark it as invalid
-                            self.encoding = False
+                # servers which hand over an already serialized body, like the JSON of the
+                # Alertmanager silences, pass a string - iterating over that as if it was
+                # a dict raised a TypeError on every request and disabled the encoding
+                if self.encoding and isinstance(cgi_data, dict):
+                    try:
+                        for k in cgi_data:
+                            cgi_data[k] = cgi_data[k].encode(self.encoding)
+                    except:
+                        # set to false to mark it as invalid
+                        self.encoding = False
 
                 # use session only for connections to monitor servers, other requests like looking for updates
                 # should go out without credentials
