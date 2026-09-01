@@ -441,13 +441,7 @@ class DialogSettings(Dialog):
         if OS != OS_MACOS:
             self.window.input_checkbox_hide_macos_dock_icon.hide()
 
-        # 'Start at login' needs an application bundle to point the login item at
-        if autostart.is_available():
-            self.window.input_checkbox_start_at_login.show()
-            # the LaunchAgent is the truth - it might have been removed in the system settings
-            self.window.input_checkbox_start_at_login.setChecked(autostart.is_enabled())
-        else:
-            self.window.input_checkbox_start_at_login.hide()
+        self.toggle_start_at_login()
 
         # avoid showing offset setting if not icon in systray is configured
         if not OS in OS_NON_LINUX and not conf.icon_in_systray:
@@ -456,11 +450,27 @@ class DialogSettings(Dialog):
         # important final size adjustment
         self.window.adjustSize()
 
+    def toggle_start_at_login(self):
+        """
+        show 'Start at login' only if there is an application bundle to point the login item
+        at and take its state from the LaunchAgent
+
+        The LaunchAgent is the truth, not the configuration: it might have been removed in
+        the login items of the system settings in the meantime, so it is read back every
+        time the dialog pops up.
+        """
+        if autostart.is_available():
+            self.window.input_checkbox_start_at_login.show()
+            self.window.input_checkbox_start_at_login.setChecked(autostart.is_enabled())
+        else:
+            self.window.input_checkbox_start_at_login.hide()
+
     def show(self, tab=0):
         # hide them and thus be able to fix size if no extra Zabbix/Op5Monitor/IcingaWeb2 widgets are shown
         self.toggle_zabbix_widgets()
         self.toggle_op5monitor_widgets()
         self.toggle_expire_time_widgets()
+        self.toggle_start_at_login()
 
         # tell the world that dialog pops up
         self.show_dialog.emit()

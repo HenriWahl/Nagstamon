@@ -101,12 +101,42 @@ def disable():
     return True
 
 
+def get_agent_bundle():
+    """
+    Path of the .app bundle the existing LaunchAgent points at, or None if there is no
+    LaunchAgent or it does not contain a usable path
+    """
+    try:
+        with LAUNCH_AGENT_FILE.open('rb') as file:
+            arguments = plistlib.load(file).get('ProgramArguments', [])
+    except (OSError, plistlib.InvalidFileException):
+        return None
+    # the arguments look like ['/usr/bin/open', '-a', <bundle>, '--args', <configdir>]
+    if '-a' in arguments:
+        bundle_index = arguments.index('-a') + 1
+        if bundle_index < len(arguments):
+            return Path(arguments[bundle_index])
+    return None
+
+
 def apply(enabled):
     """
     Bring the LaunchAgent in line with the given setting
+
+    Removing it must not depend on is_available(): a LaunchAgent written from an
+    application bundle stays behind when Nagstamon is started from source afterwards, and
+    once its bundle is gone it can only fail silently at login.
     """
-    if not is_available():
+    if OS != OS_MACOS:
         return False
-    if enabled:
+    if not enabled:
+        return disable()
+    if is_available():
         return enable()
-    return disable()
+    # there is no bundle to point a login item at, so a LaunchAgent left over from an
+    # earlier one is only removed if its bundle is gone as well - as long as it is still
+    # there the login item keeps working and has to survive a run from source
+    bundle = get_agent_bundle()
+    if bundle is not None and not bundle.exists():
+        return disable()
+    return False
