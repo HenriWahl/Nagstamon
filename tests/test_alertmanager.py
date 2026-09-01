@@ -5,7 +5,7 @@ import dateutil.parser
 from pylint import lint
 
 import unittest
-from Nagstamon.objects import GenericHost
+from Nagstamon.objects import GenericHost, Result
 from Nagstamon.servers.Alertmanager import (AlertmanagerServer,
                                             AlertmanagerService)
 
@@ -362,7 +362,13 @@ class test_alertmanager_silence_removal(unittest.TestCase):
         host.services = {'0ef7c4bd7a504b8d': self.alert}
         self.server.hosts = {'127.0.0.1': host}
 
-        self.server.expire_silence = self.expired.append
+        def expire_silence(silence_id):
+            self.expired.append(silence_id)
+            return Result(result='', status_code=self.status_codes.get(silence_id, 200))
+
+        # status code the faked API answers with, per silence
+        self.status_codes = {}
+        self.server.expire_silence = expire_silence
 
     def test_build_silence_comment(self):
         self.assertEqual(
@@ -384,6 +390,12 @@ class test_alertmanager_silence_removal(unittest.TestCase):
     def test_remove_silences_of_unknown_alert(self):
         self.assertEqual(self.server.remove_silences('127.0.0.1', 'Nope'), 0)
         self.assertEqual(self.expired, [])
+
+    def test_remove_silences_does_not_count_a_failed_one(self):
+        self.status_codes['silence-1'] = 404
+        self.assertEqual(self.server.remove_silences('127.0.0.1', 'Error'), 1)
+        # the failing one must not stop the others from being expired
+        self.assertEqual(self.expired, ['silence-1', 'silence-2'])
 
     def test_acknowledgement_and_downtime_are_told_apart(self):
         """a suppressed alert used to be acknowledged and in downtime at the same time"""

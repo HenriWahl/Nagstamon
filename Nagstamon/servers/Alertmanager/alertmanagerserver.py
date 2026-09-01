@@ -477,7 +477,7 @@ class AlertmanagerServer(GenericServer):
             service (str): The display name of the alert
 
         Returns:
-            int: How many silences were expired
+            int: How many silences were really expired
         """
         alert = self.get_alert(host, service)
         if alert is None:
@@ -485,9 +485,18 @@ class AlertmanagerServer(GenericServer):
         if not alert.silenced_by:
             log.info('no silence to remove for "%s" on "%s"', service, host)
             return 0
+        expired = 0
         for silence_id in alert.silenced_by:
-            self.expire_silence(silence_id)
-        return len(alert.silenced_by)
+            result = self.expire_silence(silence_id)
+            # a failed expiration leaves the alert suppressed, so it must not be counted
+            # as a success - otherwise the alert silently stays away until the next refresh
+            if result.error or not 200 <= result.status_code < 300:
+                log.error('could not expire silence "%s" of "%s" on "%s": %s',
+                          silence_id, service, host,
+                          result.error or f'status code {result.status_code}, {result.result}')
+                continue
+            expired += 1
+        return expired
 
     def _set_downtime(self, host, service, author, comment, fixed, start_time,
                       end_time, hours, minutes):
