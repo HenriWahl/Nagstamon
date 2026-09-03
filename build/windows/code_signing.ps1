@@ -29,6 +29,7 @@ if (-not $signtool) {
 Write-Host "Current directory: $(Get-Location)"
 Write-Host "Using signtool: $signtool"
 Write-Host "Signing file: $file"
+Write-Host "Using certificate thumbprint: ${env:CODESIGNING_THUMBPRINT}"
 
 # Sign the given file
-& $signtool sign /fd sha256 /sha1 ${env:CODESIGNING_THUMBPRINT} /tr http://ts.harica.gr /td sha256 $file
+& $signtool sign /debug /fd sha256 /sha1 ${env:CODESIGNING_THUMBPRINT} /tr http://ts.harica.gr /td sha256 $file
