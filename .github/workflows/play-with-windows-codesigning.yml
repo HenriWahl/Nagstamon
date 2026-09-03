@@ -14,16 +14,16 @@ jobs:
   windows-64:
     runs-on: codesigning
     steps:
-      - run: pwd
       - run: Get-ChildItem -Recurse
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '${{ env.python_win_version }}'
           architecture: x64
       - run: python -m pip install --no-warn-script-location -r build/requirements/windows.txt
       # pretty hacky but no other idea to avoid gssapi being installed which breaks requests-kerberos
-      - run: python -m pip uninstall -y gssapi requests-gssapi
+      # seems to be unnecessary now (2026)?
+      #- run: python -m pip uninstall -y gssapi requests-gssapi
       - run: cd ${{ github.workspace }}/build; python build.py
         env:
           PYTHONPATH: ${{ github.workspace }}
