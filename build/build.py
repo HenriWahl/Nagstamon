@@ -29,7 +29,6 @@ import subprocess
 import sys
 import zipfile
 
-
 CURRENT_DIR = os.getcwd()
 NAGSTAMON_DIR = os.path.normpath('{0}{1}..{1}'.format(CURRENT_DIR, os.sep))
 sys.path.insert(1, NAGSTAMON_DIR)
@@ -55,7 +54,6 @@ PYTHON_VERSION = '{0}.{1}'.format(sys.version_info[0],
 
 DIST_NAME, DIST_VERSION, DIST_ID = get_distro()
 
-
 # depending on debug build or not a console window will be shown or not
 if len(sys.argv) > 1 and sys.argv[1] == 'debug':
     DEBUG = True
@@ -70,12 +68,11 @@ else:
     # also no need for filename suffix
     DIR_NAME_SUFFIX = ''
 
-# when run by GitHub Actions with PFX and password as environment variables
-# signing will be done
-SIGNING = False
-if 'WIN_SIGNING_CERT_BASE64' in environ \
-    and 'WIN_SIGNING_PASSWORD' in environ:
-    SIGNING = True
+# when run by GitHub Actions on codesigning runner signing will be done
+CODESIGNING = False
+if 'CODESIGNING' in environ and \
+        'CODESIGNING_THUMBPRINT' in environ:
+    CODESIGNING = True
 
 
 def zip_manpage():
@@ -109,7 +106,8 @@ def package_windows():
     else:
         VERSION_IS = VERSION
 
-    ISCC = r'{0}{1}Inno Setup 6{1}iscc.exe'.format(os.environ[f'PROGRAMFILES{ARCH_WINDOWS_OPTS[ARCH_WINDOWS][2]}'], os.sep)
+    ISCC = r'{0}{1}Inno Setup 6{1}iscc.exe'.format(os.environ[f'PROGRAMFILES{ARCH_WINDOWS_OPTS[ARCH_WINDOWS][2]}'],
+                                                   os.sep)
     DIR_BUILD_EXE = f'{CURRENT_DIR}{os.sep}dist{os.sep}Nagstamon'
     DIR_BUILD_NAGSTAMON = f'{CURRENT_DIR}{os.sep}dist{os.sep}Nagstamon-{VERSION}-win{ARCH_WINDOWS}{DIR_NAME_SUFFIX}'
     FILE_ZIP = f'{DIR_BUILD_NAGSTAMON}.zip'
@@ -137,7 +135,7 @@ def package_windows():
                      '..\\nagstamon.py'],
                     shell=True)
 
-    if SIGNING:
+    if CODESIGNING:
         # environment variables will be used by powershell script for signing
         subprocess.run(['pwsh.exe', './windows/code_signing.ps1', 'dist/Nagstamon/*.exe'])
 
@@ -175,20 +173,21 @@ def package_windows():
 
         # execute InnoSetup with many variables set by ISCC.EXE outside .iss file
         result = subprocess.call([ISCC,
-                         r'/Dsource={0}'.format(DIR_BUILD_NAGSTAMON),
-                         r'/Dversion_is={0}'.format(VERSION_IS),
-                         r'/Dversion={0}'.format(VERSION),
-                         r'/Darch={0}'.format(ARCH_WINDOWS),
-                         r'/Darchs_allowed={0}'.format(ARCH_WINDOWS_OPTS[ARCH_WINDOWS][3]),
-                         r'/O{0}{1}dist'.format(CURRENT_DIR, os.sep),
-                         r'{0}{1}windows{1}nagstamon.iss'.format(CURRENT_DIR, os.sep)],
-                         shell=True)
+                                  r'/Dsource={0}'.format(DIR_BUILD_NAGSTAMON),
+                                  r'/Dversion_is={0}'.format(VERSION_IS),
+                                  r'/Dversion={0}'.format(VERSION),
+                                  r'/Darch={0}'.format(ARCH_WINDOWS),
+                                  r'/Darchs_allowed={0}'.format(ARCH_WINDOWS_OPTS[ARCH_WINDOWS][3]),
+                                  r'/O{0}{1}dist'.format(CURRENT_DIR, os.sep),
+                                  r'{0}{1}windows{1}nagstamon.iss'.format(CURRENT_DIR, os.sep)],
+                                 shell=True)
         if result > 0:
             sys.exit(result)
 
-    if SIGNING:
+    if CODESIGNING:
         # environment variables will be used by powershell script for signing
         subprocess.run(['pwsh.exe', '../windows/code_signing.ps1', '*.exe'])
+
 
 def package_macos():
     """
@@ -226,6 +225,7 @@ def package_macos():
                      f'"dist/Nagstamon-{VERSION}-{ARCH_MACOS_NAMES[ARCH_MACOS]}.dmg" '
                      f'Nagstamon_{VERSION}_Staging_DMG/'
                      ], shell=True)
+
 
 def package_linux_deb():
     shutil.rmtree(SCRIPTS_DIR, ignore_errors=True)
