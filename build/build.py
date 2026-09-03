@@ -70,8 +70,7 @@ else:
 
 # when run by GitHub Actions on codesigning runner signing will be done
 CODESIGNING = False
-if 'CODESIGNING' in environ and \
-        'CODESIGNING_THUMBPRINT' in environ:
+if 'CODESIGNING_THUMBPRINT' in environ:
     CODESIGNING = True
 
 
