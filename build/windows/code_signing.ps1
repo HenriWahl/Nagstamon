@@ -6,10 +6,6 @@ if (-not $file -or -not (Test-Path $file)) {
     exit 1
 }
 
-Write-Host "DebugDebugDebug"
-
-
-
 if (-not $signtool) {
     $sdkPaths = @(
         "${env:ProgramFiles(x86)}\Windows Kits",
@@ -30,6 +26,7 @@ if (-not $signtool) {
 }
 
 # Display the path to the signtool
+Write-Host "Current directory: $(Get-Location)"
 Write-Host "Using signtool: $signtool"
 Write-Host "Signing file: $file"
 
