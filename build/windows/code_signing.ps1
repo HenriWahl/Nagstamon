@@ -6,8 +6,9 @@ if (-not $file -or -not (Test-Path $file)) {
     exit 1
 }
 
-# Locate signtool.exe
-$signtool = (Get-Command "signtool.exe" -ErrorAction SilentlyContinue).Source
+Write-Host "DebugDebugDebug"
+
+
 
 if (-not $signtool) {
     $sdkPaths = @(
@@ -31,7 +32,6 @@ if (-not $signtool) {
 # Display the path to the signtool
 Write-Host "Using signtool: $signtool"
 Write-Host "Signing file: $file"
-Write-Host "Using certificate thumbprint: ${env:CODESIGNING_THUMBPRINT}"
 
 # Sign the given file
 & $signtool sign /fd sha256 /sha1 ${env:CODESIGNING_THUMBPRINT} /tr http://ts.harica.gr /td sha256 $file
