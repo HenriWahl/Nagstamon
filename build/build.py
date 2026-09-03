@@ -137,7 +137,7 @@ def package_windows():
 
     if CODESIGNING:
         # environment variables will be used by powershell script for signing
-        subprocess.run(['pwsh.exe', './windows/code_signing.ps1', 'dist/Nagstamon/*.exe'])
+        subprocess.run(['powershell.exe', './windows/code_signing.ps1', 'dist/Nagstamon/*.exe'])
 
     # rename output
     os.rename(DIR_BUILD_EXE, DIR_BUILD_NAGSTAMON)
@@ -186,7 +186,7 @@ def package_windows():
 
     if CODESIGNING:
         # environment variables will be used by powershell script for signing
-        subprocess.run(['pwsh.exe', '../windows/code_signing.ps1', '*.exe'])
+        subprocess.run(['powershell.exe', '../windows/code_signing.ps1', '*.exe'])
 
 
 def package_macos():
