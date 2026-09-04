@@ -135,6 +135,9 @@ def package_windows():
                     shell=True)
 
     if CODESIGNING:
+
+        print('do code signing')
+
         # environment variables will be used by powershell script for signing
         subprocess.run(['powershell.exe', './windows/code_signing.ps1', 'dist/Nagstamon/*.exe'])
 
