@@ -33,4 +33,4 @@ Write-Host "Using certificate thumbprint: ${env:CODESIGNING_THUMBPRINT}"
 
 # Sign the given file
 #& $signtool sign /debug /fd sha256 /sha1 ${env:CODESIGNING_THUMBPRINT} /tr http://ts.harica.gr /td sha256 $file
-C:\${env:ProgramFiles(x86)}\"Windows Kits\"\10\bin\10.0.28000.0\x64\signtool.exe sign /debug /fd sha256 /sha1 ${env:CODESIGNING_THUMBPRINT} /tr http://ts.harica.gr /td sha256 $file
+C:\${env:ProgramFiles(x86)}\"Windows Kits"\10\bin\10.0.28000.0\x64\signtool.exe sign /debug /fd sha256 /sha1 ${env:CODESIGNING_THUMBPRINT} /tr http://ts.harica.gr /td sha256 $file
