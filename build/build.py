@@ -120,7 +120,7 @@ def package_windows():
                 os.remove(file)
 
     # pyinstaller seems also to be installed not in \Scripts folder - if so, try without path
-    pyinstaller_path = f'{sys.base_prefix}\\Scripts\\pyinstaller'
+    pyinstaller_path = f'{sys.base_prefix}\\Scripts\\pyinstaller.exe'
     if not Path(pyinstaller_path).exists():
         pyinstaller_path = 'pyinstaller'
     subprocess.call([pyinstaller_path,
