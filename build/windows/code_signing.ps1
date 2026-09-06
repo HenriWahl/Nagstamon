@@ -1,11 +1,34 @@
-# get file to be signed from first argument
+# Get file to be signed from first argument
 $file = $args[0]
 
-# decode base64 PFX from environment variable
-$cert_buffer = [System.Convert]::FromBase64String($env:WIN_SIGNING_CERT_BASE64)
+if (-not $file -or -not (Test-Path $file)) {
+    Write-Error "Target file '$file' does not exist or was not specified."
+    exit 1
+}
 
-# open cert from PFX with password
-$cert = [System.Security.Cryptography.X509Certificates.X509Certificate2]::New($cert_buffer, $env:WIN_SIGNING_PASSWORD)
+if (-not $signtool) {
+    $sdkPaths = @(
+        "${env:ProgramFiles(x86)}\Windows Kits",
+        "${env:ProgramFiles}\Windows Kits"
+    ) | Where-Object { Test-Path $_ }
 
-# finally sign the given file
-Set-AuthenticodeSignature -HashAlgorithm SHA256 -Certificate $cert -TimestampServer http://timestamp.sectigo.com -FilePath $file
+    if ($sdkPaths) {
+        $signtool = (Get-ChildItem -Path $sdkPaths -Filter "signtool.exe" -Recurse -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -match '\\x64\\' } |
+            Sort-Object -Property LastWriteTime -Descending |
+            Select-Object -First 1).FullName
+    }
+}
+
+if (-not $signtool) {
+    Write-Error "signtool.exe not found in standard Windows SDK locations or PATH."
+    exit 1
+}
+
+# Display the path to the signtool
+Write-Host "Current directory: $(Get-Location)"
+Write-Host "Using signtool: $signtool"
+Write-Host "Signing file: $file"
+
+# Sign the given file
+& $signtool sign /debug /fd sha256 /sha1 ${env:CODESIGNING_THUMBPRINT} /tr http://ts.harica.gr /td sha256 $file
