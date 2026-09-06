@@ -23,7 +23,7 @@ jobs:
         python-version: ['3.10', 3.11, 3.12, 3.13, 3.14]
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     # docker login is needed for pushing the test image
     - uses: docker/login-action@v4
       with:
@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       # docker login is needed for pushing the build image
       - uses: docker/login-action@v4
         with:
@@ -79,7 +79,7 @@ jobs:
       matrix:
         version: [ 42, 43, 44, 45 ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       # docker login is needed for pushing the build image
       - uses: docker/login-action@v4
         with:
@@ -105,7 +105,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       # docker login is needed for pushing the build image
       - uses: docker/login-action@v4
         with:
@@ -132,7 +132,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       # docker login is needed for pushing the build image
       - uses: docker/login-action@v4
         with:
@@ -161,7 +161,7 @@ jobs:
     runs-on: macos-15-intel
     needs: test
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - run : brew install create-dmg
       - run: pip3 install --no-warn-script-location --break-system-packages -r build/requirements/macos.txt
       - run: cd ${{ github.workspace }}/build; python3 build.py
@@ -178,7 +178,7 @@ jobs:
     runs-on: macos-14
     needs: test
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - run : brew install create-dmg
       - run: pip3 install --no-warn-script-location --break-system-packages -r build/requirements/macos.txt
       - run: cd ${{ github.workspace }}/build; python3 build.py
@@ -196,8 +196,8 @@ jobs:
 #    runs-on: windows-2022
 #    needs: test
 #    steps:
-#      - uses: actions/checkout@v6
-#      - uses: actions/setup-python@v6
+#      - uses: actions/checkout@v7
+#      - uses: actions/setup-python@v7
 #        with:
 #          python-version: '${{ env.python_win_version }}'
 #          architecture: x86
@@ -226,8 +226,8 @@ jobs:
     runs-on: windows-2022
     needs: test
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '${{ env.python_win_version }}'
           architecture: x64
@@ -253,8 +253,8 @@ jobs:
     runs-on: windows-2022
     needs: test
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '${{ env.python_win_version }}'
           architecture: x64
@@ -285,7 +285,7 @@ jobs:
       family: debian
     steps:
       # checkout to get Dockerfiles for steps.dockerfile_hash.outputs.HASH
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       # get binaries created by other jobs
       - uses: actions/download-artifact@v8
         with:
@@ -336,7 +336,7 @@ jobs:
       version_latest: 41
     steps:
       # checkout to get Dockerfiles for steps.dockerfile_hash.outputs.HASH
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       # get binaries created by other jobs
       - uses: actions/download-artifact@v8
         with:
@@ -388,7 +388,7 @@ jobs:
       version: 9
     steps:
       # checkout to get Dockerfiles for steps.dockerfile_hash.outputs.HASH
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       # get binaries created by other jobs
       - uses: actions/download-artifact@v8
         with:
