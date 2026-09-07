@@ -69,7 +69,7 @@ CLASSIFIERS = ['Intended Audience :: System Administrators',
                'Topic :: System :: Monitoring',
                'Topic :: System :: Networking :: Monitoring']
 
-# only used when building RPMs - stays empty on platforms which do not build any
+# only used when building RPMs - stays empty on the platforms which do not build them
 bdist_rpm_options = dict()
 
 # get paths of modules aka packages dynamically

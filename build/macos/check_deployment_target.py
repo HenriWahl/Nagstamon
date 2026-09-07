@@ -25,6 +25,20 @@ MACHO_MAGIC = (b'\xcf\xfa\xed\xfe', b'\xce\xfa\xed\xfe',
                b'\xca\xfe\xba\xbe', b'\xbe\xba\xfe\xca')
 
 
+# how many components a version is padded to, so that a bundle declaring '13' and a
+# binary requiring '13.0.0' are recognized as the same version - a plain tuple comparison
+# would consider the shorter one smaller
+VERSION_COMPONENTS = 3
+
+
+def parse_version(text):
+    """
+        turn a version string into a padded tuple of ints
+    """
+    version = tuple(int(x) for x in text.split('.'))
+    return version + (0,) * (VERSION_COMPONENTS - len(version))
+
+
 def version_string(version):
     """
         turn a version tuple back into a printable string
@@ -59,7 +73,7 @@ def get_minimum_os_version(path):
         elif (command == 'LC_BUILD_VERSION' and stripped.startswith('minos ')) or \
                 (command == 'LC_VERSION_MIN_MACOSX' and stripped.startswith('version ')):
             try:
-                versions.append(tuple(int(x) for x in stripped.split()[1].split('.')))
+                versions.append(parse_version(stripped.split()[1]))
             except ValueError:
                 pass
     return max(versions) if versions else None
@@ -89,7 +103,7 @@ def get_declared_version(bundle):
 
     declared = plist['LSMinimumSystemVersion']
     try:
-        return tuple(int(x) for x in str(declared).split('.'))
+        return parse_version(str(declared))
     except ValueError:
         sys.exit(f'{plist_path} declares an unusable LSMinimumSystemVersion {declared!r}')
 
