@@ -66,8 +66,6 @@ class ZabbixServer(GenericServer):
         self.use_description_name_service = conf.servers[self.get_name()].use_description_name_service
         self.api_version = ''
         self.auth_token = ''
-        # Force authentication refresh by default until verified
-        self.refresh_authentication = True
         self.monitor_path = '/api_jsonrpc.php'
 
     def init_config(self):
