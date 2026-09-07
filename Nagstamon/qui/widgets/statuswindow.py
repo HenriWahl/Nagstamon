@@ -1398,8 +1398,8 @@ class StatusWindow(QWidget):
             return
         self.workers_shut_down = True
 
-        # stop statuswindow workers - the running flag has to be falsificated first,
-        # otherwise the workers just schedule themselves again
+        # stop statuswindow workers - the running flag has to be cleared first, otherwise
+        # the workers just schedule themselves again
         if hasattr(self, 'worker'):
             self.worker.running = False
             self.worker.finish.emit()
