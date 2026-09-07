@@ -87,9 +87,15 @@ def enable():
                                   '--args', conf.configdir],
              'RunAtLoad': True}
 
-    LAUNCH_AGENTS_DIR.mkdir(parents=True, exist_ok=True)
-    with LAUNCH_AGENT_FILE.open('wb') as file:
-        plistlib.dump(agent, file)
+    # writing it can fail on a read-only or full home directory, and a login item which
+    # is not there must not be reported as if it were
+    try:
+        LAUNCH_AGENTS_DIR.mkdir(parents=True, exist_ok=True)
+        with LAUNCH_AGENT_FILE.open('wb') as file:
+            plistlib.dump(agent, file)
+    except OSError as error:
+        print(f'could not write the login item {LAUNCH_AGENT_FILE}: {error}')
+        return False
     return True
 
 
@@ -97,7 +103,11 @@ def disable():
     """
     Remove the LaunchAgent again
     """
-    LAUNCH_AGENT_FILE.unlink(missing_ok=True)
+    try:
+        LAUNCH_AGENT_FILE.unlink(missing_ok=True)
+    except OSError as error:
+        print(f'could not remove the login item {LAUNCH_AGENT_FILE}: {error}')
+        return False
     return True
 
 

@@ -557,8 +557,12 @@ class DialogSettings(Dialog):
         font.fromString(conf.font)
         font_icons.setPointSize(font.pointSize() + 2)
 
-        # create or remove the macOS login item
+        # create or remove the macOS login item and take the setting from the LaunchAgent
+        # afterwards - if writing or removing it failed, the configuration must not claim
+        # otherwise
         autostart.apply(conf.start_at_login)
+        if autostart.is_available():
+            conf.start_at_login = autostart.is_enabled()
 
         # save configuration
         conf.save_config()
