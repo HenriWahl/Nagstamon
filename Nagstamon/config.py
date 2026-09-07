@@ -1113,6 +1113,9 @@ class Server:
 
         # Alertmanager mappings
         self.alertmanager_filter = ''
+        # labels a silence created by Nagstamon matches on - all labels of an alert make
+        # the silence so specific that it breaks as soon as one volatile label changes
+        self.silence_matcher_labels = 'alertname,instance'
         self.map_to_critical = 'critical,error'
         self.map_to_warning = 'warning,warn'
         self.map_to_down = 'down'

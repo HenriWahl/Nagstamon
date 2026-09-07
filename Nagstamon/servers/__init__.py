@@ -214,6 +214,7 @@ def create_server(server=None):
 
     # Prometheus & Alertmanager
     new_server.alertmanager_filter = server.alertmanager_filter
+    new_server.silence_matcher_labels = server.silence_matcher_labels
     new_server.map_to_hostname = server.map_to_hostname
     new_server.map_to_servicename = server.map_to_servicename
     new_server.map_to_status_information = server.map_to_status_information
