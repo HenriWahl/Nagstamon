@@ -131,6 +131,9 @@ class StatusWindow(QWidget):
         # by the QApplication.aboutToQuit signal
         self.workers_shut_down = False
 
+        # tells if the position stored in the configuration could be restored yet
+        self.stored_position_applied = False
+
         # immediately hide to avoid flicker on Windows and OSX
         self.hide()
 
@@ -255,6 +258,11 @@ class StatusWindow(QWidget):
         self.injected_dialogs.weblogin.delete_web_cookies.connect(
             self.injected_dialogs.server.delete_web_cookies_action)
         self.injected_dialogs.server.delete_web_cookies.connect(self.injected_dialogs.server.delete_web_cookies_action)
+
+        # the screen setup might still be changing when Nagstamon is started at login,
+        # so the stored position has to be applied again as soon as the screens are known
+        app.screenAdded.connect(self.apply_stored_position)
+        app.primaryScreenChanged.connect(self.apply_stored_position)
 
         self.initialize()
 
@@ -537,10 +545,36 @@ class StatusWindow(QWidget):
         # force correct position of statuswindow
         self.adjust_size()
 
+        # remember if the stored position could be used at all - when Nagstamon is started
+        # at login the screens are not necessarily known yet and the position gets
+        # discarded as being off-screen
+        self.stored_position_applied = bool(get_screen_name(conf.position_x, conf.position_y))
+
         # store position for showing/hiding statuswindow
         self.stored_x = self.x()
         self.stored_y = self.y()
         self.stored_width = self.width()
+
+    @Slot()
+    def apply_stored_position(self):
+        """
+        apply the stored position and size after the screens became known
+
+        when Nagstamon gets started at login the screen setup is not necessarily complete
+        yet, so the stored position looks off-screen and is thrown away, leaving the
+        window at a default position and size - see
+        https://github.com/HenriWahl/Nagstamon/issues/1148
+        """
+        # only relevant until the stored position could be used once
+        if self.stored_position_applied or conf.fullscreen:
+            return
+        if not get_screen_name(conf.position_x, conf.position_y):
+            return
+        self.move(conf.position_x, conf.position_y)
+        if conf.windowed:
+            self.resize(conf.position_width, conf.position_height)
+        self.adjust_size()
+        self.stored_position_applied = True
 
     def sort_server_vboxes(self):
         """

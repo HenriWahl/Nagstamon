@@ -25,6 +25,7 @@ import psutil
 from pathlib import Path
 import platform
 import re
+import subprocess
 import sys
 import traceback
 import webbrowser
@@ -56,6 +57,35 @@ STATES_SOUND = ['WARNING',
 
 
 USER_AGENT = f'{AppInfo.NAME}/{AppInfo.VERSION}/{platform.system()}'
+
+
+def is_translated_by_rosetta():
+    """
+    Tell if this process runs under Rosetta, which means an Intel build was started on an
+    Apple Silicon Mac. It works, but slower and with subtle Qt differences, and users end
+    up debugging problems which are really just the wrong download - see
+    https://github.com/HenriWahl/Nagstamon/issues/1055
+    """
+    if OS != OS_MACOS:
+        return False
+    try:
+        # sysctl.proc_translated is 1 while running translated, 0 natively and missing
+        # on Macs which have no Rosetta at all
+        return subprocess.run(['sysctl', '-n', 'sysctl.proc_translated'],
+                              capture_output=True,
+                              text=True,
+                              check=False).stdout.strip() == '1'
+    except OSError:
+        return False
+
+
+def get_architecture():
+    """
+    Architecture this instance runs on, with a hint if it is being translated
+    """
+    if is_translated_by_rosetta():
+        return f'{platform.machine()} (translated by Rosetta)'
+    return platform.machine()
 
 # store default sounds as buffers to avoid https://github.com/HenriWahl/Nagstamon/issues/578
 # meanwhile used as backup copy in case they had been deleted by macOS

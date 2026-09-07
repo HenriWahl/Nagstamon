@@ -20,6 +20,7 @@ from platform import python_version
 
 from Nagstamon.config import (AppInfo,
                               RESOURCES)
+from Nagstamon.helpers import get_architecture
 from Nagstamon.qui.dialogs.dialog import Dialog
 from Nagstamon.qui.qt import (QSvgWidget,
                               Qt,
@@ -44,7 +45,11 @@ class DialogAbout(Dialog):
         self.window.label_copyright.setText(AppInfo.COPYRIGHT)
         self.window.label_website.setText(f'<a href={AppInfo.WEBSITE}>{AppInfo.WEBSITE}</a>')
         self.window.label_website.setOpenExternalLinks(True)
-        self.window.label_versions.setText(f'Python: {python_version()}, Qt: {QT_VERSION_STR}')
+        # the architecture matters on macOS, where an Intel build silently runs
+        # translated by Rosetta on Apple Silicon
+        self.window.label_versions.setText(f'Python: {python_version()}, '
+                                           f'Qt: {QT_VERSION_STR}, '
+                                           f'Architecture: {get_architecture()}')
         self.window.label_contribution.setText(
             f'<a href={AppInfo.WEBSITE}/contribution>Contribution</a> | <a href=https://paypal.me/nagstamon>Donation</a>')
         self.window.label_footnote.setText('<small>¹ meanwhile many more monitors...</small>')

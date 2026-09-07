@@ -770,6 +770,13 @@
             </property>
            </widget>
           </item>
+          <item row="15" column="0">
+           <widget class="QCheckBox" name="input_checkbox_start_at_login">
+            <property name="text">
+             <string>Start at login</string>
+            </property>
+           </widget>
+          </item>
           <item row="8" column="0" colspan="2">
            <widget class="QCheckBox" name="input_checkbox_systray_offset_use">
             <property name="text">
@@ -3203,6 +3210,7 @@
   <tabstop>input_spinbox_systray_offset</tabstop>
   <tabstop>input_combobox_fullscreen_display</tabstop>
   <tabstop>input_checkbox_hide_macos_dock_icon</tabstop>
+  <tabstop>input_checkbox_start_at_login</tabstop>
   <tabstop>input_checkbox_enable_position_fix</tabstop>
   <tabstop>button_fontchooser</tabstop>
   <tabstop>button_default_font</tabstop>
