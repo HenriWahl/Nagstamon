@@ -609,9 +609,6 @@ class Config:
             config = configparser.ConfigParser(allow_no_value=True, interpolation=None)
             # general section for Nagstamon
             config.add_section('Nagstamon')
-            for option in self.__dict__:
-                if option not in ['servers', 'actions', 'configfile', 'configdir', 'cli_args']:
-                    config.set('Nagstamon', option, str(self.__dict__[option]))
 
             # because the switch from Nagstamon 1.0 to 1.0.1 brings the use_system_keyring property
             # and all the thousands 1.0 installations do not know it yet it will be more comfortable
@@ -633,6 +630,12 @@ class Config:
 
             # save actions dict
             self.save_multiple_config('actions', 'action')
+
+            # fill the general section only now because saving the servers might have
+            # switched off use_system_keyring after the keyring refused to store a password
+            for option in self.__dict__:
+                if option not in ['servers', 'actions', 'configfile', 'configdir', 'cli_args']:
+                    config.set('Nagstamon', option, str(self.__dict__[option]))
 
             # open, save and close config file
             with open(os.path.normpath(self.configfile), 'w') as file:
@@ -695,35 +698,24 @@ class Config:
                                 value = ''
                             elif self.keyring_available and self.use_system_keyring:
                                 if self.__dict__[settingsdir][s].password != '':
-                                    # provoke crash if password saving does not work - this is the case
-                                    # on newer Ubuntu releases
-                                    try:
-                                        keyring.set_password('Nagstamon',
-                                                             '@'.join((self.__dict__[settingsdir][s].username,
-                                                                       self.__dict__[settingsdir][s].monitor_url)),
-                                                             self.__dict__[settingsdir][s].password)
-                                    except Exception:
-                                        import traceback
-                                        traceback.print_exc(file=sys.stdout)
-                                        sys.exit(1)
-                                value = ''
+                                    if self.store_password_in_keyring(
+                                            '@'.join((self.__dict__[settingsdir][s].username,
+                                                      self.__dict__[settingsdir][s].monitor_url)),
+                                            self.__dict__[settingsdir][s].password):
+                                        value = ''
+                                else:
+                                    value = ''
                         if option == 'proxy_password':
                             if self.keyring_available and self.use_system_keyring:
                                 if self.__dict__[settingsdir][s].proxy_password != '':
-                                    # provoke crash if password saving does not work - this is the case
-                                    # on newer Ubuntu releases
-                                    try:
-                                        keyring.set_password('Nagstamon',
-                                                             '@'.join(('proxy',
-                                                                       self.__dict__[settingsdir][s].proxy_username,
-                                                                       self.__dict__[settingsdir][s].proxy_address)),
-                                                             self.__dict__[settingsdir][s].proxy_password)
-                                    except Exception:
-                                        import traceback
-                                        traceback.print_exc(file=sys.stdout)
-                                        sys.exit(1)
-
-                                value = ''
+                                    if self.store_password_in_keyring(
+                                            '@'.join(('proxy',
+                                                      self.__dict__[settingsdir][s].proxy_username,
+                                                      self.__dict__[settingsdir][s].proxy_address)),
+                                            self.__dict__[settingsdir][s].proxy_password):
+                                        value = ''
+                                else:
+                                    value = ''
                         config.set(setting + '_' + s, option, str(value))
                     else:
                         config.set(setting + '_' + s, option, str(self.__dict__[settingsdir][s].__dict__[option]))
@@ -749,6 +741,50 @@ class Config:
             # ##    for f in os.listdir(self.configdir + os.sep + settingsdir):
             # ##        if not f.split(setting + "_")[1].split(".conf")[0] in self.__dict__[settingsdir]:
             # ##            os.unlink(self.configdir + os.sep + settingsdir + os.sep + f)
+
+    def store_password_in_keyring(self, account, password):
+        """
+        Stores a password for the given account in the system keyring.
+
+        Returns:
+            bool: True if the password could be stored, False otherwise.
+
+        Special Considerations:
+            - On macOS the ACL of an existing keychain entry may reject a freshly built
+              binary with error -25299, so the entry gets deleted and written again before
+              giving up - see https://github.com/HenriWahl/Nagstamon/issues/1159
+            - If the keyring stays unusable on macOS the keyring gets switched off and the
+              caller falls back to storing the obfuscated password in the config file.
+              Killing the application in the middle of saving the configuration, as it was
+              done before, leaves the user with an unusable installation.
+            - On Linux and Windows the previous behaviour is kept: a keyring which accepts
+              no password is a broken system which should be noticed loudly.
+        """
+        try:
+            keyring.set_password('Nagstamon', account, password)
+            return True
+        except Exception:
+            # an existing entry might carry an ACL which does not accept the current binary
+            # deleting and recreating it repairs exactly that case
+            try:
+                keyring.delete_password('Nagstamon', account)
+                keyring.set_password('Nagstamon', account, password)
+                return True
+            except Exception:
+                import traceback
+                traceback.print_exc(file=sys.stdout)
+
+        if OS != OS_MACOS:
+            # provoke crash if password saving does not work - this is the case
+            # on newer Ubuntu releases
+            sys.exit(1)
+
+        # do not bother the keyring again for the remaining passwords of this run
+        self.keyring_available = False
+        self.use_system_keyring = False
+        print('Storing passwords in the system keyring failed - '
+              'falling back to storing them in the configuration file.')
+        return False
 
     def is_keyring_available(self):
         """

@@ -74,6 +74,50 @@ from Nagstamon.qui.widgets.menu import MenuAtCursor
 from Nagstamon.qui.widgets.model import Model
 from Nagstamon.servers import SERVER_TYPES, servers
 
+# milliseconds to wait for a worker thread to end before it gets abandoned
+WORKER_THREAD_WAIT_TIMEOUT = 3000
+
+# registry of all living TreeViews to be able to stop their worker threads at shutdown
+# the layout hierarchy alone is not sufficient because sort_server_vboxes() may drop
+# ServerVBoxes which keep their still running worker thread
+treeviews = list()
+
+# workers and their threads which could not be stopped in time - they are kept referenced
+# to keep them from being deleted while they are still running, see stop_worker_thread()
+abandoned_worker_threads = list()
+
+
+def stop_worker_thread(worker, worker_thread):
+    """
+    stop a worker and its thread as cleanly as possible
+
+    returns True if the thread really ended and False if it had to be abandoned
+    """
+    # forget the threads abandoned earlier which have ended in the meantime
+    for abandoned in list(abandoned_worker_threads):
+        if abandoned[1].isFinished():
+            abandoned_worker_threads.remove(abandoned)
+
+    # make sure the worker neither keeps looping nor schedules itself again via singleShot
+    worker.running = False
+    # tell the thread to leave its event loop
+    worker_thread.quit()
+    # wait until the thread is really stopped - but not forever, because the worker might
+    # be stuck in a request running into the socket timeout
+    if worker_thread.wait(WORKER_THREAD_WAIT_TIMEOUT):
+        return True
+
+    # quit() only unwinds the event loop, so a worker which is stuck in a request is still
+    # running. It must not be terminated: it executes Python code and holds the GIL, so
+    # killing it there can deadlock the whole process - including the wait() for it. It is
+    # abandoned instead and ends on its own once its request runs into the timeout.
+    # Detaching the thread and keeping both referenced makes sure that neither of them gets
+    # deleted while still running, which would make Qt call qFatal(). Nagstamon does not
+    # wait for them any longer, see the os._exit() in nagstamon.py
+    worker_thread.setParent(None)
+    abandoned_worker_threads.append((worker, worker_thread))
+    return False
+
 
 class StatusAwareDelegate(QStyledItemDelegate):
     """
@@ -290,6 +334,9 @@ class TreeView(QTreeView):
         self.worker_thread = QThread(parent=self)
         self.worker = self.Worker(server=server, sort_column=self.sort_column, sort_order=self.sort_order, status_window=self.parent_statuswindow)
         self.worker.moveToThread(self.worker_thread)
+
+        # make this treeview findable at shutdown, no matter where it ends up in the layout
+        treeviews.append(self)
 
         # if worker got new status data from monitor server get_status
         # the treeview model has to be updated
@@ -1035,10 +1082,10 @@ class TreeView(QTreeView):
         """
         attempt to shut down thread cleanly
         """
-        # tell thread to quit
-        self.worker_thread.quit()
-        # wait until thread is really stopped
-        self.worker_thread.wait()
+        stop_worker_thread(self.worker, self.worker_thread)
+        # no need to be stopped again at shutdown
+        if self in treeviews:
+            treeviews.remove(self)
 
     class Worker(QObject):
         """
