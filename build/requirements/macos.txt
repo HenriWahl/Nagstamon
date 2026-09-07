@@ -1,13 +1,14 @@
 arrow
 beautifulsoup4
 cryptography
-# problems since 24.x?
-keyring==23.13.1
+keyring
 lxml
 packaging
 psutil
-pyinstaller
+pyinstaller==6.22.2
 pyobjc-framework-ApplicationServices
+# AppKit comes from Cocoa - it was only pulled in transitively before
+pyobjc-framework-Cocoa
 pyqt6==6.11.0
 pyqt6-qt6==6.11.1
 pyqt6-webengine==6.11.0
