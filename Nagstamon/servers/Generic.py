@@ -1080,6 +1080,11 @@ class GenericServer:
                         self.debug(server=self.get_name(), debug='Filter: REGEXP ' + str(host.name))
                     host.visible = False
 
+                if groups_is_filtered_out_by_re(host.groups, conf) is True:
+                    if conf.debug_mode:
+                        self.debug(server=self.get_name(), debug='Filter: REGEXP ' + str(host.name))
+                    host.visible = False
+
                 # The Criticality filter can be used only with centreon objects. Other objects don't have the criticality attribute.
                 if self.type == 'Centreon':
                     if criticality_is_filtered_out_by_re(host.criticality, conf):
