@@ -68,14 +68,7 @@ from Nagstamon.qui.widgets.treeview import TreeView
 
 from Nagstamon.config import (conf,
                               OS_NON_LINUX,
-                              OS,
-                              OS_MACOS)
-
-# make icon status in macOS dock accessible via NSApp, used by set_macos_dock_icon_visible()
-if OS == OS_MACOS:
-    from AppKit import (NSApp,
-                        NSApplicationPresentationDefault,
-                        NSApplicationPresentationHideDock)
+                              OS)
 
 
 # check for updates
@@ -156,6 +149,12 @@ dialogs.settings.changed_display_mode.connect(statuswindow.reinitialize)
 
 # connect application exit with server missing dialog
 dialogs.server_missing.window.button_exit.clicked.connect(statuswindow.exit)
+
+# stop all worker threads no matter how the application is quit - on macOS Cmd-Q, the
+# application menu and the dock quit the application directly via QApplication, bypassing
+# statuswindow.exit() and leaving running QThreads to be destroyed at interpreter shutdown,
+# which makes Qt call qFatal() - see https://github.com/HenriWahl/Nagstamon/issues/1055
+app.aboutToQuit.connect(statuswindow.shutdown_workers)
 
 # connect weblogin browser
 #dialogs.weblogin.page_loaded.connect(statuswindow.refresh)

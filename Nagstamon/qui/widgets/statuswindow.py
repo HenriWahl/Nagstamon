@@ -40,10 +40,8 @@ from Nagstamon.qui.globals import (dbus_connection,
 from Nagstamon.qui.helpers import (get_screen_geometry,
                                    get_screen_name,
                                    hide_macos_dock_icon)
-from Nagstamon.qui.qt import (QAction,
-                              QCursor,
+from Nagstamon.qui.qt import (QCursor,
                               QIcon,
-                              QMenuBar,
                               QMessageBox,
                               QObject,
                               QVBoxLayout,
@@ -63,6 +61,8 @@ from Nagstamon.qui.widgets.labels import LabelAllOK
 from Nagstamon.qui.widgets.server_vbox import ServerVBox
 from Nagstamon.qui.widgets.statusbar import StatusBar
 from Nagstamon.qui.widgets.toparea import TopArea
+from Nagstamon.qui.widgets.treeview import (stop_worker_thread,
+                                            treeviews)
 from Nagstamon.servers import (get_enabled_servers,
                                get_status_count,
                                servers)
@@ -127,6 +127,13 @@ class StatusWindow(QWidget):
         """
         QWidget.__init__(self)
 
+        # flag to make shutdown_workers() idempotent - it may be called by exit() and
+        # by the QApplication.aboutToQuit signal
+        self.workers_shut_down = False
+
+        # tells if the position stored in the configuration could be restored yet
+        self.stored_position_applied = False
+
         # immediately hide to avoid flicker on Windows and OSX
         self.hide()
 
@@ -179,14 +186,6 @@ class StatusWindow(QWidget):
         self.label_all_ok = LabelAllOK(parent=self)
         self.label_all_ok.hide()
         self.servers_vbox.addWidget(self.label_all_ok)
-
-        # test with OSX top menubar
-        if OS == OS_MACOS:
-            self.menubar = QMenuBar()
-            action_exit = QAction('exit', self.menubar)
-            action_settings = QAction('settings', self.menubar)
-            self.menubar.addAction(action_settings)
-            self.menubar.addAction(action_exit)
 
         # stored x y values for systemtray icon
         statuswindow_properties.icon_x = 0
@@ -259,6 +258,11 @@ class StatusWindow(QWidget):
         self.injected_dialogs.weblogin.delete_web_cookies.connect(
             self.injected_dialogs.server.delete_web_cookies_action)
         self.injected_dialogs.server.delete_web_cookies.connect(self.injected_dialogs.server.delete_web_cookies_action)
+
+        # the screen setup might still be changing when Nagstamon is started at login,
+        # so the stored position has to be applied again as soon as the screens are known
+        app.screenAdded.connect(self.apply_stored_position)
+        app.primaryScreenChanged.connect(self.apply_stored_position)
 
         self.initialize()
 
@@ -541,10 +545,36 @@ class StatusWindow(QWidget):
         # force correct position of statuswindow
         self.adjust_size()
 
+        # remember if the stored position could be used at all - when Nagstamon is started
+        # at login the screens are not necessarily known yet and the position gets
+        # discarded as being off-screen
+        self.stored_position_applied = bool(get_screen_name(conf.position_x, conf.position_y))
+
         # store position for showing/hiding statuswindow
         self.stored_x = self.x()
         self.stored_y = self.y()
         self.stored_width = self.width()
+
+    @Slot()
+    def apply_stored_position(self):
+        """
+        apply the stored position and size after the screens became known
+
+        when Nagstamon gets started at login the screen setup is not necessarily complete
+        yet, so the stored position looks off-screen and is thrown away, leaving the
+        window at a default position and size - see
+        https://github.com/HenriWahl/Nagstamon/issues/1148
+        """
+        # only relevant until the stored position could be used once
+        if self.stored_position_applied or conf.fullscreen:
+            return
+        if not get_screen_name(conf.position_x, conf.position_y):
+            return
+        self.move(conf.position_x, conf.position_y)
+        if conf.windowed:
+            self.resize(conf.position_width, conf.position_height)
+        self.adjust_size()
+        self.stored_position_applied = True
 
     def sort_server_vboxes(self):
         """
@@ -1356,20 +1386,14 @@ class StatusWindow(QWidget):
         """
         # stop debugging
         statuswindow_properties.worker_debug_loop_looping = False
-        # tell thread to quit
-        self.worker_thread.quit()
-        # wait until thread is really stopped
-        self.worker_thread.wait()
+        stop_worker_thread(self.worker, self.worker_thread)
 
     @Slot()
     def finish_worker_notification_thread(self):
         """
         attempt to shut down thread cleanly
         """
-        # tell thread to quit
-        self.worker_notification_thread.quit()
-        # wait until thread is really stopped
-        self.worker_notification_thread.wait()
+        stop_worker_thread(self.worker_notification, self.worker_notification_thread)
 
     @Slot(str)
     def remove_previous_server_vbox(self, previous_server_name):
@@ -1395,6 +1419,41 @@ class StatusWindow(QWidget):
         statuswindow_properties.is_shown_timestamp -= 1
 
     @Slot()
+    def shutdown_workers(self):
+        """
+        stop all worker threads
+        has to be idempotent because it is called both by exit() and by the
+        QApplication.aboutToQuit signal - the latter is the only way to catch quitting
+        via the macOS application menu, the dock or Cmd-Q, which all bypass exit()
+        leaving running QThreads to be destroyed at interpreter shutdown, which makes
+        Qt call qFatal() - see https://github.com/HenriWahl/Nagstamon/issues/1055
+        """
+        if self.workers_shut_down:
+            return
+        self.workers_shut_down = True
+
+        # stop statuswindow workers - the running flag has to be cleared first, otherwise
+        # the workers just schedule themselves again
+        if hasattr(self, 'worker'):
+            self.worker.running = False
+            self.worker.finish.emit()
+        if hasattr(self, 'worker_notification'):
+            self.worker_notification.running = False
+            self.worker_notification.finish.emit()
+
+        # tell all treeview threads to stop - iterating over the registry instead of the
+        # layout because sort_server_vboxes() may have dropped ServerVBoxes which still
+        # own a running worker thread
+        for treeview in list(treeviews):
+            try:
+                treeview.worker.running = False
+                treeview.worker.finish.emit()
+            except RuntimeError:
+                # underlying C++ object might be gone already
+                if treeview in treeviews:
+                    treeviews.remove(treeview)
+
+    @Slot()
     def exit(self):
         """
         stop all child threads before quitting instance
@@ -1408,13 +1467,7 @@ class StatusWindow(QWidget):
         # hide statuswindow first to avoid lag when waiting for finished threads
         self.hide()
 
-        # stop statuswindow workers
-        self.worker.finish.emit()
-        self.worker_notification.finish.emit()
-
-        # tell all treeview threads to stop
-        for server_vbox in self.servers_vbox.children():
-            server_vbox.table.worker.finish.emit()
+        self.shutdown_workers()
 
         app.exit()
 
@@ -1504,12 +1557,18 @@ class StatusWindow(QWidget):
         def __init__(self, statuswindow_properties=None):
             QObject.__init__(self)
             self.statuswindow_properties = statuswindow_properties
+            # flag to decide if the thread has to run or to be stopped
+            self.running = True
 
         @Slot(str, str, str)
         def start(self, server_name, worst_status_diff, worst_status_current):
             """
             start notification
             """
+            # while shutting down no notification should be started anymore - a sound or a
+            # notification action would only delay the quit
+            if not self.running:
+                return
             if conf.notification:
                 # only if not notifying yet or the current state is worse than the prior AND
                 # only when the current state is configured to be honking about
