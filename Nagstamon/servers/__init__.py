@@ -214,6 +214,10 @@ def create_server(server=None):
 
     # Prometheus & Alertmanager
     new_server.alertmanager_filter = server.alertmanager_filter
+    new_server.silence_matcher_labels = server.silence_matcher_labels
+    new_server.alertmanager_show_silenced = server.alertmanager_show_silenced
+    new_server.alertmanager_show_inhibited = server.alertmanager_show_inhibited
+    new_server.alertmanager_use_alert_groups = server.alertmanager_use_alert_groups
     new_server.map_to_hostname = server.map_to_hostname
     new_server.map_to_servicename = server.map_to_servicename
     new_server.map_to_status_information = server.map_to_status_information
@@ -222,6 +226,10 @@ def create_server(server=None):
     new_server.map_to_warning = server.map_to_warning
     new_server.map_to_critical = server.map_to_critical
     new_server.map_to_down = server.map_to_down
+    new_server.map_to_disaster = server.map_to_disaster
+    new_server.map_to_high = server.map_to_high
+    new_server.map_to_average = server.map_to_average
+    new_server.map_to_information = server.map_to_information
 
     # LibreNMS
     new_server.treat_services_as_alerts = server.treat_services_as_alerts
