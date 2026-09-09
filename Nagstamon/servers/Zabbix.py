@@ -251,7 +251,7 @@ class ZabbixServer(GenericServer):
                                                # 'expandComment': True,
                                                'triggerids': [trigger['triggerid'] for trigger in services_ids[i:i + chunk_size]],
                                                'selectLastEvent': ['eventid', 'name', 'ns', 'clock', 'acknowledged',
-                                                                   'value', 'severity'],
+                                                                   'value', 'severity', 'suppressed'],
                                                'selectHosts': ["hostid", "host", "name", "status", "available",
                                                                "active_available", "maintenance_status", "maintenance_from"],
                                                'selectItems': ['name', 'lastvalue', 'state', 'lastclock']
@@ -274,6 +274,8 @@ class ZabbixServer(GenericServer):
                 service_obj.duration = human_readable_duration_from_timestamp(service['lastEvent']['clock'])
                 service_obj.status_information = status_information
                 service_obj.acknowledged = False if service['lastEvent']['acknowledged'] == '0' else True
+                # .get() with fallback, in case an older Zabbix version doesn't return 'suppressed' yet
+                service_obj.suppressed = False if service['lastEvent'].get('suppressed', '0') == '0' else True
                 #service_obj.address = ''  # Todo: check if address is available
                 service_obj.triggerid = service['triggerid']
                 service_obj.eventid = service['lastEvent']['eventid']

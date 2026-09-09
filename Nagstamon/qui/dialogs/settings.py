@@ -324,6 +324,7 @@ class DialogSettings(Dialog):
                                self.window.input_checkbox_filter_all_disaster_services,
                                self.window.input_checkbox_filter_all_high_services,
                                self.window.input_checkbox_filter_all_information_services,
+                               self.window.input_checkbox_filter_all_suppressed_services,
                                self.window.input_checkbox_notify_if_average,
                                self.window.input_checkbox_notify_if_disaster,
                                self.window.input_checkbox_notify_if_high,
