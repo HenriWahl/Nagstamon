@@ -251,12 +251,37 @@ class ZabbixServer(GenericServer):
                                                # 'expandComment': True,
                                                'triggerids': [trigger['triggerid'] for trigger in services_ids[i:i + chunk_size]],
                                                'selectLastEvent': ['eventid', 'name', 'ns', 'clock', 'acknowledged',
-                                                                   'value', 'severity', 'suppressed'],
+                                                                   'value', 'severity'],
                                                'selectHosts': ["hostid", "host", "name", "status", "available",
                                                                "active_available", "maintenance_status", "maintenance_from"],
                                                'selectItems': ['name', 'lastvalue', 'state', 'lastclock']
                                            }))
-                services.extend(results['result'])
+                chunk_services = results['result']
+
+                # trigger.get's selectLastEvent only ever returns a fixed set of event
+                # properties and never includes 'suppressed', regardless of what is
+                # requested here - that has to be looked up separately via problem.get
+                # for the same event IDs (see https://www.zabbix.com/documentation/current/
+                # en/manual/api/reference/problem/object for the 'suppressed' property).
+                chunk_event_ids = [service['lastEvent']['eventid'] for service in chunk_services
+                                   if service.get('lastEvent')]
+                suppressed_by_event_id = {}
+                if chunk_event_ids:
+                    problems_result = self.api_request(
+                        self.generate_cgi_data('problem.get',
+                                               {
+                                                   'eventids': chunk_event_ids,
+                                                   'output': ['eventid', 'suppressed']
+                                               }))
+                    suppressed_by_event_id = {problem['eventid']: problem['suppressed']
+                                              for problem in problems_result['result']}
+
+                for service in chunk_services:
+                    if service.get('lastEvent'):
+                        service['lastEvent']['suppressed'] = suppressed_by_event_id.get(
+                            service['lastEvent']['eventid'], '0')
+
+                services.extend(chunk_services)
             for service in services:
                 status_information = ", ".join(
                     [f"{item['name']}: {item['lastvalue']}" for item in service['items']])
