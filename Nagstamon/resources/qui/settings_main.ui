@@ -1163,6 +1163,13 @@
             </property>
            </widget>
           </item>
+          <item row="12" column="0">
+           <widget class="QCheckBox" name="input_checkbox_filter_all_suppressed_services">
+            <property name="text">
+             <string>All suppressed services</string>
+            </property>
+           </widget>
+          </item>
           <item row="7" column="0">
            <widget class="QCheckBox" name="input_checkbox_filter_all_unknown_services">
             <property name="text">
@@ -3235,6 +3242,7 @@
   <tabstop>input_checkbox_filter_all_average_services</tabstop>
   <tabstop>input_checkbox_filter_all_disaster_services</tabstop>
   <tabstop>input_checkbox_filter_all_high_services</tabstop>
+  <tabstop>input_checkbox_filter_all_suppressed_services</tabstop>
   <tabstop>input_checkbox_filter_acknowledged_hosts_services</tabstop>
   <tabstop>input_checkbox_filter_hosts_services_disabled_notifications</tabstop>
   <tabstop>input_checkbox_filter_hosts_services_disabled_checks</tabstop>

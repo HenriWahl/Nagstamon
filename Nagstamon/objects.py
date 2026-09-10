@@ -36,6 +36,9 @@ class GenericObject:
         self.notifications_disabled = False
         self.flapping = False
         self.scheduled_downtime = False
+        # Zabbix: True if the underlying event is currently suppressed (e.g. via manual suppression
+        # or an active maintenance period that Zabbix itself considers suppressing)
+        self.suppressed = False
         # compress all flags like acknowledged and flapping into one string
         self.host_flags = ''
         self.service_flags = ''

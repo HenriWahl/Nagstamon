@@ -181,6 +181,7 @@ class Config:
         self.filter_all_critical_services = False
         self.filter_all_disaster_services = False
         self.filter_all_flapping_services = False
+        self.filter_all_suppressed_services = False
         self.filter_acknowledged_hosts_services = False
         self.filter_hosts_services_disabled_notifications = False
         self.filter_hosts_services_disabled_checks = False
