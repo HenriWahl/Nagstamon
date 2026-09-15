@@ -464,7 +464,7 @@ jobs:
 
   windows-64-codesigning:
     runs-on: codesigning
-    needs: [github-release]
+    needs: [debian, fedora, linux-pyinstaller, macos-arm, macos-intel, rhel-9, windows-64, windows-64-debug]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
