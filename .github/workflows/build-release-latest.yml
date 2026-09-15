@@ -441,7 +441,7 @@ jobs:
 
   github-release:
     runs-on: ubuntu-latest
-    needs: [repo-rpm-rhel]
+    needs: [debian, fedora, linux-pyinstaller, macos-arm, macos-intel, rhel-9, windows-64, windows-64-debug]
     steps:
       - uses: actions/download-artifact@v8
         with:
