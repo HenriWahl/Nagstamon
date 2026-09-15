@@ -418,15 +418,18 @@ jobs:
     runs-on: ubuntu-latest
     needs: [debian, fedora, linux-pyinstaller, macos-arm, macos-intel, rhel-9, windows-64, windows-64-debug]
     outputs:
-      artifact-id: ${{ steps.upload-step.outputs.artifact-id }}
+      md5sums: ${{ steps.md5sums-step.outputs }}
+      sha256sums: ${{ steps.sha256sums-step.outputs }}
     steps:
       - uses: actions/download-artifact@v8
         with:
           pattern: '*'
           path: artifact
           merge-multiple: true
-      - run: cd artifact && md5sum *agstamon* > md5sums.txt
-      - run: cd artifact && sha256sum *agstamon* > sha256sums.txt
+      - id: md5sums-step
+        run: cd artifact && md5sum *agstamon* > md5sums.txt && cat md5sums.txt
+      - id: sha256sums-step
+        run: cd artifact && sha256sum *agstamon* > sha256sums.txt && cat sha256sums.txt
       # finally some maintained solution for creating releases
       # https://github.com/marketplace/actions/create-release
       - id: upload-step
@@ -476,12 +479,12 @@ jobs:
     steps:
       - uses: actions/download-artifact@v8
         with:
-          # avoid downloading and merging windows-64 artifacts by omitting them here
-          artifact-ids: ${{ needs.github-release.outputs.artifact-id }},${{ needs.windows-64-codesigning.outputs.artifact-id }}
+          # use only artifacts from codesigning (.exe) and release (checksum files) jobs
+          artifact-ids: ${{ needs.windows-64-codesigning.outputs.artifact-id }}
           path: artifact
           merge-multiple: true
-      - run: cd artifact && sed -i '/.exe/d' md5sums.txt && md5sum *agstamon* >> md5sums.txt
-      - run: cd artifact && sed -i '/.exe/d' sha256sums.txt && sha256sum *agstamon* >> sha256sums.txt
+      - run: cd artifact && echo "${{ needs.github-release.outputs.md5sums }}" | grep -v ".exe" >> md5sums.txt && md5sum *agstamon* >> md5sums.txt
+      - run: cd artifact && echo "${{ needs.github-release.outputs.sha256sums }}" | grep -v ".exe" >> sha256sums.txt && sha256sum *agstamon* >> sha256sums.txt
       # finally some maintained solution for creating releases
       # https://github.com/marketplace/actions/create-release
       - uses: ncipollo/release-action@v1.21.0
