@@ -257,8 +257,6 @@ jobs:
       - run: cd ${{ github.workspace }}/build; python build.py
         env:
           PYTHONPATH: ${{ github.workspace }}
-          WIN_SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
-          WIN_SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
       - uses: actions/upload-artifact@v7
         with:
           path: |
@@ -284,9 +282,6 @@ jobs:
       - run: cd ${{ github.workspace }}/build; python build.py debug
         env:
           PYTHONPATH: ${{ github.workspace }}
-          # signing key is expired
-          #WIN_SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
-          #WIN_SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
       - uses: actions/upload-artifact@v7
         with:
           path: |
@@ -495,7 +490,13 @@ jobs:
     steps:
       - uses: actions/download-artifact@v8
         with:
-          pattern: '*'
+          pattern: |
+            debian
+            fedora-*
+            rhel-9
+            linux-*
+            macos-*
+            windows-64-debug
           path: artifact
           merge-multiple: true
       - run: cd artifact && md5sum *agstamon* > md5sums.txt
