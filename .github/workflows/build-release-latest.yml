@@ -490,6 +490,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v8
         with:
+          # avoid downloading and merging windows-64 artifacts by omitting them here
           pattern: |
             debian
             fedora-*
