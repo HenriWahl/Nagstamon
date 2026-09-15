@@ -435,7 +435,7 @@ jobs:
       - uses: ncipollo/release-action@v1.21.0
         with:
           allowUpdates: true
-          makeLatest: true
+          makeLatest: legacy
           prerelease: true
           tag: latest
           removeArtifacts: true
@@ -484,7 +484,7 @@ jobs:
       - uses: ncipollo/release-action@v1.21.0
         with:
           allowUpdates: true
-          makeLatest: true
+          makeLatest: legacy
           prerelease: true
           tag: latest
           removeArtifacts: true
