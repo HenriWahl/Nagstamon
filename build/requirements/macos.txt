@@ -10,9 +10,9 @@ pyobjc-framework-ApplicationServices
 # AppKit comes from Cocoa - it was only pulled in transitively before
 pyobjc-framework-Cocoa
 pyqt6==6.11.0
-pyqt6-qt6==6.11.1
+pyqt6-qt6==6.11.2
 pyqt6-webengine==6.11.0
-pyqt6-webengine-qt6==6.11.1
+pyqt6-webengine-qt6==6.11.2
 pysocks
 python-dateutil
 requests

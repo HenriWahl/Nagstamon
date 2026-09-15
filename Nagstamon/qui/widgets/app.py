@@ -37,9 +37,11 @@ if QT_VERSION_MAJOR < 6:
         pass
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
 
-
 # global application instance
 app = QApplication(argv)
+
+# try to avoid crashes on KDE - see issue #1090
+app.setQuitLockEnabled(False)
 
 # set style for tooltips globally - to sad not all properties can be set here
 app.setStyleSheet('''QToolTip { margin: 3px;
