@@ -514,6 +514,6 @@ jobs:
           prerelease: true
           tag: latest
           commit: ${{ github.sha }}
-          removeArtifacts: true
+          removeArtifacts: false
           replacesArtifacts: true
           artifacts: "artifact/*"
