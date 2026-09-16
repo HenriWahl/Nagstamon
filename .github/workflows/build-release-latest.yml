@@ -495,7 +495,7 @@ jobs:
 
   github-release-codesigning:
     runs-on: ubuntu-latest
-    needs: [windows-64-codesigning]
+    needs: [github-release, windows-64-codesigning]
     steps:
       - uses: actions/download-artifact@v8
         with:
