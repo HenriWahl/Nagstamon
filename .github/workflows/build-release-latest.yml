@@ -483,6 +483,8 @@ jobs:
           artifact-ids: ${{ needs.windows-64-codesigning.outputs.artifact-id }}
           path: artifact
           merge-multiple: true
+      - run: echo "${{ needs.github-release.outputs.md5sums }}"
+      - run: echo "${{ needs.github-release.outputs.sha256sums }}"
       - run: cd artifact && echo "${{ needs.github-release.outputs.md5sums }}" | grep -v ".exe" >> md5sums.txt && md5sum *agstamon* >> md5sums.txt
       - run: cd artifact && echo "${{ needs.github-release.outputs.sha256sums }}" | grep -v ".exe" >> sha256sums.txt && sha256sum *agstamon* >> sha256sums.txt
       # finally some maintained solution for creating releases
