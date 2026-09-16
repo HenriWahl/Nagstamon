@@ -438,8 +438,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [debian, fedora, linux-pyinstaller, macos-arm, macos-intel, rhel-9, windows-64, windows-64-debug]
     outputs:
-      md5sums: ${{ steps.md5sums-step.outputs.result }}
-      sha256sums: ${{ steps.sha256sums-step.outputs.result }}
+      md5sums: ${{ steps.md5sums-step.outputs.stdout }}
+      sha256sums: ${{ steps.sha256sums-step.outputs.stdout }}
     steps:
       - uses: actions/download-artifact@v8
         with:
