@@ -427,9 +427,9 @@ jobs:
           path: artifact
           merge-multiple: true
       - id: md5sums-step
-        run: echo "MD5SUMS=$(cd artifact && md5sum *agstamon* > md5sums.txt && cat md5sums.txt)" >> $GITHUB_OUTPUT
+        run: echo "MD5SUMS=$(cd artifact && md5sum *agstamon* > md5sums.txt && cat md5sums.txt | base64 --wrap 0)" >> $GITHUB_OUTPUT
       - id: sha256sums-step
-        run: echo "SHA256SUMS=$(cd artifact && sha256sum *agstamon* > sha256sums.txt && cat sha256sums.txt)" >> $GITHUB_OUTPUT
+        run: echo "SHA256SUMS=$(cd artifact && sha256sum *agstamon* > sha256sums.txt && cat sha256sums.txt | base64 --wrap 0)" >> $GITHUB_OUTPUT
       # finally some maintained solution for creating releases
       # https://github.com/marketplace/actions/create-release
       - id: upload-step
@@ -485,8 +485,8 @@ jobs:
           merge-multiple: true
       - run: echo "${{ needs.github-release.outputs.md5sums }}"
       - run: echo "${{ needs.github-release.outputs.sha256sums }}"
-      - run: cd artifact && echo "${{ needs.github-release.outputs.md5sums }}" | grep -v "win64.zip" | grep -v "win64_setup.exe" > md5sums.txt && md5sum *agstamon* >> md5sums.txt
-      - run: cd artifact && echo "${{ needs.github-release.outputs.sha256sums }}" | grep -v "win64.zip" | grep -v "win64_setup.exe" > sha256sums.txt && sha256sum *agstamon* >> sha256sums.txt
+      - run: cd artifact && echo "${{ needs.github-release.outputs.md5sums }}" | base64 --decode | grep -v "win64.zip" | grep -v "win64_setup.exe" > md5sums.txt && md5sum *agstamon* >> md5sums.txt
+      - run: cd artifact && echo "${{ needs.github-release.outputs.sha256sums }}" | base64 --decode | grep -v "win64.zip" | grep -v "win64_setup.exe" > sha256sums.txt && sha256sum *agstamon* >> sha256sums.txt
       # finally some maintained solution for creating releases
       # https://github.com/marketplace/actions/create-release
       - uses: ncipollo/release-action@v1.21.0
