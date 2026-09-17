@@ -430,6 +430,12 @@ jobs:
         run: echo "MD5SUMS=$(cd artifact && md5sum *agstamon* > md5sums.txt && cat md5sums.txt | base64 --wrap 0)" >> $GITHUB_OUTPUT
       - id: sha256sums-step
         run: echo "SHA256SUMS=$(cd artifact && sha256sum *agstamon* > sha256sums.txt && cat sha256sums.txt | base64 --wrap 0)" >> $GITHUB_OUTPUT
+      - uses: rickstaa/action-create-tag@v1
+        id: "tag_create"
+        with:
+          tag: "latest"
+          tag_exists_error: false
+          message: "Latest release"
       # finally some maintained solution for creating releases
       # https://github.com/marketplace/actions/create-release
       - id: upload-step
