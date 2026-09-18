@@ -68,6 +68,10 @@ class Icinga2APIServer(GenericServer):
             self.new_hosts[service_host] = GenericHost()
             self.new_hosts[service_host].name = service_host
             self.new_hosts[service_host].site = service.site
+        # carry host groups to the host object so host group filtering works for
+        # hosts that are only present because of a faulty service (issue #491)
+        if service.groups and not self.new_hosts[service_host].groups:
+            self.new_hosts[service_host].groups = service.groups
         self.new_hosts[service_host].services[service.name] = service
 
     def _get_status(self):
@@ -110,6 +114,7 @@ class Icinga2APIServer(GenericServer):
                     self.new_hosts[host_name].acknowledged = bool(host['attrs']['acknowledgement'])
                     self.new_hosts[host_name].scheduled_downtime = bool(host['attrs']['downtime_depth'])
                     self.new_hosts[host_name].status_type = {0: "soft", 1: "hard"}[host['attrs']['state_type']]
+                    self.new_hosts[host_name].groups = str(host['attrs'].get('groups', []))
                 del host_name
             del hosts
 
@@ -151,6 +156,8 @@ class Icinga2APIServer(GenericServer):
                 new_service.acknowledged = bool(service['attrs']['acknowledgement'])
                 new_service.scheduled_downtime = bool(service['attrs']['downtime_depth'])
                 new_service.status_type = {0: "soft", 1: "hard"}[service['attrs']['state_type']]
+                # host groups joined from the host object, used for host group filtering (issue #491)
+                new_service.groups = str(service.get('joins', {}).get('host', {}).get('groups', []))
                 self._insert_service_to_hosts(new_service)
             del services
 
@@ -164,10 +171,13 @@ class Icinga2APIServer(GenericServer):
         # dummy return in case all is OK
         return Result()
 
-    def _list_objects(self, object_type, filter):
+    def _list_objects(self, object_type, filter, joins=None):
         """List objects"""
+        params = {"filter": filter}
+        if joins is not None:
+            params["joins"] = joins
         result = self.fetch_url(
-            f'{self.url}/objects/{object_type}?{urllib.parse.urlencode({"filter": filter})}',
+            f'{self.url}/objects/{object_type}?{urllib.parse.urlencode(params)}',
             giveback='raw'
         )
         # purify JSON result of unnecessary control sequence \n
@@ -187,8 +197,11 @@ class Icinga2APIServer(GenericServer):
     def _get_service_events(self):
         """
         Suck faulty service events from API
+
+        Join the host's groups so host group filtering (issue #491) can be applied
+        to services as well, without an extra request.
         """
-        return self._list_objects('services', 'service.state!=ServiceOK')
+        return self._list_objects('services', 'service.state!=ServiceOK', joins='host.groups')
 
     def _get_host_events(self):
         """

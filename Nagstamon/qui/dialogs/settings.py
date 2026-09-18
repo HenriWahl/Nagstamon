@@ -356,6 +356,11 @@ class DialogSettings(Dialog):
                                    self.window.input_lineedit_re_groups_pattern,
                                    self.window.input_checkbox_re_groups_reverse]
 
+        # same groups filter widgets, additionally shown for Icinga server types (issue #491)
+        self.GROUPS_FILTER_WIDGETS = [self.window.input_checkbox_re_groups_enabled,
+                                      self.window.input_lineedit_re_groups_pattern,
+                                      self.window.input_checkbox_re_groups_reverse]
+
         # ...and another...
         self.EXPIRE_TIME_WIDGETS = [self.window.input_checkbox_defaults_acknowledge_expire,
                                     self.window.label_expire_in,
@@ -469,6 +474,7 @@ class DialogSettings(Dialog):
         # hide them and thus be able to fix size if no extra Zabbix/Op5Monitor/IcingaWeb2 widgets are shown
         self.toggle_zabbix_widgets()
         self.toggle_op5monitor_widgets()
+        self.toggle_groups_filter_widgets()
         self.toggle_expire_time_widgets()
         self.toggle_start_at_login()
 
@@ -1065,6 +1071,20 @@ class DialogSettings(Dialog):
         else:
             for widget in self.OP5MONITOR_WIDGETS:
                 widget.hide()
+
+    @Slot()
+    def toggle_groups_filter_widgets(self):
+        """
+        additionally show the groups filter widgets for Icinga server types (issue #491).
+        This runs after toggle_op5monitor_widgets() and only ever shows the widgets, so the
+        Op5Monitor logic stays untouched and remains the authority for hiding them.
+        """
+        for server in servers.values():
+            if server.enabled:
+                if server.type in ('Icinga2API', 'IcingaWeb2'):
+                    for widget in self.GROUPS_FILTER_WIDGETS:
+                        widget.show()
+                    break
 
     @Slot()
     def toggle_expire_time_widgets(self):

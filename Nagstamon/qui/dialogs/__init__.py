@@ -68,6 +68,7 @@ class Dialogs(QObject):
         # check if special widgets have to be shown
         self.server.edited.connect(self.settings.toggle_zabbix_widgets)
         self.server.edited.connect(self.settings.toggle_op5monitor_widgets)
+        self.server.edited.connect(self.settings.toggle_groups_filter_widgets)
         self.server.edited.connect(self.settings.toggle_expire_time_widgets)
 
     def initialize_dialog_action(self, dialog):
