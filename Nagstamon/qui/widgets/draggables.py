@@ -44,6 +44,9 @@ class DraggableWidget(QWidget):
     # needed to close window in some configurations
     mouse_released_in_window = Signal()
 
+    # keep state of left button pressed to only drag after a real press on this widget
+    left_mouse_button_pressed = False
+
     # keep state of right button pressed to avoid dragging and
     # unwanted repositioning of statuswindow
     right_mouse_button_pressed = False
@@ -65,18 +68,19 @@ class DraggableWidget(QWidget):
         # update access to status window
         self.parent_statuswindow = self.parentWidget().parentWidget()
         if event.button() == Qt.MouseButton.LeftButton:
+            self.left_mouse_button_pressed = True
             self.mouse_pressed.emit()
+
+            # keep x and y relative to statusbar
+            # if not set calculate relative position
+            if not statuswindow_properties.relative_x and \
+                    not statuswindow_properties.relative_y:
+                # Qt5 & Qt6 have different methods for getting the global position so take it from qt.py
+                global_position = get_global_position(event)
+                statuswindow_properties.relative_x = global_position.x() - self.parent_statuswindow.x()
+                statuswindow_properties.relative_y = global_position.y() - self.parent_statuswindow.y()
         if event.button() == Qt.MouseButton.RightButton:
             self.right_mouse_button_pressed = True
-
-        # keep x and y relative to statusbar
-        # if not set calculate relative position
-        if not statuswindow_properties.relative_x and \
-                not statuswindow_properties.relative_y:
-            # Qt5 & Qt6 have different methods for getting the global position so take it from qt.py
-            global_position = get_global_position(event)
-            statuswindow_properties.relative_x = global_position.x() - self.parent_statuswindow.x()
-            statuswindow_properties.relative_y = global_position.y() - self.parent_statuswindow.y()
 
     def mouseReleaseEvent(self, event):
         """
@@ -94,18 +98,32 @@ class DraggableWidget(QWidget):
                 self.mouse_released.emit()
 
             # reset all helper values
+            self.left_mouse_button_pressed = False
             statuswindow_properties.moving = False
             statuswindow_properties.relative_x = 0
             statuswindow_properties.relative_y = 0
 
         if event.button() == Qt.MouseButton.RightButton:
             self.right_mouse_button_pressed = False
+            statuswindow_properties.relative_x = 0
+            statuswindow_properties.relative_y = 0
             self.menu.show_at_cursor()
 
     def mouseMoveEvent(self, event):
         """
         do the moving action
         """
+        # only drag while the left button really is held after a press on this widget - stray move events,
+        # e.g. with stale button state on macOS, would otherwise center the statusbar at the cursor
+        if not (self.left_mouse_button_pressed and event.buttons() & Qt.MouseButton.LeftButton):
+            if self.left_mouse_button_pressed:
+                # release got lost - reset all helper values
+                self.left_mouse_button_pressed = False
+                statuswindow_properties.moving = False
+                statuswindow_properties.relative_x = 0
+                statuswindow_properties.relative_y = 0
+            return
+
         # if window should close when being clicked it might be problematic if it
         # will be moved unintendedly so try to filter this events out by waiting 0.5 seconds
         if not (conf.close_details_clicking and
