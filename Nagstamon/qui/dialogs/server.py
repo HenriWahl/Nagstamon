@@ -115,6 +115,8 @@ class DialogServer(Dialog):
             self.window.input_lineedit_map_to_status_information: ['Prometheus', 'Alertmanager'],
             self.window.label_alertmanager_filter: ['Alertmanager'],
             self.window.input_lineedit_alertmanager_filter: ['Alertmanager'],
+            self.window.label_silence_matcher_labels: ['Alertmanager'],
+            self.window.input_lineedit_silence_matcher_labels: ['Alertmanager'],
             self.window.label_map_to_ok: ['Alertmanager'],
             self.window.input_lineedit_map_to_ok: ['Alertmanager'],
             self.window.label_map_to_unknown: ['Alertmanager'],

@@ -3,6 +3,7 @@ import json
 import re
 
 from datetime import datetime, timedelta, timezone
+from urllib.parse import urlencode
 
 from Nagstamon.config import conf
 from Nagstamon.objects import (GenericHost, Result)
@@ -10,9 +11,11 @@ from Nagstamon.servers.Generic import GenericServer
 from Nagstamon.helpers import webbrowser_open
 
 from .helpers import (start_logging,
+                      add_duration_to_timestring,
                       get_duration,
                       convert_timestring_to_utc,
-                      detect_from_labels)
+                      detect_from_labels,
+                      split_matchers)
 
 from .alertmanagerservice import AlertmanagerService
 
@@ -25,7 +28,7 @@ class AlertmanagerServer(GenericServer):
     """
     TYPE = 'Alertmanager'
 
-    # alertmanager actions are limited to visiting the monitor for now
+    # acknowledgement and downtime are both mapped onto silences
     MENU_ACTIONS = ['Monitor', 'Downtime', 'Acknowledge']
     BROWSER_URLS = {
         'monitor':  '$MONITOR$/#/alerts',
@@ -34,9 +37,17 @@ class AlertmanagerServer(GenericServer):
         'history':  '$MONITOR$/#/alerts'
     }
 
-    API_PATH_ALERTS = "/api/v2/alerts?inhibited=false"
+    API_PATH_ALERTS = "/api/v2/alerts"
     API_PATH_SILENCES = "/api/v2/silences"
-    API_FILTERS = '&filter='
+    API_PATH_SILENCE = "/api/v2/silence"
+
+    # how long a silence lasts which was created by an acknowledgement without expiry time
+    DEFAULT_SILENCE_HOURS = 24
+
+    # Alertmanager only knows silences, so the comment tells afterwards whether a silence
+    # was meant as an acknowledgement or as a downtime
+    SILENCE_COMMENT_ACKNOWLEDGE = 'Nagstamon acknowledgement'
+    SILENCE_COMMENT_DOWNTIME = 'Nagstamon downtime'
 
     # vars specific to alertmanager class
     map_to_hostname = ''
@@ -49,6 +60,7 @@ class AlertmanagerServer(GenericServer):
     map_to_ok = ''
     name = ''
     alertmanager_filter = ''
+    silence_matcher_labels = ''
 
 
     def init_http(self):
@@ -128,22 +140,21 @@ class AlertmanagerServer(GenericServer):
         servicename = detect_from_labels(labels,self.map_to_servicename,"unknown")
         log.debug("[%s]: detected servicename from labels: '%s'", fingerprint, servicename)
 
-        if "status" in alert:
-            attempt = alert["status"].get("state", "unknown")
-        else:
-            attempt = "unknown"
+        alert_status = alert.get("status", {})
+        attempt = alert_status.get("state", "unknown")
+        silenced_by = alert_status.get("silencedBy", []) or []
 
         if attempt == "suppressed":
             scheduled_downtime = True
             acknowledged = True
-            log.debug("[%s]: detected status: '%s' -> interpreting as silenced",
-                      fingerprint, attempt)
+            log.debug("[%s]: detected status: '%s' -> interpreting as silenced by %s",
+                      fingerprint, attempt, silenced_by)
         else:
             scheduled_downtime = False
             acknowledged = False
             log.debug("[%s]: detected status: '%s'", fingerprint, attempt)
 
-        duration = str(get_duration(alert["startsAt"]))
+        duration = get_duration(alert.get("startsAt"))
 
         annotations = alert.get("annotations", {})
         status_information = detect_from_labels(annotations,self.map_to_status_information,'')
@@ -153,7 +164,7 @@ class AlertmanagerServer(GenericServer):
         result['server'] = self.name
         result['status'] = severity
         result['labels'] = labels
-        result['last_check'] = str(get_duration(alert["updatedAt"]))
+        result['last_check'] = get_duration(alert.get("updatedAt"))
         result['attempt'] = attempt
         result['scheduled_downtime'] = scheduled_downtime
         result['acknowledged'] = acknowledged
@@ -161,9 +172,25 @@ class AlertmanagerServer(GenericServer):
         result['generatorURL'] = generator_url
         result['fingerprint'] = fingerprint
         result['status_information'] = status_information
+        result['silenced_by'] = silenced_by
 
         return result
 
+
+    def get_alerts_url(self):
+        """Builds the URL to get the alerts from
+
+        The configured filter may contain several matchers separated by commas, which the
+        API expects as repeated filter parameters. Everything gets encoded properly - the
+        filter expressions contain characters like " and = which have to be escaped.
+
+        Returns:
+            str: The URL to fetch the alerts from
+        """
+        parameters = [('inhibited', 'false')]
+        parameters += [('filter', matcher)
+                       for matcher in split_matchers(self.alertmanager_filter)]
+        return f'{self.monitor_url}{self.API_PATH_ALERTS}?{urlencode(parameters)}'
 
     def _get_status(self):
         """
@@ -191,12 +218,7 @@ class AlertmanagerServer(GenericServer):
 
         # get all alerts from the API server
         try:
-            if self.alertmanager_filter != '':
-                result = self.fetch_url(self.monitor_url + self.API_PATH_ALERTS + self.API_FILTERS
-                                        + self.alertmanager_filter, giveback="raw")
-            else:
-                result = self.fetch_url(self.monitor_url + self.API_PATH_ALERTS,
-                                        giveback="raw")
+            result = self.fetch_url(self.get_alerts_url(), giveback="raw")
 
             if result.status_code == 200:
                 log.debug("received status code '%s' with this content in result.result: \n\
@@ -219,6 +241,17 @@ class AlertmanagerServer(GenericServer):
             if errors_occured is not None:
                 return errors_occured
 
+            # anything but a list of alerts means the request did not deliver what it
+            # should - iterating over it would walk the keys of an error object
+            if not isinstance(data, list):
+                log.error("expected a list of alerts but got '%s'", type(data).__name__)
+                return Result(result=result.result,
+                              error='Unexpected response from Alertmanager API',
+                              status_code=status_code)
+
+            # alerts suppressed by a silence get a second look further down
+            suppressed_services = []
+
             for alert in data:
                 alert_data = self._process_alert(alert)
                 if not alert_data:
@@ -239,14 +272,20 @@ class AlertmanagerServer(GenericServer):
 
                 service.generator_url = alert_data['generatorURL']
                 service.fingerprint = alert_data['fingerprint']
+                service.silenced_by = alert_data['silenced_by']
 
                 service.status_information = alert_data['status_information']
+
+                if service.silenced_by:
+                    suppressed_services.append(service)
 
                 if service.host not in self.new_hosts:
                     self.new_hosts[service.host] = GenericHost()
                     self.new_hosts[service.host].name = str(service.host)
                     self.new_hosts[service.host].server = self.name
                 self.new_hosts[service.host].services[service.name] = service
+
+            self.apply_silence_kind(suppressed_services)
 
         except Exception as the_exception:
             # set checking flag back to False
@@ -257,6 +296,35 @@ class AlertmanagerServer(GenericServer):
 
         # dummy return in case all is OK
         return Result()
+
+    def apply_silence_kind(self, services):
+        """Tells acknowledgements and downtimes apart for the given silenced alerts
+
+        Alertmanager only knows silences, so a suppressed alert used to be marked as
+        acknowledged and in downtime at the same time, which makes the according filters
+        useless. The comment of the silence tells which of the two it was meant to be.
+        Silences created elsewhere keep counting as both.
+
+        Args:
+            services (list(AlertmanagerService)): The suppressed alerts
+        """
+        if not services:
+            return
+
+        silences = {silence.get('id'): silence for silence in self.get_silences()}
+        if not silences:
+            return
+
+        for service in services:
+            comments = [silences[silence_id].get('comment', '')
+                        for silence_id in service.silenced_by
+                        if silence_id in silences]
+            acknowledged = any(x.startswith(self.SILENCE_COMMENT_ACKNOWLEDGE) for x in comments)
+            downtime = any(x.startswith(self.SILENCE_COMMENT_DOWNTIME) for x in comments)
+            # only decide if at least one silence was created by Nagstamon
+            if acknowledged or downtime:
+                service.acknowledged = acknowledged
+                service.scheduled_downtime = downtime
 
     def open_monitor_webpage(self, host, service):
         """
@@ -272,38 +340,182 @@ class AlertmanagerServer(GenericServer):
         webbrowser_open(url)
 
 
+    def get_alert(self, host, service):
+        """Looks up an alert by the display name the GUI passes around
+
+        Services are keyed by fingerprint internally, but the GUI passes display_name.
+
+        Args:
+            host (str): The host the alert belongs to
+            service (str): The display name of the alert
+
+        Returns:
+            AlertmanagerService: The alert or None if it could not be found
+        """
+        if host not in self.hosts:
+            log.error('host "%s" not found', host)
+            return None
+        alert = next((x for x in self.hosts[host].services.values()
+                      if x.display_name == service), None)
+        if alert is None:
+            log.error('service "%s" not found on host "%s"', service, host)
+        return alert
+
+    def get_silence_matchers(self, alert):
+        """Builds the matchers of a silence for the given alert
+
+        Using every label of an alert makes the silence so specific that it stops matching
+        as soon as one volatile label changes, so the labels to match on are configurable.
+        If none of the configured labels exists on the alert all labels are used, because
+        a silence without matchers would silence everything.
+
+        Args:
+            alert (AlertmanagerService): The alert to be silenced
+
+        Returns:
+            list(dict): The matchers for the silence
+        """
+        labels = alert.labels
+        wanted = [x.strip() for x in self.silence_matcher_labels.split(',') if x.strip()]
+        if wanted:
+            selected = {name: value for name, value in labels.items() if name in wanted}
+            if selected:
+                labels = selected
+            else:
+                log.warning('none of the labels %s found on the alert - '
+                            'falling back to all of its labels', wanted)
+        return [{'name': name,
+                 'value': value,
+                 'isRegex': False,
+                 'isEqual': True}
+                for name, value in labels.items()]
+
+    def post_silence(self, alert, author, comment, starts_at, ends_at):
+        """Creates a silence for the given alert
+
+        API Spec: https://github.com/prometheus/alertmanager/blob/master/api/v2/openapi.yaml
+
+        Args:
+            alert (AlertmanagerService): The alert to be silenced
+            author (str): Who created the silence
+            comment (str): Why the silence was created
+            starts_at (str): Start of the silence as ISO formatted UTC time string
+            ends_at (str): End of the silence as ISO formatted UTC time string
+
+        Returns:
+            Result: The result of the API call
+        """
+        silence_data = {'matchers': self.get_silence_matchers(alert),
+                        'startsAt': starts_at,
+                        'endsAt': ends_at,
+                        'comment': comment,
+                        'createdBy': author or 'Nagstamon'}
+        log.debug('creating silence: %s', silence_data)
+        # the content type is given explicitly instead of relying on the session headers
+        # from init_http() - while credentials have to be renewed fetch_url() falls back
+        # to a temporary session which does not carry them, and Alertmanager answers
+        # anything but application/json with 415
+        return self.fetch_url(self.monitor_url + self.API_PATH_SILENCES, giveback="raw",
+                              cgi_data=json.dumps(silence_data),
+                              headers={'Content-Type': 'application/json'})
+
+    @staticmethod
+    def build_silence_comment(marker, comment):
+        """Prefixes the user comment with the marker telling what the silence stands for
+
+        Args:
+            marker (str): One of SILENCE_COMMENT_ACKNOWLEDGE or SILENCE_COMMENT_DOWNTIME
+            comment (str): The comment the user entered, may be empty
+
+        Returns:
+            str: The comment to send along with the silence
+        """
+        if comment:
+            return f'{marker}: {comment}'
+        return marker
+
+    def get_silences(self):
+        """Gets all silences known to the Alertmanager
+
+        Returns:
+            list(dict): The silences, empty if they could not be retrieved
+        """
+        result = self.fetch_url(self.monitor_url + self.API_PATH_SILENCES, giveback="raw")
+        try:
+            silences = json.loads(result.result)
+        except json.decoder.JSONDecodeError:
+            log.error("could not decode the silences: %s", result.result)
+            return []
+        if not isinstance(silences, list):
+            log.error("expected a list of silences but got '%s'", type(silences).__name__)
+            return []
+        return silences
+
+    def expire_silence(self, silence_id):
+        """Expires a single silence
+
+        Args:
+            silence_id (str): ID of the silence to expire
+
+        Returns:
+            Result: The result of the API call
+        """
+        log.debug("expiring silence '%s'", silence_id)
+        return self.fetch_url(f'{self.monitor_url}{self.API_PATH_SILENCE}/{silence_id}',
+                              giveback="raw",
+                              method="DELETE")
+
+    def remove_silences(self, host, service):
+        """Expires all silences which suppress the given alert
+
+        This is the counterpart of the acknowledgement and the downtime, both of which
+        create a silence. Without it a silence could only be removed in the Alertmanager
+        web interface.
+
+        Args:
+            host (str): The host the alert belongs to
+            service (str): The display name of the alert
+
+        Returns:
+            int: How many silences were really expired
+        """
+        alert = self.get_alert(host, service)
+        if alert is None:
+            return 0
+        if not alert.silenced_by:
+            log.info('no silence to remove for "%s" on "%s"', service, host)
+            return 0
+        expired = 0
+        for silence_id in alert.silenced_by:
+            result = self.expire_silence(silence_id)
+            # a failed expiration leaves the alert suppressed, so it must not be counted
+            # as a success - otherwise the alert silently stays away until the next refresh
+            if result.error or not 200 <= result.status_code < 300:
+                log.error('could not expire silence "%s" of "%s" on "%s": %s',
+                          silence_id, service, host,
+                          result.error or f'status code {result.status_code}, {result.result}')
+                continue
+            expired += 1
+        return expired
+
     def _set_downtime(self, host, service, author, comment, fixed, start_time,
                       end_time, hours, minutes):
 
-        # Services are keyed by fingerprint internally, but the UI passes display_name.
-        # Look up the alert by display_name.
-        alert = next((s for s in self.hosts[host].services.values()
-                      if s.display_name == service), None)
+        alert = self.get_alert(host, service)
         if alert is None:
-            log.error(f'_set_downtime: service "{service}" not found on host "{host}"')
             return
 
         # Convert local dates to UTC
-        start_time_dt = convert_timestring_to_utc(start_time)
-        end_time_dt = convert_timestring_to_utc(end_time)
+        starts_at = convert_timestring_to_utc(start_time)
+        if fixed:
+            ends_at = convert_timestring_to_utc(end_time)
+        else:
+            # a flexible downtime has no end time in the dialog, just a duration
+            ends_at = add_duration_to_timestring(start_time, hours, minutes)
 
-        # API Spec: https://github.com/prometheus/alertmanager/blob/master/api/v2/openapi.yaml
-        silence_data = {}
-        silence_data["matchers"] = []
-        for name, value in alert.labels.items():
-            silence_data["matchers"].append({
-                "name": name,
-                "value": value,
-                "isRegex": False,
-                "isEqual": True
-            })
-        silence_data["startsAt"] = start_time_dt
-        silence_data["endsAt"] = end_time_dt
-        silence_data["comment"] = comment or "Nagstamon downtime"
-        silence_data["createdBy"] = author or "Nagstamon"
-
-        self.fetch_url(self.monitor_url + self.API_PATH_SILENCES, giveback="raw",
-                       cgi_data=json.dumps(silence_data))
+        self.post_silence(alert, author,
+                          self.build_silence_comment(self.SILENCE_COMMENT_DOWNTIME, comment),
+                          starts_at, ends_at)
 
 
     # Overwrite function from generic server to add expire_time value
@@ -331,41 +543,27 @@ class AlertmanagerServer(GenericServer):
                               info_dict['expire_time'])
 
 
-    def _post_silence(self, alert, author, comment, starts_at, ends_at):
-        """Build and POST a silence payload for the given alert object."""
-        silence_data = {
-            "matchers": [
-                {"name": name, "value": value, "isRegex": False}
-                for name, value in alert.labels.items()
-            ],
-            "startsAt": starts_at,
-            "endsAt": ends_at,
-            "comment": comment or "Nagstamon silence",
-            "createdBy": author or "Nagstamon",
-        }
-        return self.fetch_url(self.monitor_url + self.API_PATH_SILENCES, giveback="raw",
-                              cgi_data=json.dumps(silence_data))
-
     def _set_acknowledge(self, host, service, author, comment, sticky, notify, persistent,
                          all_services=None, expire_time=None):
-        # Services are keyed by fingerprint internally, but the UI passes display_name.
-        # Look up the alert by display_name.
-        alert = next((s for s in self.hosts[host].services.values()
-                      if s.display_name == service), None)
+        alert = self.get_alert(host, service)
         if alert is None:
-            log.error(f'_set_acknowledge: service "{service}" not found on host "{host}"')
             return
 
-        starts_at = datetime.now(timezone.utc).isoformat()
-        ends_at = convert_timestring_to_utc(expire_time) if expire_time else starts_at
+        now = datetime.now(timezone.utc)
+        starts_at = now.isoformat()
+        if expire_time:
+            ends_at = convert_timestring_to_utc(expire_time)
+        else:
+            # without an end time the silence used to start and end at the very same
+            # moment, which silenced exactly nothing
+            ends_at = (now + timedelta(hours=self.DEFAULT_SILENCE_HOURS)).isoformat()
 
-        self._post_silence(alert, author, comment, starts_at, ends_at)
+        comment = self.build_silence_comment(self.SILENCE_COMMENT_ACKNOWLEDGE, comment)
 
-        if all_services:
-            for svc_name in all_services:
-                svc_alert = next((s for s in self.hosts[host].services.values()
-                                  if s.display_name == svc_name), None)
-                if svc_alert is None:
-                    log.error(f'_set_acknowledge: service "{svc_name}" not found on host "{host}"')
-                    continue
-                self._post_silence(svc_alert, author, comment, starts_at, ends_at)
+        self.post_silence(alert, author, comment, starts_at, ends_at)
+
+        for service_name in all_services or []:
+            service_alert = self.get_alert(host, service_name)
+            if service_alert is None:
+                continue
+            self.post_silence(service_alert, author, comment, starts_at, ends_at)

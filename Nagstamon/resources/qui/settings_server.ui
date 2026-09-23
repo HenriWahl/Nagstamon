@@ -304,6 +304,16 @@
       <item row="16" column="2" colspan="3">
        <widget class="QLineEdit" name="input_lineedit_alertmanager_filter"/>
       </item>
+      <item row="38" column="1">
+       <widget class="QLabel" name="label_silence_matcher_labels">
+        <property name="text">
+         <string>Silence matcher labels:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="38" column="2" colspan="3">
+       <widget class="QLineEdit" name="input_lineedit_silence_matcher_labels"/>
+      </item>
       <item row="36" column="2" colspan="3">
        <widget class="QLineEdit" name="input_lineedit_idp_ecp_endpoint"/>
       </item>
@@ -854,6 +864,7 @@
   <tabstop>input_lineedit_notification_lookback</tabstop>
   <tabstop>input_lineedit_custom_filter</tabstop>
   <tabstop>input_lineedit_alertmanager_filter</tabstop>
+  <tabstop>input_lineedit_silence_matcher_labels</tabstop>
   <tabstop>input_lineedit_map_to_hostname</tabstop>
   <tabstop>input_lineedit_map_to_servicename</tabstop>
   <tabstop>input_lineedit_map_to_status_information</tabstop>
