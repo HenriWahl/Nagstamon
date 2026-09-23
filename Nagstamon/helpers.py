@@ -16,6 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 import datetime
+import dateutil.parser
 import getpass
 from glob import glob
 import os
@@ -146,6 +147,59 @@ class FilesDict(dict):
                     file.write(dict.__getitem__(self, key))
         # looks strange but the filename is all the caller expects here
         return key
+
+
+def get_duration(timestring):
+    """
+    calculates the duration (delta) from an ISO8601 time string until now and returns a
+    human friendly string - used by the Prometheus and the Alertmanager server
+
+    Args:
+        timestring (string): An ISO8601 time string
+
+    Returns:
+        string: A time string in human readable format, empty if the given time string is
+                missing or unparseable - not every implementation delivers all timestamps
+    """
+    if not timestring:
+        return ""
+    try:
+        time_object = dateutil.parser.parse(timestring)
+    except (ValueError, OverflowError, TypeError):
+        return ""
+    duration = datetime.datetime.now(datetime.timezone.utc) - time_object
+    hour = int(duration.seconds / 3600)
+    minute = int(duration.seconds % 3600 / 60)
+    second = int(duration.seconds % 60)
+    if duration.days > 0:
+        return "%sd %sh %02dm %02ds" % (duration.days, hour, minute, second)
+    if hour > 0:
+        return "%sh %02dm %02ds" % (hour, minute, second)
+    if minute > 0:
+        return "%02dm %02ds" % (minute, second)
+    return "%02ds" % (second)
+
+
+def detect_from_labels(labels, config_label_list, default_value="", list_delimiter=","):
+    """
+    Returns the value of the first label of config_label_list which exists in labels -
+    used by the Prometheus and the Alertmanager server to find host and service names
+
+    Args:
+        labels (dict): The labels of an alert
+        config_label_list (str): A delimiter separated list of label names
+        default_value (str, optional): The value to return if there was no match
+        list_delimiter (str, optional): The delimiter of config_label_list
+
+    Returns:
+        str: The value of the matched label or default_value if there was no match
+    """
+    result = default_value
+    for each_label in config_label_list.split(list_delimiter):
+        if each_label in labels:
+            result = labels.get(each_label)
+            break
+    return result
 
 
 def not_empty(x):
