@@ -1158,6 +1158,12 @@ class GenericServer:
                                    debug='Filter: DOWNTIME ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
+                if service.suppressed is True and conf.filter_all_suppressed_services is True:
+                    if conf.debug_mode:
+                        self.debug(server=self.get_name(),
+                                   debug='Filter: SUPPRESSED ' + str(host.name) + ';' + str(service.name))
+                    service.visible = False
+
                 if service.flapping is True and conf.filter_all_flapping_services is True:
                     if conf.debug_mode:
                         self.debug(server=self.get_name(),
