@@ -33,7 +33,16 @@ from bs4 import BeautifulSoup
 import requests
 
 from Nagstamon.cookies import (cookie_data_to_jar,
-                               load_cookies)
+                               load_cookies,
+                               save_jar_cookies)
+from Nagstamon.windows_sso import get_sso_cookies
+
+# hosts of identity providers which answer with 200 and a login page instead of a 401
+WEB_AUTH_IDP_URL_PREFIXES = ('https://login.microsoftonline.com/',)
+# hidden form fields of auto-submitting SSO forms: requests to the IdP and results posted back to the service provider
+WEB_AUTH_SSO_FORM_FIELDS = ('SAMLRequest', 'SAMLResponse', 'code', 'id_token')
+# maximum number of auto-submit forms to follow during silent reauthentication
+WEB_AUTH_SSO_MAX_STEPS = 5
 
 # check ECP authentication support availability
 try:
@@ -1481,7 +1490,8 @@ class GenericServer:
         # return True if all worked well
         return Result()
 
-    def fetch_url(self, url, giveback='obj', cgi_data=None, no_auth=False, multipart=False, headers=None):
+    def fetch_url(self, url, giveback='obj', cgi_data=None, no_auth=False, multipart=False, headers=None,
+                  silent_reauthentication=True):
         """
         get content of given url, cgi_data only used if present
         'obj' fetch_url() gives back a dict full of miserable hosts/services,
@@ -1490,7 +1500,11 @@ class GenericServer:
         'json' gives back JSON data
         existence of cgi_data forces urllib to use POST instead of GET requests
         NEW: gives back a list containing result and, if necessary, a more clear error description
+        silent_reauthentication allows one attempt to renew an expired web authentication session via SSO
         """
+
+        # keep original data for a retry after silent reauthentication, as encoding might modify it
+        original_cgi_data = copy.copy(cgi_data)
 
         # assume TLS is OK when connecting
         self.tls_error = False
@@ -1607,7 +1621,13 @@ class GenericServer:
             # Microsoft Authentication required - Required since mslogin returns 200
             if self.authentication == 'web' and \
                 response.status_code == 200 and \
-                response.url.startswith('https://login.microsoftonline.com/'):
+                response.url.startswith(WEB_AUTH_IDP_URL_PREFIXES):
+                # the IdP session usually lives much longer than the monitor session, so try to renew it silently
+                if silent_reauthentication and \
+                        no_auth is False and \
+                        self.silent_web_reauthentication(response):
+                    return self.fetch_url(url, giveback=giveback, cgi_data=original_cgi_data, no_auth=no_auth,
+                                          multipart=multipart, headers=headers, silent_reauthentication=False)
                 response.status_code = 401
 
             # give back pure HTML or XML in case giveback is 'raw'
@@ -1639,6 +1659,94 @@ class GenericServer:
 
         result, error = self.error(sys.exc_info())
         return Result(result=result, error=error, status_code=response.status_code)
+
+    def silent_web_reauthentication(self, response):
+        """
+        try to renew an expired web authentication session without user interaction
+        as long as the identity provider still knows the user it answers with an auto-submitting form
+        containing the SSO result, which in a browser would be posted back to the monitor by JavaScript
+        returns True if the monitor accepted the SSO result
+        """
+        if not self.session:
+            return False
+        idp_retried = False
+        try:
+            for _ in range(WEB_AUTH_SSO_MAX_STEPS):
+                soup = BeautifulSoup(response.text, self.PARSER)
+                form = None
+                for candidate in soup.find_all('form'):
+                    field_names = {field.get('name') for field in candidate.find_all('input')}
+                    if field_names.intersection(WEB_AUTH_SSO_FORM_FIELDS):
+                        form = candidate
+                        break
+                if form is None:
+                    # Entra ID asks to repeat the request with a nonce the Windows SSO cookie has to be bound to
+                    bsso_interrupt = self._get_entra_bsso_interrupt(response)
+                    if bsso_interrupt:
+                        response = self._web_sso_request('POST', *bsso_interrupt)
+                        continue
+                    # the IdP asks for interaction - on Entra ID joined Windows devices the PRT might still help
+                    if response.url.startswith(WEB_AUTH_IDP_URL_PREFIXES) and not idp_retried:
+                        idp_retried = True
+                        response = self._web_sso_request('GET', response.url)
+                        continue
+                    # only the web login dialog can help now
+                    break
+                action = urllib.parse.urljoin(response.url, form.get('action') or response.url)
+                form_data = {field.get('name'): field.get('value', '')
+                             for field in form.find_all('input') if field.get('name')}
+                if conf.debug_mode:
+                    self.debug(server=self.get_name(), debug=f'Silent web reauthentication: posting SSO form to {action}')
+                response = self._web_sso_request('POST', action, form_data)
+                if response.status_code < 400 and \
+                        not response.url.startswith(WEB_AUTH_IDP_URL_PREFIXES):
+                    save_jar_cookies(self.get_name(), self.session.cookies)
+                    if conf.debug_mode:
+                        self.debug(server=self.get_name(), debug='Silent web reauthentication succeeded')
+                    return True
+        except Exception:
+            self.error(sys.exc_info())
+        if conf.debug_mode:
+            self.debug(server=self.get_name(), debug='Silent web reauthentication failed, web login needed')
+        return False
+
+    @staticmethod
+    def _get_entra_bsso_interrupt(response):
+        """
+        extract URL with nonce and POST data from Entra ID 'BssoInterrupt' page, which a browser would submit via JavaScript
+        returns (url, data) or None
+        """
+        if not response.url.startswith(WEB_AUTH_IDP_URL_PREFIXES):
+            return None
+        start = response.text.find('$Config=')
+        if start < 0:
+            return None
+        try:
+            config, _ = json.JSONDecoder().raw_decode(response.text, start + len('$Config='))
+        except ValueError:
+            return None
+        url_post = config.get('urlPost', '')
+        is_bsso_interrupt = config.get('pgid') == 'BssoInterrupt' or \
+                            '<meta name="PageID" content="BssoInterrupt"' in response.text
+        if not is_bsso_interrupt or 'sso_nonce=' not in url_post:
+            return None
+        return urllib.parse.urljoin(response.url, url_post), config.get('oPostParams') or None
+
+    def _web_sso_request(self, method, url, data=None):
+        """
+        request during silent reauthentication, following redirects manually to add the Windows SSO cookies
+        to every request to the IdP - they are bound to the exact URL and must not be stored
+        """
+        for _ in range(WEB_AUTH_SSO_MAX_STEPS * 2):
+            sso_cookies = get_sso_cookies(url) if url.startswith(WEB_AUTH_IDP_URL_PREFIXES) else {}
+            response = self.session.request(method, url, data=data, cookies=sso_cookies,
+                                            allow_redirects=False, timeout=self.timeout)
+            if not response.is_redirect:
+                break
+            url = urllib.parse.urljoin(url, response.headers['Location'])
+            if response.status_code not in (307, 308):
+                method, data = 'GET', None
+        return response
 
     def get_host(self, host):
         """
