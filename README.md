@@ -28,5 +28,6 @@ Successfully tested monitors include:
  - monitos 3 - experimental
  - SNAG-View3 - experimental
  - LibreNMS - experimental
+ - Monit (see [setup instructions](docs/Monit-Integration-README.md))
 
 See https://nagstamon.de for further information.
