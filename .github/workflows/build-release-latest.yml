@@ -6,6 +6,7 @@ on:
       - '**'
       - '!master'
       - '!*.*.*'
+      - !'zabbix_fixes'
 
 env:
   python_win_version: 3.14.7
