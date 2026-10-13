@@ -266,6 +266,18 @@ class ZabbixServer(GenericServer):
                             'opdata'] + ")"
 
                 service_obj = GenericService()
+
+                # Last event can be missing, for example if it was too old and got cleaned up by Zabbix.
+                # In such cases, we create a placeholder lastEvent instead of dropping the service.
+                if not service['lastEvent']:
+                    service['lastEvent'] = {
+                        'name': 'Trigger without event: ' + service['description'],
+                        'severity': '5',
+                        'clock': service['lastchange'],
+                        'acknowledged': '0',
+                        'eventid': '0'
+                    }
+
                 service_obj.name = service['lastEvent']['name']
                 service_obj.status = self.statemap.get(service['lastEvent']['severity'], service['lastEvent']['severity'])
                 service_obj.last_check = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(max(int(item['lastclock']) for item in service['items'])))
