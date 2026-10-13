@@ -271,6 +271,17 @@ class ZabbixServer(GenericServer):
                 # service's last change time to avoid showing 1970-01-01 00:00:00.
                 last_check = max(int(item['lastclock']) for item in service['items'])
                 last_check = last_check if last_check > 0 else int(service['lastchange'])
+                
+                # Last event can be missing, for example if it was too old and got cleaned up by Zabbix.
+                # In such cases, we create a placeholder lastEvent instead of dropping the service.
+                if not service['lastEvent']:
+                    service['lastEvent'] = {
+                        'name': 'Trigger without event: ' + service['description'],
+                        'severity': '5',
+                        'clock': service['lastchange'],
+                        'acknowledged': '0',
+                        'eventid': '0'
+                    }
 
                 service_obj.name = service['lastEvent']['name']
                 service_obj.status = self.statemap.get(service['lastEvent']['severity'], service['lastEvent']['severity'])
