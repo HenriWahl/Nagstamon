@@ -693,8 +693,8 @@ class StatusWindow(QWidget):
         """
         for server in servers.values():
             if server.enabled:
-                server_vbox = self.create_server_vbox(server.name)
-                self.servers_vbox.addLayout(server_vbox)
+                # create_server_vbox() already adds the vbox to servers_vbox
+                self.create_server_vbox(server.name)
         self.sort_server_vboxes()
 
     @Slot(str)

@@ -61,7 +61,9 @@ class ServerVBox(QVBoxLayout):
     open_dialog = Signal()
 
     def __init__(self, server, parent=None):
-        QVBoxLayout.__init__(self, parent)
+        # parent is not handed over to Qt - the statuswindow already has a layout,
+        # so Qt would only warn and drop the parent again
+        QVBoxLayout.__init__(self)
 
         self.parent_statuswindow = parent
 
@@ -73,7 +75,7 @@ class ServerVBox(QVBoxLayout):
         self.server = server
 
         # header containing monitor name, buttons and status
-        self.header = HBoxLayout(spacing=SPACE, parent=parent)
+        self.header = HBoxLayout(spacing=SPACE)
         self.addLayout(self.header)
         # top and bottom should be kept by padding
         self.header.setContentsMargins(0, 0, SPACE, 0)
