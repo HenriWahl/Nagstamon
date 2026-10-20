@@ -108,7 +108,7 @@ class StatusBar(QWidget):
 
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
-        self.hbox = HBoxLayout(spacing=0, parent=parent)
+        self.hbox = HBoxLayout(spacing=0)
         self.setLayout(self.hbox)
 
         # define labels first to get their size for svg logo dimensions
