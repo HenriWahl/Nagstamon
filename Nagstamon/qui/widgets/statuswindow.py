@@ -1458,11 +1458,8 @@ class StatusWindow(QWidget):
         """
         stop all child threads before quitting instance
         """
-        # store position of statuswindow/statusbar
+        # store position of statuswindow/statusbar - saves the whole configuration too
         self.save_position_to_conf()
-
-        # save configuration
-        conf.save_config()
 
         # hide statuswindow first to avoid lag when waiting for finished threads
         self.hide()
