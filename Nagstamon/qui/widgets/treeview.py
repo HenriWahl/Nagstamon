@@ -18,6 +18,7 @@ from copy import deepcopy
 from datetime import datetime
 from subprocess import Popen
 from sys import stdout
+from time import monotonic
 from traceback import print_exc
 from urllib.parse import quote
 
@@ -93,30 +94,49 @@ def stop_worker_thread(worker, worker_thread):
 
     returns True if the thread really ended and False if it had to be abandoned
     """
+    return stop_worker_threads([(worker, worker_thread)])
+
+
+def stop_worker_threads(workers_and_threads):
+    """
+    stop several workers and their threads at once
+
+    all threads are told to stop first and then share one WORKER_THREAD_WAIT_TIMEOUT -
+    waiting for them one after another made quitting take that timeout once for every
+    server whose worker was stuck in a request
+
+    returns True if all threads really ended and False if any had to be abandoned
+    """
     # forget the threads abandoned earlier which have ended in the meantime
     for abandoned in list(abandoned_worker_threads):
         if abandoned[1].isFinished():
             abandoned_worker_threads.remove(abandoned)
 
-    # make sure the worker neither keeps looping nor schedules itself again via singleShot
-    worker.running = False
-    # tell the thread to leave its event loop
-    worker_thread.quit()
-    # wait until the thread is really stopped - but not forever, because the worker might
-    # be stuck in a request running into the socket timeout
-    if worker_thread.wait(WORKER_THREAD_WAIT_TIMEOUT):
-        return True
+    for worker, worker_thread in workers_and_threads:
+        # make sure the worker neither keeps looping nor schedules itself again via singleShot
+        worker.running = False
+        # tell the thread to leave its event loop
+        worker_thread.quit()
 
-    # quit() only unwinds the event loop, so a worker which is stuck in a request is still
-    # running. It must not be terminated: it executes Python code and holds the GIL, so
-    # killing it there can deadlock the whole process - including the wait() for it. It is
-    # abandoned instead and ends on its own once its request runs into the timeout.
-    # Detaching the thread and keeping both referenced makes sure that neither of them gets
-    # deleted while still running, which would make Qt call qFatal(). Nagstamon does not
-    # wait for them any longer, see the os._exit() in nagstamon.py
-    worker_thread.setParent(None)
-    abandoned_worker_threads.append((worker, worker_thread))
-    return False
+    # wait until the threads are really stopped - but not forever, because a worker might
+    # be stuck in a request running into the socket timeout
+    deadline = monotonic() + WORKER_THREAD_WAIT_TIMEOUT / 1000
+    all_stopped = True
+    for worker, worker_thread in workers_and_threads:
+        if worker_thread.wait(max(0, int((deadline - monotonic()) * 1000))):
+            continue
+
+        # quit() only unwinds the event loop, so a worker which is stuck in a request is still
+        # running. It must not be terminated: it executes Python code and holds the GIL, so
+        # killing it there can deadlock the whole process - including the wait() for it. It is
+        # abandoned instead and ends on its own once its request runs into the timeout.
+        # Detaching the thread and keeping both referenced makes sure that neither of them gets
+        # deleted while still running, which would make Qt call qFatal(). Nagstamon does not
+        # wait for them any longer, see the os._exit() in nagstamon.py
+        worker_thread.setParent(None)
+        abandoned_worker_threads.append((worker, worker_thread))
+        all_stopped = False
+    return all_stopped
 
 
 class StatusAwareDelegate(QStyledItemDelegate):

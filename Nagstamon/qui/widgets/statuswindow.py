@@ -62,6 +62,7 @@ from Nagstamon.qui.widgets.server_vbox import ServerVBox
 from Nagstamon.qui.widgets.statusbar import StatusBar
 from Nagstamon.qui.widgets.toparea import TopArea
 from Nagstamon.qui.widgets.treeview import (stop_worker_thread,
+                                            stop_worker_threads,
                                             treeviews)
 from Nagstamon.servers import (get_enabled_servers,
                                get_status_count,
@@ -1432,26 +1433,37 @@ class StatusWindow(QWidget):
             return
         self.workers_shut_down = True
 
-        # stop statuswindow workers - the running flag has to be cleared first, otherwise
-        # the workers just schedule themselves again
-        if hasattr(self, 'worker'):
-            self.worker.running = False
-            self.worker.finish.emit()
-        if hasattr(self, 'worker_notification'):
-            self.worker_notification.running = False
-            self.worker_notification.finish.emit()
+        # a worker stuck in a request may delay quitting by up to WORKER_THREAD_WAIT_TIMEOUT -
+        # nothing should be left on screen meanwhile which looks like a hanging application
+        self.hide()
+        if self.injected_systrayicon:
+            self.injected_systrayicon.hide()
 
-        # tell all treeview threads to stop - iterating over the registry instead of the
+        # collect all workers to stop them at once instead of emitting their finish
+        # signals, which would wait for each of their threads one after another
+        workers_and_threads = list()
+
+        # stop statuswindow workers
+        if hasattr(self, 'worker'):
+            # stop debugging
+            statuswindow_properties.worker_debug_loop_looping = False
+            workers_and_threads.append((self.worker, self.worker_thread))
+        if hasattr(self, 'worker_notification'):
+            workers_and_threads.append((self.worker_notification, self.worker_notification_thread))
+
+        # stop all treeview threads - iterating over the registry instead of the
         # layout because sort_server_vboxes() may have dropped ServerVBoxes which still
         # own a running worker thread
         for treeview in list(treeviews):
             try:
-                treeview.worker.running = False
-                treeview.worker.finish.emit()
+                if not treeview.worker_thread.isFinished():
+                    workers_and_threads.append((treeview.worker, treeview.worker_thread))
             except RuntimeError:
                 # underlying C++ object might be gone already
-                if treeview in treeviews:
-                    treeviews.remove(treeview)
+                pass
+            treeviews.remove(treeview)
+
+        stop_worker_threads(workers_and_threads)
 
     @Slot()
     def exit(self):
