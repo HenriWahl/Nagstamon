@@ -421,6 +421,9 @@ jobs:
       md5sums: ${{ steps.md5sums-step.outputs.MD5SUMS }}
       sha256sums: ${{ steps.sha256sums-step.outputs.SHA256SUMS }}
     steps:
+      # checkout runs first so its default clean:true does not wipe the artifacts that
+      # download-artifact places into ./artifact right after this step
+      - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with:
           pattern: '*'
@@ -436,7 +439,6 @@ jobs:
       # commit before updating the release. (The previous dciborow/action-github-releases
       # 'automatic_release_tag' mode did exactly this; kept here as plain git to avoid
       # depending on that unmaintained action.)
-      - uses: actions/checkout@v7
       - name: Move 'latest' tag to the current commit
         run: |
           git config user.name "Nagstamon Release"
