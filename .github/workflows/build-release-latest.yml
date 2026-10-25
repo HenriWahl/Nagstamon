@@ -430,6 +430,19 @@ jobs:
         run: echo "MD5SUMS=$(cd artifact && md5sum *agstamon* > md5sums.txt && cat md5sums.txt | base64 --wrap 0)" >> $GITHUB_OUTPUT
       - id: sha256sums-step
         run: echo "SHA256SUMS=$(cd artifact && sha256sum *agstamon* > sha256sums.txt && cat sha256sums.txt | base64 --wrap 0)" >> $GITHUB_OUTPUT
+      # ncipollo/release-action only creates the 'latest' tag on its very first run and
+      # never moves an existing one, so without this the tag (and the commit shown on the
+      # release page) would stay frozen at the first run. Force the tag to the current
+      # commit before updating the release. (The previous dciborow/action-github-releases
+      # 'automatic_release_tag' mode did exactly this; kept here as plain git to avoid
+      # depending on that unmaintained action.)
+      - uses: actions/checkout@v7
+      - name: Move 'latest' tag to the current commit
+        run: |
+          git config user.name "Nagstamon Release"
+          git config user.email "repo@nagstamon.de"
+          git tag -f latest "${GITHUB_SHA}"
+          git push origin latest:latest --force
       # finally some maintained solution for creating releases
       # https://github.com/marketplace/actions/create-release
       - id: upload-step
