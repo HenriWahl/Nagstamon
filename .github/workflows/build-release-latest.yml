@@ -8,7 +8,7 @@ on:
       - '!*.*.*'
 
 env:
-  python_win_version: 3.14.7
+  python_win_version: 3.14.9
   repo_dir: nagstamon-jekyll/docs/repo
   cr_image: ghcr.io/henriwahl/build-nagstamon
   # release type this file is used for
@@ -20,7 +20,7 @@ jobs:
     strategy:
       matrix:
         # without quotes the 3.10 will be interpreted as 3.1 which leads to fail
-        python-version: ['3.10', 3.11, 3.12, 3.13, 3.14]
+        python-version: ['3.10', 3.11, 3.12, 3.13, 3.14, 3.15]
 
     steps:
     - uses: actions/checkout@v7
@@ -421,9 +421,6 @@ jobs:
       md5sums: ${{ steps.md5sums-step.outputs.MD5SUMS }}
       sha256sums: ${{ steps.sha256sums-step.outputs.SHA256SUMS }}
     steps:
-      # checkout runs first so its default clean:true does not wipe the artifacts that
-      # download-artifact places into ./artifact right after this step
-      - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with:
           pattern: '*'
@@ -433,18 +430,19 @@ jobs:
         run: echo "MD5SUMS=$(cd artifact && md5sum *agstamon* > md5sums.txt && cat md5sums.txt | base64 --wrap 0)" >> $GITHUB_OUTPUT
       - id: sha256sums-step
         run: echo "SHA256SUMS=$(cd artifact && sha256sum *agstamon* > sha256sums.txt && cat sha256sums.txt | base64 --wrap 0)" >> $GITHUB_OUTPUT
-      # ncipollo/release-action only creates the 'latest' tag on its very first run and
-      # never moves an existing one, so without this the tag (and the commit shown on the
-      # release page) would stay frozen at the first run. Force the tag to the current
-      # commit before updating the release. (The previous dciborow/action-github-releases
-      # 'automatic_release_tag' mode did exactly this; kept here as plain git to avoid
-      # depending on that unmaintained action.)
-      - name: Move 'latest' tag to the current commit
+      # Reset both the 'latest' release and the 'latest' tag via the API so the
+      # createRelease below recreates both fresh: the release gets a current published_at
+      # (an in-place update can never change that date), and the tag is re-created at the
+      # current commit (createRelease creates a missing tag at target_commitish). No git
+      # checkout/force-push needed.
+      - name: Delete 'latest' release and tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config user.name "Nagstamon Release"
-          git config user.email "repo@nagstamon.de"
-          git tag -f latest "${GITHUB_SHA}"
-          git push origin latest:latest --force
+          set -euo pipefail
+          id="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/latest" --jq .id 2>/dev/null || true)"
+          [ -n "$id" ] && gh api -X DELETE "repos/${GITHUB_REPOSITORY}/releases/${id}"
+          gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/tags/latest" 2>/dev/null || true
       # finally some maintained solution for creating releases
       # https://github.com/marketplace/actions/create-release
       - id: upload-step
