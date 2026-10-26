@@ -79,6 +79,10 @@ if not os.environ.get('QT_QPA_PLATFORMTHEME'):
 # modules access config.py so it can be distributed from here
 debug_queue = list()
 
+# passwords known to be stored in the system keyring, keyed by their keyring account - kept
+# outside of the Config object because all its attributes end up in the config file
+keyring_passwords = dict()
+
 # temporary dict for string-to-bool-conversion
 # the bool:bool relations are thought to make things easier in Dialog_Settings.ok()
 BOOLPOOL = {'False': False,
@@ -473,25 +477,26 @@ class Config:
                 if servers[server].save_password == 'False':
                     servers[server].password = ""
                 elif self.keyring_available and self.use_system_keyring:
-                    password = keyring.get_password('Nagstamon', '@'.join((servers[server].username,
-                                                                           servers[server].monitor_url))) or ""
+                    account = '@'.join((servers[server].username, servers[server].monitor_url))
+                    password = keyring.get_password('Nagstamon', account) or ""
                     if password == "":
                         if servers[server].password != "":
                             servers[server].password = self.deobfuscate(servers[server].password)
                     else:
                         servers[server].password = password
+                        keyring_passwords[account] = password
                 elif servers[server].password != "":
                     servers[server].password = self.deobfuscate(servers[server].password)
                 # proxy password
                 if self.keyring_available and self.use_system_keyring:
-                    proxy_password = keyring.get_password('Nagstamon', '@'.join(('proxy',
-                                                                                 servers[server].proxy_username,
-                                                                                 servers[server].proxy_address))) or ""
+                    account = '@'.join(('proxy', servers[server].proxy_username, servers[server].proxy_address))
+                    proxy_password = keyring.get_password('Nagstamon', account) or ""
                     if proxy_password == "":
                         if servers[server].proxy_password != "":
                             servers[server].proxy_password = self.deobfuscate(servers[server].proxy_password)
                     else:
                         servers[server].proxy_password = proxy_password
+                        keyring_passwords[account] = proxy_password
                 elif servers[server].proxy_password != "":
                     servers[server].proxy_password = self.deobfuscate(servers[server].proxy_password)
 
@@ -762,8 +767,14 @@ class Config:
             - On Linux and Windows the previous behaviour is kept: a keyring which accepts
               no password is a broken system which should be noticed loudly.
         """
+        # every saving of the configuration ends up here - writing an unchanged password again
+        # replaces the keychain entry on macOS, which might ask the user for permission and
+        # blocks the main thread meanwhile, at start and at quit
+        if keyring_passwords.get(account) == password:
+            return True
         try:
             keyring.set_password('Nagstamon', account, password)
+            keyring_passwords[account] = password
             return True
         except Exception:
             # an existing entry might carry an ACL which does not accept the current binary
@@ -771,6 +782,7 @@ class Config:
             try:
                 keyring.delete_password('Nagstamon', account)
                 keyring.set_password('Nagstamon', account, password)
+                keyring_passwords[account] = password
                 return True
             except Exception:
                 import traceback
@@ -1035,6 +1047,9 @@ class Config:
 
         # might be there only once after starting Nagstamon 3.4 the first time
         if 'save_config_after_urlencode' in self.__dict__.keys():
+            # the flag has to go before saving - otherwise it gets saved into the config file
+            # and makes every following start save the configuration again
+            self.__dict__.pop('save_config_after_urlencode')
             self.save_config()
 
     def get_number_of_enabled_monitors(self):
