@@ -5,6 +5,10 @@ on:
 
 env:
   python_win_version: 3.14.3
+  python_macos_version: 3.14.3
+  # oldest macOS release the app bundle is built for - verified after every macOS build by
+  # build/macos/check_deployment_target.py
+  MACOSX_DEPLOYMENT_TARGET: '13.0'
   repo_dir: nagstamon-jekyll/docs/repo
   cr_image: ghcr.io/henriwahl/build-nagstamon
   # release type this file is used for
@@ -154,15 +158,23 @@ jobs:
 
   macos-intel:
     # according to https://github.blog/changelog/2025-09-19-github-actions-macos-13-runner-image-is-closing-down/
+    # macOS 26 is only available for arm64 runners, so the Intel build stays on macOS 15
     runs-on: macos-15-intel
     needs: test
     steps:
       - uses: actions/checkout@v6
+      # the runner's own python3 is not pinned and differs between the runner images -
+      # its deployment target ends up in the app bundle, so it has to be reproducible
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '${{ env.python_macos_version }}'
       - run : brew install create-dmg
-      - run: pip3 install --no-warn-script-location --break-system-packages -r build/requirements/macos.txt
+      - run: pip3 install --no-warn-script-location -r build/requirements/macos.txt
       - run: cd ${{ github.workspace }}/build; python3 build.py
         env:
           PYTHONPATH: ${{ github.workspace }}
+      # the promised minimum macOS version has to be verified, not hoped for
+      - run: python3 build/macos/check_deployment_target.py build/Nagstamon_*_Staging_DMG/Nagstamon.app
       - uses: actions/upload-artifact@v7
         with:
           path: build/dist/*.dmg
@@ -171,15 +183,22 @@ jobs:
           name: ${{ github.job }}
 
   macos-arm:
-    runs-on: macos-14
+    runs-on: macos-26
     needs: test
     steps:
       - uses: actions/checkout@v6
+      # the runner's own python3 is not pinned and differs between the runner images -
+      # its deployment target ends up in the app bundle, so it has to be reproducible
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '${{ env.python_macos_version }}'
       - run : brew install create-dmg
-      - run: pip3 install --no-warn-script-location --break-system-packages -r build/requirements/macos.txt
+      - run: pip3 install --no-warn-script-location -r build/requirements/macos.txt
       - run: cd ${{ github.workspace }}/build; python3 build.py
         env:
           PYTHONPATH: ${{ github.workspace }}
+      # the promised minimum macOS version has to be verified, not hoped for
+      - run: python3 build/macos/check_deployment_target.py build/Nagstamon_*_Staging_DMG/Nagstamon.app
       - uses: actions/upload-artifact@v7
         with:
           path: build/dist/*.dmg

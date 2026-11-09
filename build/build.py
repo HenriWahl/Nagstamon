@@ -48,6 +48,11 @@ ARCH_WINDOWS_OPTS = {'32': ('win32', 'win32', '', 'x86'),
 ARCH_MACOS = platform.machine()
 ARCH_MACOS_NAMES = {'x86_64': 'Intel',
                     'arm64': 'ARM'}
+ARCH_MACOS_NAME = ARCH_MACOS_NAMES.get(ARCH_MACOS, ARCH_MACOS)
+
+# oldest macOS release the app bundle is built for - the shipped Qt binaries of
+# pyqt6-qt6 6.10 and newer require macOS 13, so anything lower would not run anyway
+MACOS_DEPLOYMENT_TARGET = '13.0'
 
 PYTHON_VERSION = '{0}.{1}'.format(sys.version_info[0],
                                   sys.version_info[1])
@@ -188,6 +193,15 @@ def package_windows():
         subprocess.run(['powershell.exe', '../windows/code_signing.ps1', '*.exe'])
 
 
+def run_or_die(command, error_message):
+    """
+        run a shell command and stop the build if it fails - a broken build must not end
+        up being uploaded as if everything went fine
+    """
+    if subprocess.call([command], shell=True) != 0:
+        sys.exit(f'{error_message}: {command}')
+
+
 def package_macos():
     """
         execute steps necessary for compilation of MacOS X binaries and .dmg file
@@ -195,8 +209,18 @@ def package_macos():
     # can't pass --version to pyinstaller in spec mode, so export as env var
     os.environ['NAGSTAMON_VERSION'] = VERSION
 
-    # create one-file .app bundle by pyinstaller
-    subprocess.call(['pyinstaller --noconfirm macos/nagstamon.spec'], shell=True)
+    # the spec file uses it for LSMinimumSystemVersion
+    os.environ.setdefault('MACOSX_DEPLOYMENT_TARGET', MACOS_DEPLOYMENT_TARGET)
+
+    # create one-dir .app bundle by pyinstaller
+    run_or_die('pyinstaller --noconfirm macos/nagstamon.spec',
+               'pyinstaller failed')
+
+    # sign the bundle ad-hoc - this is no replacement for a Developer ID signature and
+    # notarization, but arm64 binaries need a valid signature to be startable at all and
+    # signing the finished bundle in one go keeps it consistent
+    run_or_die('codesign --force --deep --sign - dist/Nagstamon.app',
+               'ad-hoc code signing failed')
 
     # create staging DMG folder for later compressing of DMG
     shutil.rmtree(f'Nagstamon_{VERSION}_Staging_DMG/', ignore_errors=True)
@@ -205,25 +229,25 @@ def package_macos():
     shutil.move('dist/Nagstamon.app', f'Nagstamon_{VERSION}_Staging_DMG/Nagstamon.app')
 
     # copy icon to staging folder
-    shutil.copy('../Nagstamon/resources/nagstamon.ico', 'nagstamon.ico'.format(VERSION))
+    shutil.copy('../Nagstamon/resources/nagstamon.icns', 'nagstamon.icns')
 
     # cleanup before new images get created
     for dmg_file in glob.iglob('*.dmg'):
         os.unlink(dmg_file)
 
-    # create dmg file with create-dmg insttaled via brew
-    subprocess.call([f'create-dmg '
-                     f'--volname "Nagstamon {VERSION}" '
-                     f'--volicon "nagstamon.ico" '
-                     f'--window-pos 400 300 '
-                     f'--window-size 600 320 '
-                     f'--icon-size 100 '
-                     f'--icon "Nagstamon.app" 175 110 '
-                     f'--hide-extension "Nagstamon.app" '
-                     f'--app-drop-link 425 110 '
-                     f'"dist/Nagstamon-{VERSION}-{ARCH_MACOS_NAMES[ARCH_MACOS]}.dmg" '
-                     f'Nagstamon_{VERSION}_Staging_DMG/'
-                     ], shell=True)
+    # create dmg file with create-dmg installed via brew
+    run_or_die(f'create-dmg '
+               f'--volname "Nagstamon {VERSION}" '
+               f'--volicon "nagstamon.icns" '
+               f'--window-pos 400 300 '
+               f'--window-size 600 320 '
+               f'--icon-size 100 '
+               f'--icon "Nagstamon.app" 175 110 '
+               f'--hide-extension "Nagstamon.app" '
+               f'--app-drop-link 425 110 '
+               f'"dist/Nagstamon-{VERSION}-{ARCH_MACOS_NAME}.dmg" '
+               f'Nagstamon_{VERSION}_Staging_DMG/',
+               'create-dmg failed')
 
 
 def package_linux_deb():

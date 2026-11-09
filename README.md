@@ -7,8 +7,10 @@ It is inspired by Nagios Checker for Firefox – just without an open Firefox wi
 
 Nagstamon is released under the GPLv2 and free to use and modify.
 
-Nagstamon is written in Python 3 and uses the Qt 5/6 GUI toolkit which makes it very portable. It has been tested successfully on latest Ubuntu, Debian, Windows, NetBSD, OpenBSD, FreeBSD and MacOS X.
+Nagstamon is written in Python 3 and uses the Qt 5/6 GUI toolkit which makes it very portable. It has been tested successfully on latest Ubuntu, Debian, Windows, NetBSD, OpenBSD, FreeBSD and macOS.
 It works with GNOME, KDE, Windows and macOS desktops.
+
+The macOS builds require **macOS 13 Ventura or newer**, because that is the oldest release the shipped Qt 6.11 binaries support. There are separate disk images for Apple Silicon (`ARM`) and Intel (`Intel`) - the Qt binaries are not available as universal binaries, so one image cannot serve both.
 
 Successfully tested monitors include:
 
