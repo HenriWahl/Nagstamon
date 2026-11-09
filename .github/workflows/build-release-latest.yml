@@ -6,11 +6,10 @@ on:
       - '**'
       - '!master'
       - '!*.*.*'
-      - '!macos_improvements'
 
 env:
-  python_win_version: 3.14.9
-  python_macos_version: 3.14.7
+  python_win_version: 3.15.2
+  python_macos_version: 3.15.2
   # oldest macOS release the app bundle is built for - verified after every macOS build by
   # build/macos/check_deployment_target.py
   MACOSX_DEPLOYMENT_TARGET: '13.0'
