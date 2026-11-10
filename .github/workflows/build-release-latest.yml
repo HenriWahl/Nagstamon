@@ -12,7 +12,7 @@ env:
   python_macos_version: 3.15.2
   # oldest macOS release the app bundle is built for - verified after every macOS build by
   # build/macos/check_deployment_target.py
-  MACOSX_DEPLOYMENT_TARGET: '13.0'
+  MACOSX_DEPLOYMENT_TARGET: '15.0'
   repo_dir: nagstamon-jekyll/docs/repo
   cr_image: ghcr.io/henriwahl/build-nagstamon
   # release type this file is used for
