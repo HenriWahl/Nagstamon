@@ -22,6 +22,7 @@ from datetime import datetime
 import copy
 import html
 import json
+import re
 import socket
 import sys
 import urllib.request, urllib.parse, urllib.error
@@ -203,13 +204,19 @@ class MultisiteServer(GenericServer):
                 '<!DOCTYPE html>' in content:
             self.cookie_auth = True
             # if first attempt login and then try to get data again
-            if not self._is_auth_in_cookies():
+            if not self._is_auth_in_cookies() or \
+                    self.authentication == 'web':
                 if self.authentication != 'web':
                     self._get_cookie_login()
+                else:
+                    # Checkmk session expired - try to renew it via SAML without bothering the user
+                    self._renew_saml_session()
                 result = self.fetch_url(url, 'raw')
                 content, error = result.result, result.error
                 if content.startswith('<') or\
                 '<!DOCTYPE html>' in content:
+                    if self.authentication == 'web':
+                        self.refresh_authentication = True
                     return ''
 
         # if finally still some <HTML> is sent this looks like a new login due to password change
@@ -219,6 +226,24 @@ class MultisiteServer(GenericServer):
             return ''
 
         return eval(content)
+
+    def _renew_saml_session(self):
+        """
+        start the SAML login offered on the Checkmk login page - if the IdP session is still valid
+        fetch_url() completes it silently and Checkmk issues a new auth cookie
+        """
+        try:
+            if not self.session:
+                return
+            result = self.fetch_url(self.monitor_url + '/login.py', 'raw')
+            match = re.search(r'saml_sso\.py\?RelayState=[^"\'&<>\s]+', html.unescape(result.result or ''))
+            if not match:
+                return
+            # Checkmk hands over to the IdP either by redirect or by an auto-submitting SAMLRequest form
+            response = self.session.get(f'{self.monitor_url}/{match.group(0)}', timeout=self.timeout)
+            self.silent_web_reauthentication(response)
+        except:
+            self.error(sys.exc_info())
 
     def _get_cookie_login(self):
         """
