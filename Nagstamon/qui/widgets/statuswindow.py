@@ -795,6 +795,8 @@ class StatusWindow(QWidget):
                 statuswindow_properties.is_shown_timestamp = time()
 
                 if not conf.fullscreen and not conf.windowed:
+                    # store position of collapsed statusbar before it gets hidden
+                    self.save_position()
                     # attempt to avoid flickering on MacOSX - already hide statusbar here
                     self.statusbar.hide()
                     # show the other status window components
@@ -1107,11 +1109,7 @@ class StatusWindow(QWidget):
         resize status window according to its new size
         """
         # store position for restoring it when hiding - only if not shown of course
-        if statuswindow_properties.is_shown is False:
-            self.stored_x = self.x()
-            self.stored_y = self.y()
-            self.stored_width = self.width()
-            self.stored_height = self.height()
+        self.save_position()
 
         if OS == OS_WINDOWS:
             # absolutely strange, but no other solution available
@@ -1151,6 +1149,10 @@ class StatusWindow(QWidget):
                 if statuswindow_properties.is_shown is True:
                     width, height, x, y = self.calculate_size()
                     self.adjust_dummy_columns()
+                elif self.is_expanded():
+                    # macOS: window is already expanded but set_shown() has not fired yet -
+                    # show_window() did the sizing, treating it as statusbar would store the wrong position
+                    return
                 else:
                     # statusbar only
                     hint = self.sizeHint()
@@ -1199,11 +1201,19 @@ class StatusWindow(QWidget):
         """
         store position for restoring it when hiding
         """
-        if not statuswindow_properties.is_shown:
+        if not statuswindow_properties.is_shown and not self.is_expanded():
             self.stored_x = self.x()
             self.stored_y = self.y()
             self.stored_width = self.width()
             self.stored_height = self.height()
+
+    def is_expanded(self):
+        """
+        floating statusbar gets hidden as soon as show_window() expands the window,
+        while is_shown is set delayed on macOS
+        """
+        # isHidden() instead of isVisible() because the latter is False before the window is shown at all
+        return conf.statusbar_floating and self.statusbar.isHidden()
 
     def leaveEvent(self, event):
         """
