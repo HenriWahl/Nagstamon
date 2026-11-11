@@ -42,6 +42,7 @@ from Nagstamon.servers.ZabbixProblemBased import ZabbixProblemBasedServer
 from Nagstamon.servers.Livestatus import LivestatusServer
 from Nagstamon.servers.Zenoss import ZenossServer
 from Nagstamon.servers.Monitos3 import Monitos3Server
+from Nagstamon.servers.Monit import MonitServer
 from Nagstamon.servers.Monitos4x import Monitos4xServer
 from Nagstamon.servers.SnagView3 import SnagViewServer
 from Nagstamon.servers.Sensu import SensuServer
@@ -249,6 +250,7 @@ servers_list = [AlertmanagerServer,
                 Icinga2APIServer,
                 LibreNMSServer,
                 LivestatusServer,
+                MonitServer,
                 Monitos3Server,
                 Monitos4xServer,
                 MultisiteServer,
