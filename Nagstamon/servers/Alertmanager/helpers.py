@@ -25,12 +25,19 @@ def get_duration(timestring):
     format) until now and returns a human friendly string
 
     Args:
-        timestring (string): An ISO8601 time string 
+        timestring (string): An ISO8601 time string
 
     Returns:
-        string: A time string in human readable format
+        string: A time string in human readable format, empty if the given time string is
+                missing or unparseable - not every Alertmanager implementation delivers
+                all timestamps
     """
-    time_object = dateutil.parser.parse(timestring)
+    if not timestring:
+        return ""
+    try:
+        time_object = dateutil.parser.parse(timestring)
+    except (ValueError, OverflowError, TypeError):
+        return ""
     duration = datetime.now(timezone.utc) - time_object
     hour = int(duration.seconds / 3600)
     minute = int(duration.seconds % 3600 / 60)
@@ -78,3 +85,55 @@ def detect_from_labels(labels, config_label_list, default_value="", list_delimit
             result = labels.get(each_label)
             break
     return result
+
+
+def add_duration_to_timestring(timestring, hours=0, minutes=0):
+    """Adds the given amount of time to a time string and returns it as UTC in ISO format
+
+    Args:
+        timestring (string): A time string in local time
+        hours (int): Hours to add
+        minutes (int): Minutes to add
+
+    Returns:
+        string: A time string in ISO format
+    """
+    local_time = datetime.now(timezone(timedelta(0))).astimezone().tzinfo
+    parsed_time = dateutil.parser.parse(timestring).replace(tzinfo=local_time)
+    end_time = parsed_time + timedelta(hours=int(hours), minutes=int(minutes))
+    return end_time.astimezone(timezone.utc).isoformat()
+
+
+def split_matchers(text, delimiter=","):
+    """Splits a filter expression into single matchers
+
+    A simple split() would break matchers whose value contains the delimiter, like
+    severity=~"warning,critical", so delimiters inside quotes are ignored.
+
+    Args:
+        text (string): The filter expression
+        delimiter (string, optional): The delimiter between matchers. Defaults to ",".
+
+    Returns:
+        list(str): The single matchers, stripped and without empty ones
+    """
+    matchers = []
+    current = ""
+    quote = None
+    for character in text:
+        if quote:
+            current += character
+            if character == quote:
+                quote = None
+        elif character in ('"', "'"):
+            quote = character
+            current += character
+        elif character == delimiter:
+            if current.strip():
+                matchers.append(current.strip())
+            current = ""
+        else:
+            current += character
+    if current.strip():
+        matchers.append(current.strip())
+    return matchers

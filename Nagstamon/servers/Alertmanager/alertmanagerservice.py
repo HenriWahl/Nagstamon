@@ -9,6 +9,8 @@ class AlertmanagerService(GenericService):
     def __init__(self):
         super().__init__()
         self.labels = {}
+        # IDs of the silences which suppress this alert - needed to expire them again
+        self.silenced_by = []
 
     def get_service_name(self):
         return self.display_name
