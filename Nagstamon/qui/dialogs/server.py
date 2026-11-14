@@ -497,7 +497,7 @@ class DialogServer(Dialog):
         """
         # strip name to avoid whitespace
         server_name = self.window.input_lineedit_name.text().strip()
-        self.delete_web_cookies.emit(server_name, self)
+        self.delete_web_cookies.emit(server_name, self.window)
 
     @Slot(str)
     def delete_web_cookies_action(self, server_name=None, parent=None):
