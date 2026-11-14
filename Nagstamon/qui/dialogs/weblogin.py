@@ -239,4 +239,4 @@ class DialogWebLogin(Dialog):
         """
         delete all cookies for given server
         """
-        self.delete_web_cookies.emit(self.server.name, self)
+        self.delete_web_cookies.emit(self.server.name, self.window)
