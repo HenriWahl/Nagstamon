@@ -40,8 +40,8 @@ class ComboBoxServers(QComboBox):
     def mousePressEvent(self, event):
         # first click opens combobox popup
         self.freshly_opened = True
-        # tell status window that there is no combobox anymore
-        self.showPopup()
+        # let Qt open the popup - it ignores the release of the opening click, which would close it at once
+        QComboBox.mousePressEvent(self, event)
 
     def fill(self):
         """

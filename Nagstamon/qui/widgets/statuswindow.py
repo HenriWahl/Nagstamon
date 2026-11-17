@@ -44,6 +44,7 @@ from Nagstamon.qui.qt import (QCursor,
                               QIcon,
                               QMessageBox,
                               QObject,
+                              QPoint,
                               QVBoxLayout,
                               QScrollArea,
                               QSizePolicy,
@@ -378,6 +379,12 @@ class StatusWindow(QWidget):
         should actually fit into qt.py but due to the reference to `app` it could only
         be solved here
         """
+        # Wayland fix: the popup belongs to the screen of the systray icon, not to the one it was shown on last
+        if DESKTOP_WAYLAND and statuswindow_properties.icon_x:
+            screen = app.screenAt(QPoint(statuswindow_properties.icon_x,
+                                         statuswindow_properties.icon_y))
+            if screen:
+                return screen
         # Qt6 has .screen() as replacement for QDesktopWidget...
         if QT_VERSION_MAJOR > 5:
             return self.screen()
@@ -750,6 +757,10 @@ class StatusWindow(QWidget):
 
             # already show here because was closed before in hide_window()
             # best results achieved when doing .show() before .show_window()
+            if DESKTOP_WAYLAND:
+                # keep the window invisible until show_window() moved it to the systray icon to avoid flashing
+                self.setWindowOpacity(0)
+                QTimer.singleShot(0, lambda: self.setWindowOpacity(1))
             self.show()
             self.show_window()
 
@@ -1040,6 +1051,9 @@ class StatusWindow(QWidget):
                 sleep(0.01)
 
             x = statuswindow_properties.icon_x
+            if DESKTOP_WAYLAND:
+                # there is no statusbar in systray mode whose width had to be taken into account below
+                self.stored_width = 0
 
         # get height from table widgets
         real_height = self.get_real_height()
@@ -1101,6 +1115,11 @@ class StatusWindow(QWidget):
                 else:
                     y = available_height - real_height
                     height = real_height
+
+            if DESKTOP_WAYLAND:
+                # the screen of the systray icon might not start at y = 0, so calculate relative to it
+                height = min(real_height, available_height)
+                y = available_y if statuswindow_properties.top else available_y + available_height - height
 
         return width, height, x, y
 

@@ -22,9 +22,11 @@ from traceback import print_exc
 
 from Nagstamon.config import (conf,
                               debug_queue,
+                              DESKTOP_WAYLAND,
                               OS,
                               OS_MACOS,
                               RESOURCES, OS_NON_LINUX)
+from Nagstamon.qui.dbus import systray_click_position
 from Nagstamon.qui.globals import (resource_files,
                                    statuswindow_properties)
 from Nagstamon.qui.qt import (QCursor,
@@ -86,7 +88,11 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.timer = QTimer()
 
         # treat clicks
-        self.activated.connect(self.icon_clicked)
+        if DESKTOP_WAYLAND:
+            # the click position arrives via another DBus connection - give it a moment to get here
+            self.activated.connect(lambda reason: QTimer.singleShot(20, lambda: self.icon_clicked(reason)))
+        else:
+            self.activated.connect(self.icon_clicked)
 
     def current_icon_name(self):
         """
@@ -194,6 +200,13 @@ class SystemTrayIcon(QSystemTrayIcon):
                 statuswindow_properties.icon_x = QCursor.pos().x()
             elif icon_x != 0:
                 statuswindow_properties.icon_x = icon_x
+        elif DESKTOP_WAYLAND and icon_x == 0:
+            # cursor position is stale on XWayland, so use the click position from DBus
+            x, y = systray_click_position
+            # x = 0 means unknown position, so avoid it for clicks at the left screen edge
+            statuswindow_properties.icon_x = 1 if x == 0 and y != 0 else x
+            statuswindow_properties.icon_y = y
+            return
         else:
             # strangely enough on KDE the systray icon geometry gives back 0, 0 as coordinates
             # also at Ubuntu Unity 16.04
