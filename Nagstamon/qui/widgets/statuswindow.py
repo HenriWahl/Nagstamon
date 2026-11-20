@@ -380,11 +380,17 @@ class StatusWindow(QWidget):
         be solved here
         """
         # Wayland fix: the popup belongs to the screen of the systray icon, not to the one it was shown on last
-        if DESKTOP_WAYLAND and statuswindow_properties.icon_x:
-            screen = app.screenAt(QPoint(statuswindow_properties.icon_x,
-                                         statuswindow_properties.icon_y))
-            if screen:
-                return screen
+        if DESKTOP_WAYLAND and conf.icon_in_systray:
+            if statuswindow_properties.icon_x:
+                screen = app.screenAt(QPoint(statuswindow_properties.icon_x,
+                                             statuswindow_properties.icon_y))
+                if screen:
+                    return screen
+            # without a known systray icon position the primary screen is the
+            # best guess, because GNOME Shell keeps its panel there
+            primary_screen = app.primaryScreen()
+            if primary_screen:
+                return primary_screen
         # Qt6 has .screen() as replacement for QDesktopWidget...
         if QT_VERSION_MAJOR > 5:
             return self.screen()

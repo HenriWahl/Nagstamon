@@ -22,6 +22,7 @@ from traceback import print_exc
 
 from Nagstamon.config import (conf,
                               debug_queue,
+                              DESKTOP_GNOME,
                               DESKTOP_WAYLAND,
                               OS,
                               OS_MACOS,
@@ -40,6 +41,7 @@ from Nagstamon.qui.qt import (QCursor,
                               QXmlStreamReader,
                               Signal,
                               Slot)
+from Nagstamon.qui.widgets.app import app
 from Nagstamon.qui.widgets.icon import QIconWithFilename
 from Nagstamon.servers import get_worst_status
 
@@ -192,39 +194,107 @@ class SystemTrayIcon(QSystemTrayIcon):
         """
         get the coordinates of the systray icon and store it in statuswindow_properties
         """
-        # where is the pointer which clicked onto systray icon
-        icon_x = self.geometry().x()
-        icon_y = self.geometry().y()
+        geometry = self.geometry()
         if OS in OS_NON_LINUX:
-            if statuswindow_properties.icon_x == 0:
-                statuswindow_properties.icon_x = QCursor.pos().x()
-            elif icon_x != 0:
-                statuswindow_properties.icon_x = icon_x
-        elif DESKTOP_WAYLAND and icon_x == 0:
-            # cursor position is stale on XWayland, so use the click position from DBus
-            x, y = systray_click_position
-            # x = 0 means unknown position, so avoid it for clicks at the left screen edge
-            statuswindow_properties.icon_x = 1 if x == 0 and y != 0 else x
-            statuswindow_properties.icon_y = y
-            return
+            SystemTrayIcon._retrieve_position_non_linux(geometry)
+        elif DESKTOP_WAYLAND:
+            SystemTrayIcon._retrieve_position_wayland(geometry)
         else:
-            # strangely enough on KDE the systray icon geometry gives back 0, 0 as coordinates
-            # also at Ubuntu Unity 16.04
-            if icon_x == 0 and statuswindow_properties.icon_x == 0:
-                statuswindow_properties.icon_x = QCursor.pos().x()
-            elif icon_x != 0:
-                statuswindow_properties.icon_x = icon_x
+            SystemTrayIcon._retrieve_position_x11(geometry)
 
-        if icon_y == 0 and statuswindow_properties.icon_y == 0:
+    @staticmethod
+    def _retrieve_position_non_linux(geometry):
+        """
+        get the systray icon coordinates on macOS and Windows
+        """
+        icon_x = geometry.x()
+        icon_y = geometry.y()
+        if statuswindow_properties.icon_x == 0:
+            statuswindow_properties.icon_x = QCursor.pos().x()
+        elif icon_x != 0:
+            statuswindow_properties.icon_x = icon_x
+
+        if statuswindow_properties.icon_y == 0:
+            statuswindow_properties.icon_y = QCursor.pos().y()
+        elif icon_y != 0:
+            statuswindow_properties.icon_y = icon_y
+
+    @staticmethod
+    def _retrieve_position_x11(geometry):
+        """
+        get the systray icon coordinates on X11 and similar windowing systems
+        """
+        icon_x = geometry.x()
+
+        # strangely enough on KDE the systray icon geometry gives back 0, 0
+        # as coordinates, also at Ubuntu Unity 16.04
+        if icon_x == 0 and statuswindow_properties.icon_x == 0:
+            statuswindow_properties.icon_x = QCursor.pos().x()
+        elif icon_x != 0:
+            statuswindow_properties.icon_x = icon_x
+
+        if geometry.y() == 0 and statuswindow_properties.icon_y == 0:
             statuswindow_properties.icon_y = QCursor.pos().y()
 
-        if OS in OS_NON_LINUX:
-            if statuswindow_properties.icon_y == 0:
-                statuswindow_properties.icon_y = QCursor.pos().y()
-            elif icon_y != 0:
-                statuswindow_properties.icon_y = icon_y
+    @staticmethod
+    def _retrieve_position_wayland(geometry):
+        """
+        get the systray icon coordinates on Wayland where Nagstamon runs via
+        XWayland, so neither the icon geometry nor the cursor position can be
+        trusted
 
-        pass
+        Prefer the click position a StatusNotifierItem host reported via DBus.
+        If there is none - GNOME Shell only sends it on double clicks and
+        middle clicks - fall back to the icon geometry and finally to a
+        deterministic position on the primary screen instead of a stale one.
+        Note: GNOME Shell does not report a click position for its own menu,
+        so "Show status window" can only use the last known or fallback
+        position there.
+        """
+        click_position = systray_click_position.fresh()
+        if click_position:
+            x, y = click_position
+            # 0 is the "unknown" marker used by statuswindow_properties
+            statuswindow_properties.icon_x = 1 if x == 0 else x
+            statuswindow_properties.icon_y = y
+            position_source = 'systray click via DBus'
+        else:
+            icon_x = geometry.x()
+            icon_y = geometry.y()
+            if icon_x != 0 or icon_y != 0:
+                statuswindow_properties.icon_x = 1 if icon_x == 0 else icon_x
+                statuswindow_properties.icon_y = icon_y
+                position_source = 'systray icon geometry'
+            elif statuswindow_properties.icon_x == 0:
+                SystemTrayIcon._retrieve_position_fallback()
+                position_source = 'fallback on primary screen'
+            else:
+                position_source = 'previously retrieved position'
+
+        if conf.debug_mode:
+            debug_queue.append(f'DEBUG: Systray icon position via {position_source}: '
+                               f'{statuswindow_properties.icon_x}, {statuswindow_properties.icon_y}')
+
+    @staticmethod
+    def _retrieve_position_fallback():
+        """
+        put the popup at the right edge of the primary screen if no systray
+        icon position is available at all
+
+        GNOME Shell keeps its panel and status icons on the primary screen, so
+        this at least avoids showing the popup on a stale or wrong screen.
+        """
+        primary_screen = app.primaryScreen()
+        if primary_screen is None:
+            return
+
+        screen_geometry = primary_screen.availableGeometry()
+        statuswindow_properties.icon_x = screen_geometry.x() + screen_geometry.width() - 50
+        if DESKTOP_GNOME:
+            # the GNOME Shell panel usually sits at the top of the screen
+            statuswindow_properties.icon_y = screen_geometry.y()
+        else:
+            statuswindow_properties.icon_y = screen_geometry.y() + screen_geometry.height()
 
     @Slot()
     def show_state(self):

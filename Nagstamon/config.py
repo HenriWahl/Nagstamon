@@ -57,6 +57,13 @@ if 'WAYLAND_DISPLAY' in os.environ or \
 else:
     DESKTOP_WAYLAND = False
 
+# simple GNOME detection - needed because GNOME Shell reports systray icon
+# click positions differently than KDE Plasma does
+DESKTOP_NAME = ' '.join(filter(None, (os.environ.get('XDG_CURRENT_DESKTOP', ''),
+                                      os.environ.get('XDG_SESSION_DESKTOP', ''),
+                                      os.environ.get('DESKTOP_SESSION', '')))).lower()
+DESKTOP_GNOME = 'gnome' in DESKTOP_NAME
+
 # detection of somehow quirky desktop enviroments which might need a fix
 QUIRKY_DESKTOPS = ('cinnamon', 'gnome-flashback-metacity')
 if os.environ.get('CINNAMON_VERSION') or \
