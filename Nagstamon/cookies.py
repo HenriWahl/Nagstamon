@@ -210,6 +210,27 @@ def cookie_data_to_jar(server_name, cookie_data):
     return jar
 
 
+def save_jar_cookies(server_name, jar):
+    """
+    persist cookies of a requests cookie jar, e.g. after a silent reauthentication refreshed them
+    """
+    cookies = {}
+    for cookie in jar:
+        cookey = f'{server_name}+{cookie.domain}+{cookie.path}+{cookie.name}'
+        cookies[cookey] = {
+            'server': server_name,
+            'name': cookie.name,
+            'value': cookie.value or '',
+            'domain': cookie.domain,
+            'path': cookie.path,
+            'expiration': cookie.expires,
+            'secure': bool(cookie.secure),
+            'httponly': bool(cookie.has_nonstandard_attr('HttpOnly'))
+        }
+    if cookies:
+        save_cookies(cookies)
+
+
 def has_any_cookie(server_name: str, cookie_name: str) -> bool:
     """
     Return True if at least one cookie with given name exists.
