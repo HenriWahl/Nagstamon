@@ -20,11 +20,14 @@
 from dataclasses import dataclass
 
 from Nagstamon.config import (conf,
+                              debug_queue,
+                              DESKTOP_WAYLAND,
                               OS,
                               OS_MACOS,
                               RESOURCES)
 from Nagstamon.helpers import FilesDict
-from Nagstamon.qui.dbus import DBus
+from Nagstamon.qui.dbus import (DBus,
+                                monitor_systray_clicks)
 from Nagstamon.qui.qt import QFont
 from Nagstamon.qui.widgets.app import app
 
@@ -44,6 +47,14 @@ font_icons = QFont('Nagstamon', font.pointSize() + 2, QFont.Weight.Normal, False
 
 # DBus initialization
 dbus_connection = DBus()
+
+# Wayland fix: let the statuswindow pop up at the systray icon, whose position is only available via DBus
+if DESKTOP_WAYLAND:
+    try:
+        systray_click_monitor = monitor_systray_clicks()
+    except Exception as error:
+        if conf.debug_mode:
+            debug_queue.append(f'DEBUG: Systray click monitoring via DBus not available: {error}')
 
 # check ECP authentication support availability
 try:

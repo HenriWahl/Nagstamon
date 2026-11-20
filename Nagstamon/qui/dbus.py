@@ -116,3 +116,31 @@ class DBus(QObject):
         """
         if action == 'open' + self.random_id:
             self.open_statuswindow.emit()
+
+
+# Wayland fix: position of the last click onto a systray icon, 0 means unknown
+systray_click_position = [0, 0]
+
+
+def monitor_systray_clicks():
+    """
+    Wayland fix: XWayland knows neither the systray icon geometry nor the cursor position, but the systray
+    host sends the click position as DBus call Activate(x, y) - so get it from a DBus monitoring connection
+    """
+    def store_position(connection, message):
+        # a monitor must not reply, which would happen at an exception here, so ignore unexpected messages
+        try:
+            if message.get_member() == 'Activate':
+                x, y = message.get_args_list()
+                systray_click_position[:] = int(x), int(y)
+        except Exception:
+            pass
+
+    bus = SessionBus(private=True, mainloop=DBusMainLoop())
+    # otherwise the whole process would exit if this connection gets closed
+    bus.set_exit_on_disconnect(False)
+    bus.add_message_filter(store_position)
+    bus.call_blocking('org.freedesktop.DBus', '/org/freedesktop/DBus', 'org.freedesktop.DBus.Monitoring',
+                      'BecomeMonitor', 'asu', (["interface='org.kde.StatusNotifierItem',member='Activate'"], 0),
+                      timeout=1)
+    return bus
