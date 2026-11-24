@@ -1,4 +1,4 @@
-FROM debian:11
+FROM debian:13
 LABEL maintainer=henri@nagstamon.de
 
 RUN apt -y update
