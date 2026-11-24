@@ -4,11 +4,11 @@ on:
     tags: 'v*'
 
 env:
-  python_win_version: 3.14.3
-  python_macos_version: 3.14.3
+  python_win_version: 3.14.10
+  python_macos_version: 3.15.2
   # oldest macOS release the app bundle is built for - verified after every macOS build by
   # build/macos/check_deployment_target.py
-  MACOSX_DEPLOYMENT_TARGET: '13.0'
+  MACOSX_DEPLOYMENT_TARGET: '15.0'
   repo_dir: nagstamon-jekyll/docs/repo
   cr_image: ghcr.io/henriwahl/build-nagstamon
   # release type this file is used for
@@ -20,10 +20,10 @@ jobs:
     strategy:
       matrix:
         # without quotes the 3.10 will be interpreted as 3.1 which leads to fail
-        python-version: ['3.10', 3.11, 3.12, 3.13, 3.14]
+        python-version: ['3.10', 3.11, 3.12, 3.13, 3.14, 3.15]
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     # docker login is needed for pushing the test image
     - uses: docker/login-action@v4
       with:
@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       # docker login is needed for pushing the build image
       - uses: docker/login-action@v4
         with:
@@ -77,9 +77,9 @@ jobs:
     needs: test
     strategy:
       matrix:
-        version: [ 42, 43, 44, 45 ]
+        version: [ 43, 44, 45, 46 ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       # docker login is needed for pushing the build image
       - uses: docker/login-action@v4
         with:
@@ -105,7 +105,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       # docker login is needed for pushing the build image
       - uses: docker/login-action@v4
         with:
@@ -132,7 +132,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       # docker login is needed for pushing the build image
       - uses: docker/login-action@v4
         with:
@@ -162,10 +162,10 @@ jobs:
     runs-on: macos-15-intel
     needs: test
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       # the runner's own python3 is not pinned and differs between the runner images -
       # its deployment target ends up in the app bundle, so it has to be reproducible
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '${{ env.python_macos_version }}'
       - run : brew install create-dmg
@@ -186,10 +186,10 @@ jobs:
     runs-on: macos-26
     needs: test
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       # the runner's own python3 is not pinned and differs between the runner images -
       # its deployment target ends up in the app bundle, so it has to be reproducible
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '${{ env.python_macos_version }}'
       - run : brew install create-dmg
@@ -206,42 +206,13 @@ jobs:
           if-no-files-found: error
           name: ${{ github.job }}
 
-  windows-32:
-    # better depend on stable build image
-    runs-on: windows-2022
-    needs: test
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '${{ env.python_win_version }}'
-          architecture: x86
-      #  no PyQt6 for win32 available on pypi.org
-      - run: ((Get-Content -path build/requirements/windows.txt -Raw) -replace 'pyqt6.*','pyqt5') | Set-Content -Path build/requirements/windows.txt
-      - run: python -m pip install --no-warn-script-location -r build/requirements/windows.txt
-      # pretty hacky but no other idea to avoid gssapi being installed which breaks requests-kerberos
-      - run: python -m pip uninstall -y gssapi requests-gssapi
-      - run: cd ${{ github.workspace }}/build; python build.py
-        env:
-          PYTHONPATH: ${{ github.workspace }}
-          WIN_SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
-          WIN_SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
-      - uses: actions/upload-artifact@v7
-        with:
-          path: |
-            build/dist/*.zip
-            build/dist/*.exe
-          retention-days: 1
-          if-no-files-found: error
-          name: ${{ github.job }}
-
   windows-64:
     # better depend on stable build image
     runs-on: windows-2022
     needs: test
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '${{ env.python_win_version }}'
           architecture: x64
@@ -251,8 +222,6 @@ jobs:
       - run: cd ${{ github.workspace }}/build; python build.py
         env:
           PYTHONPATH: ${{ github.workspace }}
-          WIN_SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
-          WIN_SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
       - uses: actions/upload-artifact@v7
         with:
           path: |
@@ -264,11 +233,11 @@ jobs:
 
   windows-64-debug:
     # better depend on stable build image
-    runs-on: windows-2022
+    runs-on: windows-2025
     needs: test
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '${{ env.python_win_version }}'
           architecture: x64
@@ -278,8 +247,6 @@ jobs:
       - run: cd ${{ github.workspace }}/build; python build.py debug
         env:
           PYTHONPATH: ${{ github.workspace }}
-          WIN_SIGNING_CERT_BASE64: ${{ secrets.SIGNING_CERT_BASE64 }}
-          WIN_SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
       - uses: actions/upload-artifact@v7
         with:
           path: |
@@ -292,12 +259,12 @@ jobs:
   repo-debian:
     runs-on: ubuntu-latest
     # try to avoid race condition and start uploading only after the last install package has been build
-    needs: [debian, fedora, linux-pyinstaller, macos-arm, macos-intel, rhel-9, windows-32, windows-64, windows-64-debug]
+    needs: [debian, fedora, linux-pyinstaller, macos-arm, macos-intel, rhel-9, windows-64, windows-64-debug]
     env:
       family: debian
     steps:
       # checkout to get Dockerfiles for steps.dockerfile_hash.outputs.HASH
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       # get binaries created by other jobs
       - uses: actions/download-artifact@v8
         with:
@@ -345,10 +312,10 @@ jobs:
     env:
       family: fedora
       # which image to use for packaging
-      version_latest: 41
+      version_latest: 45
     steps:
       # checkout to get Dockerfiles for steps.dockerfile_hash.outputs.HASH
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       # get binaries created by other jobs
       - uses: actions/download-artifact@v8
         with:
@@ -381,7 +348,7 @@ jobs:
           for noarch_rpm in artifact/*${{ env.family }}*.noarch.rpm; \
             do \
               version=$(echo ${noarch_rpm} | python3 -c "file=input(); print(file.split('${{ env.family }}')[1].split('.')[0])") && \
-              mkdir -p mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${version} && \
+              mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${version} && \
               cp -r artifact/*.${{ env.family }}${version}* ${{ env.repo_dir }}/${{ env.family }}/${version} && \
               docker run --rm -v ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}:/repo \
                 ${{ env.cr_image }}-${{ env.family }}-${{ env.version_latest }}:${{ steps.dockerfile_hash.outputs.HASH }} \
@@ -403,7 +370,7 @@ jobs:
       version: 9
     steps:
       # checkout to get Dockerfiles for steps.dockerfile_hash.outputs.HASH
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       # get binaries created by other jobs
       - uses: actions/download-artifact@v8
         with:
@@ -426,7 +393,7 @@ jobs:
           for noarch_rpm in artifact/*${{ env.family }}*.noarch.rpm; \
             do \
               version=$(echo ${noarch_rpm} | python3 -c "file=input(); print(file.split('${{ env.family }}')[1].split('.')[0])") && \
-              mkdir -p mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${version} && \
+              mkdir -p ${{ env.repo_dir }}/${{ env.family }}/${version} && \
               cp -r artifact/*.${{ env.family }}${version}* ${{ env.repo_dir }}/${{ env.family }}/${version} && \
               docker run --rm -v ${PWD}/${{ env.repo_dir }}/${{ env.family }}/${version}:/repo \
                 ${{ env.cr_image }}-${{ env.family }}-${{ env.version }}:${{ steps.dockerfile_hash.outputs.HASH }} \
@@ -439,22 +406,99 @@ jobs:
 
   github-release:
     runs-on: ubuntu-latest
-    needs: [repo-rpm-rhel]
+    needs: [debian, fedora, linux-pyinstaller, macos-arm, macos-intel, rhel-9, windows-64, windows-64-debug]
+    outputs:
+      md5sums: ${{ steps.md5sums-step.outputs.MD5SUMS }}
+      sha256sums: ${{ steps.sha256sums-step.outputs.SHA256SUMS }}
     steps:
       - uses: actions/download-artifact@v8
         with:
           pattern: '*'
           path: artifact
           merge-multiple: true
-      - run: cd artifact && md5sum *agstamon* > md5sums.txt
-      - run: cd artifact && sha256sum *agstamon* > sha256sums.txt
+      - id: md5sums-step
+        run: echo "MD5SUMS=$(cd artifact && md5sum *agstamon* > md5sums.txt && cat md5sums.txt | base64 --wrap 0)" >> $GITHUB_OUTPUT
+      - id: sha256sums-step
+        run: echo "SHA256SUMS=$(cd artifact && sha256sum *agstamon* > sha256sums.txt && cat sha256sums.txt | base64 --wrap 0)" >> $GITHUB_OUTPUT
+      # Reset both the 'latest' release and the 'latest' tag via the API so the
+      # createRelease below recreates both fresh: the release gets a current published_at
+      # (an in-place update can never change that date), and the tag is re-created at the
+      # current commit (createRelease creates a missing tag at target_commitish). No git
+      # checkout/force-push needed.
+      - name: Delete 'latest' release and tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          id="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/latest" --jq .id 2>/dev/null || true)"
+          [ -n "$id" ] && gh api -X DELETE "repos/${GITHUB_REPOSITORY}/releases/${id}"
+          gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/tags/latest" 2>/dev/null || true
       # finally some maintained solution for creating releases
       # https://github.com/marketplace/actions/create-release
-      - uses: ncipollo/release-action@v1
+      - id: upload-step
+        uses: ncipollo/release-action@v1.21.0
         with:
-          allowUpdates: false
+          allowUpdates: true
+          makeLatest: legacy
           prerelease: true
-          draft: true
+          tag: latest
+          commit: ${{ github.sha }}
           removeArtifacts: true
+          replacesArtifacts: true
+          artifacts: "artifact/*"
+
+  windows-64-codesigning:
+    runs-on: codesigning
+    needs: [debian, fedora, linux-pyinstaller, macos-arm, macos-intel, rhel-9, windows-64, windows-64-debug]
+    outputs:
+      artifact-id: ${{ steps.upload-step.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '${{ env.python_win_version }}'
+          architecture: x64
+      - run: python -m pip install --no-warn-script-location -r build/requirements/windows.txt
+      # pretty hacky but no other idea to avoid gssapi being installed which breaks requests-kerberos
+      # seems unnecessary now (2026)?
+      #- run: python -m pip uninstall -y gssapi requests-gssapi
+      - run: cd ${{ github.workspace }}/build; python build.py
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          CODESIGNING_THUMBPRINT: ${{ secrets.CODESIGNING_THUMBPRINT }}
+      - id: upload-step
+        uses: actions/upload-artifact@v7
+        with:
+          path: |
+            build/dist/*.zip
+            build/dist/*.exe
+          retention-days: 1
+          if-no-files-found: error
+          name: ${{ github.job }}
+
+  github-release-codesigning:
+    runs-on: ubuntu-latest
+    needs: [github-release, windows-64-codesigning]
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          # use only artifacts from codesigning (.exe) and release (checksum files) jobs
+          artifact-ids: ${{ needs.windows-64-codesigning.outputs.artifact-id }}
+          path: artifact
+          merge-multiple: true
+      - run: echo "${{ needs.github-release.outputs.md5sums }}"
+      - run: echo "${{ needs.github-release.outputs.sha256sums }}"
+      - run: cd artifact && echo "${{ needs.github-release.outputs.md5sums }}" | base64 --decode | grep -v "win64.zip" | grep -v "win64_setup.exe" > md5sums.txt && md5sum *agstamon* >> md5sums.txt
+      - run: cd artifact && echo "${{ needs.github-release.outputs.sha256sums }}" | base64 --decode | grep -v "win64.zip" | grep -v "win64_setup.exe" > sha256sums.txt && sha256sum *agstamon* >> sha256sums.txt
+      # finally some maintained solution for creating releases
+      # https://github.com/marketplace/actions/create-release
+      - uses: ncipollo/release-action@v1.21.0
+        with:
+          allowUpdates: true
+          makeLatest: legacy
+          prerelease: true
+          tag: latest
+          commit: ${{ github.sha }}
+          removeArtifacts: false
           replacesArtifacts: true
           artifacts: "artifact/*"
