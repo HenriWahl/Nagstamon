@@ -57,6 +57,13 @@ if 'WAYLAND_DISPLAY' in os.environ or \
 else:
     DESKTOP_WAYLAND = False
 
+# simple GNOME detection - needed because GNOME Shell reports systray icon
+# click positions differently than KDE Plasma does
+DESKTOP_NAME = ' '.join(filter(None, (os.environ.get('XDG_CURRENT_DESKTOP', ''),
+                                      os.environ.get('XDG_SESSION_DESKTOP', ''),
+                                      os.environ.get('DESKTOP_SESSION', '')))).lower()
+DESKTOP_GNOME = 'gnome' in DESKTOP_NAME
+
 # detection of somehow quirky desktop enviroments which might need a fix
 QUIRKY_DESKTOPS = ('cinnamon', 'gnome-flashback-metacity')
 if os.environ.get('CINNAMON_VERSION') or \
@@ -129,7 +136,7 @@ class AppInfo:
     contains app information previously located in GUI.py
     """
     NAME = 'Nagstamon'
-    VERSION = '3.19-20261111'
+    VERSION = '3.19-20261124'
     WEBSITE = 'https://nagstamon.de'
     COPYRIGHT = '©2008-2026 Henri Wahl et al.'
     COMMENTS = 'Nagios status monitor for your desktop'
@@ -181,6 +188,7 @@ class Config:
         self.filter_all_critical_services = False
         self.filter_all_disaster_services = False
         self.filter_all_flapping_services = False
+        self.filter_all_suppressed_services = False
         self.filter_acknowledged_hosts_services = False
         self.filter_hosts_services_disabled_notifications = False
         self.filter_hosts_services_disabled_checks = False
@@ -1151,6 +1159,9 @@ class Server:
 
         # Alertmanager mappings
         self.alertmanager_filter = ''
+        # labels a silence created by Nagstamon matches on - all labels of an alert make
+        # the silence so specific that it breaks as soon as one volatile label changes
+        self.silence_matcher_labels = 'alertname,instance'
         self.map_to_critical = 'critical,error'
         self.map_to_warning = 'warning,warn'
         self.map_to_down = 'down'

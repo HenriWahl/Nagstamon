@@ -1167,6 +1167,12 @@ class GenericServer:
                                    debug='Filter: DOWNTIME ' + str(host.name) + ';' + str(service.name))
                     service.visible = False
 
+                if service.suppressed is True and conf.filter_all_suppressed_services is True:
+                    if conf.debug_mode:
+                        self.debug(server=self.get_name(),
+                                   debug='Filter: SUPPRESSED ' + str(host.name) + ';' + str(service.name))
+                    service.visible = False
+
                 if service.flapping is True and conf.filter_all_flapping_services is True:
                     if conf.debug_mode:
                         self.debug(server=self.get_name(),
@@ -1491,7 +1497,7 @@ class GenericServer:
         return Result()
 
     def fetch_url(self, url, giveback='obj', cgi_data=None, no_auth=False, multipart=False, headers=None,
-                  silent_reauthentication=True):
+                  silent_reauthentication=True, method=None):
         """
         get content of given url, cgi_data only used if present
         'obj' fetch_url() gives back a dict full of miserable hosts/services,
@@ -1499,6 +1505,7 @@ class GenericServer:
         'raw' it gives back pure HTML - useful for finding out IP or new version
         'json' gives back JSON data
         existence of cgi_data forces urllib to use POST instead of GET requests
+        method allows any other HTTP method, for example DELETE
         NEW: gives back a list containing result and, if necessary, a more clear error description
         silent_reauthentication allows one attempt to renew an expired web authentication session via SSO
         """
@@ -1539,14 +1546,16 @@ class GenericServer:
                         file.write(self.cacert_content)
 
                 # in case we know the server's encoding use it
-                if self.encoding:
-                    if cgi_data is not None:
-                        try:
-                            for k in cgi_data:
-                                cgi_data[k] = cgi_data[k].encode(self.encoding)
-                        except:
-                            # set to false to mark it as invalid
-                            self.encoding = False
+                # servers which hand over an already serialized body, like the JSON of the
+                # Alertmanager silences, pass a string - iterating over that as if it was
+                # a dict raised a TypeError on every request and disabled the encoding
+                if self.encoding and isinstance(cgi_data, dict):
+                    try:
+                        for k in cgi_data:
+                            cgi_data[k] = cgi_data[k].encode(self.encoding)
+                    except:
+                        # set to false to mark it as invalid
+                        self.encoding = False
 
                 # use session only for connections to monitor servers, other requests like looking for updates
                 # should go out without credentials
@@ -1559,7 +1568,10 @@ class GenericServer:
                         self.init_http()
                     # most requests come without multipart/form-data
                     if multipart is False:
-                        if cgi_data is None:
+                        if method:
+                            response = self.session.request(method, url, data=cgi_data, timeout=self.timeout,
+                                                            headers=headers)
+                        elif cgi_data is None:
                             response = self.session.get(url, timeout=self.timeout, headers=headers)
                         else:
                             response = self.session.post(url, data=cgi_data, timeout=self.timeout, headers=headers)
@@ -1588,7 +1600,10 @@ class GenericServer:
 
                     # most requests come without multipart/form-data
                     if not multipart:
-                        if cgi_data is None:
+                        if method:
+                            response = temporary_session.request(method, url, data=cgi_data, timeout=self.timeout,
+                                                                 verify=False, headers=headers)
+                        elif cgi_data is None:
                             response = temporary_session.get(url, timeout=self.timeout, verify=False, headers=headers)
                         else:
                             response = temporary_session.post(url, data=cgi_data, timeout=self.timeout, verify=False, headers=headers)
