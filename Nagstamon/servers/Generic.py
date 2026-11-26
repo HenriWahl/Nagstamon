@@ -22,6 +22,7 @@ import datetime
 import json
 from pathlib import Path
 import platform
+import re
 import socket
 import sys
 import traceback
@@ -43,6 +44,14 @@ WEB_AUTH_IDP_URL_PREFIXES = ('https://login.microsoftonline.com/',)
 WEB_AUTH_SSO_FORM_FIELDS = ('SAMLRequest', 'SAMLResponse', 'code', 'id_token')
 # maximum number of auto-submit forms to follow during silent reauthentication
 WEB_AUTH_SSO_MAX_STEPS = 5
+
+SECRET_JSON_VALUE = re.compile(r'("(?:[^"]*pass[^"]*|sessionid|token|secret)"\s*:\s*)"[^"]*"', re.IGNORECASE)
+
+
+def mask_secrets(text):
+    """hide secret values in JSON text before it is written to the debug log"""
+    return SECRET_JSON_VALUE.sub(r'\1"***************"', text)
+
 
 # check ECP authentication support availability
 try:
@@ -1534,7 +1543,7 @@ class GenericServer:
                             if 'pass' in key:
                                 cgi_data_log[key] = '***************'
                     else:
-                        cgi_data_log = cgi_data
+                        cgi_data_log = mask_secrets(cgi_data) if isinstance(cgi_data, str) else cgi_data
                     self.debug(server=self.get_name(), debug='fetch_url: ' + url + ' CGI Data: ' + str(cgi_data_log))
 
                 if OS == OS_MACOS and self.cacert_path and not self.cacert_path.is_file():
